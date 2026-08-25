@@ -48,7 +48,7 @@ func _ready() -> void:
 		room_run_controller.begin_run()
 	elif map_runtime:
 		map_run_controller.begin_run()
-		if OS.is_debug_build() and ("--map-runtime-check" in OS.get_cmdline_user_args() or "--map-soak-check" in OS.get_cmdline_user_args() or "--map-gui-capture" in OS.get_cmdline_user_args()):
+		if OS.is_debug_build() and ("--map-runtime-check" in OS.get_cmdline_user_args() or "--map-combat-check" in OS.get_cmdline_user_args() or "--map-soak-check" in OS.get_cmdline_user_args() or "--map-gui-capture" in OS.get_cmdline_user_args()):
 			var runtime_check := preload("res://tests/map_exploration_runtime_check.gd").new()
 			add_child(runtime_check)
 	else:

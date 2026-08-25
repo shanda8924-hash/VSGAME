@@ -63,6 +63,10 @@ func begin_run() -> void:
 		return
 	_active = true
 	_transitioning = false
+	# game.tscnでは旧ROOMの手動Wave/Test Lab sandboxを守るため両NodeをDisabledで
+	# 配置している。連続MAP探索だけは自然Spawn/Elite Areaを処理する必要がある。
+	wave_spawner.process_mode = Node.PROCESS_MODE_INHERIT
+	elite_room_manager.process_mode = Node.PROCESS_MODE_INHERIT
 	combo_system.configure_timeout(float(_config.get("combo_timeout_seconds", 3.5)))
 	combo_system.set_active(true)
 	concept_system.set_active(true)

@@ -2588,13 +2588,17 @@ Element ModifierのGameplay/VFX/Masteryは`ElementCombatSystem`と`FusionCombatR
 
 | MAP | 寸法 / 部屋 | Boss解放 | 通常敵HP / Damage | 同時上限 | Boss HP / Damage |
 |---|---|---|---|---|---|
-| 1 忘却の地下回廊 | 78×78 / 10 | 540秒+55体 | ×1.00 / ×1.00 | 52 | ×2.2 / ×0.62 |
-| 2 紫晶の深層 | 86×86 / 11 | 600秒+75体 | ×1.25 / ×1.10 | 66 | ×3.8 / ×0.72 |
-| 3 終焉の炉心 | 94×94 / 12 | 660秒+95体 | ×1.55 / ×1.20 | 78 | ×5.8 / ×0.82 |
+| 1 忘却の地下回廊 | 78×78 / 10 | 540秒+55体 | ×2.50 / ×1.00 | 32 | ×2.2 / ×0.62 |
+| 2 紫晶の深層 | 86×86 / 11 | 600秒+75体 | ×3.25 / ×1.10 | 40 | ×3.8 / ×0.72 |
+| 3 終焉の炉心 | 94×94 / 12 | 660秒+95体 | ×4.00 / ×1.20 | 48 | ×5.8 / ×0.82 |
 
 - 難易度はMAP番号・MAP内時間だけで決まり、Player火力、Attribute/Fusion/装備所持数から逆算しない。
+- MAP1開始Poolの平均HPは初期Soldier通常攻撃換算で約8.0Hit。後続MAPは想定Build成長を受けても
+  通常敵8〜15Hit、強敵15〜25Hitを基準にする固定倍率であり、RuntimeのPlayer能力追従補正は行わない。
 - `WaveSpawner`はPlayerから220〜480pxの床に1〜3体ずつ自然生成する。MAP内間隔は1.35→0.62秒へ変化し、
   Boss/Elite Encounter中は停止する。MAP切替で床Cache、Elite/Boss停止Counter、進行Offsetを必ずリセットする。
+- `game.tscn`で旧ROOM/Test Lab用にDisabled配置された`WaveSpawner`/`EliteRoomManager`は、
+  `MapRunController.begin_run()`時だけInheritへ戻す。通常MAPで自然SpawnとElite Areaが停止したままにならないこと。
 - COMBO猶予は3.5秒。Triggered hitは数値へ加算するが猶予を更新せず、戦闘が途切れれば自然に切れる。
 
 ### 34.3 探索配置・報酬・回復
@@ -2613,8 +2617,10 @@ Element ModifierのGameplay/VFX/Masteryは`ElementCombatSystem`と`FusionCombatR
   壁装飾/檻/結晶候補は全矩形走査ではなく床近傍/Room外周/床Cacheから列挙する。
 - MAP HUDは2行進捗と案内文を別領域へ置く。Boss戦中はMAP進捗を一時非表示にしてBoss名/HPを優先し、終了後に復帰する。
 - `--map-runtime-check`は実Game SceneでAttribute、3MAP、各Boss、Boss宝箱、Skill、Run Clearを短縮完走する。
-  MAP2/3遷移の2026-08-25 headless最終実測は最大slice 34.119/39.526ms（最適化前53.698/71.546ms）。
-- `--map-soak-check`は20倍速で論理1818.7秒、通常宝箱12、3Boss、全遷移、敵上限、Run Clearを確認する。
+  MAP2/3遷移の2026-08-25 headless最終実測は最大slice 21.188/29.566ms（最適化前53.698/71.546ms）。
+- `--map-combat-check`は4倍速の通常移動Input/近接Hitboxで、MAP1の自然撃破55/55を論理168.3秒で確認する。
+- `--map-soak-check`は20倍速で論理1820.2秒、自然Spawn、通常宝箱12、Elite完了経路、3Boss、
+  全遷移、敵上限32/40/48、Run Clearを確認する。
 - `--map-gui-capture`はRTX 4060 / Vulkan Forward MobileでMAP開始、Boss領域、Boss戦を
   `artifacts/map_exploration_*.png`へ保存する。Debugger gameplay error、暗転残留、HUD重なりは0件。
 - 31〜33章のROOM数値・検証結果は旧方式の回帰資料であり、現行通常Runの進行仕様は本34章を優先する。

@@ -18,6 +18,9 @@ func _run() -> void:
 	if "--map-gui-capture" in OS.get_cmdline_user_args():
 		await _run_gui_capture()
 		return
+	if "--map-combat-check" in OS.get_cmdline_user_args():
+		await _run_combat_gate_check()
+		return
 	if "--map-soak-check" in OS.get_cmdline_user_args():
 		await _run_soak()
 		return
@@ -90,22 +93,64 @@ func _capture_viewport(path: String) -> void:
 	var error := image.save_png(path)
 	_expect(error == OK, "GUI capture保存失敗: %s" % path)
 
+func _run_combat_gate_check() -> void:
+	await _wait_frames(8)
+	player.health_component.max_hp = 1000000000.0
+	player.health_component.current_hp = 1000000000.0
+	Engine.time_scale = 4.0
+	await _open_regular_chests()
+	var kill_requirement := int(controller._current_config.get("boss_kill_requirement", 55))
+	var local_started := GameManager.elapsed_seconds
+	while int(controller.debug_get_map_state().get("kills", 0)) < kill_requirement and GameManager.elapsed_seconds - local_started < 240.0:
+		await _close_visible_reward_modals()
+		_drive_soak_combat()
+		await _wait_frames(4)
+	_release_soak_movement()
+	var natural_kills := int(controller.debug_get_map_state().get("kills", 0))
+	_expect(natural_kills >= kill_requirement, "MAP1の自然撃破数がBoss条件未達です: %d/%d" % [natural_kills, kill_requirement])
+	Engine.time_scale = 1.0
+	if failures.is_empty():
+		_finish_test(0, "MAP_EXPLORATION_COMBAT_CHECK: PASS natural_kills=%d required=%d logical_seconds=%.1f" % [natural_kills, kill_requirement, GameManager.elapsed_seconds - local_started])
+	else:
+		for message in failures:
+			push_error("MAP_EXPLORATION_COMBAT_CHECK: %s" % message)
+		_finish_test(1, "")
+
 func _run_soak() -> void:
 	await _wait_frames(8)
 	player.health_component.max_hp = 1000000000.0
 	player.health_component.current_hp = 1000000000.0
+	# 論理30分のLifecycleを短時間化する。自然Spawn/移動/攻撃のHitbox確認は同じ
+	# Testを4倍でMAP1解放条件まで別途実測し、Soak本体は20倍で全3MAPを回す。
 	Engine.time_scale = 20.0
+	player.weapon_manager.process_mode = Node.PROCESS_MODE_DISABLED
+	player.set_movement_locked(true)
 	var run_started_at := GameManager.elapsed_seconds
 	for expected_map in [1, 2, 3]:
+		# 直前MAPのBoss撃破Hit Stopは正常に1倍へ復帰するため、Test短縮倍率だけ
+		# 各MAP開始時に張り直す。
+		Engine.time_scale = 20.0
 		_expect(GameManager.current_map_index == expected_map, "Soak MAP %d開始に失敗" % expected_map)
 		await _open_regular_chests()
 		var required := float(controller._current_config.get("boss_unlock_seconds", 600.0))
 		var local_started := GameManager.elapsed_seconds
+		var next_combat_status := local_started + 20.0
 		while GameManager.elapsed_seconds - local_started < required + 1.0:
 			await _close_visible_reward_modals()
+			_resolve_soak_elites()
 			await _wait_frames(4)
+			if GameManager.elapsed_seconds >= next_combat_status:
+				next_combat_status += 120.0
+				_print_soak_combat_status(expected_map)
+		_release_soak_movement()
 		var enemy_cap := int(controller._current_config.get("enemy_cap", 60))
-		_expect(get_tree().get_nodes_in_group("enemies").size() <= enemy_cap + 3, "MAP %d enemy cap超過" % expected_map)
+		var kill_requirement := int(controller._current_config.get("boss_kill_requirement", 60))
+		var natural_kills := int(controller.debug_get_map_state().get("kills", 0))
+		var living_enemies := get_tree().get_nodes_in_group("enemies").size()
+		print("MAP_EXPLORATION_SOAK map=%d natural_kills=%d required=%d living=%d" % [expected_map, natural_kills, kill_requirement, living_enemies])
+		_expect(living_enemies > 0, "MAP %dで自然Spawnが動いていません" % expected_map)
+		# 通常上限外に、部屋Elite最大2×複数Triggerと巡回Eliteが一時共存し得る。
+		_expect(living_enemies <= enemy_cap + 6, "MAP %d enemy cap超過" % expected_map)
 		controller.debug_force_boss_ready()
 		controller.debug_start_boss()
 		await _wait_frames(3)
@@ -137,6 +182,7 @@ func _run_soak() -> void:
 		_finish_test(1, "")
 
 func _open_regular_chests() -> void:
+	_release_soak_movement()
 	var chests: Array[TreasureChest] = []
 	for node in get_tree().get_nodes_in_group("map_content"):
 		if node is TreasureChest and not node.is_boss_chest and not node.is_opened:
@@ -146,6 +192,64 @@ func _open_regular_chests() -> void:
 		chest.interact(player)
 		await _wait_frames(2)
 		await _close_visible_reward_modals()
+
+func _drive_soak_combat() -> void:
+	var enemies := get_tree().get_nodes_in_group("enemies").filter(func(enemy):
+		return is_instance_valid(enemy) and enemy.get_node_or_null("HealthComponent") != null and (enemy.get_node("HealthComponent") as HealthComponent).current_hp > 0.0
+	)
+	if enemies.is_empty():
+		_release_soak_movement()
+		return
+	var nearest := enemies[0] as Node2D
+	var nearest_distance := player.global_position.distance_to(nearest.global_position)
+	for enemy_variant in enemies:
+		var enemy := enemy_variant as Node2D
+		var distance := player.global_position.distance_to(enemy.global_position)
+		if distance < nearest_distance:
+			nearest = enemy
+			nearest_distance = distance
+	# 自然敵はPlayerを追跡する。検査Bot側は重い経路探索を持たず、通常入力を
+	# 最寄り方向へ入れるだけにしてゲーム本体の長時間負荷を汚染しない。
+	var direction := (nearest.global_position - player.global_position).normalized() if nearest_distance > 42.0 else Vector2.ZERO
+	_set_soak_movement(direction)
+
+func _resolve_soak_elites() -> void:
+	# 20倍速では0.08秒近接Hitboxが物理1Frame未満になるため、Elite Encounterの
+	# Cleanup/Signal/確定装備経路だけはDebug damageで完了させる。
+	for enemy_variant in get_tree().get_nodes_in_group("elite_enemies"):
+		var enemy := enemy_variant as EnemyBasic
+		if enemy == null or not is_instance_valid(enemy) or enemy.enemy_data is BossData:
+			continue
+		enemy.health_component.current_hp = minf(enemy.health_component.current_hp, 1.0)
+		enemy.health_component.apply_secondary_damage(99999999.0, CombatEventMeta.create_secondary("map_soak_elite_clear", [], false))
+
+func _print_soak_combat_status(map_index: int) -> void:
+	var nearest_distance := INF
+	var living := 0
+	for enemy_variant in get_tree().get_nodes_in_group("enemies"):
+		var enemy := enemy_variant as Node2D
+		if not is_instance_valid(enemy):
+			continue
+		var health := enemy.get_node_or_null("HealthComponent") as HealthComponent
+		if health == null or health.current_hp <= 0.0:
+			continue
+		living += 1
+		nearest_distance = minf(nearest_distance, player.global_position.distance_to(enemy.global_position))
+	print("MAP_EXPLORATION_SOAK combat map=%d kills=%d living=%d nearest=%.1f player=%s room_mode=%s elite=%d boss=%s floor=%d timer=%.2f state=%d" % [map_index, int(controller.debug_get_map_state().get("kills", 0)), living, nearest_distance, player.global_position, controller.wave_spawner._room_mode_enabled, controller.wave_spawner._active_elite_rooms, controller.wave_spawner._boss_fight_active, controller.wave_spawner._floor_cells.size(), controller.wave_spawner._timer, GameManager.run_state])
+
+func _set_soak_movement(direction: Vector2) -> void:
+	if direction.x < -0.18: Input.action_press("ui_left", -direction.x)
+	else: Input.action_release("ui_left")
+	if direction.x > 0.18: Input.action_press("ui_right", direction.x)
+	else: Input.action_release("ui_right")
+	if direction.y < -0.18: Input.action_press("ui_up", -direction.y)
+	else: Input.action_release("ui_up")
+	if direction.y > 0.18: Input.action_press("ui_down", direction.y)
+	else: Input.action_release("ui_down")
+
+func _release_soak_movement() -> void:
+	for action in ["ui_left", "ui_right", "ui_up", "ui_down"]:
+		Input.action_release(action)
 
 func _close_visible_reward_modals() -> void:
 	for _attempt in 12:
