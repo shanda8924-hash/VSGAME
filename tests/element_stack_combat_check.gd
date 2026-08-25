@@ -65,7 +65,7 @@ func _run_checks(game: Node) -> void:
 	GameManager.add_fragment("lightning")
 	_check(GameManager.get_active_element_ids() == ["element_fire", "element_ice"], "third element cannot replace locked slots")
 	_check(GameManager.get_element_stack("element_lightning") == 0, "rejected third element receives no stack")
-	_check("火 Lv3" in hud.active_element_label.text and "氷 Lv1" in hud.active_element_label.text and "LOCKED" in hud.active_element_label.text, "HUD shows locked two-slot build and levels")
+	_check("火 Lv3" in hud.active_element_label.text and "氷 Lv1" in hud.active_element_label.text and ("固定済み" in hud.active_element_label.text or "LOCKED" in hud.active_element_label.text), "HUD shows locked two-slot build and levels")
 
 	GameManager.set_active_element(GameManager.ELEMENT_NONE)
 	GameManager.add_fragment("fire")

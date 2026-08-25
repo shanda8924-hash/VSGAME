@@ -67,6 +67,9 @@ func _handle_title(title: TitleScreen) -> void:
 func _handle_home(_home: HomeScreen) -> void:
 	_release_movement()
 	if _ui_ready():
+		# 通常入口はMAPへ変更されたため、この旧36ROOM回帰だけ明示Debug requestで
+		# ROOM Controllerへ入れる。ROOM Code/Dataの復旧可能性を継続検証する。
+		GameManager.debug_request_room_mode_for_next_game()
 		# The first keyboard-focused card is the always-unlocked Soldier.
 		_tap("ui_accept")
 

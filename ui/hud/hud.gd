@@ -155,6 +155,9 @@ func set_experience(current_exp: int, exp_to_next_level: int, level: int) -> voi
 ## BossSpawnerがボスを出現させたときに呼ぶ。画面上部中央にボス専用のHPバーを表示する。
 func show_boss_health(display_name: String, current: float, max_hp: float) -> void:
 	boss_health_container.visible = true
+	if GameManager.map_mode_active:
+		room_status_label.visible = false
+		room_message_label.visible = false
 	boss_name_label.text = display_name
 	boss_hp_bar.max_value = max_hp
 	boss_hp_bar.value = current
@@ -165,11 +168,26 @@ func update_boss_health(current: float, max_hp: float) -> void:
 
 func hide_boss_health() -> void:
 	boss_health_container.visible = false
+	if GameManager.map_mode_active:
+		room_status_label.visible = true
+		room_message_label.visible = true
 
 func set_room_status(room_number: int, total_rooms: int, room_type: String, template_name: String) -> void:
+	room_status_label.offset_bottom = 54.0
+	room_message_label.offset_top = 58.0
+	room_message_label.offset_bottom = 92.0
 	var label := "最終ボス" if room_type == "final_boss" else "ボス戦" if room_type == "boss" else "ルーム %d / %d" % [room_number, total_rooms]
 	room_status_label.text = "%s  ·  %s" % [label, template_name]
 	room_message_label.text = ""
+
+func set_map_status(map_index: int, total_maps: int, map_name: String, elapsed: float, required_seconds: float, kills: int, required_kills: int, boss_ready: bool) -> void:
+	# MAP表示は進捗を含む2行なので、ROOM用1行領域のままだと案内文と重なる。
+	room_status_label.offset_bottom = 72.0
+	room_message_label.offset_top = 82.0
+	room_message_label.offset_bottom = 116.0
+	var time_text := "解放済み" if boss_ready else "%d:%02d / %d:%02d" % [int(elapsed) / 60, int(elapsed) % 60, int(required_seconds) / 60, int(required_seconds) % 60]
+	var kill_text := "%d / %d" % [mini(kills, required_kills), required_kills]
+	room_status_label.text = "MAP %d / %d  ·  %s\nボス領域 %s  ·  撃破 %s" % [map_index, total_maps, map_name, time_text, kill_text]
 
 func set_room_message(message: String) -> void:
 	room_message_label.text = message

@@ -13,7 +13,7 @@
 
 | 項目 | 内容 |
 |---|---|
-| ジャンル | ROOM制ローグライト・サバイバー |
+| ジャンル | MAP探索型ローグライト・サバイバー |
 | プラットフォーム | **Steam(PC)専用**(スマホ版は当面対象外) |
 | 画面 | 横長ワイドスクリーン(既定ウィンドウサイズ1600×900、リサイズ可能。UI一部要素は1920×1080基準で設計されているが解像度非依存で動作する) |
 | 操作 | キーボード(WASD/矢印キー)で移動。通常攻撃は自動、Spaceで職業固有アクティブスキル。共通InteractionはE、ゲームパッドX。ゲームパッド移動・UI操作対応 |
@@ -34,31 +34,27 @@
 
 ```
 ホーム画面(職業選択・恒常強化)
-  → ROOM 1開始(通常攻撃は自動、Spaceで職業固有アクティブスキル)
-       → 有限Waveを全滅 → ROOM CLEAR
-       → 属性3択から1つ取得 → フィールドに宝箱出現
-       → Eで宝箱を開け、完成済みスキル3択から1つ取得
-       → 必要ならC/Iで装備整理
-       → 次の短いROOMを自動選択し、同じPlayer/Build/装備を維持
-       → 4ROOMごとのBossを経てROOM 36をFINAL ROOMとして攻略
-  → ROOM 36 Final Boss撃破 → RUN CLEARリザルト(Retry / Title)
+  → MAP 1探索(自動攻撃、自然湧き、Elite、配置宝箱/祭壇)
+       → 敵撃破XPでLevel Up → Attribute 3択
+       → 宝箱をE/Xで開封 → 装備/回復/Skill/Attribute報酬
+       → 時間+撃破条件達成後、最深部Boss領域をE/Xで開始
+       → Boss撃破 → 確定装備+Boss宝箱Skill → MAP 2
+  → MAP 2 → MAP 3 Final Boss
+  → RUN CLEARリザルト(Retry / Title)
   → 途中死亡 → RUN OVERリザルト
 ```
 
-現行通常ゲームは上記の36 ROOM制を使用する。意味のない次ROOM選択UIは通常経路で表示せず、
-直近2件と同じTemplateを避けて自動選択する。旧100×100ダンジョン、時間経過Boss、
-Elite Room、巡回EliteのActor/Data/手動呼出しAPIはDeveloper Test Labと将来の専用ROOM用に保持する。
-通常Game Sceneでは旧Wave/Boss/Eliteの自動Processを開始時から停止する。旧2属性完成武器を自動生成していた
-`FusionSystem` Node/Scriptと、未接続だった旧Settings専用Scene/Scriptは現行経路へ重複するため削除済み。
+現行通常ゲームは上記の3 MAP探索制を使用する。旧36 ROOMのScene/Controller/Data/Testは削除せず、
+Developer Test Lab、回帰テスト、`codex/room-system-backup-20260825`からの復旧用に保持する。
+通常経路では`RoomRunController.begin_run()`、ROOM CLEAR、ROOM選択、毎ROOM報酬を呼ばない。
 
 ## 4. ダンジョン生成
 
-- 通常ゲームは`RoomTemplateFactory`が生成する1 ROOMの小マップを使用し、ROOM遷移時に
-  同一Stage上のTile/装飾を再構築する。テンプレートはstandard/wide/tall/center_block/pillars/large。
-- ROOM CLEAR報酬中に次Map、Enemy/Boss Sprite、Equipment Iconを準備する。旧ROOMのqueue_freeと
-  新ROOM生成は別Frameへ分け、TileMap敷設は行Batch、Enemy生成は1体/Frameへ分散する。
-  準備済みEnemyは描画・処理を抑止し、全個体準備後に同時に戦闘を開始する。
-- 以下の100×100手続き生成仕様は旧通常進行およびTest Lab互換として保持する。
+- 通常ゲームは`DungeonGenerator`と既存Dungeon Assetを再利用する中規模手続きMAPを3枚使用する。
+  MAP別設定は`data/maps/exploration_run.json`。寸法78/86/94、部屋数10/11/12、Elite部屋1/2/2。
+- MAP間だけ`StageEnvironment.build_dungeon_async()`でTile/装飾を行Batch敷設する。全画面黒Fadeは使わず、
+  濃紺Pixel遷移表示中に旧MAP Actor/Projectile/VFX/Lootを退役させる。
+- ROOM用`RoomTemplateFactory`は通常経路から外し、Test/復旧用に保持する。
 
 - `systems/dungeon_generator.gd` が、ラン開始ごとに固定サイズ(目安100×100マス)の
   マップを手続き生成する。生成結果は「床マス」「壁マス」のグリッド
@@ -79,8 +75,8 @@ Elite Room、巡回EliteのActor/Data/手動呼出しAPIはDeveloper Test Labと
 
 ## 5. 精鋭部屋(Elite Room)
 
-- 現行36 ROOM通常ゲームでは`EliteRoomManager`の自動進行を停止する。既存Scene/Data/AIは
-  削除せず、Developer Test Labと将来のElite/Boss専用ROOM向けに保持する。
+- MAPごとに既存`EliteRoomManager`を再設定し、配置Elite部屋と巡回Eliteを通常探索へ統合する。
+  MAP経路のElite報酬は経験値+確定地面装備で、旧ROOM用属性Modal/メタ通貨は呼ばない。
 
 - ダンジョン生成時、スタート地点から離れた部屋のうち1〜2部屋を精鋭部屋として指定する
 - プレイヤーが入室しても出入り口はふさがれず、通常マップを自由に移動・逃走できる。
@@ -92,14 +88,13 @@ Elite Room、巡回EliteのActor/Data/手動呼出しAPIはDeveloper Test Labと
 - 全滅させると現在のElement Buildに応じた属性/研鑽4択から1個を選択+メタ通貨ボーナスを獲得する。
   各精鋭の死亡時には別途、装備の地面ドロップ判定を行う(詳細は23章)
 
-## 6. レベルアップ(通常強化3択+HP全回復)
+## 6. レベルアップ(Attribute 3択+小回復)
 
-- 経験値が一定量たまると、通常の強化オプション3択から1つを選ぶ
-  (`data/upgrades/`は近接向け・遠距離向け・共通に分類。詳細は15章)
-- 通常レベルアップでは属性欠片を入手しない。欠片は精鋭部屋・ボス等の特別報酬に限定する
+- MAP通常進行では経験値が一定量たまると、Element/Attribute/Masteryの3択から1つを選ぶ。
+  SkillはLevel Upへ混ぜず、宝箱/Boss宝箱だけから取得する。
 - 欠片は `data/weapons/*.json` の `required_fragment_ids` と一致すると自動で
   武器に合成される(固定レシピ表。現状15種類以上。詳細は15章)
-- **レベルアップが完了した瞬間、プレイヤーのHPを全回復する**
+- MAP Level Up時は最大HPの12%だけ回復する。全回復は旧ROOM/Test互換経路だけに残す。
 - レベルアップとボス撃破アイテム選択がほぼ同時に発生した場合、両方のUIを
   同時表示せず、片方が閉じてからもう片方を表示する「キュー」形式にする
   (`active_modal_count` による一時停止管理、詳細は9章)
@@ -109,9 +104,9 @@ Elite Room、巡回EliteのActor/Data/手動呼出しAPIはDeveloper Test Labと
 
 ## 7. ボス
 
-- 現行36 ROOM通常ゲームでは時間経過による`BossSpawner._process()`を停止し、ROOM 4 / 8 / 12 / 16 / 20 / 24 / 28 / 32 / 36へ入った時だけ
-  `RoomRunController -> BossSpawner.start_room_boss()`で既存Bossを1体生成する。時間、Wave進行、撃破数による
-  旧自動Spawnは通常Runでは使用しない。Developer Test Lab用の明示Spawn APIは維持する。
+- 現行通常ゲームは各MAPの探索時間+撃破数を満たすと最深部Boss領域を解放し、E/Xで既存Bossを1体生成する。
+  MAP1/2/3の固定条件は540秒+55体、600秒+75体、660秒+95体。Player火力追従は行わない。
+  旧ROOM 4の倍数EncounterとDeveloper Test Lab用明示Spawn APIは維持する。
 - `data/bosses/` に10体登録済み: Black Knight_A/B/C, Demon_A〜E, Flame Golem, Minotaur
 - ROOM 4から順にBlack Knight_A、Minotaur、Black Knight_B、Demon_B、Black Knight_C、
   Demon_D、Demon_A、Demon_C/Eのどちらか、ROOM 36はFlame Golem。同一Runの9戦で重複させない。
@@ -147,16 +142,18 @@ Elite Room、巡回EliteのActor/Data/手動呼出しAPIはDeveloper Test Labと
   ROOM Bossの出現距離はPlayerから180〜320pxの床マスへ固定し、極端な至近/遠距離による戦闘時間差を抑える。
 - ROOM BossはStatusを完全無効にしない。Slow/Freeze/StunのDurationはROOM進行に応じ45%から18%へ短縮する。
   Burn等のDamage Buildは機能する。通常Hitは既存の小Flash/Squashだけで行動を止めない
-- 撃破後: ROOM 4〜32は「ボス撃破！」→属性3択から1つ→Boss宝箱→完成済みSkill 3択から1つ→自動的に次ROOM。
-  ROOM 36は「最終ボス撃破！」から直接RUN CLEARへ進む。全Bossは別途、装備を最低1個地面へ確定Dropする。
+- MAP Boss撃破後は確定地面装備+Boss宝箱を生成し、完成済みSkill 3択の確定後に次MAPへ進む。
+  MAP3 Boss宝箱完了でRUN CLEAR。旧ROOM報酬順序は回帰経路だけに残す。
   旧メタ通貨+Item選択報酬はROOM Encounter経路では呼ばず、旧明示Spawn互換経路だけに残す
 - 死亡時はBoss Nova弾、警告Area、召喚敵、攻撃Componentを退役し、ScreenEffectsのHit Stop / Shake Offsetを
   基準状態へ復元する。遅延Timer/Tweenが残っても破棄済みBossへDamageや画面状態を再適用しない
 
 ## 8. アイテムシステム(ボス撃破報酬)
 
-- ROOM制では全ての非FINAL ROOMで属性選択後に地面へ宝箱を生成する。Playerが105pxのInteraction Rangeへ入った時だけ
-  `【E】宝箱を開く`を表示し、共通`interact` Action（E / gamepad X）で完成済みスキル3択を表示する。
+- 各MAPへ通常/希少宝箱を合計4個配置する。Playerが105pxのInteraction Rangeへ入った時だけ
+  `【E】宝箱を開く`を表示し、共通`interact` Action（E / gamepad X）で一度だけ開く。
+- 通常宝箱の中身はMAP別固定Reward Slotから装備/回復/Skill/Attributeを割り当て、毎回Skillにはしない。
+  3MAP+Boss宝箱で完成済みSkill取得機会は合計7回。装備/回復はUI直付与せず実物を床へ生成する。
 - 完成済みスキルは内部ID・表示Key・日本語文言を分離し、通常プレイヤーにはTRIGGER/SKILL/MODIFIERを露出しない。
   最大6種類、同一スキル再取得はLv.UP、各スキル最大Lv3。同一Run内だけ維持し、新Runで初期化する。
 - 既存`ItemData`/`PlayerUpgradesComponent`報酬と旧Concept Parts/BoardはBoss/Test Lab互換として保持する。
@@ -2576,6 +2573,51 @@ Element ModifierのGameplay/VFX/Masteryは`ElementCombatSystem`と`FusionCombatR
 - 36ROOMキーボード通しはHeadlessとVulkan実描画の双方で9 Boss、35属性報酬、18宝箱、Fusion成立、
   完成スキル6種を完走する。2026-08-15 Vulkan Runは434撃破、wall 431.48秒、RUN CLEAR後Title復帰、
   Debugger gameplay error 0、ブラックアウトなしを確認した。
+
+## 34. 3MAP探索Run（2026年8月25日）
+
+### 34.1 通常経路と互換境界
+
+- `scenes/game.gd`は通常Main Scene時だけ`GameManager.start_run(false, true)`から`MapRunController.begin_run()`を呼ぶ。
+  明示Debug ROOM requestは`RoomRunController`、Test Labへ埋め込んだGameは自動進行なしのSandboxとして分離する。
+- ROOM 1/36、ROOM CLEAR、次ROOM選択、毎ROOM Cleanup/Rewardは通常MAP経路へ接続しない。
+  ROOM Code/Data/Testは削除せず、事前Backup commit `8d41751` / branch `codex/room-system-backup-20260825`に固定した。
+- 通常Runの可変状態はPlayer/Element/Skill/Equipment/COMBOをMAP間で維持し、Stage Actor/Loot/VFXだけをMAP遷移時に退役する。
+
+### 34.2 MAP固定曲線
+
+| MAP | 寸法 / 部屋 | Boss解放 | 通常敵HP / Damage | 同時上限 | Boss HP / Damage |
+|---|---|---|---|---|---|
+| 1 忘却の地下回廊 | 78×78 / 10 | 540秒+55体 | ×1.00 / ×1.00 | 52 | ×2.2 / ×0.62 |
+| 2 紫晶の深層 | 86×86 / 11 | 600秒+75体 | ×1.25 / ×1.10 | 66 | ×3.8 / ×0.72 |
+| 3 終焉の炉心 | 94×94 / 12 | 660秒+95体 | ×1.55 / ×1.20 | 78 | ×5.8 / ×0.82 |
+
+- 難易度はMAP番号・MAP内時間だけで決まり、Player火力、Attribute/Fusion/装備所持数から逆算しない。
+- `WaveSpawner`はPlayerから220〜480pxの床に1〜3体ずつ自然生成する。MAP内間隔は1.35→0.62秒へ変化し、
+  Boss/Elite Encounter中は停止する。MAP切替で床Cache、Elite/Boss停止Counter、進行Offsetを必ずリセットする。
+- COMBO猶予は3.5秒。Triggered hitは数値へ加算するが猶予を更新せず、戦闘が途切れれば自然に切れる。
+
+### 34.3 探索配置・報酬・回復
+
+- 各MAPに通常/希少宝箱4、Attribute祭壇1、生命祭壇1、最遠部Boss領域1を配置する。
+  宝箱/祭壇/Boss領域はPlayerの共通Interact登録を使い、範囲外E/X、二重Open、二重Rewardを拒否する。
+- XP Level UpはAttribute 3択。Skillは通常宝箱の割当と各MAP Boss宝箱だけ。Fusionは6回目のAttribute取得を目安に
+  MAP1後半〜MAP2で成立する。旧Concept Parts/Boardは通常UIへ出さない。
+- 通常敵装備率2%、MAP Eliteは1体ごと確定、Bossは最低1個確定。宝箱Equipmentも実物Ground Itemとして生成する。
+  Recoveryは通常/EliteのHeart Drop、宝箱Heart、生命祭壇40%、MAP間25%、Level Up12%を使用する。
+- C/I Character ScreenはMAP戦闘中もModal pauseで安全に開け、Inventory/Equip/Mergeは通常Run進行と同じラン状態を参照する。
+
+### 34.4 遷移・表示・検証
+
+- 遷移はMAP間だけ。濃紺Pixel Overlayを表示し、`StageEnvironment.build_dungeon_async()`で敷設する。
+  壁装飾/檻/結晶候補は全矩形走査ではなく床近傍/Room外周/床Cacheから列挙する。
+- MAP HUDは2行進捗と案内文を別領域へ置く。Boss戦中はMAP進捗を一時非表示にしてBoss名/HPを優先し、終了後に復帰する。
+- `--map-runtime-check`は実Game SceneでAttribute、3MAP、各Boss、Boss宝箱、Skill、Run Clearを短縮完走する。
+  MAP2/3遷移の2026-08-25 headless最終実測は最大slice 34.119/39.526ms（最適化前53.698/71.546ms）。
+- `--map-soak-check`は20倍速で論理1818.7秒、通常宝箱12、3Boss、全遷移、敵上限、Run Clearを確認する。
+- `--map-gui-capture`はRTX 4060 / Vulkan Forward MobileでMAP開始、Boss領域、Boss戦を
+  `artifacts/map_exploration_*.png`へ保存する。Debugger gameplay error、暗転残留、HUD重なりは0件。
+- 31〜33章のROOM数値・検証結果は旧方式の回帰資料であり、現行通常Runの進行仕様は本34章を優先する。
 
 ---
 

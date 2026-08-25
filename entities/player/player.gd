@@ -144,8 +144,12 @@ func _on_damaged(amount: float, current_hp: float, max_hp: float) -> void:
 ## アイテムのmax_hp_bonus等でmax_hpが動的に増減していても、常にその時点のmax_hpまで
 ## 満タンにするだけでよい。
 func _on_leveled_up(_new_level: int) -> void:
-	health_component.current_hp = health_component.max_hp
-	health_component.damaged.emit(0.0, health_component.current_hp, health_component.max_hp)
+	if GameManager.map_mode_active:
+		# MAPでは回復Drop/祭壇/宝箱を探索する意味を残し、Level Upは小回復に留める。
+		health_component.heal(health_component.max_hp * 0.12)
+	else:
+		health_component.current_hp = health_component.max_hp
+		health_component.damaged.emit(0.0, health_component.current_hp, health_component.max_hp)
 
 func _on_weapon_fired() -> void:
 	if animation_component:

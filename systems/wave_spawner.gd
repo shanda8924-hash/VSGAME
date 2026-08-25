@@ -31,6 +31,12 @@ var _room_wave_prepared: bool = false
 var _room_alive: Dictionary = {}
 var _room_epoch: int = 0
 var _visual_warmup_running := false
+var _map_started_elapsed: float = 0.0
+var _map_progress_offset: float = 0.0
+var _map_hp_multiplier: float = 1.0
+var _map_damage_multiplier: float = 1.0
+var _map_enemy_cap: int = 60
+var _map_spawn_batch := Vector2i(1, 2)
 
 func _ready() -> void:
 	if enemy_data_list.is_empty():
@@ -61,7 +67,11 @@ func _process(delta: float) -> void:
 		return # 精鋭部屋の攻略中・ボス戦中は通常の雑魚湧きを止める
 	_timer -= delta
 	if _timer <= 0.0:
-		_spawn_enemy()
+		var amount := randi_range(_map_spawn_batch.x, _map_spawn_batch.y) if GameManager.map_mode_active else 1
+		for _index in amount:
+			if _active_enemy_count() >= _map_enemy_cap:
+				break
+			_spawn_enemy()
 		_timer = _current_spawn_interval()
 
 ## 経過時間(GameManager.elapsed_seconds)を難易度カーブのbreakpoint間で線形補間し、
@@ -72,6 +82,8 @@ func _current_spawn_interval() -> float:
 		return fallback_spawn_interval
 
 	var elapsed := GameManager.elapsed_seconds
+	if GameManager.map_mode_active:
+		elapsed = maxf(GameManager.elapsed_seconds - _map_started_elapsed, 0.0)
 	var first: Dictionary = breakpoints[0]
 	if elapsed <= float(first.get("time_seconds", 0.0)):
 		return float(first.get("spawn_interval", fallback_spawn_interval))
@@ -101,6 +113,8 @@ var _floor_cells: Array[Vector2i] = []
 func _get_eligible_enemy_data(progress_seconds: float = -1.0) -> Array[EnemyData]:
 	var eligible: Array[EnemyData] = []
 	var elapsed := GameManager.elapsed_seconds if progress_seconds < 0.0 else progress_seconds
+	if progress_seconds < 0.0 and GameManager.map_mode_active:
+		elapsed = maxf(GameManager.elapsed_seconds - _map_started_elapsed, 0.0) + _map_progress_offset
 	for data in enemy_data_list:
 		if elapsed >= data.min_elapsed_seconds:
 			eligible.append(data)
@@ -118,7 +132,32 @@ func _spawn_enemy() -> void:
 	var enemy := enemy_scene.instantiate()
 	enemy.global_position = _pick_spawn_position(player.global_position)
 	enemy.enemy_data = eligible[randi() % eligible.size()]
+	enemy.room_hp_multiplier = _map_hp_multiplier
+	enemy.room_damage_multiplier = _map_damage_multiplier
 	GameManager.get_runtime_world(self).add_child(enemy)
+
+func configure_map_phase(config: Dictionary) -> void:
+	clear_room_wave()
+	_room_mode_enabled = false
+	_active_elite_rooms = 0
+	_boss_fight_active = false
+	_timer = 0.45
+	_floor_cells.clear()
+	_map_started_elapsed = GameManager.elapsed_seconds
+	_map_progress_offset = float(config.get("enemy_progress_offset", 0.0))
+	_map_hp_multiplier = maxf(float(config.get("enemy_hp_multiplier", 1.0)), 0.1)
+	_map_damage_multiplier = maxf(float(config.get("enemy_damage_multiplier", 1.0)), 0.1)
+	_map_enemy_cap = maxi(int(config.get("enemy_cap", 60)), 1)
+	var batch: Array = config.get("spawn_batch", [1, 2])
+	_map_spawn_batch = Vector2i(maxi(int(batch[0]), 1), maxi(int(batch[1]), 1)) if batch.size() >= 2 else Vector2i(1, 2)
+	difficulty_curve_id = String(config.get("difficulty_curve_id", "map_exploration"))
+
+func _active_enemy_count() -> int:
+	var count := 0
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if is_instance_valid(enemy) and not enemy.is_queued_for_deletion():
+			count += 1
+	return count
 
 func enable_room_mode(enabled: bool) -> void:
 	_room_mode_enabled = enabled

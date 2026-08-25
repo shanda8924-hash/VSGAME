@@ -27,7 +27,8 @@ func _on_enemy_drop_requested(death_position: Vector2, is_elite: bool, is_boss: 
 		rarity_override = _roll_boss_rarity_id(_current_room_number())
 	else:
 		var chance_key := "strong_enemy_drop_chance" if is_elite else "normal_enemy_drop_chance"
-		var chance := clampf(float(_drop_table.get(chance_key, 0.02)), 0.0, 1.0)
+		# MAP探索ではEliteを見つけて倒す意味を装備へ直結させる。通常敵の率は従来通り。
+		var chance := 1.0 if GameManager.map_mode_active and is_elite else clampf(float(_drop_table.get(chance_key, 0.02)), 0.0, 1.0)
 		if randf() >= chance:
 			return
 	for _drop_index in drop_count:
@@ -51,8 +52,14 @@ func _spawn_equipment_drop(equipment: EquipmentData, death_position: Vector2, de
 	return ground_item
 
 func _current_room_number() -> int:
+	if GameManager.map_mode_active:
+		return 36 if GameManager.current_map_index >= 3 else 13 if GameManager.current_map_index == 2 else 1
 	var controller := get_parent().get_node_or_null("RoomRunController") as RoomRunController
 	return controller.current_room if controller else 1
+
+## 宝箱からも実物の床ドロップを出す共通入口。UIへ直接装備を付与しない。
+func spawn_treasure_drop(position: Vector2, rarity_id: String = "") -> GroundEquipmentItem:
+	return _spawn_equipment_drop(_generate_equipment(rarity_id), position, false)
 
 func _roll_boss_rarity_id(room_number: int) -> String:
 	var tables: Dictionary = _drop_table.get("boss_rarity_by_phase", {})

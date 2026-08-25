@@ -17,6 +17,13 @@ func _ready() -> void:
 	EventBus.player_leveled_up.connect(_on_leveled_up)
 
 func _on_leveled_up(_new_level: int) -> void:
+	if GameManager.map_mode_active:
+		# MAP通常進行の成長はXP Level Up→Attribute 3択。ROOM用の毎部屋報酬や
+		# Concept素材を経由せず、完成済みElement Reward UIをそのまま再利用する。
+		var fragment_select := get_parent().get_node_or_null("FragmentSelect") as FragmentSelect
+		if fragment_select:
+			fragment_select.show_choices("レベルアップ！ 属性を1つ選択", 3)
+		return
 	GameManager.request_modal(_open)
 
 func _open() -> void:

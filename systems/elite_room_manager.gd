@@ -50,6 +50,7 @@ func _ready() -> void:
 
 ## Game.gdがGameManager.start_run()+StageEnvironment.build_dungeon()の直後に呼び出す。
 func setup(map: DungeonMap) -> void:
+	clear_map_runtime()
 	_map = map
 	_affix_settings = _load_affix_settings()
 	_spawn_settings = _load_json("res://data/elite_affixes/spawn_curve.json")
@@ -60,6 +61,17 @@ func setup(map: DungeonMap) -> void:
 	_floor_cells = map.get_floor_cells()
 	for room_index in map.elite_room_indices:
 		_create_trigger_area(room_index)
+
+func clear_map_runtime() -> void:
+	for child in get_children():
+		if child is Area2D:
+			child.queue_free()
+	_rooms_active.clear()
+	_rooms_cleared.clear()
+	_elite_enemies_alive.clear()
+	_floor_cells.clear()
+	_map = null
+	_retry_not_before = 0.0
 
 func _process(_delta: float) -> void:
 	if _map == null or GameManager.run_state != GameManager.RunState.PLAYING:
@@ -291,8 +303,10 @@ func _clear_room(room_index: int) -> void:
 	_grant_rewards(room_index)
 
 func _grant_rewards(room_index: int) -> void:
-	SaveManager.add_meta_currency(elite_meta_currency_reward)
-	if _fragment_select:
+	# MAP探索はElite本体からの確定装備+経験値が報酬。ROOM用の欠片Modalは混ぜない。
+	if not GameManager.map_mode_active:
+		SaveManager.add_meta_currency(elite_meta_currency_reward)
+	if _fragment_select and not GameManager.map_mode_active:
 		_fragment_select.show_choices("精鋭部屋クリア! 属性の欠片を1つ選択")
 	_play_reward_effect(room_index)
 

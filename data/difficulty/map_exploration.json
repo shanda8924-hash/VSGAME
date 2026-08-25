@@ -1,0 +1,7 @@
+[
+  { "time_seconds": 0,   "spawn_interval": 1.35 },
+  { "time_seconds": 120, "spawn_interval": 1.10 },
+  { "time_seconds": 300, "spawn_interval": 0.86 },
+  { "time_seconds": 540, "spawn_interval": 0.68 },
+  { "time_seconds": 720, "spawn_interval": 0.62 }
+]

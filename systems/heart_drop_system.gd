@@ -44,3 +44,13 @@ func _add_heart_deferred(runtime_world: Node, heart: HeartPickup, position: Vect
 		return
 	runtime_world.add_child(heart)
 	heart.global_position = position
+
+func spawn_recovery_drop(position: Vector2, configured_heal_ratio: float = 0.30, configured_lifetime: float = 60.0) -> HeartPickup:
+	var runtime_world := GameManager.get_runtime_world(self)
+	if runtime_world == null:
+		return null
+	var heart := HEART_SCENE.instantiate() as HeartPickup
+	heart.setup(configured_heal_ratio, configured_lifetime)
+	runtime_world.add_child(heart)
+	heart.global_position = position
+	return heart

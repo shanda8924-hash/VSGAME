@@ -86,6 +86,9 @@ var fusion_mastery_ranks: Dictionary = {
 ## 通常Game Sceneを直接開始した時だけtrue。Test Labや既存単体Testがgame.tscnを
 ## 埋め込んだ場合はfalseのままにし、ROOM自動進行を混入させない。
 var room_mode_active: bool = false
+## 通常の製品Runで使う3MAP探索進行。ROOM/Test Labと同時には有効にしない。
+var map_mode_active: bool = false
+var current_map_index: int = 0
 var _debug_room_mode_next_game: bool = false
 var selected_character_id: String = "soldier" # ホーム画面で選んだ職業。Playerが起動時に参照する
 var dungeon_map: DungeonMap # ラン開始時に1回だけ生成される、床/壁のグリッドデータ
@@ -164,7 +167,7 @@ func _extend_ui_actions_with_wasd() -> void:
 		if not InputMap.action_has_event(action, event):
 			InputMap.action_add_event(action, event)
 
-func start_run(enable_room_mode: bool = false) -> void:
+func start_run(enable_room_mode: bool = false, enable_map_mode: bool = false) -> void:
 	# Result/Hit Stop/選択UIの途中で前Sceneが破棄された場合も、新しいRunへ
 	# グローバルな停止状態や解放済みUI Callableを持ち越さない。
 	get_tree().paused = false
@@ -177,12 +180,23 @@ func start_run(enable_room_mode: bool = false) -> void:
 	held_fragment_ids.clear()
 	_reset_element_loadout(true)
 	room_mode_active = enable_room_mode
+	map_mode_active = enable_map_mode and not enable_room_mode
+	current_map_index = 1 if map_mode_active else 0
 	if room_mode_active:
 		dungeon_map = RoomTemplateFactory.build_map("standard")
 	else:
-		var elite_room_count := randi_range(dungeon_elite_room_count_min, dungeon_elite_room_count_max)
-		dungeon_map = DungeonGenerator.generate(DUNGEON_WIDTH, DUNGEON_HEIGHT, DUNGEON_ROOM_COUNT, elite_room_count)
+		generate_exploration_map(1 if map_mode_active else 0)
 	EventBus.run_started.emit()
+
+## MAP Controllerからのみ呼ぶ生成入口。進行度は敵DataやPlayer Buildを参照せず、
+## MAP番号に固定した寸法・部屋数・Elite数だけで決まる。
+func generate_exploration_map(map_index: int, width: int = DUNGEON_WIDTH, height: int = DUNGEON_HEIGHT, room_count: int = DUNGEON_ROOM_COUNT, elite_count: int = -1) -> DungeonMap:
+	current_map_index = maxi(map_index, 0)
+	var resolved_elites := elite_count
+	if resolved_elites < 0:
+		resolved_elites = randi_range(dungeon_elite_room_count_min, dungeon_elite_room_count_max)
+	dungeon_map = DungeonGenerator.generate(width, height, room_count, resolved_elites)
+	return dungeon_map
 
 func debug_request_room_mode_for_next_game() -> void:
 	if OS.is_debug_build():
@@ -206,6 +220,12 @@ func complete_room_run(room_count: int) -> void:
 		return
 	run_state = RunState.RESULT
 	EventBus.run_cleared.emit(room_count, elapsed_seconds, kill_count)
+
+func complete_map_run(map_count: int) -> void:
+	if run_state == RunState.RESULT:
+		return
+	run_state = RunState.RESULT
+	EventBus.run_cleared.emit(map_count, elapsed_seconds, kill_count)
 
 func register_kill() -> void:
 	kill_count += 1

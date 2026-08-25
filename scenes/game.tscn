@@ -1,4 +1,4 @@
-[gd_scene load_steps=32 format=3]
+[gd_scene load_steps=33 format=3]
 
 [ext_resource type="Script" path="res://scenes/game.gd" id="1"]
 [ext_resource type="PackedScene" path="res://entities/player/player.tscn" id="2"]
@@ -32,6 +32,7 @@
 [ext_resource type="Script" path="res://systems/concept_system.gd" id="31"]
 [ext_resource type="PackedScene" path="res://ui/concept_select/concept_select.tscn" id="32"]
 [ext_resource type="PackedScene" path="res://ui/concept_board/concept_board.tscn" id="33"]
+[ext_resource type="Script" path="res://systems/map_run_controller.gd" id="34"]
 
 [node name="Game" type="Node2D" groups=["game_runtime_world"]]
 script = ExtResource("1")
@@ -117,6 +118,21 @@ concept_select_path = NodePath("../ConceptSelect")
 concept_board_path = NodePath("../ConceptBoard")
 equipment_drop_system_path = NodePath("../EquipmentDropSystem")
 equipment_screen_path = NodePath("../EquipmentScreen")
+
+[node name="MapRunController" type="Node" parent="."]
+script = ExtResource("34")
+stage_environment_path = NodePath("../StageEnvironment")
+player_path = NodePath("../Player")
+wave_spawner_path = NodePath("../WaveSpawner")
+boss_spawner_path = NodePath("../BossSpawner")
+elite_room_manager_path = NodePath("../EliteRoomManager")
+hud_path = NodePath("../HUD")
+fragment_select_path = NodePath("../FragmentSelect")
+concept_system_path = NodePath("../ConceptSystem")
+concept_select_path = NodePath("../ConceptSelect")
+combo_system_path = NodePath("../ComboSystem")
+equipment_drop_system_path = NodePath("../EquipmentDropSystem")
+heart_drop_system_path = NodePath("../HeartDropSystem")
 
 [node name="DamageNumberManager" type="Node" parent="."]
 script = ExtResource("15")

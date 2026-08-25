@@ -12,6 +12,7 @@ var _player_in_range: Player = null
 @onready var label: Label = $Label
 
 func _ready() -> void:
+	add_to_group("map_content")
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
 	_update_label()

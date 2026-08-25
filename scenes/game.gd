@@ -15,16 +15,23 @@ extends Node2D
 @onready var boss_spawner: BossSpawner = $BossSpawner
 @onready var combo_system: ComboSystem = $ComboSystem
 @onready var room_run_controller: RoomRunController = $RoomRunController
+@onready var map_run_controller: MapRunController = $MapRunController
 @onready var concept_system: ConceptSystem = $ConceptSystem
 
 func _ready() -> void:
-	# game.tscnがMain Sceneとして直接起動した時だけROOM進行を有効化する。
-	# Test Scene / Developer Test Lab内へ埋め込まれた実Gameは従来の手動検証経路を維持する。
-	var main_game_runtime := get_tree().current_scene == self or GameManager.consume_debug_room_mode_request()
-	GameManager.start_run(main_game_runtime)
-	# ROOM RunはRoomRunControllerが非同期敷設する。ここでも同期buildするとRun開始時に
-	# 同じROOMを2回構築してしまうため、従来Map/Test経路だけを即時構築する。
-	if not main_game_runtime:
+	# 通常起動はMAP探索。ROOMは明示的Debug request時だけ、埋め込みTest Labは
+	# 従来通り自動進行なしの手動Sandboxに分離する。
+	var room_test_runtime := GameManager.consume_debug_room_mode_request()
+	var map_runtime := get_tree().current_scene == self and not room_test_runtime
+	GameManager.start_run(room_test_runtime, map_runtime)
+	if map_runtime:
+		player.set_movement_locked(true)
+		wave_spawner.enable_room_mode(true)
+		await stage_environment.build_dungeon_async(GameManager.dungeon_map, 5)
+		player.global_position = GameManager.dungeon_map.grid_to_world(GameManager.dungeon_map.spawn_point)
+		player.setup_camera_limits(GameManager.dungeon_map)
+		player.set_movement_locked(false)
+	elif not room_test_runtime:
 		stage_environment.build_dungeon(GameManager.dungeon_map)
 		player.global_position = GameManager.dungeon_map.grid_to_world(GameManager.dungeon_map.spawn_point)
 		player.setup_camera_limits(GameManager.dungeon_map)
@@ -37,8 +44,13 @@ func _ready() -> void:
 	combo_system.combo_changed.connect(hud.set_combo)
 	combo_system.combo_reset.connect(hud.reset_combo_display)
 	concept_system.completed_skill_changed.connect(func(skill_id, level): hud.set_completed_skill(skill_id, concept_system.get_completed_skill_display_name(skill_id), level))
-	if main_game_runtime:
+	if room_test_runtime:
 		room_run_controller.begin_run()
+	elif map_runtime:
+		map_run_controller.begin_run()
+		if OS.is_debug_build() and ("--map-runtime-check" in OS.get_cmdline_user_args() or "--map-soak-check" in OS.get_cmdline_user_args() or "--map-gui-capture" in OS.get_cmdline_user_args()):
+			var runtime_check := preload("res://tests/map_exploration_runtime_check.gd").new()
+			add_child(runtime_check)
 	else:
 		combo_system.set_active(false)
 		concept_system.set_active(false)

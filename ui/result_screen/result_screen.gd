@@ -32,7 +32,7 @@ func _on_run_cleared(room_count: int, elapsed_seconds: float, kill_count: int) -
 	get_tree().paused = true
 	visible = true
 	title_label.text = "クリア！"
-	time_label.text = "全%dルーム踏破  /  %d秒" % [room_count, int(elapsed_seconds)]
+	time_label.text = ("全%dMAP踏破  /  %d秒" if GameManager.map_mode_active else "全%dルーム踏破  /  %d秒") % [room_count, int(elapsed_seconds)]
 	kill_label.text = "撃破数: %d体" % kill_count
 	retry_button.grab_focus.call_deferred()
 

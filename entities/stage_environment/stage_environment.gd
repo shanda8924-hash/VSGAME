@@ -247,52 +247,73 @@ func build_dungeon_async(map: DungeonMap, row_batch_size: int = 5) -> Dictionary
 		return {"total_ms": 0.0, "max_slice_ms": 0.0, "frames": 0}
 	var total_start := Time.get_ticks_usec()
 	var max_slice_ms := 0.0
+	var max_phase := "clear"
 	var frames := 0
 	visible = false
 	var slice_start := Time.get_ticks_usec()
 	_clear_previous_dungeon()
 	_ensure_void_background(map)
-	max_slice_ms = maxf(max_slice_ms, float(Time.get_ticks_usec() - slice_start) / 1000.0)
+	var phase_ms := float(Time.get_ticks_usec() - slice_start) / 1000.0
+	if phase_ms > max_slice_ms:
+		max_slice_ms = phase_ms
+		max_phase = "clear"
 	await get_tree().process_frame
 	frames += 1
 
 	slice_start = Time.get_ticks_usec()
 	var wall_dist := _compute_wall_distances(map)
-	max_slice_ms = maxf(max_slice_ms, float(Time.get_ticks_usec() - slice_start) / 1000.0)
+	phase_ms = float(Time.get_ticks_usec() - slice_start) / 1000.0
+	if phase_ms > max_slice_ms:
+		max_slice_ms = phase_ms
+		max_phase = "wall_distance"
 	await get_tree().process_frame
 	frames += 1
 	var fill_profile := await _fill_floor_and_walls_async(map, wall_dist, row_batch_size)
-	max_slice_ms = maxf(max_slice_ms, float(fill_profile.get("max_slice_ms", 0.0)))
+	if float(fill_profile.get("max_slice_ms", 0.0)) > max_slice_ms:
+		max_slice_ms = float(fill_profile.get("max_slice_ms", 0.0))
+		max_phase = "tile_fill"
 	frames += int(fill_profile.get("frames", 0))
 
 	var occupied: Dictionary = {}
-	for phase in [
+	var phase_names := ["pillars", "dead_end_fence", "wall_flourishes", "cages", "storage", "floor_decals"]
+	var phases := [
 		func(): return _place_doorway_pillars(map, occupied),
 		func(): return _place_dead_end_pillar_fence(map, wall_dist, occupied),
 		func(): return _place_random_wall_flourishes(map, occupied),
 		func(): return _place_rare_cages(map, occupied),
 		func(): return _place_storage_clusters(map),
 		func(): return _place_floor_decals(map),
-	]:
+	]
+	for phase_index in phases.size():
 		slice_start = Time.get_ticks_usec()
-		phase.call()
-		max_slice_ms = maxf(max_slice_ms, float(Time.get_ticks_usec() - slice_start) / 1000.0)
+		phases[phase_index].call()
+		phase_ms = float(Time.get_ticks_usec() - slice_start) / 1000.0
+		if phase_ms > max_slice_ms:
+			max_slice_ms = phase_ms
+			max_phase = phase_names[phase_index]
 		await get_tree().process_frame
 		frames += 1
 
 	var sprite_positions: Array[Vector2] = []
 	slice_start = Time.get_ticks_usec()
 	_place_regular_torches(map, occupied, sprite_positions)
-	max_slice_ms = maxf(max_slice_ms, float(Time.get_ticks_usec() - slice_start) / 1000.0)
+	phase_ms = float(Time.get_ticks_usec() - slice_start) / 1000.0
+	if phase_ms > max_slice_ms:
+		max_slice_ms = phase_ms
+		max_phase = "torches"
 	await get_tree().process_frame
 	frames += 1
 	slice_start = Time.get_ticks_usec()
 	_scatter_crystal_decorations(map, sprite_positions)
-	max_slice_ms = maxf(max_slice_ms, float(Time.get_ticks_usec() - slice_start) / 1000.0)
+	phase_ms = float(Time.get_ticks_usec() - slice_start) / 1000.0
+	if phase_ms > max_slice_ms:
+		max_slice_ms = phase_ms
+		max_phase = "crystals"
 	visible = true
 	return {
 		"total_ms": float(Time.get_ticks_usec() - total_start) / 1000.0,
 		"max_slice_ms": max_slice_ms,
+		"max_phase": max_phase,
 		"frames": frames,
 	}
 
@@ -687,28 +708,28 @@ func _can_place_wall_decoration(pos: Vector2i, variant: Dictionary, map: Dungeon
 ## 床に面した壁マスに、旗/アーチ門を低頻度でランダムに混ぜる(柱が置かれた
 ## マスは既にoccupiedにあるため自動的に避けられる)。
 func _place_random_wall_flourishes(map: DungeonMap, occupied: Dictionary) -> int:
-	var min_c := map.get_min_coords()
-	var max_c := map.get_max_coords()
 	var count := 0
-	for y in range(min_c.y, max_c.y + 1):
-		for x in range(min_c.x, max_c.x + 1):
-			var pos := Vector2i(x, y)
-			if map.is_floor(pos) or occupied.has(pos):
-				continue
-			if not _is_floor_adjacent_wall(map, pos):
-				continue
-			if randf() >= wall_decoration_chance:
-				continue
-			var variant: Dictionary = wall_decoration_variants[randi() % wall_decoration_variants.size()]
-			if not _can_place_wall_decoration(pos, variant, map, occupied):
-				continue
-			_tile_map_layer.set_cell(pos, 0, variant["base"])
-			occupied[pos] = variant["base"]
-			if variant.has("top"):
-				var top_pos := pos + Vector2i(0, -1)
-				_tile_map_layer.set_cell(top_pos, 0, variant["top"])
-				occupied[top_pos] = variant["base"]
-			count += 1
+	# 全MAP矩形を走査せず、床の4近傍に実在する壁だけを候補化する。
+	var candidates: Dictionary = {}
+	for floor_cell in map.get_floor_cells():
+		for offset in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			var wall_cell: Vector2i = floor_cell + offset
+			if map.is_in_bounds(wall_cell) and not map.is_floor(wall_cell):
+				candidates[wall_cell] = true
+	for candidate in candidates.keys():
+		var pos: Vector2i = candidate
+		if occupied.has(pos) or randf() >= wall_decoration_chance:
+			continue
+		var variant: Dictionary = wall_decoration_variants[randi() % wall_decoration_variants.size()]
+		if not _can_place_wall_decoration(pos, variant, map, occupied):
+			continue
+		_tile_map_layer.set_cell(pos, 0, variant["base"])
+		occupied[pos] = variant["base"]
+		if variant.has("top"):
+			var top_pos := pos + Vector2i(0, -1)
+			_tile_map_layer.set_cell(top_pos, 0, variant["top"])
+			occupied[top_pos] = variant["base"]
+		count += 1
 	return count
 
 ## 檻(格子)は「壁の一部として時々挟み込む」程度に留めるため、
@@ -716,25 +737,29 @@ func _place_random_wall_flourishes(map: DungeonMap, occupied: Dictionary) -> int
 ## - 出入り口の柱付近(2マス以内)は避ける(目立ちすぎるのを防ぐ)
 ## - 頻度は旗/アーチ門よりさらに低くする(cage_chance)
 func _place_rare_cages(map: DungeonMap, occupied: Dictionary) -> int:
-	var min_c := map.get_min_coords()
-	var max_c := map.get_max_coords()
 	var count := 0
-	for y in range(min_c.y, max_c.y + 1):
-		for x in range(min_c.x, max_c.x + 1):
-			var pos := Vector2i(x, y)
-			if map.is_floor(pos) or occupied.has(pos):
-				continue
-			if not _is_floor_adjacent_wall(map, pos):
-				continue
-			if not _is_room_boundary_wall(pos, map):
-				continue
-			if _is_near_any_pillar(pos, map, 2):
-				continue
-			if randf() >= cage_chance:
-				continue
-			_tile_map_layer.set_cell(pos, 0, cage_atlas_coords)
-			occupied[pos] = cage_atlas_coords
-			count += 1
+	# Room外周だけを直接列挙する。旧実装のMAP全セル×全Room判定を避ける。
+	var candidates: Dictionary = {}
+	for room in map.rooms:
+		var left := room.position.x - 1
+		var right := room.position.x + room.size.x
+		var top := room.position.y - 1
+		var bottom := room.position.y + room.size.y
+		for y in range(top, bottom + 1):
+			candidates[Vector2i(left, y)] = true
+			candidates[Vector2i(right, y)] = true
+		for x in range(left, right + 1):
+			candidates[Vector2i(x, top)] = true
+			candidates[Vector2i(x, bottom)] = true
+	for candidate in candidates.keys():
+		var pos: Vector2i = candidate
+		if map.is_floor(pos) or occupied.has(pos) or not _is_floor_adjacent_wall(map, pos):
+			continue
+		if _is_near_any_pillar(pos, map, 2) or randf() >= cage_chance:
+			continue
+		_tile_map_layer.set_cell(pos, 0, cage_atlas_coords)
+		occupied[pos] = cage_atlas_coords
+		count += 1
 	return count
 
 ## posがいずれかの部屋の直近の外周(壁の厚み1マス分)に該当するか。
@@ -890,13 +915,9 @@ func _scatter_crystal_decorations(map: DungeonMap, placed: Array[Vector2]) -> in
 		return 0
 
 	var candidate_cells: Array[Vector2i] = []
-	var min_c := map.get_min_coords()
-	var max_c := map.get_max_coords()
-	for y in range(min_c.y, max_c.y + 1):
-		for x in range(min_c.x, max_c.x + 1):
-			var pos := Vector2i(x, y)
-			if map.is_wall_adjacent_floor(pos):
-				candidate_cells.append(pos)
+	for pos in map.get_floor_cells():
+		if map.is_wall_adjacent_floor(pos):
+			candidate_cells.append(pos)
 
 	return _spawn_flickering_sprites(_wall_deco_frames, wall_deco_count, candidate_cells, map, placed, 1.0)
 
