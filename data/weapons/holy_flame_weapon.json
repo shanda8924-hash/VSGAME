@@ -1,0 +1,10 @@
+{
+  "id": "holy_flame_weapon",
+  "display_name": "聖炎の剣",
+  "description": "炎+光の合成武器。発射地点から着弾点まで貫通ビームを描く。",
+  "base_damage": 26.0,
+  "attack_interval": 1.1,
+  "attack_range": 210.0,
+  "required_fragment_ids": ["fire", "light"],
+  "vfx_theme_id": "holy_flame"
+}

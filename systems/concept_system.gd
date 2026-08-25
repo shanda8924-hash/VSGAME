@@ -1,0 +1,460 @@
+extends Node
+class_name ConceptSystem
+
+signal inventory_changed()
+signal board_changed()
+signal skill_triggered(chain_index: int, skill_id: String, generation_depth: int)
+signal completed_skill_changed(skill_id: String, level: int)
+signal completed_skill_triggered(skill_id: String, level: int)
+
+const CONFIG_PATH := "res://data/balance/concept_system.json"
+const COMPLETED_SKILLS_PATH := "res://data/skills/completed_skills.json"
+const SLOT_TYPES := ["trigger", "skill", "modifier"]
+const MAX_COMPLETED_SKILLS := 6
+
+@export var combo_system_path: NodePath
+
+@onready var combo_system: ComboSystem = get_node(combo_system_path)
+
+var acquired_ids: Array[String] = []
+var chains: Array[Dictionary] = [
+	{"trigger": "", "skill": "", "modifier": ""},
+	{"trigger": "", "skill": "", "modifier": ""},
+]
+var _config: Dictionary = {}
+var _completed_skill_definitions: Dictionary = {}
+var _completed_skill_order: Array[String] = []
+var completed_skill_levels: Dictionary = {}
+var _active: bool = false
+var _direct_hit_counts: Dictionary = {}
+var _completed_hit_counts: Dictionary = {}
+var _completed_charge_counts: Dictionary = {}
+var _processed_trigger_keys: Dictionary = {}
+var _runtime_epoch: int = 0
+
+
+func _ready() -> void:
+	_config = _load_config()
+	_load_completed_skills()
+	EventBus.enemy_damage_confirmed.connect(_on_enemy_damage_confirmed)
+	combo_system.combo_advanced.connect(_on_combo_advanced)
+	EventBus.run_started.connect(reset_runtime)
+	EventBus.run_ended.connect(func(_seconds, _kills): reset_runtime())
+
+
+func set_active(active: bool) -> void:
+	_active = active
+	if not active:
+		_direct_hit_counts.clear()
+
+
+func reset_runtime() -> void:
+	_runtime_epoch += 1
+	acquired_ids.clear()
+	chains = [
+		{"trigger": "", "skill": "", "modifier": ""},
+		{"trigger": "", "skill": "", "modifier": ""},
+	]
+	_direct_hit_counts.clear()
+	_completed_hit_counts.clear()
+	_completed_charge_counts.clear()
+	completed_skill_levels.clear()
+	_processed_trigger_keys.clear()
+	inventory_changed.emit()
+	board_changed.emit()
+
+
+func acquire_concept(concept_id: String) -> bool:
+	if concept_id in acquired_ids or DataLoader.get_concept(concept_id) == null:
+		return false
+	acquired_ids.append(concept_id)
+	inventory_changed.emit()
+	return true
+
+
+func equip_concept(chain_index: int, slot_type: String, concept_id: String) -> bool:
+	if chain_index < 0 or chain_index >= chains.size() or slot_type not in SLOT_TYPES or concept_id not in acquired_ids:
+		return false
+	var data := DataLoader.get_concept(concept_id)
+	if data == null or data.concept_type != slot_type:
+		return false
+	chains[chain_index][slot_type] = concept_id
+	board_changed.emit()
+	return true
+
+
+func unequip_concept(chain_index: int, slot_type: String) -> void:
+	if chain_index < 0 or chain_index >= chains.size() or slot_type not in SLOT_TYPES:
+		return
+	chains[chain_index][slot_type] = ""
+	board_changed.emit()
+
+
+func get_owned_concepts(concept_type: String = "") -> Array[ConceptData]:
+	var result: Array[ConceptData] = []
+	for concept_id in acquired_ids:
+		var data := DataLoader.get_concept(concept_id)
+		if data and (concept_type == "" or data.concept_type == concept_type):
+			result.append(data)
+	return result
+
+
+func get_unowned_concepts() -> Array[ConceptData]:
+	var result: Array[ConceptData] = []
+	for data in DataLoader.get_all_concepts():
+		if data.id not in acquired_ids:
+			result.append(data)
+	return result
+
+
+func get_chain(chain_index: int) -> Dictionary:
+	return chains[chain_index].duplicate(true) if chain_index >= 0 and chain_index < chains.size() else {}
+
+
+func get_balance_value(key: String, fallback: Variant) -> Variant:
+	return _config.get(key, fallback)
+
+
+func get_completed_skill_definitions() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for skill_id in _completed_skill_order:
+		result.append((_completed_skill_definitions.get(skill_id, {}) as Dictionary).duplicate(true))
+	return result
+
+
+func get_completed_skill_definition(skill_id: String) -> Dictionary:
+	return (_completed_skill_definitions.get(skill_id, {}) as Dictionary).duplicate(true)
+
+
+func get_completed_skill_level(skill_id: String) -> int:
+	return int(completed_skill_levels.get(skill_id, 0))
+
+
+func get_completed_skill_count() -> int:
+	return completed_skill_levels.size()
+
+
+func acquire_completed_skill(skill_id: String) -> int:
+	var definition: Dictionary = _completed_skill_definitions.get(skill_id, {})
+	if definition.is_empty():
+		return 0
+	var current := get_completed_skill_level(skill_id)
+	var maximum := maxi(int(definition.get("max_level", 3)), 1)
+	if current <= 0 and completed_skill_levels.size() >= MAX_COMPLETED_SKILLS:
+		return 0
+	if current >= maximum:
+		return current
+	var next_level := current + 1
+	completed_skill_levels[skill_id] = next_level
+	inventory_changed.emit()
+	completed_skill_changed.emit(skill_id, next_level)
+	return next_level
+
+
+func is_completed_skill_available_for_build(definition: Dictionary, active_element_ids: Array) -> bool:
+	var active_fragments: Array[String] = []
+	for element_id in active_element_ids:
+		active_fragments.append(String(element_id).trim_prefix("element_"))
+	for required in definition.get("required_elements", []):
+		if String(required) not in active_fragments:
+			return false
+	return true
+
+
+func get_completed_skill_display_name(skill_id: String) -> String:
+	var definition := get_completed_skill_definition(skill_id)
+	return UiText.get_text(String(definition.get("name_key", skill_id)), skill_id)
+
+
+func get_completed_skill_description(skill_id: String, level: int) -> String:
+	var definition := get_completed_skill_definition(skill_id)
+	var keys: Array = definition.get("description_keys", [])
+	if keys.is_empty():
+		return ""
+	var key := String(keys[clampi(level - 1, 0, keys.size() - 1)])
+	return UiText.get_text(key, key)
+
+
+func _on_enemy_damage_confirmed(target: Node, _amount: float, is_critical: bool, metadata: Dictionary) -> void:
+	if not _active or GameManager.run_state != GameManager.RunState.PLAYING:
+		return
+	var source_kind := String(metadata.get("source_kind", ""))
+	if source_kind in ["non_player_hit", "debug_room_clear"]:
+		return
+	var direct_hit_count := 0
+	if bool(metadata.get("is_direct", false)) and not bool(metadata.get("is_triggered", false)) and is_instance_valid(target):
+		var target_id := target.get_instance_id()
+		direct_hit_count = int(_direct_hit_counts.get(target_id, 0)) + 1
+		_direct_hit_counts[target_id] = direct_hit_count
+	if bool(metadata.get("killed", false)) and is_instance_valid(target):
+		_direct_hit_counts.erase(target.get_instance_id())
+	for chain_index in chains.size():
+		var trigger := _concept_for_slot(chain_index, "trigger")
+		if trigger == null:
+			continue
+		var kind := String(trigger.params.get("trigger_kind", ""))
+		var should_trigger := false
+		match kind:
+			"on_critical": should_trigger = is_critical and bool(metadata.get("is_direct", false)) and not bool(metadata.get("is_triggered", false))
+			"fifth_hit": should_trigger = direct_hit_count > 0 and direct_hit_count % maxi(int(_config.get("fifth_hit_count", 5)), 1) == 0
+			"on_kill": should_trigger = bool(metadata.get("killed", false))
+		if should_trigger:
+			_try_trigger(chain_index, target, metadata)
+	_process_completed_skills_on_hit(target as Node2D, is_critical, direct_hit_count, metadata)
+
+
+func _on_combo_advanced(value: int, target: Node, metadata: Dictionary) -> void:
+	if not _active:
+		return
+	var interval := maxi(int(_config.get("combo_trigger_interval", 20)), 1)
+	if value % interval != 0:
+		return
+	for chain_index in chains.size():
+		var trigger := _concept_for_slot(chain_index, "trigger")
+		if trigger and String(trigger.params.get("trigger_kind", "")) == "combo":
+			_try_trigger(chain_index, target, metadata)
+
+
+func _try_trigger(chain_index: int, target: Node, parent_metadata: Dictionary) -> void:
+	var skill := _concept_for_slot(chain_index, "skill")
+	if skill == null:
+		return
+	var depth := int(parent_metadata.get("generation_depth", 0))
+	if depth >= maxi(int(_config.get("max_trigger_depth", 2)), 0):
+		return
+	var lineage: Array = parent_metadata.get("triggered_chain_indices", [])
+	if chain_index in lineage:
+		return
+	var guard_key := "%s:%d" % [str(parent_metadata.get("event_id", 0)), chain_index]
+	if _processed_trigger_keys.has(guard_key):
+		return
+	_processed_trigger_keys[guard_key] = true
+	if _processed_trigger_keys.size() > 2048:
+		_processed_trigger_keys.clear()
+	var position: Vector2 = parent_metadata.get("impact_position", Vector2.ZERO)
+	if target is Node2D and is_instance_valid(target):
+		position = (target as Node2D).global_position
+	var skill_meta := CombatEventMeta.create_triggered(parent_metadata, "concept:%s" % skill.id, skill.element_tags, chain_index, true)
+	var modifier := _concept_for_slot(chain_index, "modifier")
+	_execute_skill(chain_index, skill, modifier, target as Node2D, position, skill_meta, false)
+	skill_triggered.emit(chain_index, skill.id, int(skill_meta.get("generation_depth", 0)))
+
+
+func _execute_skill(chain_index: int, skill: ConceptData, modifier: ConceptData, preferred_target: Node2D, position: Vector2, skill_meta: Dictionary, is_echo: bool, skill_level: int = 1) -> void:
+	var target := _resolve_target(preferred_target, position)
+	var center := target.global_position if target else position
+	var radius := float(skill.params.get("radius", _config.get("skill_base_radius", 82.0)))
+	var modifier_kind := String(modifier.params.get("modifier_kind", "")) if modifier else ""
+	if modifier_kind == "area":
+		radius *= float(_config.get("area_multiplier", 1.55))
+	radius *= 1.0 + 0.14 * float(maxi(skill_level - 1, 0))
+	_apply_skill_at(skill, center, radius, skill_meta, skill_level)
+	if is_echo:
+		return
+	match modifier_kind:
+		"chain":
+			var excluded := {target.get_instance_id(): true} if target else {}
+			var chain_count := int(_config.get("chain_target_count", 2)) + maxi(skill_level - 1, 0)
+			for chained_target in _nearest_enemies(center, float(_config.get("chain_range", 260.0)), chain_count, excluded):
+				_apply_skill_at(skill, chained_target.global_position, radius, CombatEventMeta.fork_event(skill_meta, "concept:%s:chain" % skill.id), skill_level)
+		"echo":
+			_schedule_repeat(chain_index, skill, target, center, skill_meta, float(_config.get("echo_delay", 0.22)), "echo", skill_level)
+		"focus":
+			_schedule_repeat(chain_index, skill, target, center, skill_meta, float(_config.get("focus_delay", 0.18)), "focus", skill_level)
+
+
+func _schedule_repeat(chain_index: int, skill: ConceptData, target: Node2D, position: Vector2, metadata: Dictionary, delay: float, repeat_kind: String, skill_level: int = 1) -> void:
+	var epoch := _runtime_epoch
+	await get_tree().create_timer(maxf(delay, 0.02), false).timeout
+	if epoch != _runtime_epoch or not _active:
+		return
+	if repeat_kind == "focus":
+		if not is_instance_valid(target):
+			return
+		var health := target.get_node_or_null("HealthComponent") as HealthComponent
+		if health == null or health.current_hp <= 0.0:
+			return
+	_execute_skill(chain_index, skill, null, target, position, CombatEventMeta.fork_event(metadata, "concept:%s:repeat" % skill.id), true, skill_level)
+
+
+func _apply_skill_at(skill: ConceptData, center: Vector2, radius: float, skill_meta: Dictionary, skill_level: int = 1) -> void:
+	_play_skill_vfx(skill, center, radius)
+	var damage := float(_config.get("reference_damage", 14.0)) * float(skill.params.get("damage_multiplier", 1.0)) * (1.0 + 0.28 * float(maxi(skill_level - 1, 0)))
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if not is_instance_valid(enemy) or not (enemy is Node2D) or (enemy as Node2D).global_position.distance_to(center) > radius:
+			continue
+		var health := enemy.get_node_or_null("HealthComponent") as HealthComponent
+		if health == null or health.current_hp <= 0.0:
+			continue
+		var hit_meta := CombatEventMeta.fork_event(skill_meta)
+		var actual := health.apply_secondary_damage(damage, hit_meta)
+		if actual <= 0.0:
+			continue
+		var element_id := "element_%s" % String(skill.element_tags[0]) if not skill.element_tags.is_empty() else "concept"
+		EventBus.element_damage_dealt.emit(actual, (enemy as Node2D).global_position, element_id, 1, int(hit_meta.get("generation_depth", 0)))
+		if String(skill.params.get("skill_kind", "")) == "ice_nova":
+			var status := enemy.get_node_or_null("StatusEffectComponent") as StatusEffectComponent
+			if status:
+				status.apply_effect("slow", float(skill.params.get("slow_duration", 1.1)), float(skill.params.get("slow_multiplier", 0.58)))
+
+
+func _play_skill_vfx(skill: ConceptData, center: Vector2, radius: float) -> void:
+	var kind := String(skill.params.get("skill_kind", ""))
+	var colors := {
+		"thunder_strike": Color("#a56dff"),
+		"fire_burst": Color("#ff6b2f"),
+		"ice_nova": Color("#71dcff"),
+		"wind_blade": Color("#8ff5c0"),
+		"light_burst": Color("#fff1a8"),
+		"dark_rift": Color("#b56cff"),
+	}
+	ConceptSkillVFX.spawn(GameManager.get_runtime_world(self), center, kind, radius * 0.72, colors.get(kind, Color.WHITE))
+
+
+func _concept_for_slot(chain_index: int, slot_type: String) -> ConceptData:
+	if chain_index < 0 or chain_index >= chains.size():
+		return null
+	var concept_id := String(chains[chain_index].get(slot_type, ""))
+	return DataLoader.get_concept(concept_id) if concept_id != "" else null
+
+
+func _resolve_target(preferred: Node2D, fallback_position: Vector2) -> Node2D:
+	if is_instance_valid(preferred):
+		var health := preferred.get_node_or_null("HealthComponent") as HealthComponent
+		if health and health.current_hp > 0.0:
+			return preferred
+	var nearest := _nearest_enemies(fallback_position, INF, 1, {})
+	return nearest[0] if not nearest.is_empty() else null
+
+
+func _nearest_enemies(center: Vector2, max_range: float, count: int, excluded: Dictionary) -> Array[Node2D]:
+	var candidates: Array[Node2D] = []
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if not is_instance_valid(enemy) or not (enemy is Node2D) or excluded.has(enemy.get_instance_id()):
+			continue
+		var health := enemy.get_node_or_null("HealthComponent") as HealthComponent
+		if health and health.current_hp > 0.0 and (enemy as Node2D).global_position.distance_to(center) <= max_range:
+			candidates.append(enemy as Node2D)
+	candidates.sort_custom(func(a: Node2D, b: Node2D): return a.global_position.distance_squared_to(center) < b.global_position.distance_squared_to(center))
+	return candidates.slice(0, mini(count, candidates.size()))
+
+
+func _process_completed_skills_on_hit(target: Node2D, is_critical: bool, _direct_hit_count: int, metadata: Dictionary) -> void:
+	if completed_skill_levels.is_empty() or not bool(metadata.get("is_direct", false)) or bool(metadata.get("is_triggered", false)):
+		return
+	var element_tags: Array = metadata.get("element_tags", [])
+	for skill_id_variant in completed_skill_levels.keys():
+		var skill_id := String(skill_id_variant)
+		var definition: Dictionary = _completed_skill_definitions.get(skill_id, {})
+		var level := get_completed_skill_level(skill_id)
+		if definition.is_empty() or level <= 0 or not _completed_trigger_matches(definition, target, is_critical, element_tags, metadata, level):
+			continue
+		_trigger_completed_skill(skill_id, definition, level, target, metadata)
+
+
+func _completed_trigger_matches(definition: Dictionary, target: Node2D, is_critical: bool, element_tags: Array, metadata: Dictionary, level: int) -> bool:
+	var trigger_element := String(definition.get("trigger_element", ""))
+	var normalized_tags: Array[String] = []
+	for tag in element_tags:
+		normalized_tags.append(String(tag).trim_prefix("element_"))
+	if trigger_element != "" and trigger_element not in normalized_tags:
+		return false
+	if not _target_condition_matches(String(definition.get("target_condition", "")), target):
+		return false
+	var trigger_kind := String(definition.get("trigger_kind", "on_hit"))
+	match trigger_kind:
+		"on_hit":
+			return true
+		"on_critical":
+			return is_critical
+		"on_kill":
+			return bool(metadata.get("killed", false))
+		"charge_critical":
+			if not is_critical:
+				return false
+			var charge_id := String(definition.get("id", ""))
+			var charge := int(_completed_charge_counts.get(charge_id, 0)) + 1
+			var threshold := _completed_trigger_count(definition, level)
+			if charge < threshold:
+				_completed_charge_counts[charge_id] = charge
+				return false
+			_completed_charge_counts[charge_id] = 0
+			return true
+		"nth_hit":
+			if target == null or not is_instance_valid(target):
+				return false
+			var count_key := "%s:%d" % [String(definition.get("id", "")), target.get_instance_id()]
+			var count := int(_completed_hit_counts.get(count_key, 0)) + 1
+			var threshold := _completed_trigger_count(definition, level)
+			if count < threshold:
+				_completed_hit_counts[count_key] = count
+				return false
+			_completed_hit_counts[count_key] = 0
+			return true
+	return false
+
+
+func _completed_trigger_count(definition: Dictionary, level: int) -> int:
+	var counts: Array = definition.get("trigger_count_by_level", [5])
+	return maxi(int(counts[clampi(level - 1, 0, counts.size() - 1)]), 1)
+
+
+func _target_condition_matches(condition: String, target: Node2D) -> bool:
+	if condition == "":
+		return true
+	if target == null or not is_instance_valid(target):
+		return false
+	if condition == "burning":
+		var element_system := get_tree().get_first_node_in_group("element_combat_system") as ElementCombatSystem
+		return element_system != null and element_system.is_target_burning(target)
+	if condition == "cold":
+		var status := target.get_node_or_null("StatusEffectComponent") as StatusEffectComponent
+		return status != null and (status.has_effect("slow") or status.has_effect("stun"))
+	return true
+
+
+func _trigger_completed_skill(skill_id: String, definition: Dictionary, level: int, target: Node2D, parent_metadata: Dictionary) -> void:
+	var skill := DataLoader.get_concept(String(definition.get("skill_id", "")))
+	if skill == null:
+		return
+	var modifier := DataLoader.get_concept(String(definition.get("modifier_id", "")))
+	var completed_index := 100 + _completed_skill_order.find(skill_id)
+	var position: Vector2 = target.global_position if is_instance_valid(target) else parent_metadata.get("impact_position", Vector2.ZERO)
+	var skill_meta := CombatEventMeta.create_triggered(parent_metadata, "completed_skill:%s" % skill_id, skill.element_tags, completed_index, true)
+	if bool(definition.get("apply_freeze", false)) and is_instance_valid(target):
+		var freeze_status := target.get_node_or_null("StatusEffectComponent") as StatusEffectComponent
+		if freeze_status:
+			freeze_status.apply_effect("stun", 0.45 + 0.2 * level, 0.0)
+	if bool(definition.get("consume_cold", false)) and is_instance_valid(target):
+		var cold_status := target.get_node_or_null("StatusEffectComponent") as StatusEffectComponent
+		if cold_status:
+			cold_status.remove_effect("slow")
+			cold_status.remove_effect("stun")
+	_execute_skill(completed_index, skill, modifier, target, position, skill_meta, false, level)
+	completed_skill_triggered.emit(skill_id, level)
+	skill_triggered.emit(completed_index, skill.id, int(skill_meta.get("generation_depth", 0)))
+
+
+func _load_completed_skills() -> void:
+	_completed_skill_definitions.clear()
+	_completed_skill_order.clear()
+	var file := FileAccess.open(COMPLETED_SKILLS_PATH, FileAccess.READ)
+	var parsed = JSON.parse_string(file.get_as_text()) if file else null
+	if typeof(parsed) != TYPE_ARRAY:
+		push_warning("ConceptSystem: completed skill data could not be loaded")
+		return
+	for value in parsed:
+		if typeof(value) != TYPE_DICTIONARY:
+			continue
+		var definition: Dictionary = value
+		var skill_id := String(definition.get("id", ""))
+		if skill_id == "":
+			continue
+		_completed_skill_definitions[skill_id] = definition.duplicate(true)
+		_completed_skill_order.append(skill_id)
+
+
+func _load_config() -> Dictionary:
+	var file := FileAccess.open(CONFIG_PATH, FileAccess.READ)
+	var parsed = JSON.parse_string(file.get_as_text()) if file else null
+	return parsed if typeof(parsed) == TYPE_DICTIONARY else {}

@@ -1,0 +1,10 @@
+{
+  "id": "greatsword_skeleton",
+  "display_name": "大剣スケルトン",
+  "sprite_folder": "enemy/Greatsword Skeleton",
+  "max_hp": 154.0,
+  "move_speed": 55.0,
+  "contact_damage": 14.0,
+  "exp_value": 3,
+  "min_elapsed_seconds": 180.0
+}

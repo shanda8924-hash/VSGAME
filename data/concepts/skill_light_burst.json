@@ -1,0 +1,8 @@
+{
+  "id": "skill_light_burst",
+  "display_name": "光輪",
+  "concept_type": "skill",
+  "description": "対象周辺へ高密度の光を放つ",
+  "element_tags": ["light"],
+  "params": {"skill_kind": "light_burst", "damage_multiplier": 1.18, "radius": 88.0}
+}

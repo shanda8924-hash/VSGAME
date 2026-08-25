@@ -1,0 +1,321 @@
+{
+  "generator": "built-in image_gen + chroma-key removal + tools/build_fusion_pixel_vfx.py",
+  "frame_size": [
+    64,
+    64
+  ],
+  "frames": 6,
+  "fusions": {
+    "frostfire": {
+      "source": "artifacts/fusion_vfx_pixel_sources/frostfire_transparent.png",
+      "source_sha256": "44b1f8af61f0126a58a0ac8e2bba8667320560b8ba3e95cb6442501605b47084",
+      "outputs": {
+        "attack": {
+          "path": "assets/vfx/fusions/frostfire/fx_fusion_frostfire_attack_6f.png",
+          "sha256": "063e2adb8e694e312fb4e4a89c3cba785a4d64408a4410b360fba0a898a2a95e",
+          "opaque_pixels": 1588
+        },
+        "trail": {
+          "path": "assets/vfx/fusions/frostfire/fx_fusion_frostfire_trail_6f.png",
+          "sha256": "4e3d1d3c40ef51f01675b2baaf93e0ada35afda674cb707e47b2789ffd5760dc",
+          "opaque_pixels": 783
+        },
+        "hit": {
+          "path": "assets/vfx/fusions/frostfire/fx_fusion_frostfire_hit_6f.png",
+          "sha256": "8f3fbeba1ac61c4e38a91deed8eddfad260ec8625e0affd1988454d4446d367c",
+          "opaque_pixels": 3893
+        },
+        "burst": {
+          "path": "assets/vfx/fusions/frostfire/fx_fusion_frostfire_burst_6f.png",
+          "sha256": "f1e6259230bae89541cdef78ad7ed492320cf04555514515fe6edd592728cb16",
+          "opaque_pixels": 1537
+        },
+        "intro": {
+          "path": "assets/vfx/fusions/frostfire/fx_fusion_frostfire_intro_6f.png",
+          "sha256": "6b3a2a085e14eabdae1110a20f6268752e1a0f3b9a89ebd91d49202eab63848d",
+          "opaque_pixels": 2818
+        }
+      }
+    },
+    "plasma": {
+      "source": "artifacts/fusion_vfx_pixel_sources/plasma_transparent.png",
+      "source_sha256": "28aeb44dd6009ecdd0ec095de32bf6e05ac55115cd459f00b8c0ba4787811a0b",
+      "outputs": {
+        "attack": {
+          "path": "assets/vfx/fusions/plasma/fx_fusion_plasma_attack_6f.png",
+          "sha256": "55e2702b56a7b57b1ec93a755c9e4b1b10c7de8e050f02f3178ceef78409f4ab",
+          "opaque_pixels": 1101
+        },
+        "trail": {
+          "path": "assets/vfx/fusions/plasma/fx_fusion_plasma_trail_6f.png",
+          "sha256": "22a0b49caa8c125b5f01f0fcf55b0ca17c2e33c966f361b7fe748a588a7371b3",
+          "opaque_pixels": 823
+        },
+        "hit": {
+          "path": "assets/vfx/fusions/plasma/fx_fusion_plasma_hit_6f.png",
+          "sha256": "e0ecc371b25920f6dc18167dcd9ea0bfac4648b833c6509c6376ba47b514ae43",
+          "opaque_pixels": 2389
+        },
+        "burst": {
+          "path": "assets/vfx/fusions/plasma/fx_fusion_plasma_burst_6f.png",
+          "sha256": "57cdece31f23c92c8a8b941218d620816d1c597a82de6c4813d431f05eef7e27",
+          "opaque_pixels": 3573
+        },
+        "intro": {
+          "path": "assets/vfx/fusions/plasma/fx_fusion_plasma_intro_6f.png",
+          "sha256": "91ecf4d7b38e3bdf13dba52db62a2c54bcd21c55026a49d1aa3463aca4fc653b",
+          "opaque_pixels": 2359
+        }
+      }
+    },
+    "solar": {
+      "source": "artifacts/fusion_vfx_pixel_sources/solar_transparent.png",
+      "source_sha256": "97df10b84ddeaecdafc20b509db68d1444abb348c54b481a24be12c4433783ae",
+      "outputs": {
+        "attack": {
+          "path": "assets/vfx/fusions/solar/fx_fusion_solar_attack_6f.png",
+          "sha256": "dbc4fa8ad71585773af83fdff72bc0f03f885476f7d49d8c1140feb55f6513e7",
+          "opaque_pixels": 1283
+        },
+        "trail": {
+          "path": "assets/vfx/fusions/solar/fx_fusion_solar_trail_6f.png",
+          "sha256": "985ac3f1c0ca4eab53b7a6ec95d9cb2957236bf0ece2c9e8896b58344da82b78",
+          "opaque_pixels": 584
+        },
+        "hit": {
+          "path": "assets/vfx/fusions/solar/fx_fusion_solar_hit_6f.png",
+          "sha256": "b7d1a9053a1f5dd49286ab1cb7a9ddf7f01b5fafe93793038b26811da5b95845",
+          "opaque_pixels": 4637
+        },
+        "burst": {
+          "path": "assets/vfx/fusions/solar/fx_fusion_solar_burst_6f.png",
+          "sha256": "3f5f5ddd24673d762a7e1a75ce7ed31a8a58620870031e2c1e2b0999588b439f",
+          "opaque_pixels": 2398
+        },
+        "intro": {
+          "path": "assets/vfx/fusions/solar/fx_fusion_solar_intro_6f.png",
+          "sha256": "40ba5cc852359adb01fc58d470bf68b37b992b310a5bc960e7964b41cde19ac5",
+          "opaque_pixels": 1154
+        }
+      }
+    },
+    "inferno": {
+      "source": "artifacts/fusion_vfx_pixel_sources/inferno_transparent.png",
+      "source_sha256": "21a66255e49cfd15a632b4b3ee0d3929028aa2cf58264ee2036aa18d114a4553",
+      "outputs": {
+        "attack": {
+          "path": "assets/vfx/fusions/inferno/fx_fusion_inferno_attack_6f.png",
+          "sha256": "53573a0c84b6ae0c0e3e39b217c18cd27cad8a66a30db0ad1660676e9c6406e5",
+          "opaque_pixels": 1926
+        },
+        "trail": {
+          "path": "assets/vfx/fusions/inferno/fx_fusion_inferno_trail_6f.png",
+          "sha256": "a294e2d6353a273fc3c10f9933a6138c75dc81123cb610574162e78e4f012a49",
+          "opaque_pixels": 1287
+        },
+        "hit": {
+          "path": "assets/vfx/fusions/inferno/fx_fusion_inferno_hit_6f.png",
+          "sha256": "742a9c7ddf0ae5ff63c6eebe9930be7ccd77251f1cd0fd37d6e626f7daa86436",
+          "opaque_pixels": 2779
+        },
+        "burst": {
+          "path": "assets/vfx/fusions/inferno/fx_fusion_inferno_burst_6f.png",
+          "sha256": "eb3a531f876d2c2c4bd78a5f78fb245b563be0fadca0c09ac38a00f7346a8601",
+          "opaque_pixels": 2431
+        },
+        "intro": {
+          "path": "assets/vfx/fusions/inferno/fx_fusion_inferno_intro_6f.png",
+          "sha256": "396d4faeb02ebe2e5dc847e98efa2b422f7827788436cc8101a10ddb1ec0a47c",
+          "opaque_pixels": 2109
+        }
+      }
+    },
+    "superconductor": {
+      "source": "artifacts/fusion_vfx_pixel_sources/superconductor_transparent.png",
+      "source_sha256": "b48293451fb33111c9eb0c8e871bb4501861c8a6ac34a856047939c05c87e2ea",
+      "outputs": {
+        "attack": {
+          "path": "assets/vfx/fusions/superconductor/fx_fusion_superconductor_attack_6f.png",
+          "sha256": "ef153a2df9d74bea5ecf980189ccde0d04e8db7dc70500423d41a5025bac135f",
+          "opaque_pixels": 1076
+        },
+        "trail": {
+          "path": "assets/vfx/fusions/superconductor/fx_fusion_superconductor_trail_6f.png",
+          "sha256": "85006a3eec9c694c5de98293e1b4d7a76bdeaa508799db6dc48b26475f4f0220",
+          "opaque_pixels": 1014
+        },
+        "hit": {
+          "path": "assets/vfx/fusions/superconductor/fx_fusion_superconductor_hit_6f.png",
+          "sha256": "b64bb7150c330d9d37e5011ded5baab90e8e167737311a792b4431109ff3f9e0",
+          "opaque_pixels": 3283
+        },
+        "burst": {
+          "path": "assets/vfx/fusions/superconductor/fx_fusion_superconductor_burst_6f.png",
+          "sha256": "fde54579a2d6de227f01fe141e5b550e7e2f4659797664f463e72efc8e9d6bc5",
+          "opaque_pixels": 2076
+        },
+        "intro": {
+          "path": "assets/vfx/fusions/superconductor/fx_fusion_superconductor_intro_6f.png",
+          "sha256": "5880025b5bc75d7e61e783f7c28a1df71fa57e143862760c090d2187e420da99",
+          "opaque_pixels": 2236
+        }
+      }
+    },
+    "aurora": {
+      "source": "artifacts/fusion_vfx_pixel_sources/aurora_transparent.png",
+      "source_sha256": "53b10e6225f8add97bb541e043588edbea6f3f7583d3e57ca1b5ccd0a0af6565",
+      "outputs": {
+        "attack": {
+          "path": "assets/vfx/fusions/aurora/fx_fusion_aurora_attack_6f.png",
+          "sha256": "a3c6ca88216f5171eb8ae2ea68d24f88b7433266a35053370450d14b94d42721",
+          "opaque_pixels": 1233
+        },
+        "trail": {
+          "path": "assets/vfx/fusions/aurora/fx_fusion_aurora_trail_6f.png",
+          "sha256": "7f6171e69eb52d1533fd261f80e2f98d80c80e22dc8fba06f0822cc627756952",
+          "opaque_pixels": 719
+        },
+        "hit": {
+          "path": "assets/vfx/fusions/aurora/fx_fusion_aurora_hit_6f.png",
+          "sha256": "ef70700afbf06090d6e761c931b38f60677d3012ecfcff3bccf74026d8f51592",
+          "opaque_pixels": 1818
+        },
+        "burst": {
+          "path": "assets/vfx/fusions/aurora/fx_fusion_aurora_burst_6f.png",
+          "sha256": "3bda779ca5c10d7f9a4129c5fce7c7462aef16b18743405d7592e0c94285e3b2",
+          "opaque_pixels": 1176
+        },
+        "intro": {
+          "path": "assets/vfx/fusions/aurora/fx_fusion_aurora_intro_6f.png",
+          "sha256": "4a17ed9e9d3199d5f5788708bc1ca584797321d0ff576d60b1559770fb46cbd8",
+          "opaque_pixels": 1985
+        }
+      }
+    },
+    "void_frost": {
+      "source": "artifacts/fusion_vfx_pixel_sources/void_frost_transparent.png",
+      "source_sha256": "16f3df008d26f139b9018f0eff0a1fa3c23006664776ebf6fc10ce5c75c08085",
+      "outputs": {
+        "attack": {
+          "path": "assets/vfx/fusions/void_frost/fx_fusion_void_frost_attack_6f.png",
+          "sha256": "63a1bb76a1ee873c53ffcef1b304a8c272dfdad355eaf897c91a6336459d3889",
+          "opaque_pixels": 2982
+        },
+        "trail": {
+          "path": "assets/vfx/fusions/void_frost/fx_fusion_void_frost_trail_6f.png",
+          "sha256": "b0a855c4ca30473164d34b75731e7c24f46ee7434b1c2c1a9aa0b39fd5a4b96c",
+          "opaque_pixels": 1791
+        },
+        "hit": {
+          "path": "assets/vfx/fusions/void_frost/fx_fusion_void_frost_hit_6f.png",
+          "sha256": "e7508abd536795e7339fddafd2ce14609cbe9802d9581ab8c3b64e327ed0bb62",
+          "opaque_pixels": 3694
+        },
+        "burst": {
+          "path": "assets/vfx/fusions/void_frost/fx_fusion_void_frost_burst_6f.png",
+          "sha256": "9f514989291a4768db30b92e2f46869261d3592267483bc63e3be85411ec0b9f",
+          "opaque_pixels": 2068
+        },
+        "intro": {
+          "path": "assets/vfx/fusions/void_frost/fx_fusion_void_frost_intro_6f.png",
+          "sha256": "0a123939fad0505b399a3ced12f48f8f7a783f1b6c798a64960db76e83acbc4e",
+          "opaque_pixels": 4442
+        }
+      }
+    },
+    "judgment": {
+      "source": "artifacts/fusion_vfx_pixel_sources/judgment_transparent.png",
+      "source_sha256": "311ccd7792e86be292b91754dcd0192c0ce7b8ce53643d4773ba42766530c130",
+      "outputs": {
+        "attack": {
+          "path": "assets/vfx/fusions/judgment/fx_fusion_judgment_attack_6f.png",
+          "sha256": "8f82bb1a1cc0b9e2b5b9b59ee957a9fc722070805273bd399994c2c4a533e137",
+          "opaque_pixels": 894
+        },
+        "trail": {
+          "path": "assets/vfx/fusions/judgment/fx_fusion_judgment_trail_6f.png",
+          "sha256": "ca7286dc494dd5603580fee35a81d8ee4477422d6387fe033168d562eee067e7",
+          "opaque_pixels": 562
+        },
+        "hit": {
+          "path": "assets/vfx/fusions/judgment/fx_fusion_judgment_hit_6f.png",
+          "sha256": "3cf56dc0771307e14ee9e2fcbb497c3e51d6b83388fc208651fe8f5a495de12b",
+          "opaque_pixels": 1804
+        },
+        "burst": {
+          "path": "assets/vfx/fusions/judgment/fx_fusion_judgment_burst_6f.png",
+          "sha256": "1ea0b0e191b68f70a22ccf2d66a533ea8f51f56a8c29177e4ed6ed01910340d7",
+          "opaque_pixels": 1664
+        },
+        "intro": {
+          "path": "assets/vfx/fusions/judgment/fx_fusion_judgment_intro_6f.png",
+          "sha256": "f7d6b77a603542c9e48f34603231c1d3e9449e1415e0a5f9476fb0e89a00f004",
+          "opaque_pixels": 920
+        }
+      }
+    },
+    "voidstorm": {
+      "source": "artifacts/fusion_vfx_pixel_sources/voidstorm_transparent.png",
+      "source_sha256": "97c44836e40838422efb557cf7e576c16b9c3d87150612fa8f80b344ccbc2af3",
+      "outputs": {
+        "attack": {
+          "path": "assets/vfx/fusions/voidstorm/fx_fusion_voidstorm_attack_6f.png",
+          "sha256": "84e325fa549059a48095db522b2d336f6d158b2f97f87e994368130795c634fe",
+          "opaque_pixels": 871
+        },
+        "trail": {
+          "path": "assets/vfx/fusions/voidstorm/fx_fusion_voidstorm_trail_6f.png",
+          "sha256": "20df411e68948c909a4ee3ceaa50742a1af00bd487f0063c8404cee70874dbf2",
+          "opaque_pixels": 742
+        },
+        "hit": {
+          "path": "assets/vfx/fusions/voidstorm/fx_fusion_voidstorm_hit_6f.png",
+          "sha256": "0d5694baa6ca4c7f328fcff0053bacf7a399ca943ec34d8d0e1acafae113fa54",
+          "opaque_pixels": 1002
+        },
+        "burst": {
+          "path": "assets/vfx/fusions/voidstorm/fx_fusion_voidstorm_burst_6f.png",
+          "sha256": "b6b999341993f9e39bad2e3bf5a777bdc812181364e2f73c46bf287992aec977",
+          "opaque_pixels": 2828
+        },
+        "intro": {
+          "path": "assets/vfx/fusions/voidstorm/fx_fusion_voidstorm_intro_6f.png",
+          "sha256": "af865479dc798472c38ceb81543c31574120d2ebda2f51c49d997368cd099939",
+          "opaque_pixels": 935
+        }
+      }
+    },
+    "eclipse": {
+      "source": "artifacts/fusion_vfx_pixel_sources/eclipse_transparent.png",
+      "source_sha256": "b3c00b44170564f172c88a2edc8df5bf1375977159407a5ecd13a2fcaf4613af",
+      "outputs": {
+        "attack": {
+          "path": "assets/vfx/fusions/eclipse/fx_fusion_eclipse_attack_6f.png",
+          "sha256": "72ff18fd2caff001fd955d5d456dbd9ec5bc98d81fce435e98f4b66546fd7222",
+          "opaque_pixels": 4831
+        },
+        "trail": {
+          "path": "assets/vfx/fusions/eclipse/fx_fusion_eclipse_trail_6f.png",
+          "sha256": "7dae2efe437afdef0213ddcc39a2627dc0900dff0da5e3fc578dd48c4f2fff89",
+          "opaque_pixels": 1018
+        },
+        "hit": {
+          "path": "assets/vfx/fusions/eclipse/fx_fusion_eclipse_hit_6f.png",
+          "sha256": "edc22a59765171401f28cd4fdb518160f9fb9a237c2fe957c64dca05c7818504",
+          "opaque_pixels": 4060
+        },
+        "burst": {
+          "path": "assets/vfx/fusions/eclipse/fx_fusion_eclipse_burst_6f.png",
+          "sha256": "da3e70a8409f1c5e57819a664b09fffe6b05e6ef714226c79558469915e5b066",
+          "opaque_pixels": 1546
+        },
+        "intro": {
+          "path": "assets/vfx/fusions/eclipse/fx_fusion_eclipse_intro_6f.png",
+          "sha256": "763fe939c7d8d25010dcfdb0937836c13f286734e665f094ffa0c49ef8e4aa9b",
+          "opaque_pixels": 3192
+        }
+      }
+    }
+  },
+  "catalog": "artifacts/fusion_vfx_pixel_sources/fusion_pixel_asset_catalog.png"
+}

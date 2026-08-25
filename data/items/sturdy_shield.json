@@ -1,0 +1,7 @@
+{
+  "id": "sturdy_shield",
+  "display_name": "頑丈な盾",
+  "effect_type": "damage_taken_multiplier",
+  "value": 0.15,
+  "description": "被ダメージが15%軽減される"
+}

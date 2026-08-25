@@ -1,0 +1,10 @@
+{
+  "id": "frost_thunder_weapon",
+  "display_name": "凍雷の剣",
+  "description": "氷+雷の合成武器。対象を減速させつつ周囲へ稲妻が連鎖する。",
+  "base_damage": 27.0,
+  "attack_interval": 1.05,
+  "attack_range": 220.0,
+  "required_fragment_ids": ["ice", "lightning"],
+  "vfx_theme_id": "frost_thunder"
+}

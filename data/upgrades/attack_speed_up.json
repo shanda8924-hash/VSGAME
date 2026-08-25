@@ -1,0 +1,8 @@
+{
+  "id": "attack_speed_up",
+  "display_name": "俊敏な一撃",
+  "effect_type": "attack_interval_multiplier",
+  "category": "common",
+  "value": 0.12,
+  "description": "攻撃間隔-12%"
+}

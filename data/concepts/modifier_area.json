@@ -1,0 +1,7 @@
+{
+  "id": "modifier_area",
+  "display_name": "範囲拡張",
+  "concept_type": "modifier",
+  "description": "スキルの効果範囲を拡大する",
+  "params": {"modifier_kind": "area"}
+}

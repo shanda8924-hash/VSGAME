@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://effects/damage_number.gd" id="1"]
+
+[node name="DamageNumber" type="Label"]
+visible = false
+z_index = 50
+mouse_filter = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+script = ExtResource("1")

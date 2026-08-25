@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ElementVFXData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://resources/element_vfx_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/vfx/elements/iai_light_trail_6f.png" id="2"]
+[ext_resource type="Texture2D" path="res://assets/vfx/elements/light_hit_6f.png" id="3"]
+
+[resource]
+script = ExtResource("1")
+element_id = "element_light"
+display_name = "光"
+attack_tint = Color(1, 0.95, 0.75, 1)
+secondary_tint = Color(1, 1, 0.94, 1)
+stack_accent_style = "rays"
+level2_accent_count = 5
+level3_accent_count = 10
+iai_trail_vfx_id = "vfx_iai_light_trail"
+iai_trail_sprite_sheet = ExtResource("2")
+iai_trail_fps = 16.0
+iai_trail_lifetime = 0.5
+iai_trail_visual_ratio = 1.12
+iai_afterimage_alpha_multiplier = 0.5
+hit_vfx_id = "vfx_light_hit"
+hit_sprite_sheet = ExtResource("3")
+hit_fps = 18.0
+hit_lifetime = 0.4
+hit_visual_ratio = 0.64

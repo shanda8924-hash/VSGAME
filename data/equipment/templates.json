@@ -1,0 +1,202 @@
+[
+  {
+    "id": "wanderer_iron_sword",
+    "display_name": "旅鉄の剣",
+    "slot": "weapon",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/weapons/weapon_sword_uncommon_001.png",
+    "stats": ["attack_power", "attack_speed", "crit_rate"]
+  },
+  {
+    "id": "traveler_shortbow",
+    "display_name": "旅人の短弓",
+    "slot": "weapon",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/weapons/weapon_bow_uncommon_001.png",
+    "stats": ["attack_power", "attack_speed", "crit_rate"]
+  },
+  {
+    "id": "leather_scout_cap",
+    "display_name": "革のスカウト帽",
+    "slot": "head",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/head/head_cap_uncommon_001.png",
+    "stats": ["defense", "max_hp", "move_speed"]
+  },
+  {
+    "id": "traveler_leather_coat",
+    "display_name": "旅人の革服",
+    "slot": "body",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/body/body_coat_uncommon_001.png",
+    "stats": ["defense", "max_hp", "move_speed"]
+  },
+  {
+    "id": "scout_gloves",
+    "display_name": "斥候の手袋",
+    "slot": "arms",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/arms/arms_gloves_uncommon_001.png",
+    "stats": ["attack_power", "attack_speed", "move_speed"]
+  },
+  {
+    "id": "moonblue_dagger",
+    "display_name": "月青の短剣",
+    "slot": "weapon",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/weapons/weapon_dagger_rare_001.png",
+    "stats": ["attack_power", "attack_speed", "crit_rate", "crit_damage"]
+  },
+  {
+    "id": "frostblue_spear",
+    "display_name": "霜青の槍",
+    "slot": "weapon",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/weapons/weapon_spear_rare_001.png",
+    "stats": ["attack_power", "crit_rate", "crit_damage"]
+  },
+  {
+    "id": "azure_knight_helm",
+    "display_name": "蒼鋼の騎士兜",
+    "slot": "head",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/head/head_helm_rare_001.png",
+    "stats": ["defense", "max_hp", "crit_rate"]
+  },
+  {
+    "id": "ripple_chainmail",
+    "display_name": "波紋の鎖帷子",
+    "slot": "body",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/body/body_mail_rare_001.png",
+    "stats": ["defense", "max_hp", "move_speed"]
+  },
+  {
+    "id": "windrunner_boots",
+    "display_name": "風走りのブーツ",
+    "slot": "legs",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/legs/legs_boots_rare_001.png",
+    "stats": ["move_speed", "defense", "attack_speed"]
+  },
+  {
+    "id": "rune_greatsword",
+    "display_name": "ルーン大剣",
+    "slot": "weapon",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/weapons/weapon_greatsword_epic_001.png",
+    "stats": ["attack_power", "crit_rate", "crit_damage", "attack_speed"]
+  },
+  {
+    "id": "star_sorcerer_staff",
+    "display_name": "星術の杖",
+    "slot": "weapon",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/weapons/weapon_staff_epic_001.png",
+    "stats": ["attack_power", "attack_speed", "crit_rate", "crit_damage"]
+  },
+  {
+    "id": "arcane_mage_robe",
+    "display_name": "秘術師のローブ",
+    "slot": "body",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/body/body_robe_epic_001.png",
+    "stats": ["defense", "max_hp", "attack_power", "crit_rate"]
+  },
+  {
+    "id": "spellweave_gauntlets",
+    "display_name": "魔紋の篭手",
+    "slot": "arms",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/arms/arms_gauntlets_epic_001.png",
+    "stats": ["attack_power", "attack_speed", "crit_damage", "defense"]
+  },
+  {
+    "id": "amethyst_ring",
+    "display_name": "紫晶の指輪",
+    "slot": "accessory",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/accessories/accessory_ring_epic_001.png",
+    "stats": ["crit_rate", "crit_damage", "attack_power", "max_hp"]
+  },
+  {
+    "id": "sunfire_battle_axe",
+    "display_name": "太陽炎の戦斧",
+    "slot": "weapon",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/weapons/weapon_axe_legendary_001.png",
+    "stats": ["attack_power", "crit_rate", "crit_damage", "attack_speed", "max_hp"]
+  },
+  {
+    "id": "phoenix_crossbow",
+    "display_name": "不死鳥の弩",
+    "slot": "weapon",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/weapons/weapon_crossbow_legendary_001.png",
+    "stats": ["attack_power", "attack_speed", "crit_rate", "crit_damage", "move_speed"]
+  },
+  {
+    "id": "lionking_helm",
+    "display_name": "獅子王の兜",
+    "slot": "head",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/head/head_helm_legendary_001.png",
+    "stats": ["defense", "max_hp", "attack_power", "crit_rate"]
+  },
+  {
+    "id": "dragonclaw_gauntlets",
+    "display_name": "竜爪の篭手",
+    "slot": "arms",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/arms/arms_gauntlets_legendary_001.png",
+    "stats": ["attack_power", "attack_speed", "crit_damage", "defense"]
+  },
+  {
+    "id": "solar_amulet",
+    "display_name": "陽輪の護符",
+    "slot": "accessory",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/accessories/accessory_amulet_legendary_001.png",
+    "stats": ["attack_power", "max_hp", "crit_rate", "crit_damage", "defense"]
+  },
+  {
+    "id": "void_twin_claws",
+    "display_name": "虚無の双爪",
+    "slot": "weapon",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/weapons/weapon_claw_mythic_001.png",
+    "stats": ["attack_power", "attack_speed", "crit_rate", "crit_damage", "move_speed", "defense"]
+  },
+  {
+    "id": "endtime_grimoire",
+    "display_name": "終焉の魔導書",
+    "slot": "weapon",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/weapons/weapon_grimoire_mythic_001.png",
+    "stats": ["attack_power", "attack_speed", "crit_rate", "crit_damage", "max_hp", "defense"]
+  },
+  {
+    "id": "voidwalker_boots",
+    "display_name": "虚空歩きの靴",
+    "slot": "legs",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/legs/legs_boots_mythic_001.png",
+    "stats": ["move_speed", "defense", "max_hp", "attack_speed", "crit_rate"]
+  },
+  {
+    "id": "starfall_greaves",
+    "display_name": "星堕ちの脚甲",
+    "slot": "legs",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/legs/legs_greaves_mythic_001.png",
+    "stats": ["move_speed", "defense", "max_hp", "attack_power", "crit_damage"]
+  },
+  {
+    "id": "heart_of_the_abyss",
+    "display_name": "深淵の心核",
+    "slot": "accessory",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/accessories/accessory_relic_mythic_001.png",
+    "stats": ["attack_power", "defense", "max_hp", "move_speed", "attack_speed", "crit_rate", "crit_damage"]
+  }
+]

@@ -1,0 +1,10 @@
+{
+  "id": "reckless_power",
+  "display_name": "捨て身の一撃",
+  "description": "攻撃力+25%、代わりに移動速度-5%",
+  "category": "common",
+  "effect_type": "damage_up",
+  "value": 0.25,
+  "downside_type": "move_speed_multiplier",
+  "downside_value": 0.05
+}

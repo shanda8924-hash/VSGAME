@@ -1,0 +1,8 @@
+{
+  "id": "multishot_chance_up",
+  "display_name": "追加の矢",
+  "effect_type": "multishot_chance_up",
+  "category": "ranged",
+  "value": 0.10,
+  "description": "追加の矢を発射する確率+10%"
+}

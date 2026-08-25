@@ -1,0 +1,145 @@
+[gd_scene load_steps=32 format=3]
+
+[ext_resource type="Script" path="res://scenes/game.gd" id="1"]
+[ext_resource type="PackedScene" path="res://entities/player/player.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://entities/enemies/enemy_basic.tscn" id="3"]
+[ext_resource type="Script" path="res://systems/wave_spawner.gd" id="4"]
+[ext_resource type="Script" path="res://systems/mass_kill_tracker.gd" id="6"]
+[ext_resource type="Script" path="res://effects/screen_effects.gd" id="7"]
+[ext_resource type="Script" path="res://effects/vfx_pool_manager.gd" id="8"]
+[ext_resource type="PackedScene" path="res://effects/particles/mass_kill_burst.tscn" id="9"]
+[ext_resource type="PackedScene" path="res://ui/hud/hud.tscn" id="10"]
+[ext_resource type="PackedScene" path="res://ui/level_up_select/level_up_select.tscn" id="11"]
+[ext_resource type="PackedScene" path="res://ui/result_screen/result_screen.tscn" id="12"]
+[ext_resource type="Script" path="res://effects/effect_theme_manager.gd" id="13"]
+[ext_resource type="PackedScene" path="res://entities/stage_environment/stage_environment.tscn" id="14"]
+[ext_resource type="Script" path="res://effects/damage_number_manager.gd" id="15"]
+[ext_resource type="PackedScene" path="res://effects/damage_number.tscn" id="16"]
+[ext_resource type="Script" path="res://systems/elite_room_manager.gd" id="17"]
+[ext_resource type="Script" path="res://systems/boss_spawner.gd" id="18"]
+[ext_resource type="PackedScene" path="res://ui/item_select/item_select.tscn" id="19"]
+[ext_resource type="PackedScene" path="res://ui/pause_menu/pause_menu.tscn" id="20"]
+[ext_resource type="PackedScene" path="res://ui/fragment_select/fragment_select.tscn" id="21"]
+[ext_resource type="Script" path="res://systems/heart_drop_system.gd" id="22"]
+[ext_resource type="Script" path="res://systems/equipment_drop_system.gd" id="23"]
+[ext_resource type="PackedScene" path="res://entities/pickups/ground_equipment_item.tscn" id="24"]
+[ext_resource type="PackedScene" path="res://ui/equipment/equipment_screen.tscn" id="25"]
+[ext_resource type="Script" path="res://effects/attack_vfx_manager.gd" id="26"]
+[ext_resource type="Script" path="res://systems/element_combat_system.gd" id="27"]
+[ext_resource type="Script" path="res://systems/room_run_controller.gd" id="28"]
+[ext_resource type="PackedScene" path="res://ui/room_select/room_select.tscn" id="29"]
+[ext_resource type="Script" path="res://systems/combo_system.gd" id="30"]
+[ext_resource type="Script" path="res://systems/concept_system.gd" id="31"]
+[ext_resource type="PackedScene" path="res://ui/concept_select/concept_select.tscn" id="32"]
+[ext_resource type="PackedScene" path="res://ui/concept_board/concept_board.tscn" id="33"]
+
+[node name="Game" type="Node2D" groups=["game_runtime_world"]]
+script = ExtResource("1")
+
+[node name="StageEnvironment" parent="." instance=ExtResource("14")]
+
+[editable path="StageEnvironment"]
+
+[node name="Player" parent="." instance=ExtResource("2")]
+
+[node name="WaveSpawner" type="Node2D" parent="."]
+process_mode = 4
+script = ExtResource("4")
+enemy_scene = ExtResource("3")
+
+[node name="EliteRoomManager" type="Node2D" parent="."]
+process_mode = 4
+script = ExtResource("17")
+enemy_scene = ExtResource("3")
+screen_effects_path = NodePath("../ScreenEffects")
+vfx_pool_path = NodePath("../VFXPoolManager")
+fragment_select_path = NodePath("../FragmentSelect")
+
+[node name="BossSpawner" type="Node2D" parent="."]
+process_mode = 4
+script = ExtResource("18")
+enemy_scene = ExtResource("3")
+screen_effects_path = NodePath("../ScreenEffects")
+vfx_pool_path = NodePath("../VFXPoolManager")
+hud_path = NodePath("../HUD")
+item_select_path = NodePath("../ItemSelect")
+fragment_select_path = NodePath("../FragmentSelect")
+
+[node name="ScreenEffects" type="Node" parent="."]
+script = ExtResource("7")
+
+[node name="VFXPoolManager" type="Node" parent="."]
+script = ExtResource("8")
+mass_kill_particle_scene = ExtResource("9")
+
+[node name="MassKillTracker" type="Node" parent="."]
+script = ExtResource("6")
+screen_effects_path = NodePath("../ScreenEffects")
+vfx_pool_path = NodePath("../VFXPoolManager")
+
+[node name="HeartDropSystem" type="Node" parent="."]
+script = ExtResource("22")
+
+[node name="EquipmentDropSystem" type="Node" parent="."]
+script = ExtResource("23")
+ground_item_scene = ExtResource("24")
+
+[node name="EffectThemeManager" type="Node" parent="."]
+script = ExtResource("13")
+
+[node name="AttackVFXManager" type="Node2D" parent="."]
+script = ExtResource("26")
+
+[node name="ElementCombatSystem" type="Node2D" parent="."]
+script = ExtResource("27")
+
+[node name="ComboSystem" type="Node" parent="."]
+script = ExtResource("30")
+
+[node name="ConceptSystem" type="Node" parent="."]
+script = ExtResource("31")
+combo_system_path = NodePath("../ComboSystem")
+
+[node name="RoomRunController" type="Node" parent="."]
+script = ExtResource("28")
+stage_environment_path = NodePath("../StageEnvironment")
+player_path = NodePath("../Player")
+wave_spawner_path = NodePath("../WaveSpawner")
+boss_spawner_path = NodePath("../BossSpawner")
+elite_room_manager_path = NodePath("../EliteRoomManager")
+hud_path = NodePath("../HUD")
+room_select_path = NodePath("../RoomSelect")
+fragment_select_path = NodePath("../FragmentSelect")
+item_select_path = NodePath("../ItemSelect")
+combo_system_path = NodePath("../ComboSystem")
+concept_system_path = NodePath("../ConceptSystem")
+concept_select_path = NodePath("../ConceptSelect")
+concept_board_path = NodePath("../ConceptBoard")
+equipment_drop_system_path = NodePath("../EquipmentDropSystem")
+equipment_screen_path = NodePath("../EquipmentScreen")
+
+[node name="DamageNumberManager" type="Node" parent="."]
+script = ExtResource("15")
+damage_number_scene = ExtResource("16")
+
+[node name="HUD" parent="." instance=ExtResource("10")]
+
+[node name="LevelUpSelect" parent="." instance=ExtResource("11")]
+
+[node name="ItemSelect" parent="." instance=ExtResource("19")]
+
+[node name="FragmentSelect" parent="." instance=ExtResource("21")]
+
+[node name="RoomSelect" parent="." instance=ExtResource("29")]
+
+[node name="ConceptSelect" parent="." instance=ExtResource("32")]
+concept_system_path = NodePath("../ConceptSystem")
+
+[node name="ConceptBoard" parent="." instance=ExtResource("33")]
+concept_system_path = NodePath("../ConceptSystem")
+
+[node name="ResultScreen" parent="." instance=ExtResource("12")]
+
+[node name="PauseMenu" parent="." instance=ExtResource("20")]
+
+[node name="EquipmentScreen" parent="." instance=ExtResource("25")]

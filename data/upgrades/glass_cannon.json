@@ -1,0 +1,10 @@
+{
+  "id": "glass_cannon",
+  "display_name": "会心特化",
+  "description": "会心率+15%、代わりに被ダメージ+10%",
+  "category": "common",
+  "effect_type": "crit_rate_up",
+  "value": 0.15,
+  "downside_type": "damage_taken_multiplier",
+  "downside_value": 0.10
+}

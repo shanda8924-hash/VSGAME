@@ -1,0 +1,10 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+WARNING: Case mismatch opening requested file 'res://assets/sprites/player/Necromancer/Necromancer_Death.png.import', stored as 'res://assets/sprites/player/Necromancer/Necromancer_DEATH.png.import' in the filesystem. This file will not open when exported to other case-sensitive platforms.
+   at: open_internal (drivers/windows/file_access_windows.cpp:192)
+   GDScript backtrace (most recent call first):
+       [0] build_sprite_frames (res://entities/sprite_sheet_builder.gd:39)
+       [1] _apply_character_data (res://entities/player/player.gd:40)
+       [2] _ready (res://entities/player/player.gd:24)
+       [3] _check_all_character_ground_icon_sizes (res://tests/equipment_integration_check.gd:180)
+EQUIPMENT_INTEGRATION_CHECK failures=0

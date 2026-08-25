@@ -1,0 +1,11 @@
+{
+  "id": "melee_blood_thirst",
+  "display_name": "BLOOD THIRST / 吸血",
+  "category": "melee",
+  "effect_type": "melee_lifesteal",
+  "value": 0.015,
+  "effect_params": {
+    "max_heal_per_hit": 3.0
+  },
+  "description": "近接命中時に与ダメージの1.5%回復（1ヒット最大3HP）"
+}

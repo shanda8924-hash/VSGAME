@@ -1,0 +1,76 @@
+[gd_scene load_steps=14 format=3]
+
+[ext_resource type="Script" path="res://entities/player/player.gd" id="1"]
+[ext_resource type="Script" path="res://components/health_component.gd" id="2"]
+[ext_resource type="Script" path="res://components/movement_component.gd" id="3"]
+[ext_resource type="Script" path="res://components/status_effect_component.gd" id="4"]
+[ext_resource type="Script" path="res://components/hurtbox_component.gd" id="5"]
+[ext_resource type="Script" path="res://components/weapon_manager_component.gd" id="6"]
+[ext_resource type="Script" path="res://components/experience_component.gd" id="7"]
+[ext_resource type="Script" path="res://components/animation_component.gd" id="9"]
+[ext_resource type="Script" path="res://components/stat_modifier_component.gd" id="10"]
+[ext_resource type="Script" path="res://components/player_upgrades_component.gd" id="11"]
+[ext_resource type="Script" path="res://components/active_skill_component.gd" id="12"]
+[ext_resource type="Script" path="res://components/equipment_component.gd" id="13"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_1"]
+radius = 20.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
+size = Vector2(40, 40)
+
+[node name="Player" type="CharacterBody2D" groups=["player"]]
+motion_mode = 1
+script = ExtResource("1")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+scale = Vector2(1.5, 1.5)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_1")
+
+[node name="HealthComponent" type="Node" parent="."]
+script = ExtResource("2")
+max_hp = 100.0
+
+[node name="MovementComponent" type="Node" parent="."]
+script = ExtResource("3")
+base_speed = 140.0
+
+[node name="StatusEffectComponent" type="Node" parent="."]
+script = ExtResource("4")
+
+[node name="HurtboxComponent" type="Area2D" parent="."]
+script = ExtResource("5")
+collision_layer = 2
+collision_mask = 16
+health_component_path = NodePath("../HealthComponent")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HurtboxComponent"]
+shape = SubResource("RectangleShape2D_1")
+
+[node name="WeaponManagerComponent" type="Node" parent="."]
+script = ExtResource("6")
+starting_weapon_id = "starter_sword"
+
+[node name="ExperienceComponent" type="Node" parent="."]
+script = ExtResource("7")
+
+[node name="AnimationComponent" type="Node" parent="."]
+script = ExtResource("9")
+
+[node name="StatModifierComponent" type="Node" parent="."]
+script = ExtResource("10")
+
+[node name="PlayerUpgradesComponent" type="Node" parent="."]
+script = ExtResource("11")
+
+[node name="ActiveSkillComponent" type="Node" parent="."]
+script = ExtResource("12")
+
+[node name="EquipmentComponent" type="Node" parent="."]
+script = ExtResource("13")
+
+[node name="Camera2D" type="Camera2D" parent="." groups=["main_camera"]]
+current = true
+zoom = Vector2(1.5, 1.5)

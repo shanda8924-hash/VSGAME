@@ -1,0 +1,7 @@
+{
+  "id": "trigger_on_kill",
+  "display_name": "撃破起動",
+  "concept_type": "trigger",
+  "description": "有効なプレイヤー攻撃で敵を倒した時、接続スキルを発動する",
+  "params": {"trigger_kind": "on_kill"}
+}

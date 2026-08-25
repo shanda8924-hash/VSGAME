@@ -1,0 +1,8 @@
+{
+  "id": "homing_upgrade",
+  "display_name": "矢の誘導性能",
+  "effect_type": "homing_upgrade",
+  "category": "ranged",
+  "value": 0.2,
+  "description": "矢の誘導性能上昇"
+}

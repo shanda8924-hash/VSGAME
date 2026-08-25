@@ -1,0 +1,10 @@
+{
+  "id": "shadow_frost_weapon",
+  "display_name": "冥氷の剣",
+  "description": "氷+闇の合成武器。対象を減速させつつ闇の吸収演出が発生する。",
+  "base_damage": 28.0,
+  "attack_interval": 1.2,
+  "attack_range": 215.0,
+  "required_fragment_ids": ["ice", "dark"],
+  "vfx_theme_id": "shadow_frost"
+}

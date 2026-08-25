@@ -1,0 +1,11 @@
+{
+  "id": "demon_e",
+  "display_name": "デーモンE",
+  "sprite_folder": "boss/Demon_E",
+  "max_hp": 420.0,
+  "move_speed": 51.0,
+  "contact_damage": 44.0,
+  "exp_value": 28,
+  "visual_scale": 1.49,
+  "attack_pattern_id": "summon"
+}

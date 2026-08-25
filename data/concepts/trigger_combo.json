@@ -1,0 +1,7 @@
+{
+  "id": "trigger_combo",
+  "display_name": "連撃起動",
+  "concept_type": "trigger",
+  "description": "20コンボ到達ごとに接続スキルを発動する",
+  "params": {"trigger_kind": "combo"}
+}

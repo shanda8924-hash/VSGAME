@@ -1,0 +1,10 @@
+{
+  "id": "shadow_thunder_weapon",
+  "display_name": "冥雷の剣",
+  "description": "雷+闇の合成武器。稲妻の連鎖と闇の吸収演出を併せ持つ。",
+  "base_damage": 32.0,
+  "attack_interval": 1.05,
+  "attack_range": 230.0,
+  "required_fragment_ids": ["lightning", "dark"],
+  "vfx_theme_id": "shadow_thunder"
+}

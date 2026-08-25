@@ -1,0 +1,10 @@
+{
+  "id": "long_range_focus",
+  "display_name": "遠距離特化",
+  "description": "射程+20%、代わりに攻撃間隔+8%(遅くなる)",
+  "category": "ranged",
+  "effect_type": "attack_range_multiplier",
+  "value": 0.20,
+  "downside_type": "attack_interval_multiplier",
+  "downside_value": 0.08
+}

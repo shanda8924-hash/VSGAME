@@ -1,0 +1,8 @@
+{
+  "id": "crit_rate_up",
+  "display_name": "会心率アップ",
+  "effect_type": "crit_rate_up",
+  "category": "common",
+  "value": 0.08,
+  "description": "会心率+8%"
+}

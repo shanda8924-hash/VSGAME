@@ -1,0 +1,12 @@
+{
+  "id": "tetra_elemental_weapon",
+  "display_name": "四大天啓剣",
+  "description": "炎+氷+雷+光の上位融合武器。4属性ぶんの着弾演出をまとめて発動する。",
+  "base_damage": 72.0,
+  "attack_interval": 1.35,
+  "attack_range": 300.0,
+  "required_fragment_ids": ["fire", "ice", "lightning", "light"],
+  "vfx_theme_id": "tetra_elemental",
+  "crit_chance": 0.25,
+  "crit_multiplier": 2.4
+}

@@ -1,0 +1,10 @@
+{
+  "id": "berserker_instinct",
+  "display_name": "狂戦士の本能",
+  "description": "攻撃力+20%、代わりに被ダメージ+15%",
+  "category": "common",
+  "effect_type": "damage_up",
+  "value": 0.20,
+  "downside_type": "damage_taken_multiplier",
+  "downside_value": 0.15
+}

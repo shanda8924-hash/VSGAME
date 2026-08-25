@@ -1,0 +1,7 @@
+{
+  "id": "modifier_echo",
+  "display_name": "反響",
+  "concept_type": "modifier",
+  "description": "スキルを短時間後に1度だけ再発動する",
+  "params": {"modifier_kind": "echo"}
+}

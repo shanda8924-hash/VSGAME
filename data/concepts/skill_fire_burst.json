@@ -1,0 +1,8 @@
+{
+  "id": "skill_fire_burst",
+  "display_name": "炎上爆発",
+  "concept_type": "skill",
+  "description": "対象周辺へ炎の爆発を発生させる",
+  "element_tags": ["fire"],
+  "params": {"skill_kind": "fire_burst", "damage_multiplier": 1.2, "radius": 92.0}
+}

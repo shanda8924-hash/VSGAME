@@ -1,0 +1,10 @@
+{
+  "id": "orc_rider",
+  "display_name": "オーク騎兵",
+  "sprite_folder": "enemy/Orc rider",
+  "max_hp": 92.0,
+  "move_speed": 95.0,
+  "contact_damage": 9.0,
+  "exp_value": 2,
+  "min_elapsed_seconds": 180.0
+}

@@ -1,0 +1,8 @@
+{
+  "id": "skill_dark_rift",
+  "display_name": "虚無裂傷",
+  "concept_type": "skill",
+  "description": "対象周辺へ闇の裂け目を発生させる",
+  "element_tags": ["dark"],
+  "params": {"skill_kind": "dark_rift", "damage_multiplier": 1.22, "radius": 86.0}
+}

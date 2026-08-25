@@ -1,0 +1,10 @@
+{
+  "id": "rapid_barrage",
+  "display_name": "連射特化",
+  "description": "攻撃間隔-15%、代わりに射程-10%",
+  "category": "ranged",
+  "effect_type": "attack_interval_multiplier",
+  "value": 0.15,
+  "downside_type": "attack_range_multiplier",
+  "downside_value": 0.10
+}

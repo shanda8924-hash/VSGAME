@@ -1,0 +1,8 @@
+{
+  "id": "damage_up",
+  "display_name": "攻撃力アップ",
+  "effect_type": "damage_up",
+  "category": "common",
+  "value": 0.15,
+  "description": "攻撃力+15%"
+}

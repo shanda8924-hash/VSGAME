@@ -1,0 +1,11 @@
+{
+  "id": "black_knight_b",
+  "display_name": "黒騎士B",
+  "sprite_folder": "boss/Black Knight_B",
+  "max_hp": 350.0,
+  "move_speed": 48.0,
+  "contact_damage": 42.2,
+  "exp_value": 26,
+  "visual_scale": 1.4,
+  "attack_pattern_id": "slam"
+}

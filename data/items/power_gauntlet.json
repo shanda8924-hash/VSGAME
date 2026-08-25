@@ -1,0 +1,7 @@
+{
+  "id": "power_gauntlet",
+  "display_name": "剛力の籠手",
+  "effect_type": "damage_up",
+  "value": 0.20,
+  "description": "攻撃力が20%上昇する"
+}

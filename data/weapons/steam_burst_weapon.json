@@ -1,0 +1,10 @@
+{
+  "id": "steam_burst_weapon",
+  "display_name": "蒸気爆発剣",
+  "description": "炎+氷の合成武器。着弾時に蒸気の爆発演出が発生する。",
+  "base_damage": 25.0,
+  "attack_interval": 1.2,
+  "attack_range": 220.0,
+  "required_fragment_ids": ["fire", "ice"],
+  "vfx_theme_id": "steam"
+}

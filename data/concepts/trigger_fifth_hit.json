@@ -1,0 +1,7 @@
+{
+  "id": "trigger_fifth_hit",
+  "display_name": "五撃起動",
+  "concept_type": "trigger",
+  "description": "同じ敵への5回目の直接命中で接続スキルを発動する",
+  "params": {"trigger_kind": "fifth_hit"}
+}

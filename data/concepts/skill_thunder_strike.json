@@ -1,0 +1,8 @@
+{
+  "id": "skill_thunder_strike",
+  "display_name": "雷撃",
+  "concept_type": "skill",
+  "description": "対象へ高密度の落雷を与える",
+  "element_tags": ["lightning"],
+  "params": {"skill_kind": "thunder_strike", "damage_multiplier": 1.45, "radius": 54.0}
+}

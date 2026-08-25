@@ -1,0 +1,301 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://ui/equipment/equipment_screen.gd" id="1"]
+
+[sub_resource type="StyleBoxFlat" id="PanelStyle"]
+bg_color = Color(0.085, 0.085, 0.115, 0.985)
+border_color = Color(0.42, 0.42, 0.52, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+corner_radius_top_left = 0
+corner_radius_top_right = 0
+corner_radius_bottom_right = 0
+corner_radius_bottom_left = 0
+
+[sub_resource type="StyleBoxFlat" id="BackgroundStyle"]
+bg_color = Color(0.012, 0.012, 0.02, 0.97)
+
+[sub_resource type="StyleBoxFlat" id="ButtonStyle"]
+bg_color = Color(0.2, 0.17, 0.08, 1)
+border_color = Color(0.9, 0.72, 0.2, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+corner_radius_top_left = 0
+corner_radius_top_right = 0
+corner_radius_bottom_right = 0
+corner_radius_bottom_left = 0
+
+[node name="EquipmentScreen" type="CanvasLayer"]
+process_mode = 3
+script = ExtResource("1")
+
+[node name="Background" type="PanelContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_styles/panel = SubResource("BackgroundStyle")
+
+[node name="Margin" type="MarginContainer" parent="Background"]
+layout_mode = 2
+theme_override_constants/margin_left = 32
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 32
+theme_override_constants/margin_bottom = 24
+
+[node name="Main" type="VBoxContainer" parent="Background/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Header" type="HBoxContainer" parent="Background/Margin/Main"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Background/Margin/Main/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 30
+text = "キャラクター・装備"
+
+[node name="CloseHint" type="Label" parent="Background/Margin/Main/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.72, 0.78, 1)
+theme_override_font_sizes/font_size = 17
+text = "C / ESC / Y で閉じる"
+
+[node name="Columns" type="HBoxContainer" parent="Background/Margin/Main"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 18
+
+[node name="CharacterPanel" type="PanelContainer" parent="Background/Margin/Main/Columns"]
+custom_minimum_size = Vector2(790, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("PanelStyle")
+
+[node name="Margin" type="MarginContainer" parent="Background/Margin/Main/Columns/CharacterPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 14
+
+[node name="VBox" type="VBoxContainer" parent="Background/Margin/Main/Columns/CharacterPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="CharacterName" type="Label" parent="Background/Margin/Main/Columns/CharacterPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 23
+text = "キャラクター"
+horizontal_alignment = 1
+
+[node name="CharacterStage" type="HBoxContainer" parent="Background/Margin/Main/Columns/CharacterPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 430)
+layout_mode = 2
+size_flags_vertical = 3
+alignment = 1
+theme_override_constants/separation = 16
+
+[node name="LeftSlots" type="VBoxContainer" parent="Background/Margin/Main/Columns/CharacterPanel/Margin/VBox/CharacterStage"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 54
+
+[node name="Center" type="VBoxContainer" parent="Background/Margin/Main/Columns/CharacterPanel/Margin/VBox/CharacterStage"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 8
+
+[node name="TopSlot" type="VBoxContainer" parent="Background/Margin/Main/Columns/CharacterPanel/Margin/VBox/CharacterStage/Center"]
+layout_mode = 2
+
+[node name="PortraitFrame" type="CenterContainer" parent="Background/Margin/Main/Columns/CharacterPanel/Margin/VBox/CharacterStage/Center"]
+custom_minimum_size = Vector2(250, 220)
+layout_mode = 2
+
+[node name="CharacterPortrait" type="TextureRect" parent="Background/Margin/Main/Columns/CharacterPanel/Margin/VBox/CharacterStage/Center/PortraitFrame"]
+custom_minimum_size = Vector2(210, 210)
+layout_mode = 2
+texture_filter = 1
+expand_mode = 1
+stretch_mode = 5
+
+[node name="BottomSlot" type="VBoxContainer" parent="Background/Margin/Main/Columns/CharacterPanel/Margin/VBox/CharacterStage/Center"]
+layout_mode = 2
+
+[node name="RightSlots" type="VBoxContainer" parent="Background/Margin/Main/Columns/CharacterPanel/Margin/VBox/CharacterStage"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 54
+
+[node name="Stats" type="RichTextLabel" parent="Background/Margin/Main/Columns/CharacterPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 170)
+layout_mode = 2
+bbcode_enabled = true
+fit_content = true
+theme_override_font_sizes/normal_font_size = 17
+
+[node name="InventoryPanel" type="PanelContainer" parent="Background/Margin/Main/Columns"]
+custom_minimum_size = Vector2(650, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("PanelStyle")
+
+[node name="Margin" type="MarginContainer" parent="Background/Margin/Main/Columns/InventoryPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 14
+
+[node name="VBox" type="VBoxContainer" parent="Background/Margin/Main/Columns/InventoryPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="Background/Margin/Main/Columns/InventoryPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 23
+text = "ラン中の所持装備"
+
+[node name="ModeTabs" type="HBoxContainer" parent="Background/Margin/Main/Columns/InventoryPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="EquipmentTab" type="Button" parent="Background/Margin/Main/Columns/InventoryPanel/Margin/VBox/ModeTabs"]
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "装備"
+
+[node name="MergeTab" type="Button" parent="Background/Margin/Main/Columns/InventoryPanel/Margin/VBox/ModeTabs"]
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "合成"
+
+[node name="RarityCounts" type="Label" parent="Background/Margin/Main/Columns/InventoryPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.78, 0.84, 1)
+theme_override_font_sizes/font_size = 15
+text = "アンコモン 0　レア 0　エピック 0"
+
+[node name="MaterialSlots" type="HBoxContainer" parent="Background/Margin/Main/Columns/InventoryPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 94)
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Slot1" type="Button" parent="Background/Margin/Main/Columns/InventoryPanel/Margin/VBox/MaterialSlots"]
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "素材 1\n－ 空き －"
+
+[node name="Slot2" type="Button" parent="Background/Margin/Main/Columns/InventoryPanel/Margin/VBox/MaterialSlots"]
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "素材 2\n－ 空き －"
+
+[node name="Slot3" type="Button" parent="Background/Margin/Main/Columns/InventoryPanel/Margin/VBox/MaterialSlots"]
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "素材 3\n－ 空き －"
+
+[node name="MergeNotice" type="Label" parent="Background/Margin/Main/Columns/InventoryPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 28)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.83, 0.3, 1)
+theme_override_font_sizes/font_size = 17
+text = "合成可能な装備はありません"
+
+[node name="Scroll" type="ScrollContainer" parent="Background/Margin/Main/Columns/InventoryPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 220)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="InventoryList" type="VBoxContainer" parent="Background/Margin/Main/Columns/InventoryPanel/Margin/VBox/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="ComparisonTitle" type="Label" parent="Background/Margin/Main/Columns/InventoryPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 19
+text = "現在装備  vs  選択中装備"
+
+[node name="Comparison" type="RichTextLabel" parent="Background/Margin/Main/Columns/InventoryPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 145)
+layout_mode = 2
+bbcode_enabled = true
+fit_content = false
+theme_override_font_sizes/normal_font_size = 16
+
+[node name="MergeTitle" type="Label" parent="Background/Margin/Main/Columns/InventoryPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "装備合成プレビュー"
+
+[node name="MergePreviewRow" type="HBoxContainer" parent="Background/Margin/Main/Columns/InventoryPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 108)
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="MergePreviewIcon" type="TextureRect" parent="Background/Margin/Main/Columns/InventoryPanel/Margin/VBox/MergePreviewRow"]
+custom_minimum_size = Vector2(72, 72)
+layout_mode = 2
+texture_filter = 1
+expand_mode = 1
+stretch_mode = 5
+
+[node name="MergePreview" type="RichTextLabel" parent="Background/Margin/Main/Columns/InventoryPanel/Margin/VBox/MergePreviewRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+bbcode_enabled = true
+fit_content = false
+theme_override_font_sizes/normal_font_size = 15
+
+[node name="Buttons" type="HBoxContainer" parent="Background/Margin/Main/Columns/InventoryPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="EquipButton" type="Button" parent="Background/Margin/Main/Columns/InventoryPanel/Margin/VBox/Buttons"]
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "装備する"
+theme_override_styles/normal = SubResource("ButtonStyle")
+
+[node name="MergeButton" type="Button" parent="Background/Margin/Main/Columns/InventoryPanel/Margin/VBox/Buttons"]
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "素材を3個選択"
+theme_override_styles/normal = SubResource("ButtonStyle")
+
+[node name="UnequipButton" type="Button" parent="Background/Margin/Main/Columns/InventoryPanel/Margin/VBox/Buttons"]
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "装備を外す"
+
+[node name="AnimationHint" type="Label" parent="Background/Margin/Main/Columns/InventoryPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.58, 0.58, 0.66, 1)
+theme_override_font_sizes/font_size = 14
+text = "2回目以降: E / 決定 / クリックで演出スキップ"
+horizontal_alignment = 1
+
+[node name="MergeAnimationLayer" type="Control" parent="Background"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2

@@ -1,0 +1,10 @@
+{
+  "id": "werebear",
+  "display_name": "ワーベア",
+  "sprite_folder": "enemy/Werebear",
+  "max_hp": 182.0,
+  "move_speed": 70.0,
+  "contact_damage": 15.0,
+  "exp_value": 3,
+  "min_elapsed_seconds": 180.0
+}

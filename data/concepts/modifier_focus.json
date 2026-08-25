@@ -1,0 +1,7 @@
+{
+  "id": "modifier_focus",
+  "display_name": "集中",
+  "concept_type": "modifier",
+  "description": "別対象へ伝播せず、同じ対象へ遅延再命中する",
+  "params": {"modifier_kind": "focus"}
+}

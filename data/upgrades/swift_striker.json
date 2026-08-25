@@ -1,0 +1,10 @@
+{
+  "id": "swift_striker",
+  "display_name": "身軽な立ち回り",
+  "description": "移動速度+15%、代わりに攻撃力-10%",
+  "category": "common",
+  "effect_type": "move_speed_multiplier",
+  "value": 0.15,
+  "downside_type": "damage_up",
+  "downside_value": 0.10
+}

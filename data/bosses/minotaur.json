@@ -1,0 +1,11 @@
+{
+  "id": "minotaur",
+  "display_name": "ミノタウロス",
+  "sprite_folder": "boss/Minotaur",
+  "max_hp": 340.0,
+  "move_speed": 65.0,
+  "contact_damage": 40.5,
+  "exp_value": 25,
+  "visual_scale": 1.4,
+  "attack_pattern_id": "charge"
+}

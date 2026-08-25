@@ -1,0 +1,11 @@
+{
+  "id": "demon_b",
+  "display_name": "デーモンB",
+  "sprite_folder": "boss/Demon_B",
+  "max_hp": 330.0,
+  "move_speed": 54.0,
+  "contact_damage": 38.7,
+  "exp_value": 25,
+  "visual_scale": 1.35,
+  "attack_pattern_id": "nova"
+}

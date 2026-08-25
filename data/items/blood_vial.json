@@ -1,0 +1,7 @@
+{
+  "id": "blood_vial",
+  "display_name": "吸血の小瓶",
+  "effect_type": "lifesteal",
+  "value": 0.02,
+  "description": "与えたダメージの2%を回復する（1Hit最大3HP）"
+}

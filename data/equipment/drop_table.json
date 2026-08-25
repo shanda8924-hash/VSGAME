@@ -1,0 +1,61 @@
+{
+  "normal_enemy_drop_chance": 0.02,
+  "strong_enemy_drop_chance": 0.04,
+  "boss_minimum_drop_count": 1,
+  "drop_offset_radius": 52.0,
+  "boss_rarity_by_phase": {
+    "early": {"uncommon":45.0, "rare":40.0, "epic":13.0, "legendary":2.0, "mythic":0.0},
+    "mid": {"uncommon":18.0, "rare":45.0, "epic":28.0, "legendary":8.0, "mythic":1.0},
+    "late": {"uncommon":4.0, "rare":26.0, "epic":40.0, "legendary":24.0, "mythic":6.0},
+    "final": {"uncommon":0.0, "rare":8.0, "epic":30.0, "legendary":44.0, "mythic":18.0}
+  },
+  "rarities": [
+    {"id":"uncommon", "weight":50.0, "affix_count":1},
+    {"id":"rare", "weight":30.0, "affix_count":2},
+    {"id":"epic", "weight":15.0, "affix_count":3},
+    {"id":"legendary", "weight":4.0, "affix_count":3, "special_effect":true},
+    {"id":"mythic", "weight":1.0, "affix_count":4, "special_effect":true}
+  ],
+  "stat_ranges": {
+    "uncommon": {
+      "attack_power":[5,10], "defense":[3,6], "max_hp":[25,45],
+      "move_speed":[0.02,0.04], "attack_speed":[0.02,0.04],
+      "crit_rate":[0.01,0.025], "crit_damage":[0.06,0.10]
+    },
+    "rare": {
+      "attack_power":[10,20], "defense":[6,12], "max_hp":[45,80],
+      "move_speed":[0.035,0.06], "attack_speed":[0.035,0.06],
+      "crit_rate":[0.02,0.04], "crit_damage":[0.10,0.16]
+    },
+    "epic": {
+      "attack_power":[20,35], "defense":[12,20], "max_hp":[70,120],
+      "move_speed":[0.05,0.08], "attack_speed":[0.05,0.08],
+      "crit_rate":[0.035,0.06], "crit_damage":[0.15,0.24]
+    },
+    "legendary": {
+      "attack_power":[30,50], "defense":[18,30], "max_hp":[110,170],
+      "move_speed":[0.07,0.11], "attack_speed":[0.07,0.11],
+      "crit_rate":[0.05,0.08], "crit_damage":[0.22,0.34]
+    },
+    "mythic": {
+      "attack_power":[45,70], "defense":[28,45], "max_hp":[160,240],
+      "move_speed":[0.09,0.14], "attack_speed":[0.09,0.14],
+      "crit_rate":[0.07,0.11], "crit_damage":[0.30,0.45]
+    }
+  },
+  "special_effects":[
+    {
+      "id":"kill_heal", "display_name":"命喰らい",
+      "legendary":{"heal_flat":8}, "mythic":{"heal_flat":15}
+    },
+    {
+      "id":"negate_hit", "display_name":"守護の残響",
+      "legendary":{"chance":0.10}, "mythic":{"chance":0.16}
+    },
+    {
+      "id":"low_hp_power", "display_name":"窮地の力",
+      "legendary":{"hp_threshold":0.30, "damage_bonus":0.20},
+      "mythic":{"hp_threshold":0.35, "damage_bonus":0.35}
+    }
+  ]
+}

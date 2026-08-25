@@ -1,0 +1,7 @@
+{
+  "id": "swift_boots",
+  "display_name": "俊足のブーツ",
+  "effect_type": "move_speed_multiplier",
+  "value": 0.15,
+  "description": "移動速度が15%上昇する"
+}

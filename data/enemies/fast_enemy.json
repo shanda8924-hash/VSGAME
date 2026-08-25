@@ -1,0 +1,10 @@
+{
+  "id": "fast_enemy",
+  "display_name": "俊敏な侵略者",
+  "sprite_folder": "enemy/Skeleton",
+  "max_hp": 36.0,
+  "move_speed": 110.0,
+  "contact_damage": 3.0,
+  "exp_value": 1,
+  "min_elapsed_seconds": 0.0
+}

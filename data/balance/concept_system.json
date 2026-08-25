@@ -1,0 +1,12 @@
+{
+  "max_trigger_depth": 2,
+  "fifth_hit_count": 5,
+  "combo_trigger_interval": 20,
+  "chain_target_count": 2,
+  "chain_range": 260.0,
+  "echo_delay": 0.22,
+  "focus_delay": 0.18,
+  "area_multiplier": 1.55,
+  "reference_damage": 14.0,
+  "skill_base_radius": 82.0
+}

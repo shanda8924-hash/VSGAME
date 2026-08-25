@@ -1,0 +1,6 @@
+{
+  "heart_drop_chance": 0.05,
+  "elite_heart_drop_chance": 0.10,
+  "heal_ratio": 0.15,
+  "lifetime_seconds": 25.0
+}

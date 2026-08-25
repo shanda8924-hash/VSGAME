@@ -1,0 +1,7 @@
+{
+  "id": "trigger_on_critical",
+  "display_name": "会心起動",
+  "concept_type": "trigger",
+  "description": "直接攻撃が会心になった時、接続スキルを発動する",
+  "params": {"trigger_kind": "on_critical"}
+}

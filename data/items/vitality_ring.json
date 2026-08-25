@@ -1,0 +1,7 @@
+{
+  "id": "vitality_ring",
+  "display_name": "生命の指輪",
+  "effect_type": "max_hp_bonus",
+  "value": 20.0,
+  "description": "最大HPが20上昇する(その場で回復もする)"
+}

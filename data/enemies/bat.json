@@ -1,0 +1,10 @@
+{
+  "id": "bat",
+  "display_name": "コウモリ",
+  "sprite_folder": "enemy/Bat",
+  "max_hp": 32.0,
+  "move_speed": 140.0,
+  "contact_damage": 3.0,
+  "exp_value": 1,
+  "min_elapsed_seconds": 0.0
+}

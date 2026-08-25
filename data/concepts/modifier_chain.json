@@ -1,0 +1,7 @@
+{
+  "id": "modifier_chain",
+  "display_name": "連鎖",
+  "concept_type": "modifier",
+  "description": "スキルを近くの別対象2体へ追加伝播させる",
+  "params": {"modifier_kind": "chain"}
+}

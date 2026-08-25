@@ -1,0 +1,7 @@
+{
+  "id": "lucky_charm",
+  "display_name": "幸運のお守り",
+  "effect_type": "crit_rate_up",
+  "value": 0.10,
+  "description": "会心率が10%上昇する"
+}

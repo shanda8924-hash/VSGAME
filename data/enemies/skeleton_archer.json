@@ -1,0 +1,10 @@
+{
+  "id": "skeleton_archer",
+  "display_name": "スケルトン弓兵",
+  "sprite_folder": "enemy/Skeleton Archer",
+  "max_hp": 42.0,
+  "move_speed": 100.0,
+  "contact_damage": 6.0,
+  "exp_value": 2,
+  "min_elapsed_seconds": 90.0
+}

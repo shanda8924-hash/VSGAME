@@ -1,0 +1,11 @@
+{
+  "id": "black_knight_c",
+  "display_name": "黒騎士C",
+  "sprite_folder": "boss/Black Knight_C",
+  "max_hp": 380.0,
+  "move_speed": 46.0,
+  "contact_damage": 44.0,
+  "exp_value": 27,
+  "visual_scale": 1.44,
+  "attack_pattern_id": "nova"
+}

@@ -1,0 +1,8 @@
+{
+  "id": "starter_sword",
+  "display_name": "見習いの剣",
+  "description": "最初から持っている基本武器。属性を持たない素直な直進攻撃。",
+  "base_damage": 8.0,
+  "attack_interval": 0.9,
+  "attack_range": 180.0
+}

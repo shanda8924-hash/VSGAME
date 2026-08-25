@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="EffectThemeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/effect_theme_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "hellfire"
+display_name = "業炎"
+combo_ids = "fire,dark"

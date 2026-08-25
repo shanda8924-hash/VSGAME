@@ -1,0 +1,11 @@
+{
+  "id": "demon_c",
+  "display_name": "デーモンC",
+  "sprite_folder": "boss/Demon_C",
+  "max_hp": 360.0,
+  "move_speed": 53.0,
+  "contact_damage": 40.5,
+  "exp_value": 26,
+  "visual_scale": 1.4,
+  "attack_pattern_id": "charge"
+}

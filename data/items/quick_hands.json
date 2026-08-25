@@ -1,0 +1,7 @@
+{
+  "id": "quick_hands",
+  "display_name": "早業の手袋",
+  "effect_type": "attack_interval_multiplier",
+  "value": 0.10,
+  "description": "攻撃間隔が10%短縮する"
+}

@@ -1,0 +1,11 @@
+{
+  "id": "flame_golem",
+  "display_name": "フレイムゴーレム",
+  "sprite_folder": "boss/Flame Golem",
+  "max_hp": 500.0,
+  "move_speed": 35.0,
+  "contact_damage": 48.4,
+  "exp_value": 30,
+  "visual_scale": 1.63,
+  "attack_pattern_id": "slam"
+}

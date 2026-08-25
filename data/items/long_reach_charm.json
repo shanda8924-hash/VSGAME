@@ -1,0 +1,7 @@
+{
+  "id": "long_reach_charm",
+  "display_name": "遠見の護符",
+  "effect_type": "attack_range_multiplier",
+  "value": 0.15,
+  "description": "攻撃範囲が15%上昇する"
+}

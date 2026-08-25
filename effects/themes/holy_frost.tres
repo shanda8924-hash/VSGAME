@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="EffectThemeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/effect_theme_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "holy_frost"
+display_name = "聖氷"
+combo_ids = "ice,light"

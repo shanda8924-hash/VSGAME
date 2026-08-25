@@ -1,0 +1,11 @@
+{
+  "id": "demon_d",
+  "display_name": "デーモンD",
+  "sprite_folder": "boss/Demon_D",
+  "max_hp": 390.0,
+  "move_speed": 52.0,
+  "contact_damage": 42.2,
+  "exp_value": 27,
+  "visual_scale": 1.44,
+  "attack_pattern_id": "slam"
+}

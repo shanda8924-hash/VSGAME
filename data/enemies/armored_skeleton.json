@@ -1,0 +1,10 @@
+{
+  "id": "armored_skeleton",
+  "display_name": "重装スケルトン",
+  "sprite_folder": "enemy/Armored Skeleton",
+  "max_hp": 92.0,
+  "move_speed": 55.0,
+  "contact_damage": 7.0,
+  "exp_value": 2,
+  "min_elapsed_seconds": 90.0
+}

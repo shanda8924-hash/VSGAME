@@ -1,0 +1,10 @@
+{
+  "id": "armored_orc",
+  "display_name": "重装オーク",
+  "sprite_folder": "enemy/Armored Orc",
+  "max_hp": 100.0,
+  "move_speed": 50.0,
+  "contact_damage": 8.0,
+  "exp_value": 2,
+  "min_elapsed_seconds": 90.0
+}

@@ -1,0 +1,10 @@
+{
+  "id": "elite_orc",
+  "display_name": "エリートオーク",
+  "sprite_folder": "enemy/Elite Orc",
+  "max_hp": 160.0,
+  "move_speed": 65.0,
+  "contact_damage": 12.0,
+  "exp_value": 3,
+  "min_elapsed_seconds": 180.0
+}

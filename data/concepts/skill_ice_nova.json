@@ -1,0 +1,8 @@
+{
+  "id": "skill_ice_nova",
+  "display_name": "氷結新星",
+  "concept_type": "skill",
+  "description": "周囲へ冷気ダメージと短い鈍足を与える",
+  "element_tags": ["ice"],
+  "params": {"skill_kind": "ice_nova", "damage_multiplier": 1.05, "radius": 108.0, "slow_duration": 1.1, "slow_multiplier": 0.58}
+}

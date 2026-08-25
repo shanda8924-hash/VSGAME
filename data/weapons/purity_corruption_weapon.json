@@ -1,0 +1,10 @@
+{
+  "id": "purity_corruption_weapon",
+  "display_name": "浄化と侵蝕の剣",
+  "description": "光+闇の合成武器。貫通ビームと闇の吸収演出を併せ持つ。",
+  "base_damage": 31.0,
+  "attack_interval": 1.15,
+  "attack_range": 225.0,
+  "required_fragment_ids": ["light", "dark"],
+  "vfx_theme_id": "purity_corruption"
+}

@@ -1,0 +1,129 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://ui/pause_menu/pause_menu.gd" id="1"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
+bg_color = Color(0.14, 0.14, 0.18, 0.95)
+border_color = Color(0.7, 0.7, 0.75, 1.0)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+corner_radius_top_left = 0
+corner_radius_top_right = 0
+corner_radius_bottom_right = 0
+corner_radius_bottom_left = 0
+
+[node name="PauseMenu" type="CanvasLayer"]
+process_mode = 3
+script = ExtResource("1")
+
+[node name="Background" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.6)
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Panel" type="PanelContainer" parent="CenterContainer"]
+custom_minimum_size = Vector2(560, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_1")
+
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 20
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 22
+text = "一時停止メニュー"
+
+[node name="TabBar" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 12
+
+[node name="WeaponTabButton" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/TabBar"]
+layout_mode = 2
+custom_minimum_size = Vector2(150, 36)
+text = "所持武器"
+
+[node name="TalentTabButton" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/TabBar"]
+layout_mode = 2
+custom_minimum_size = Vector2(150, 36)
+text = "天賦図"
+
+[node name="AudioTabButton" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/TabBar"]
+layout_mode = 2
+custom_minimum_size = Vector2(150, 36)
+text = "音量"
+
+[node name="WeaponPanel" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="ScrollContainer" type="ScrollContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/WeaponPanel"]
+custom_minimum_size = Vector2(0, 340)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="WeaponList" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/WeaponPanel/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="EmptyLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/WeaponPanel"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "所持武器はありません"
+visible = false
+
+[node name="TalentPanel" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+visible = false
+
+[node name="AudioPanel" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 14
+visible = false
+
+[node name="MusicLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/AudioPanel"]
+layout_mode = 2
+text = "BGM音量"
+
+[node name="MusicVolume" type="HSlider" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/AudioPanel"]
+layout_mode = 2
+min_value = 0.0
+max_value = 1.0
+step = 0.05
+
+[node name="SFXLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/AudioPanel"]
+layout_mode = 2
+text = "効果音量"
+
+[node name="SFXVolume" type="HSlider" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/AudioPanel"]
+layout_mode = 2
+min_value = 0.0
+max_value = 1.0
+step = 0.05
+
+[node name="CloseHint" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 13
+text = "Escキーで閉じる"

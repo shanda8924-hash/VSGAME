@@ -1,0 +1,12 @@
+{
+  "id": "lunar_frost_weapon",
+  "display_name": "月光氷刃の剣",
+  "description": "氷+光+闇の超融合武器。3属性ぶんの着弾演出をまとめて発動する。",
+  "base_damage": 55.0,
+  "attack_interval": 1.35,
+  "attack_range": 280.0,
+  "required_fragment_ids": ["ice", "light", "dark"],
+  "vfx_theme_id": "lunar_frost",
+  "crit_chance": 0.22,
+  "crit_multiplier": 2.3
+}
