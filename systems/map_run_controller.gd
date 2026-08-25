@@ -98,23 +98,25 @@ func _start_map(map_index: int) -> void:
 	_place_map_content()
 	var total_maps := int(_config.get("total_maps", _maps.size()))
 	var map_name := String(_current_config.get("display_name", "MAP %d" % map_index))
-	hud.set_map_status(map_index, total_maps, map_name, 0.0, float(_current_config.get("boss_unlock_seconds", 600.0)), 0, int(_current_config.get("boss_kill_requirement", 60)), false)
+	hud.set_map_status(map_index, total_maps, map_name, 0.0, float(_current_config.get("boss_fallback_seconds", 900.0)), 0, int(_current_config.get("boss_kill_requirement", 420)), false)
 	hud.set_room_message("探索開始：宝箱・祭壇・精鋭を探してください")
 	_clear_hud_message_later(2.6)
 	EventBus.map_started.emit(map_index, total_maps, map_name)
 
 func _update_progress() -> void:
 	var elapsed := maxf(GameManager.elapsed_seconds - _map_started_at, 0.0)
-	var required_seconds := float(_current_config.get("boss_unlock_seconds", 600.0))
-	var required_kills := int(_current_config.get("boss_kill_requirement", 60))
-	if not _boss_unlocked and elapsed >= required_seconds and _map_kills >= required_kills:
+	var fallback_seconds := float(_current_config.get("boss_fallback_seconds", 900.0))
+	var required_kills := int(_current_config.get("boss_kill_requirement", 420))
+	# Run時間を固定Timerで作らない。通常は戦闘進行で解放し、長時間撃破できない
+	# Buildだけ救済時刻で詰みを回避する。開始には最深部Boss AreaでE/Xが必要。
+	if not _boss_unlocked and (_map_kills >= required_kills or elapsed >= fallback_seconds):
 		_boss_unlocked = true
 		if is_instance_valid(_boss_gate):
 			_boss_gate.set_available(true)
 		hud.set_room_message("ボス領域の封印が解けました。MAP最深部へ向かってください")
 		EventBus.map_boss_unlocked.emit(GameManager.current_map_index)
-	hud.set_map_status(GameManager.current_map_index, int(_config.get("total_maps", 3)), String(_current_config.get("display_name", "")), elapsed, required_seconds, _map_kills, required_kills, _boss_unlocked)
-	EventBus.map_progress_changed.emit(GameManager.current_map_index, elapsed, required_seconds, _map_kills, required_kills)
+	hud.set_map_status(GameManager.current_map_index, int(_config.get("total_maps", 3)), String(_current_config.get("display_name", "")), elapsed, fallback_seconds, _map_kills, required_kills, _boss_unlocked)
+	EventBus.map_progress_changed.emit(GameManager.current_map_index, elapsed, fallback_seconds, _map_kills, required_kills)
 
 func _on_enemy_died(_enemy_data: Resource, _death_position: Vector2) -> void:
 	if _active and not _transitioning and GameManager.map_mode_active:
@@ -178,9 +180,9 @@ func _on_locked_landmark_attempted(kind: String) -> void:
 	if kind != "boss_gate":
 		return
 	var elapsed := maxf(GameManager.elapsed_seconds - _map_started_at, 0.0)
-	var seconds_left := maxi(int(ceil(float(_current_config.get("boss_unlock_seconds", 600.0)) - elapsed)), 0)
-	var kills_left := maxi(int(_current_config.get("boss_kill_requirement", 60)) - _map_kills, 0)
-	hud.set_room_message("封印条件：あと %d秒 / 敵 %d体" % [seconds_left, kills_left])
+	var seconds_left := maxi(int(ceil(float(_current_config.get("boss_fallback_seconds", 900.0)) - elapsed)), 0)
+	var kills_left := maxi(int(_current_config.get("boss_kill_requirement", 420)) - _map_kills, 0)
+	hud.set_room_message("封印条件：あと敵 %d体（長期探索の救済まで %d:%02d）" % [kills_left, seconds_left / 60, seconds_left % 60])
 
 func _start_map_boss() -> void:
 	if not _boss_unlocked or _boss_active or _transitioning or not is_instance_valid(_boss_gate):
@@ -415,8 +417,7 @@ func _read_json(path: String) -> Dictionary:
 func debug_force_boss_ready() -> void:
 	if not OS.is_debug_build() or not _active:
 		return
-	_map_started_at = GameManager.elapsed_seconds - float(_current_config.get("boss_unlock_seconds", 600.0))
-	_map_kills = int(_current_config.get("boss_kill_requirement", 60))
+	_map_kills = int(_current_config.get("boss_kill_requirement", 420))
 	_update_progress()
 
 func debug_start_boss() -> void:

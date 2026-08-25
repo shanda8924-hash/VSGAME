@@ -180,14 +180,14 @@ func set_room_status(room_number: int, total_rooms: int, room_type: String, temp
 	room_status_label.text = "%s  ·  %s" % [label, template_name]
 	room_message_label.text = ""
 
-func set_map_status(map_index: int, total_maps: int, map_name: String, elapsed: float, required_seconds: float, kills: int, required_kills: int, boss_ready: bool) -> void:
+func set_map_status(map_index: int, total_maps: int, map_name: String, elapsed: float, fallback_seconds: float, kills: int, required_kills: int, boss_ready: bool) -> void:
 	# MAP表示は進捗を含む2行なので、ROOM用1行領域のままだと案内文と重なる。
 	room_status_label.offset_bottom = 72.0
 	room_message_label.offset_top = 82.0
 	room_message_label.offset_bottom = 116.0
-	var time_text := "解放済み" if boss_ready else "%d:%02d / %d:%02d" % [int(elapsed) / 60, int(elapsed) % 60, int(required_seconds) / 60, int(required_seconds) % 60]
-	var kill_text := "%d / %d" % [mini(kills, required_kills), required_kills]
-	room_status_label.text = "MAP %d / %d  ·  %s\nボス領域 %s  ·  撃破 %s" % [map_index, total_maps, map_name, time_text, kill_text]
+	var fallback_left := maxi(int(ceil(fallback_seconds - elapsed)), 0)
+	var progress_text := "解放済み" if boss_ready else "撃破 %d / %d  ·  救済まで %d:%02d" % [mini(kills, required_kills), required_kills, fallback_left / 60, fallback_left % 60]
+	room_status_label.text = "MAP %d / %d  ·  %s\nボス領域 %s" % [map_index, total_maps, map_name, progress_text]
 
 func set_room_message(message: String) -> void:
 	room_message_label.text = message

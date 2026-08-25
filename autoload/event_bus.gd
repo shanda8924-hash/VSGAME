@@ -36,7 +36,7 @@ signal run_cleared(room_count: int, elapsed_seconds: float, kill_count: int)
 ## 通常RunのMAP探索進行。ROOM進行Signalはテスト／復旧用に残し、通常UIは
 ## こちらだけを購読する。
 signal map_started(map_index: int, total_maps: int, display_name: String)
-signal map_progress_changed(map_index: int, elapsed_seconds: float, required_seconds: float, kill_count: int, required_kills: int)
+signal map_progress_changed(map_index: int, elapsed_seconds: float, fallback_seconds: float, kill_count: int, required_kills: int)
 signal map_boss_unlocked(map_index: int)
 signal map_completed(map_index: int, elapsed_seconds: float, kill_count: int)
 signal treasure_reward_revealed(reward_type: String, rarity: String, position: Vector2)

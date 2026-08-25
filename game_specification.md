@@ -37,7 +37,7 @@
   → MAP 1探索(自動攻撃、自然湧き、Elite、配置宝箱/祭壇)
        → 敵撃破XPでLevel Up → Attribute 3択
        → 宝箱をE/Xで開封 → 装備/回復/Skill/Attribute報酬
-       → 時間+撃破条件達成後、最深部Boss領域をE/Xで開始
+       → 撃破条件達成後、最深部Boss領域をE/Xで開始（長期探索時だけ救済解放）
        → Boss撃破 → 確定装備+Boss宝箱Skill → MAP 2
   → MAP 2 → MAP 3 Final Boss
   → RUN CLEARリザルト(Retry / Title)
@@ -85,8 +85,8 @@ Developer Test Lab、回帰テスト、`codex/room-system-backup-20260825`から
   1〜2体、通常のステータスから1.8〜2.2倍に強化した個体が出現する
 - 表示スケールは通常個体よりやや大きく(1.6倍程度)し、視覚的に区別できるようにする
 - 各精鋭には進行時間に応じて1〜3個の特殊属性をランダム付与し、頭上へ属性名を表示する
-- 全滅させると現在のElement Buildに応じた属性/研鑽4択から1個を選択+メタ通貨ボーナスを獲得する。
-  各精鋭の死亡時には別途、装備の地面ドロップ判定を行う(詳細は23章)
+- MAP通常進行では精鋭ごとの高XP+確定地面装備を報酬にし、戦闘を止める属性4択/メタ通貨Modalは出さない。
+  旧ROOM/Test互換経路の報酬だけは回帰用に維持する(詳細は23章)。
 
 ## 6. レベルアップ(Attribute 3択+小回復)
 
@@ -104,8 +104,9 @@ Developer Test Lab、回帰テスト、`codex/room-system-backup-20260825`から
 
 ## 7. ボス
 
-- 現行通常ゲームは各MAPの探索時間+撃破数を満たすと最深部Boss領域を解放し、E/Xで既存Bossを1体生成する。
-  MAP1/2/3の固定条件は540秒+55体、600秒+75体、660秒+95体。Player火力追従は行わない。
+- 現行通常ゲームは各MAPの累計撃破数を満たすと最深部Boss領域を解放し、E/Xで既存Bossを1体生成する。
+  MAP1/2/3の固定撃破条件は420/650/900体。固定Timer待ちにはせず、極端に弱いBuildの詰み防止だけ
+  15/16/17分で救済解放する。いずれもBoss Areaへの到達+Interactが必要で、Player火力追従は行わない。
   旧ROOM 4の倍数EncounterとDeveloper Test Lab用明示Spawn APIは維持する。
 - `data/bosses/` に10体登録済み: Black Knight_A/B/C, Demon_A〜E, Flame Golem, Minotaur
 - ROOM 4から順にBlack Knight_A、Minotaur、Black Knight_B、Demon_B、Black Knight_C、
@@ -2586,13 +2587,15 @@ Element ModifierのGameplay/VFX/Masteryは`ElementCombatSystem`と`FusionCombatR
 
 ### 34.2 MAP固定曲線
 
-| MAP | 寸法 / 部屋 | Boss解放 | 通常敵HP / Damage | 同時上限 | Boss HP / Damage |
+| MAP | 寸法 / 部屋 | 目安 / Boss解放（救済） | 通常敵HP / Damage | 同時上限 | Boss HP / Damage |
 |---|---|---|---|---|---|
-| 1 忘却の地下回廊 | 78×78 / 10 | 540秒+55体 | ×2.50 / ×1.00 | 32 | ×2.2 / ×0.62 |
-| 2 紫晶の深層 | 86×86 / 11 | 600秒+75体 | ×3.25 / ×1.10 | 40 | ×3.8 / ×0.72 |
-| 3 終焉の炉心 | 94×94 / 12 | 660秒+95体 | ×4.00 / ×1.20 | 48 | ×5.8 / ×0.82 |
+| 1 忘却の地下回廊 | 78×78 / 10 | 約10分 / 420体（15分） | ×2.50 / ×1.00 | 32 | ×2.2 / ×0.62 |
+| 2 紫晶の深層 | 86×86 / 11 | 約11分 / 650体（16分） | ×3.25 / ×1.10 | 40 | ×3.8 / ×0.72 |
+| 3 終焉の炉心 | 94×94 / 12 | 約12分 / 900体（17分） | ×4.00 / ×1.20 | 48 | ×5.8 / ×0.82 |
 
 - 難易度はMAP番号・MAP内時間だけで決まり、Player火力、Attribute/Fusion/装備所持数から逆算しない。
+- Boss領域は固定Timer待ちでは解放しない。通常は各MAPの累計撃破数で封印を解き、さらに最遠部のBoss Areaへ到達してE/Xを押す。
+  拡散力のない極端なBuildでもRunが詰まらないよう15/16/17分だけ救済解放とし、HUDには撃破進捗と救済までの残り時間を表示する。
 - MAP1開始Poolの平均HPは初期Soldier通常攻撃換算で約8.0Hit。後続MAPは想定Build成長を受けても
   通常敵8〜15Hit、強敵15〜25Hitを基準にする固定倍率であり、RuntimeのPlayer能力追従補正は行わない。
 - `WaveSpawner`はPlayerから220〜480pxの床に1〜3体ずつ自然生成する。MAP内間隔は1.35→0.62秒へ変化し、
@@ -2617,9 +2620,10 @@ Element ModifierのGameplay/VFX/Masteryは`ElementCombatSystem`と`FusionCombatR
   壁装飾/檻/結晶候補は全矩形走査ではなく床近傍/Room外周/床Cacheから列挙する。
 - MAP HUDは2行進捗と案内文を別領域へ置く。Boss戦中はMAP進捗を一時非表示にしてBoss名/HPを優先し、終了後に復帰する。
 - `--map-runtime-check`は実Game SceneでAttribute、3MAP、各Boss、Boss宝箱、Skill、Run Clearを短縮完走する。
-  MAP2/3遷移の2026-08-25 headless最終実測は最大slice 21.188/29.566ms（最適化前53.698/71.546ms）。
-- `--map-combat-check`は4倍速の通常移動Input/近接Hitboxで、MAP1の自然撃破55/55を論理168.3秒で確認する。
-- `--map-soak-check`は20倍速で論理1820.2秒、自然Spawn、通常宝箱12、Elite完了経路、3Boss、
+  MAP2/3遷移の2026-08-25 headless最終実測は最大slice 21.842/24.338ms（最適化前53.698/71.546ms）。
+- `--map-combat-check`は4倍速・無成長Soldierの通常移動Input/実近接Hitboxで、MAP1の自然撃破421/420を
+  論理612.2秒で確認する。固定待機ではなく通常戦闘だけで約10分の解放条件へ届く。
+- `--map-soak-check`は20倍速で論理2001.5秒、自然Spawn、通常宝箱12、Elite完了経路、3Boss、
   全遷移、敵上限32/40/48、Run Clearを確認する。
 - `--map-gui-capture`はRTX 4060 / Vulkan Forward MobileでMAP開始、Boss領域、Boss戦を
   `artifacts/map_exploration_*.png`へ保存する。Debugger gameplay error、暗転残留、HUD重なりは0件。

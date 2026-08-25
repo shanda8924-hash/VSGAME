@@ -6,6 +6,10 @@ var failures: Array[String] = []
 var controller: MapRunController
 var boss_spawner: BossSpawner
 var player: Player
+var _combat_target_id := 0
+var _combat_ignored_target_id := 0
+var _combat_last_target_distance := INF
+var _combat_stuck_ticks := 0
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -99,12 +103,17 @@ func _run_combat_gate_check() -> void:
 	player.health_component.current_hp = 1000000000.0
 	Engine.time_scale = 4.0
 	await _open_regular_chests()
-	var kill_requirement := int(controller._current_config.get("boss_kill_requirement", 55))
+	var kill_requirement := int(controller._current_config.get("boss_kill_requirement", 420))
 	var local_started := GameManager.elapsed_seconds
-	while int(controller.debug_get_map_state().get("kills", 0)) < kill_requirement and GameManager.elapsed_seconds - local_started < 240.0:
+	var next_wall_status := Time.get_ticks_msec() + 10000
+	# 無成長のSoldier通常攻撃だけでもMAP1想定上限（14分）内に条件へ届くことを確認する。
+	while int(controller.debug_get_map_state().get("kills", 0)) < kill_requirement and GameManager.elapsed_seconds - local_started < 840.0:
 		await _close_visible_reward_modals()
 		_drive_soak_combat()
 		await _wait_frames(4)
+		if Time.get_ticks_msec() >= next_wall_status:
+			next_wall_status += 10000
+			print("MAP_EXPLORATION_COMBAT progress kills=%d/%d elapsed=%.1f scale=%.2f paused=%s modals=%d" % [int(controller.debug_get_map_state().get("kills", 0)), kill_requirement, GameManager.elapsed_seconds - local_started, Engine.time_scale, get_tree().paused, GameManager.active_modal_count])
 	_release_soak_movement()
 	var natural_kills := int(controller.debug_get_map_state().get("kills", 0))
 	_expect(natural_kills >= kill_requirement, "MAP1の自然撃破数がBoss条件未達です: %d/%d" % [natural_kills, kill_requirement])
@@ -132,7 +141,7 @@ func _run_soak() -> void:
 		Engine.time_scale = 20.0
 		_expect(GameManager.current_map_index == expected_map, "Soak MAP %d開始に失敗" % expected_map)
 		await _open_regular_chests()
-		var required := float(controller._current_config.get("boss_unlock_seconds", 600.0))
+		var required := float(controller._current_config.get("target_duration_seconds", 660.0))
 		var local_started := GameManager.elapsed_seconds
 		var next_combat_status := local_started + 20.0
 		while GameManager.elapsed_seconds - local_started < required + 1.0:
@@ -200,16 +209,39 @@ func _drive_soak_combat() -> void:
 	if enemies.is_empty():
 		_release_soak_movement()
 		return
-	var nearest := enemies[0] as Node2D
-	var nearest_distance := player.global_position.distance_to(nearest.global_position)
+	var nearest: Node2D = null
+	var nearest_distance := INF
 	for enemy_variant in enemies:
 		var enemy := enemy_variant as Node2D
-		var distance := player.global_position.distance_to(enemy.global_position)
-		if distance < nearest_distance:
+		if enemy.get_instance_id() == _combat_target_id:
 			nearest = enemy
-			nearest_distance = distance
-	# 自然敵はPlayerを追跡する。検査Bot側は重い経路探索を持たず、通常入力を
-	# 最寄り方向へ入れるだけにしてゲーム本体の長時間負荷を汚染しない。
+			nearest_distance = player.global_position.distance_to(enemy.global_position)
+			break
+	if nearest == null:
+		for enemy_variant in enemies:
+			var enemy := enemy_variant as Node2D
+			if enemy.get_instance_id() == _combat_ignored_target_id and enemies.size() > 1:
+				continue
+			var distance := player.global_position.distance_to(enemy.global_position)
+			if distance < nearest_distance:
+				nearest = enemy
+				nearest_distance = distance
+		_combat_target_id = nearest.get_instance_id()
+		_combat_last_target_distance = INF
+		_combat_stuck_ticks = 0
+		_combat_ignored_target_id = 0
+	if nearest_distance > 58.0 and nearest_distance >= _combat_last_target_distance - 1.5:
+		_combat_stuck_ticks += 1
+	else:
+		_combat_stuck_ticks = 0
+	_combat_last_target_distance = nearest_distance
+	if _combat_stuck_ticks >= 90:
+		_combat_ignored_target_id = _combat_target_id
+		_combat_target_id = 0
+		_combat_last_target_distance = INF
+		_combat_stuck_ticks = 0
+		_set_soak_movement(Vector2.ZERO)
+		return
 	var direction := (nearest.global_position - player.global_position).normalized() if nearest_distance > 42.0 else Vector2.ZERO
 	_set_soak_movement(direction)
 
