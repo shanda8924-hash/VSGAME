@@ -8,5 +8,10 @@
   "focus_delay": 0.18,
   "area_multiplier": 1.55,
   "reference_damage": 14.0,
-  "skill_base_radius": 82.0
+  "skill_base_radius": 82.0,
+  "completed_element_damage_per_stack": 0.16,
+  "completed_element_reach_per_stack": 0.08,
+  "completed_element_haste_per_stack": 0.07,
+  "signature_initial_delay": 1.1,
+  "signature_minimum_cooldown": 2.0
 }

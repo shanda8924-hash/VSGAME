@@ -21,6 +21,18 @@ func _ready() -> void:
 	await get_tree().create_timer(0.08, true, false, true).timeout
 	await _capture("05_concept_wind_blade.png")
 
+	_check(lab.select_tab("CONCEPT"), "Concept tab can be selected")
+	lab._completed_skill_grant_all()
+	lab._completed_skill_spawn_cluster()
+	lab.dummy.global_position = lab.player.global_position + Vector2(80, 0)
+	lab.concept_system.set_active(false)
+	for skill_id in ["thunderlord_descent", "inferno_pillar", "glacial_spear_rain", "radiant_blade_array", "void_severance"]:
+		lab.concept_system.debug_trigger_completed_skill(skill_id, lab._ensure_concept_target())
+		await get_tree().create_timer(0.14, true, false, true).timeout
+		await _capture("06_large_%s.png" % skill_id)
+		await get_tree().create_timer(0.48, true, false, true).timeout
+	lab.concept_system.set_active(true)
+
 	_check(lab.select_tab("FUSION"), "Fusion tab can be selected")
 	_check(lab.create_fusion("plasma", false), "Plasma can be prepared for visual capture")
 	lab.spawn_enemies(10, "Around Player", lab._selected_enemy_id())

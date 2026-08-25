@@ -103,10 +103,18 @@ func _run_combat_gate_check() -> void:
 	player.health_component.current_hp = 1000000000.0
 	Engine.time_scale = 4.0
 	await _open_regular_chests()
+	# MAP開始直後に宝箱を全開封する機械TestではAttribute未取得のためSkill候補が
+	# 空になり、今回のMain Loop（Attribute→大型Skill→大量殲滅）を評価できない。
+	# 実プレイのMAP1中盤相当として雷Lv3＋雷帝落雷Lv1を再現し、通常移動/実Hitboxと
+	# Cooldown自動大技の合算で撃破Gateへ届くかを測る。
+	GameManager.debug_force_element_state({"element_lightning": 3})
+	var concept := get_parent().get_node("ConceptSystem") as ConceptSystem
+	concept.acquire_completed_skill("thunderlord_descent")
+	concept.set_active(true)
 	var kill_requirement := int(controller._current_config.get("boss_kill_requirement", 420))
 	var local_started := GameManager.elapsed_seconds
 	var next_wall_status := Time.get_ticks_msec() + 10000
-	# 無成長のSoldier通常攻撃だけでもMAP1想定上限（14分）内に条件へ届くことを確認する。
+	# 代表的なMAP1完成Skill Buildで想定上限（14分）内に条件へ届くことを確認する。
 	while int(controller.debug_get_map_state().get("kills", 0)) < kill_requirement and GameManager.elapsed_seconds - local_started < 840.0:
 		await _close_visible_reward_modals()
 		_drive_soak_combat()

@@ -2,40 +2,30 @@
 
 ## 現在状態
 
-- 通常Runは3MAP探索。ROOM自動進行は通常経路から外し、Code/Data/Testは復旧用に保持。
-- MAPごとに自然湧き、配置宝箱4、Attribute/生命祭壇、Elite、最深部Boss領域を使用する。
-- 通常敵HP固定倍率はMAP1/2/3 = 2.50/3.25/4.00（MAP1開始時の初期Soldier換算平均約8.0Hit）。
-- 同時通常敵上限は32/40/48。Player周囲への補充間隔は維持し、密集時の長時間負荷を抑える。
-- Boss領域は固定Timer待ちではなく撃破420/650/900体で解放し、最遠部でE/Xを押して開始する。
-  極端に弱いBuildの詰み防止だけ15/16/17分で救済解放する。
-- 通常MAP開始時に、ROOM/Test Lab用Disabled状態からWaveSpawner/EliteRoomManagerを明示復帰する。
-- XP Level UpはAttribute 3択。Skillは宝箱/Boss宝箱のみ。Equipment/Inventory/Equip/Merge、COMBO、全10FusionをMAP間で維持。
-
-## 復旧点
-
-- ROOM版Backup commit: `8d41751`
-- ROOM版Branch: `codex/room-system-backup-20260825`
-- 現作業Branch: `codex/map-exploration-rebuild-20260825`
+- 通常Runは3MAP探索。ROOM自動進行は通常経路から外し、Backup `8d41751` / branch `codex/room-system-backup-20260825`に保持。
+- MAP固定値はHP×2.50/3.25/4.00、敵上限32/40/48、Boss解放420/650/900体、救済15/16/17分。
+- 完成Skillは既存18条件追撃+5完成大技。雷帝落雷、煉火天柱、氷槍豪雨、光刃陣、虚無断界が独立Cooldownで自動発動する。
+- 大技はLv1→3、属性Stack、Element/Fusion Mastery、Character/通常強化/装備Attackへ接続。敵不在はREADYを保持する。
+- Test Lab CONCEPTから大技選択、GRANT/Lv.UP、即時発動、Cooldown READY、24体群、全5種Previewが可能。
 
 ## 主な接続先
 
-- 進行: `systems/map_run_controller.gd`
-- MAP設定: `data/maps/exploration_run.json`
-- 通常入口: `scenes/game.gd` / `autoload/game_manager.gd`
-- 探索物: `entities/stage_environment/map_landmark.gd` / `entities/pickups/treasure_chest.gd`
-- Spawn固定曲線: `systems/wave_spawner.gd` / `data/difficulty/map_exploration.json`
+- 実行/Cooldown/補正: `systems/concept_system.gd`
+- Data/日本語: `data/skills/completed_skills.json` / `data/localization/ui_ja.json`
+- 固有VFX: `effects/concept_skill_vfx.gd`
+- MAP候補Weight: `systems/map_run_controller.gd`
+- Test Lab: `scenes/developer_test_lab.gd`
 
 ## 確認結果
 
-- `map_entry_input_check`: GAME START→通常ゲーム→Soldier→MAP1をInputMap操作だけで通過 PASS。
-- `--map-combat-check`: 無成長Soldierの通常移動Input/実近接HitboxでMAP1自然撃破421/420、論理612.2秒 PASS。
-- `--map-runtime-check`: MAP1→2→3、Attribute、3Boss、Boss宝箱、Skill、Run Clear PASS。
-- `--map-soak-check`: 論理2001.5秒、自然Spawn、通常宝箱12、Elite完了、敵上限32/40/48、3Boss、全遷移 PASS。
-- Vulkan RTX 4060 / Forward Mobile: MAP開始、Boss領域、Boss戦 PASS。画像は`artifacts/map_exploration_*.png`。
-- 既存Equipment/Merge/Fusion 10種/Concept/ROOM COMBO/ROOM遷移回帰はPASS。
+- `signature_skill_runtime_check`: 5種、属性Lv3、装備Attack、Cooldown連続循環、対象削除Echo、敵不在READY PASS。5種同時Peak VFX 13、残留0。
+- `concept_build_runtime_check` / `concept_fusion_stress_check` / `equipment_merge_check` / `developer_test_lab_check`: PASS。
+- `--map-runtime-check`: 3MAP/Boss/Skill/Run Clear PASS。MAP2/3遷移最大slice 26.825/24.134ms。
+- `--map-combat-check`: 雷Lv3+雷帝落雷Lv1で自然撃破420/420、論理370.6秒 PASS。
+- `--map-soak-check`: 論理2006.3秒（33.4分）、敵上限、12宝箱、Elite、3Boss、Result PASS。
+- Vulkan RTX 4060 / Forward Mobile: Test Lab全5大技個別描画10 screenshots、Debugger gameplay error 0、ブラックアウト0。
 
 ## 次に触る場合
 
-- 実プレイヤー操作で各MAP10〜15分の体感、通常敵8〜15Hit/強敵15〜25Hit、宝箱配置密度を調整する。
-- 数値変更は`data/maps/exploration_run.json`と`data/difficulty/map_exploration.json`を優先し、Player Build追従Scalingを追加しない。
-- 通常進行へROOM CLEAR/ROOM Reward/RoomSelectを再接続しない。
+- 実プレイヤー操作で各MAP10〜15分の体感と、完成大技Lv2/3の後半画面密度を調整する。
+- 通常進行へROOM CLEAR/RoomSelectを再接続せず、新属性追加時は完成大技Data+VFX profileを同じ経路へ追加する。

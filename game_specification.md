@@ -2370,6 +2370,8 @@ Element ModifierのGameplay/VFX/Masteryは`ElementCombatSystem`と`FusionCombatR
   現在Build別の4択Element報酬
 - EQUIPMENT / LOOT: Template/Rarity指定のDrop/Add/Equip/Unequip/Remove、3個Merge、
   1/10/全Rarity Drop、Loot Clean/Combat/Stress
+- CONCEPT: 旧Parts/Boardに加え、完成大技5種の選択、GRANT/Lv.UP、即時発動、Cooldown READY、
+  24体固定Target、全大技連続Previewを提供する。状態欄で各大技のLvと残Cooldownを確認できる
 - RESET STATEは生成物、Boss、Enemy、Projectile、Transient VFX、装備、属性/Fusion、Player、
   Damage Meterを初期化し、実Game Sceneは保持する。RELOAD GAMEは実Game Scene自体を再生成する
 
@@ -2378,7 +2380,7 @@ Element ModifierのGameplay/VFX/Masteryは`ElementCombatSystem`と`FusionCombatR
 - `tests/developer_test_lab_check.tscn`: 実Game接続、LevelUp、5属性、全10 Fusion、自然Fusion、
   4択報酬、Enemy/Boss、Equipment/Merge/Loot、Projectile、Resetを自動検証する
 - `tests/developer_test_lab_visual_check.tscn`: Vulkan 1600×900でPanel、実Game Field、Fusion VFX、
-  全Rarity Loot、生成済み風刃を描画し、`artifacts/developer_test_lab/`へ保存する
+  全Rarity Loot、生成済み風刃、完成大技5種の固有シルエットを描画し、`artifacts/developer_test_lab/`へ保存する
 - `tests/fusion_pixel_art_asset_check.tscn`: 全50 PNGの固有Path、384×64 RGBA、透明角、6 frame、
   Resource接続、Runtime AnimatedSprite、Collisionなしに加え、全frame高発色、発生→最大→形状崩壊、
   Attack/Trail Sprite座標固定をHeadlessで検証する
@@ -2485,6 +2487,22 @@ Element ModifierのGameplay/VFX/Masteryは`ElementCombatSystem`と`FusionCombatR
 | 光 | 光輪追撃 / 閃光蓄積 / 天啓 |
 | 闇 | 虚無裂き / 闇蝕 / 魂喰らい |
 
+- 既存18種の条件追撃に加え、独立Cooldownで敵群を自動捕捉する完成大技を5種追加する。
+
+| 属性 | 完成大技 | Lv1→Lv3基礎Cooldown | 主シルエット / 補助 |
+|---|---|---|---|
+| 雷 | 雷帝落雷 | 7.5→5.5秒 | 巨大縦雷剣 / 連鎖 |
+| 火 | 煉火天柱 | 9.0→7.0秒 | 中心火柱+二重衝撃輪 / 範囲 |
+| 氷 | 氷槍豪雨 | 10.0→8.0秒 | 放射氷槍 / 遅延Echo |
+| 光 | 光刃陣 | 8.5→6.5秒 | 放射光刃+中核 / 範囲 |
+| 闇 | 虚無断界 | 11.0→8.0秒 | 水平の虚無裂界 / 範囲 |
+
+- 初取得は1.1秒のWarm-up後、敵が自動捕捉範囲へ入った時だけ発動する。敵不在ではCooldownを消費せずREADYを保持する。
+  属性Stack Lv2/Lv3は1段階ごとDamage +16%、Reach +8%、Cooldown -7%。既存Element/Fusion Masteryも重ねる。
+  基礎Damageは選択Character、固定強化、装備Attack、低HP条件倍率を使用し、完成大技だけ固定14 Damageへ置き去りにしない。
+- 固有VFXは主Spriteの移動/全体Fadeや全画面Flashを使わず、発生点で硬い非AA形状を展開し、短い保持後にY圧縮・破片化して退役する。
+  雷/火/氷/光/闇は大技定義色を優先し、敵攻撃・背景と区別できる。
+
 - 旧`data/concepts/`と2 Chain Concept BoardはDeveloper Test Labと既存回帰テスト用に保持するが、通常プレイの
   Treasure取得後や次ROOM選択画面には表示しない。Boardを開いた場合の起点/スキル/補助名、説明、操作ラベルは日本語表示とする。
 
@@ -2517,8 +2535,12 @@ Element ModifierのGameplay/VFX/Masteryは`ElementCombatSystem`と`FusionCombatR
 - 既定`max_trigger_depth=2`。発動済みChain indexをlineageに保存し、同一Chainの自己再入を禁止する。
   Triggered Skillは直接攻撃ではなく、Critical再抽選もしないためON CRITICALへ戻らない。
 - ECHO/FOCUSは再発動時にModifierを再適用しない。Run Resetは遅延Timer epochを無効化し、古いCallbackを次Runへ持ち越さない。
+- ECHOのawait中に対象が死亡/queue_freeされた場合は、終了時に参照を再検証する。解放済みNodeを型付き引数へ渡さず、
+  Echoだけは元着弾地点で成立させ、Focusは生存対象が無ければ中止する。
 - `tests/concept_build_runtime_check.tscn`で旧Concept Parts、完成済みSkillの6種上限/Lv.UP/日本語Key、
   雷鳴連鎖、導電炎、Cross候補、Trigger再帰防止、Metadata、Developer Board modalを検証する。
+- `tests/signature_skill_runtime_check.tscn`は5種Data/Profile、Lv/属性/装備Damage、Cooldown自動復帰、敵不在READY、
+  対象削除中Echo、5種同時Cooldown Stressを検証する。2026-08-25実測の定常PeakはTransient VFX 13、終了後残留0。
 
 ### 32.5 全体監査・安定化（2026年8月14日）
 
@@ -2610,6 +2632,7 @@ Element ModifierのGameplay/VFX/Masteryは`ElementCombatSystem`と`FusionCombatR
   宝箱/祭壇/Boss領域はPlayerの共通Interact登録を使い、範囲外E/X、二重Open、二重Rewardを拒否する。
 - XP Level UpはAttribute 3択。Skillは通常宝箱の割当と各MAP Boss宝箱だけ。Fusionは6回目のAttribute取得を目安に
   MAP1後半〜MAP2で成立する。旧Concept Parts/Boardは通常UIへ出さない。
+- Skill候補は現在の1〜2属性だけから選び、完成大技へ+1.65の初回Weightを与える。取得済みSkillのLv.UP優先は従来どおり維持する。
 - 通常敵装備率2%、MAP Eliteは1体ごと確定、Bossは最低1個確定。宝箱Equipmentも実物Ground Itemとして生成する。
   Recoveryは通常/EliteのHeart Drop、宝箱Heart、生命祭壇40%、MAP間25%、Level Up12%を使用する。
 - C/I Character ScreenはMAP戦闘中もModal pauseで安全に開け、Inventory/Equip/Mergeは通常Run進行と同じラン状態を参照する。
@@ -2621,9 +2644,9 @@ Element ModifierのGameplay/VFX/Masteryは`ElementCombatSystem`と`FusionCombatR
 - MAP HUDは2行進捗と案内文を別領域へ置く。Boss戦中はMAP進捗を一時非表示にしてBoss名/HPを優先し、終了後に復帰する。
 - `--map-runtime-check`は実Game SceneでAttribute、3MAP、各Boss、Boss宝箱、Skill、Run Clearを短縮完走する。
   MAP2/3遷移の2026-08-25 headless最終実測は最大slice 21.842/24.338ms（最適化前53.698/71.546ms）。
-- `--map-combat-check`は4倍速・無成長Soldierの通常移動Input/実近接Hitboxで、MAP1の自然撃破421/420を
-  論理612.2秒で確認する。固定待機ではなく通常戦闘だけで約10分の解放条件へ届く。
-- `--map-soak-check`は20倍速で論理2001.5秒、自然Spawn、通常宝箱12、Elite完了経路、3Boss、
+- `--map-combat-check`は4倍速・雷Lv3+雷帝落雷Lv1のMAP1中盤代表Build、通常移動Input/実近接Hitboxで、
+  自然撃破420/420を論理370.6秒で確認する。大技なしの比較実測は209体/840秒で、Build取得による殲滅差を確認する。
+- `--map-soak-check`は20倍速で論理2006.3秒、自然Spawn、通常宝箱12、Elite完了経路、3Boss、
   全遷移、敵上限32/40/48、Run Clearを確認する。
 - `--map-gui-capture`はRTX 4060 / Vulkan Forward MobileでMAP開始、Boss領域、Boss戦を
   `artifacts/map_exploration_*.png`へ保存する。Debugger gameplay error、暗転残留、HUD重なりは0件。

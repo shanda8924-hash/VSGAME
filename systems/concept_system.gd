@@ -30,6 +30,7 @@ var _direct_hit_counts: Dictionary = {}
 var _completed_hit_counts: Dictionary = {}
 var _completed_charge_counts: Dictionary = {}
 var _processed_trigger_keys: Dictionary = {}
+var _completed_skill_cooldowns: Dictionary = {}
 var _runtime_epoch: int = 0
 
 
@@ -48,6 +49,23 @@ func set_active(active: bool) -> void:
 		_direct_hit_counts.clear()
 
 
+func _process(delta: float) -> void:
+	if not _active or GameManager.run_state != GameManager.RunState.PLAYING or completed_skill_levels.is_empty():
+		return
+	for skill_id_variant in completed_skill_levels.keys():
+		var skill_id := String(skill_id_variant)
+		var definition: Dictionary = _completed_skill_definitions.get(skill_id, {})
+		if String(definition.get("trigger_kind", "")) != "cooldown_auto":
+			continue
+		var remaining := maxf(float(_completed_skill_cooldowns.get(skill_id, 0.0)) - delta, 0.0)
+		_completed_skill_cooldowns[skill_id] = remaining
+		if remaining > 0.0:
+			continue
+		var target := _signature_auto_target(definition)
+		if target:
+			_activate_signature_skill(skill_id, definition, get_completed_skill_level(skill_id), target)
+
+
 func reset_runtime() -> void:
 	_runtime_epoch += 1
 	acquired_ids.clear()
@@ -59,6 +77,7 @@ func reset_runtime() -> void:
 	_completed_hit_counts.clear()
 	_completed_charge_counts.clear()
 	completed_skill_levels.clear()
+	_completed_skill_cooldowns.clear()
 	_processed_trigger_keys.clear()
 	inventory_changed.emit()
 	board_changed.emit()
@@ -134,6 +153,17 @@ func get_completed_skill_count() -> int:
 	return completed_skill_levels.size()
 
 
+func get_completed_skill_cooldown(skill_id: String) -> float:
+	return maxf(float(_completed_skill_cooldowns.get(skill_id, 0.0)), 0.0)
+
+
+func get_completed_skill_cooldown_total(skill_id: String) -> float:
+	var definition: Dictionary = _completed_skill_definitions.get(skill_id, {})
+	if definition.is_empty():
+		return 0.0
+	return _signature_cooldown_total(definition, maxi(get_completed_skill_level(skill_id), 1))
+
+
 func acquire_completed_skill(skill_id: String) -> int:
 	var definition: Dictionary = _completed_skill_definitions.get(skill_id, {})
 	if definition.is_empty():
@@ -146,6 +176,12 @@ func acquire_completed_skill(skill_id: String) -> int:
 		return current
 	var next_level := current + 1
 	completed_skill_levels[skill_id] = next_level
+	if String(definition.get("trigger_kind", "")) == "cooldown_auto":
+		var total := _signature_cooldown_total(definition, next_level)
+		if current <= 0:
+			_completed_skill_cooldowns[skill_id] = minf(total, float(_config.get("signature_initial_delay", 1.1)))
+		else:
+			_completed_skill_cooldowns[skill_id] = minf(get_completed_skill_cooldown(skill_id), total)
 	inventory_changed.emit()
 	completed_skill_changed.emit(skill_id, next_level)
 	return next_level
@@ -248,6 +284,10 @@ func _execute_skill(chain_index: int, skill: ConceptData, modifier: ConceptData,
 	if modifier_kind == "area":
 		radius *= float(_config.get("area_multiplier", 1.55))
 	radius *= 1.0 + 0.14 * float(maxi(skill_level - 1, 0))
+	var completed_definition := _completed_definition_from_metadata(skill_meta)
+	if not completed_definition.is_empty():
+		radius *= _definition_level_value(completed_definition, "radius_multiplier_by_level", skill_level, 1.0)
+	radius *= _element_reach_multiplier(skill)
 	_apply_skill_at(skill, center, radius, skill_meta, skill_level)
 	if is_echo:
 		return
@@ -274,12 +314,21 @@ func _schedule_repeat(chain_index: int, skill: ConceptData, target: Node2D, posi
 		var health := target.get_node_or_null("HealthComponent") as HealthComponent
 		if health == null or health.current_hp <= 0.0:
 			return
-	_execute_skill(chain_index, skill, null, target, position, CombatEventMeta.fork_event(metadata, "concept:%s:repeat" % skill.id), true, skill_level)
+	# EchoはTarget消滅後も元の着弾地点で成立するが、解放済みObjectを型付き引数へ
+	# 渡してはいけない。await終了時点で有効な参照だけを再構成する。
+	var repeat_target: Node2D = null
+	if is_instance_valid(target):
+		repeat_target = target
+	_execute_skill(chain_index, skill, null, repeat_target, position, CombatEventMeta.fork_event(metadata, "concept:%s:repeat" % skill.id), true, skill_level)
 
 
 func _apply_skill_at(skill: ConceptData, center: Vector2, radius: float, skill_meta: Dictionary, skill_level: int = 1) -> void:
-	_play_skill_vfx(skill, center, radius)
-	var damage := float(_config.get("reference_damage", 14.0)) * float(skill.params.get("damage_multiplier", 1.0)) * (1.0 + 0.28 * float(maxi(skill_level - 1, 0)))
+	_play_skill_vfx(skill, center, radius, skill_meta, skill_level)
+	var damage := _player_skill_damage_basis() * float(skill.params.get("damage_multiplier", 1.0)) * (1.0 + 0.28 * float(maxi(skill_level - 1, 0)))
+	var completed_definition := _completed_definition_from_metadata(skill_meta)
+	if not completed_definition.is_empty():
+		damage *= _definition_level_value(completed_definition, "damage_multiplier_by_level", skill_level, 1.0)
+	damage *= _element_damage_multiplier(skill)
 	for enemy in get_tree().get_nodes_in_group("enemies"):
 		if not is_instance_valid(enemy) or not (enemy is Node2D) or (enemy as Node2D).global_position.distance_to(center) > radius:
 			continue
@@ -298,7 +347,7 @@ func _apply_skill_at(skill: ConceptData, center: Vector2, radius: float, skill_m
 				status.apply_effect("slow", float(skill.params.get("slow_duration", 1.1)), float(skill.params.get("slow_multiplier", 0.58)))
 
 
-func _play_skill_vfx(skill: ConceptData, center: Vector2, radius: float) -> void:
+func _play_skill_vfx(skill: ConceptData, center: Vector2, radius: float, skill_meta: Dictionary, skill_level: int) -> void:
 	var kind := String(skill.params.get("skill_kind", ""))
 	var colors := {
 		"thunder_strike": Color("#a56dff"),
@@ -308,7 +357,19 @@ func _play_skill_vfx(skill: ConceptData, center: Vector2, radius: float) -> void
 		"light_burst": Color("#fff1a8"),
 		"dark_rift": Color("#b56cff"),
 	}
-	ConceptSkillVFX.spawn(GameManager.get_runtime_world(self), center, kind, radius * 0.72, colors.get(kind, Color.WHITE))
+	var vfx_color: Color = colors.get(kind, Color.WHITE)
+	var completed_definition := _completed_definition_from_metadata(skill_meta)
+	if not completed_definition.is_empty() and String(completed_definition.get("color", "")) != "":
+		vfx_color = Color(String(completed_definition.get("color")))
+	ConceptSkillVFX.spawn(
+		GameManager.get_runtime_world(self),
+		center,
+		kind,
+		radius * 0.72,
+		vfx_color,
+		skill_level,
+		String(skill_meta.get("signature_profile", ""))
+	)
 
 
 func _concept_for_slot(chain_index: int, slot_type: String) -> ConceptData:
@@ -391,6 +452,8 @@ func _completed_trigger_matches(definition: Dictionary, target: Node2D, is_criti
 				return false
 			_completed_hit_counts[count_key] = 0
 			return true
+		"cooldown_auto":
+			return false
 	return false
 
 
@@ -421,6 +484,8 @@ func _trigger_completed_skill(skill_id: String, definition: Dictionary, level: i
 	var completed_index := 100 + _completed_skill_order.find(skill_id)
 	var position: Vector2 = target.global_position if is_instance_valid(target) else parent_metadata.get("impact_position", Vector2.ZERO)
 	var skill_meta := CombatEventMeta.create_triggered(parent_metadata, "completed_skill:%s" % skill_id, skill.element_tags, completed_index, true)
+	skill_meta["completed_skill_id"] = skill_id
+	skill_meta["signature_profile"] = String(definition.get("vfx_profile", ""))
 	if bool(definition.get("apply_freeze", false)) and is_instance_valid(target):
 		var freeze_status := target.get_node_or_null("StatusEffectComponent") as StatusEffectComponent
 		if freeze_status:
@@ -433,6 +498,119 @@ func _trigger_completed_skill(skill_id: String, definition: Dictionary, level: i
 	_execute_skill(completed_index, skill, modifier, target, position, skill_meta, false, level)
 	completed_skill_triggered.emit(skill_id, level)
 	skill_triggered.emit(completed_index, skill.id, int(skill_meta.get("generation_depth", 0)))
+
+
+func debug_trigger_completed_skill(skill_id: String, preferred_target: Node2D = null) -> bool:
+	var definition: Dictionary = _completed_skill_definitions.get(skill_id, {})
+	var level := get_completed_skill_level(skill_id)
+	if definition.is_empty() or level <= 0:
+		return false
+	var target := preferred_target if is_instance_valid(preferred_target) else _signature_auto_target(definition)
+	if target == null:
+		return false
+	if String(definition.get("trigger_kind", "")) == "cooldown_auto":
+		_activate_signature_skill(skill_id, definition, level, target)
+	else:
+		var metadata := CombatEventMeta.create_secondary("developer_completed_skill", [], false)
+		metadata["impact_position"] = target.global_position
+		_trigger_completed_skill(skill_id, definition, level, target, metadata)
+	return true
+
+
+func debug_force_completed_skill_ready(skill_id: String) -> bool:
+	var definition: Dictionary = _completed_skill_definitions.get(skill_id, {})
+	if definition.is_empty() or get_completed_skill_level(skill_id) <= 0 or String(definition.get("trigger_kind", "")) != "cooldown_auto":
+		return false
+	_completed_skill_cooldowns[skill_id] = 0.0
+	return true
+
+
+func _activate_signature_skill(skill_id: String, definition: Dictionary, level: int, target: Node2D) -> void:
+	_completed_skill_cooldowns[skill_id] = _signature_cooldown_total(definition, level)
+	var skill := DataLoader.get_concept(String(definition.get("skill_id", "")))
+	var tags: Array = skill.element_tags if skill else []
+	var metadata := CombatEventMeta.create_secondary("completed_skill_auto:%s" % skill_id, tags, false)
+	metadata["impact_position"] = target.global_position
+	_trigger_completed_skill(skill_id, definition, level, target, metadata)
+
+
+func _signature_auto_target(definition: Dictionary) -> Node2D:
+	var player := get_tree().get_first_node_in_group("player") as Node2D
+	if player == null or not is_instance_valid(player):
+		return null
+	var candidates := _nearest_enemies(player.global_position, float(definition.get("auto_target_range", 740.0)), 1, {})
+	return candidates[0] if not candidates.is_empty() else null
+
+
+func _signature_cooldown_total(definition: Dictionary, level: int) -> float:
+	var total := _definition_level_value(definition, "cooldown_by_level", level, 8.0)
+	var element_id := "element_%s" % String(definition.get("trigger_element", ""))
+	var stack := GameManager.get_element_stack(element_id)
+	total *= 1.0 - float(_config.get("completed_element_haste_per_stack", 0.07)) * float(maxi(stack - 1, 0))
+	total *= GameManager.get_element_haste_multiplier()
+	if GameManager.active_fusion_id != "" and element_id in GameManager.get_active_element_ids():
+		total *= GameManager.get_fusion_haste_multiplier()
+	var player := get_tree().get_first_node_in_group("player")
+	if player:
+		var upgrades := player.get_node_or_null("PlayerUpgradesComponent") as PlayerUpgradesComponent
+		if upgrades:
+			var build_haste := upgrades.attack_interval_multiplier + upgrades.equipment_attack_speed_bonus
+			total *= maxf(0.65, 1.0 - build_haste * 0.35)
+	return maxf(total, float(_config.get("signature_minimum_cooldown", 2.0)))
+
+
+func _completed_definition_from_metadata(metadata: Dictionary) -> Dictionary:
+	var skill_id := String(metadata.get("completed_skill_id", ""))
+	return _completed_skill_definitions.get(skill_id, {}) if skill_id != "" else {}
+
+
+func _definition_level_value(definition: Dictionary, key: String, level: int, fallback: float) -> float:
+	var values: Array = definition.get(key, [])
+	if values.is_empty():
+		return fallback
+	return float(values[clampi(level - 1, 0, values.size() - 1)])
+
+
+func _element_id_for_skill(skill: ConceptData) -> String:
+	return "element_%s" % String(skill.element_tags[0]) if not skill.element_tags.is_empty() else ""
+
+
+func _element_damage_multiplier(skill: ConceptData) -> float:
+	var element_id := _element_id_for_skill(skill)
+	if element_id == "":
+		return 1.0
+	var stack := GameManager.get_element_stack(element_id)
+	var multiplier := 1.0 + float(_config.get("completed_element_damage_per_stack", 0.16)) * float(maxi(stack - 1, 0))
+	multiplier *= GameManager.get_element_damage_multiplier(element_id)
+	if GameManager.active_fusion_id != "" and element_id in GameManager.get_active_element_ids():
+		multiplier *= GameManager.get_fusion_damage_multiplier()
+	return multiplier
+
+
+func _element_reach_multiplier(skill: ConceptData) -> float:
+	var element_id := _element_id_for_skill(skill)
+	if element_id == "":
+		return 1.0
+	var stack := GameManager.get_element_stack(element_id)
+	return (1.0 + float(_config.get("completed_element_reach_per_stack", 0.08)) * float(maxi(stack - 1, 0))) * GameManager.get_element_reach_multiplier(element_id)
+
+
+func _player_skill_damage_basis() -> float:
+	var damage := float(_config.get("reference_damage", 14.0))
+	var character: CharacterData = DataLoader.characters.get(GameManager.selected_character_id)
+	if character:
+		damage = maxf(character.base_damage, damage)
+	var player := get_tree().get_first_node_in_group("player")
+	if player == null:
+		return damage
+	var stat_modifier := player.get_node_or_null("StatModifierComponent") as StatModifierComponent
+	if stat_modifier:
+		damage += stat_modifier.get_damage_flat_bonus()
+	var upgrades := player.get_node_or_null("PlayerUpgradesComponent") as PlayerUpgradesComponent
+	if upgrades:
+		damage += upgrades.equipment_attack_flat
+		damage *= upgrades.damage_multiplier * upgrades.get_equipment_conditional_damage_multiplier()
+	return damage
 
 
 func _load_completed_skills() -> void:

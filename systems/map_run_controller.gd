@@ -266,6 +266,9 @@ func _build_completed_skill_candidates() -> Array[Dictionary]:
 			continue
 		var required: Array = definition.get("required_elements", [])
 		var weight := 1.0 + (1.35 if current_level > 0 else 0.0) + (0.7 if required.size() >= 2 else 0.0)
+		# 各属性の大技をRun中に体験しやすくする。取得後は従来どおりLv上げを優先する。
+		if bool(definition.get("signature_skill", false)):
+			weight += 1.65
 		if not active_elements.is_empty() and String(active_elements[-1]).trim_prefix("element_") in required:
 			weight += 0.55
 		pool.append({"definition": definition, "weight": weight})

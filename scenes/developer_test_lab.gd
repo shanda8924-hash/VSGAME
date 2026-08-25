@@ -57,6 +57,7 @@ var _equipment_template: OptionButton
 var _equipment_rarity: OptionButton
 var _equipment_summary: RichTextLabel
 var _room_number: SpinBox
+var _completed_skill_select: OptionButton
 var _dummy_hp_label: Label
 var _dummy_infinite := true
 var _dummy_freeze := true
@@ -189,7 +190,7 @@ func _build_shell() -> void:
 	_state_label.name = "BuildState"
 	_state_label.bbcode_enabled = true
 	_state_label.fit_content = false
-	_state_label.custom_minimum_size.y = 68
+	_state_label.custom_minimum_size.y = 98
 	_state_label.scroll_active = false
 	panel_vbox.add_child(_state_label)
 
@@ -247,7 +248,7 @@ func _load_runtime_game() -> void:
 	_subviewport.add_child(runtime_game)
 	await get_tree().process_frame
 	await get_tree().physics_frame
-	for node_name in ["WaveSpawner", "BossSpawner", "EliteRoomManager", "RoomRunController", "ComboSystem", "ConceptSystem"]:
+	for node_name in ["WaveSpawner", "BossSpawner", "EliteRoomManager", "RoomRunController", "ComboSystem"]:
 		var automatic := runtime_game.get_node_or_null(node_name)
 		if automatic:
 			automatic.process_mode = Node.PROCESS_MODE_DISABLED
@@ -338,6 +339,23 @@ func _room_transition_stress() -> void:
 
 func _build_concept_tab() -> void:
 	var body := _new_tab("CONCEPT")
+	_section(body, "COMPLETED LARGE SKILL / COOLDOWN")
+	_completed_skill_select = OptionButton.new()
+	_completed_skill_select.name = "CompletedLargeSkillSelect"
+	for definition in concept_system.get_completed_skill_definitions():
+		if not bool(definition.get("signature_skill", false)):
+			continue
+		var skill_id := String(definition.get("id", ""))
+		_completed_skill_select.add_item("%s / %s" % [concept_system.get_completed_skill_display_name(skill_id), skill_id])
+		_completed_skill_select.set_item_metadata(_completed_skill_select.item_count - 1, skill_id)
+	body.add_child(_completed_skill_select)
+	var large_buttons := _grid(body, 2)
+	_add_button(large_buttons, "GRANT / LEVEL UP", _completed_skill_grant_selected)
+	_add_button(large_buttons, "TRIGGER NOW", _completed_skill_trigger_selected)
+	_add_button(large_buttons, "RESET COOLDOWN", _completed_skill_ready_selected)
+	_add_button(large_buttons, "SPAWN TARGET CLUSTER", _completed_skill_spawn_cluster)
+	_add_button(large_buttons, "GRANT ALL LARGE", _completed_skill_grant_all)
+	_add_button(large_buttons, "PREVIEW ALL LARGE", _completed_skill_preview_all)
 	_section(body, "CONCEPT INVENTORY / BOARD")
 	_add_button(body, "ACQUIRE ALL CONCEPT PARTS", _concept_acquire_all)
 	_add_button(body, "BUILD A: CRIT → THUNDER → CHAIN", func(): _concept_build_chain(0, "trigger_on_critical", "skill_thunder_strike", "modifier_chain"))
@@ -349,6 +367,71 @@ func _build_concept_tab() -> void:
 	_add_button(body, "TRIGGER FIVE DIRECT HITS", _concept_trigger_five_hits)
 	_add_button(body, "TRIGGER 20 COMBO", _concept_trigger_combo)
 	_add_button(body, "CLEAR CONCEPT STATE", _concept_clear)
+
+
+func _selected_completed_skill_id() -> String:
+	if _completed_skill_select == null or _completed_skill_select.item_count <= 0:
+		return ""
+	return String(_completed_skill_select.get_item_metadata(_completed_skill_select.selected))
+
+
+func _completed_skill_grant_selected() -> void:
+	var skill_id := _selected_completed_skill_id()
+	var level := concept_system.acquire_completed_skill(skill_id)
+	concept_system.set_active(true)
+	_refresh_state_text()
+	_set_status("Large Skill %s → Lv%d / CD %.1fs" % [concept_system.get_completed_skill_display_name(skill_id), level, concept_system.get_completed_skill_cooldown_total(skill_id)])
+
+
+func _completed_skill_trigger_selected() -> void:
+	var skill_id := _selected_completed_skill_id()
+	if concept_system.get_completed_skill_level(skill_id) <= 0:
+		concept_system.acquire_completed_skill(skill_id)
+	concept_system.set_active(true)
+	var triggered := concept_system.debug_trigger_completed_skill(skill_id, _ensure_concept_target())
+	_set_status("Triggered %s / next %.1fs" % [concept_system.get_completed_skill_display_name(skill_id), concept_system.get_completed_skill_cooldown(skill_id)] if triggered else "Large Skill trigger failed — spawn a target")
+
+
+func _completed_skill_ready_selected() -> void:
+	var skill_id := _selected_completed_skill_id()
+	var ready := concept_system.debug_force_completed_skill_ready(skill_id)
+	_set_status("%s cooldown READY" % concept_system.get_completed_skill_display_name(skill_id) if ready else "Acquire the selected Large Skill first")
+
+
+func _completed_skill_grant_all() -> void:
+	concept_system.set_active(true)
+	for definition in concept_system.get_completed_skill_definitions():
+		if bool(definition.get("signature_skill", false)):
+			concept_system.acquire_completed_skill(String(definition.get("id", "")))
+	_refresh_state_text()
+	_set_status("All five elemental Large Skills granted / levelled")
+
+
+func _completed_skill_spawn_cluster() -> void:
+	_clear_enemies(false, false)
+	var enemies := spawn_enemies(24, "Cluster", _selected_enemy_id(), false, true)
+	for enemy in enemies:
+		enemy.set_movement_locked(true)
+	_set_status("24 stationary real targets spawned for Large Skill coverage")
+
+
+func _completed_skill_preview_all() -> void:
+	_preview_token += 1
+	var token := _preview_token
+	concept_system.set_active(true)
+	var target := _ensure_concept_target()
+	for definition in concept_system.get_completed_skill_definitions():
+		if token != _preview_token:
+			return
+		if not bool(definition.get("signature_skill", false)):
+			continue
+		var skill_id := String(definition.get("id", ""))
+		if concept_system.get_completed_skill_level(skill_id) <= 0:
+			concept_system.acquire_completed_skill(skill_id)
+		concept_system.debug_trigger_completed_skill(skill_id, target)
+		_set_status("Preview: %s" % concept_system.get_completed_skill_display_name(skill_id))
+		await get_tree().create_timer(0.72, true, false, true).timeout
+	_set_status("All five Large Skill silhouettes previewed")
 
 func _concept_acquire_all() -> void:
 	concept_system.set_active(true)
@@ -910,6 +993,8 @@ func compare_base_fusion(fragment_id: String, fusion_id: String) -> void:
 func stop_all_previews() -> void:
 	_preview_token += 1
 	_compare_token += 1
+	if concept_system:
+		concept_system.set_active(false)
 	_set_status("Automatic previews stopped")
 
 func _fusion_entry(fusion_id: String) -> Dictionary:
@@ -1436,11 +1521,19 @@ func _refresh_state_text() -> void:
 		parts.append("%s Lv%d" % [element_id.trim_prefix("element_").to_upper(), GameManager.get_element_stack(element_id)])
 	var fusion := GameManager.active_fusion_id.to_upper() if GameManager.active_fusion_id != "" else "NONE"
 	var concept_parts: Array[String] = []
+	var completed_parts: Array[String] = []
 	if concept_system:
 		for chain_index in 2:
 			var chain := concept_system.get_chain(chain_index)
 			concept_parts.append("%s>%s>%s" % [String(chain.get("trigger", "-")).trim_prefix("trigger_"), String(chain.get("skill", "-")).trim_prefix("skill_"), String(chain.get("modifier", "-")).trim_prefix("modifier_")])
-	_state_label.text = "[b]BUILD[/b] %s   SLOT %d/2\n[b]FUSION[/b] %s\n[b]CONCEPT[/b] %s\n[b]FIELD[/b] Enemy %d  Projectile %d  VFX %d" % [" + ".join(parts) if not parts.is_empty() else "NONE", parts.size(), fusion, " | ".join(concept_parts), get_tree().get_nodes_in_group("enemies").size(), get_tree().get_nodes_in_group("projectiles").size(), get_tree().get_nodes_in_group("transient_vfx").size()]
+		for definition in concept_system.get_completed_skill_definitions():
+			if not bool(definition.get("signature_skill", false)):
+				continue
+			var skill_id := String(definition.get("id", ""))
+			var level := concept_system.get_completed_skill_level(skill_id)
+			if level > 0:
+				completed_parts.append("%s%d %.1f" % [skill_id.left(3).to_upper(), level, concept_system.get_completed_skill_cooldown(skill_id)])
+	_state_label.text = "[b]BUILD[/b] %s   SLOT %d/2\n[b]FUSION[/b] %s\n[b]CONCEPT[/b] %s\n[b]LARGE[/b] %s\n[b]FIELD[/b] Enemy %d  Projectile %d  VFX %d" % [" + ".join(parts) if not parts.is_empty() else "NONE", parts.size(), fusion, " | ".join(concept_parts), " | ".join(completed_parts) if not completed_parts.is_empty() else "NONE", get_tree().get_nodes_in_group("enemies").size(), get_tree().get_nodes_in_group("projectiles").size(), get_tree().get_nodes_in_group("transient_vfx").size()]
 
 func _set_status(message: String) -> void:
 	if _status_label:

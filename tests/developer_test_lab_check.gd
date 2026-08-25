@@ -36,6 +36,8 @@ func _ready() -> void:
 	_check(_button_count(lab, "ACQUIRE ALL CONCEPT PARTS") == 1, "Test Lab exposes the Concept inventory preset")
 	_check(_button_count(lab, "OPEN CONCEPT BOARD") == 1, "Test Lab exposes the real Concept Board")
 	_check(_button_count(lab, "TRIGGER DIRECT CRITICAL") == 1 and _button_count(lab, "TRIGGER FIVE DIRECT HITS") == 1 and _button_count(lab, "TRIGGER 20 COMBO") == 1, "Test Lab exposes immediate Concept trigger controls")
+	_check(_button_count(lab, "GRANT / LEVEL UP") == 1 and _button_count(lab, "TRIGGER NOW") == 1 and _button_count(lab, "RESET COOLDOWN") == 1, "Test Lab exposes completed Large Skill grant/trigger/cooldown controls")
+	_check(lab._completed_skill_select != null and lab._completed_skill_select.item_count == 5, "Test Lab selector lists all five elemental Large Skills")
 	_check(_button_count(lab, "アンコモン素材 ×3") == 1 and _button_count(lab, "レア素材 ×3") == 1 and _button_count(lab, "エピック素材 ×3") == 1, "Test Lab exposes the three requested merge-material rarity presets")
 	_check(_button_count(lab, "合成画面を開く") == 1, "Test Lab opens the real three-slot merge screen")
 	_check(GameManager.get_fusion_display_name("judgment") == "RADIANT ARC / 聖雷", "legacy judgment id presents the redesigned Radiant Arc name")
@@ -116,6 +118,12 @@ func _ready() -> void:
 	lab.concept_system.skill_triggered.connect(func(_chain, _skill, _depth): lab_trigger_count[0] += 1)
 	lab._concept_trigger_critical()
 	_check(lab_trigger_count[0] >= 1, "Concept Lab direct Critical control triggers the equipped real Chain")
+	lab._completed_skill_grant_all()
+	_check(lab.concept_system.get_completed_skill_count() == 5, "Concept Lab grants all five Large Skills without exceeding the six-slot cap")
+	lab._completed_skill_trigger_selected()
+	_check(_find_signature_vfx("thunderlord_descent") != null, "Concept Lab TRIGGER NOW spawns the selected dedicated Large Skill VFX")
+	lab._completed_skill_ready_selected()
+	_check(is_zero_approx(lab.concept_system.get_completed_skill_cooldown("thunderlord_descent")), "Concept Lab RESET COOLDOWN exposes the real cooldown state")
 	lab.concept_board.show_board("DEVELOPER CONCEPT BOARD")
 	_check(lab.concept_board.visible, "Concept Lab opens the real Board modal")
 	lab.concept_board.done_button.pressed.emit()
@@ -161,7 +169,7 @@ func _ready() -> void:
 	print("LAB_CHECK stage=reset")
 	await lab.reset_lab_state()
 	_check(GameManager.get_active_element_ids().is_empty() and GameManager.active_fusion_id == "", "Reset clears Element and Fusion state")
-	_check(lab.concept_system.acquired_ids.is_empty(), "Reset clears Concept inventory and Board state")
+	_check(lab.concept_system.acquired_ids.is_empty() and lab.concept_system.get_completed_skill_count() == 0, "Reset clears Concept inventory, Board, and completed Large Skills")
 	_check(get_tree().get_nodes_in_group("projectiles").is_empty(), "Reset clears projectiles")
 
 	_stage = "cleanup"
@@ -198,6 +206,14 @@ func _find_concept_vfx(pixel_vfx_id: String) -> ConceptSkillVFX:
 	for effect in get_tree().get_nodes_in_group("transient_vfx"):
 		var concept_effect := effect as ConceptSkillVFX
 		if concept_effect != null and String(concept_effect.get_meta("pixel_vfx_id", "")) == pixel_vfx_id:
+			return concept_effect
+	return null
+
+
+func _find_signature_vfx(profile: String) -> ConceptSkillVFX:
+	for effect in get_tree().get_nodes_in_group("transient_vfx"):
+		var concept_effect := effect as ConceptSkillVFX
+		if concept_effect != null and String(concept_effect.get_meta("signature_vfx_profile", "")) == profile:
 			return concept_effect
 	return null
 
