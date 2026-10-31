@@ -1,4 +1,7 @@
 .godot/
+.godot_test_user/
+.godot-test-user-visual/
+.codex-runtime-test/
 .import/
 export.cfg
 export_presets.cfg
@@ -6,3 +9,7 @@ export_presets.cfg
 .DS_Store
 Thumbs.db
 tmp/
+# 実画面・検証ログは git 管理外（docs/screens/ に残すものだけ追跡する）
+artifacts/
+# 生成元の素材と一時的なコード退避は git 管理外
+tools/source_art/
