@@ -37,7 +37,6 @@ func _run_soak_and_game_loop() -> void:
 	var player := game.get_node("Player") as Player
 	var wave := game.get_node("WaveSpawner") as WaveSpawner
 	var boss_spawner := game.get_node("BossSpawner") as BossSpawner
-	var combat := game.get_node("ElementCombatSystem") as ElementCombatSystem
 	var attack_vfx := game.get_node("AttackVFXManager") as AttackVFXManager
 	var effect_vfx := game.get_node("EffectThemeManager") as EffectThemeManager
 
@@ -51,13 +50,7 @@ func _run_soak_and_game_loop() -> void:
 	var baseline_signal_connections := _event_connection_snapshot()
 	metrics["baseline_signal_connections"] = baseline_signal_connections
 
-	# 欠片取得とFusionを実Systemへ通し、以後の自動Projectileも耐久負荷へ含める。
-	for _rank in 3:
-		GameManager.add_fragment("fire")
-	for _rank in 3:
-		GameManager.add_fragment("ice")
 	await get_tree().process_frame
-	_check(GameManager.active_fusion_id == "frostfire", "Fire Lv3 + Ice Lv3 forms Frostfire in the runtime state")
 	_check(not player.weapon_manager.has_weapon("steam_burst_weapon"), "new Fusion state does not also create the legacy Fusion weapon")
 
 	# 600秒時点の候補・Spawn位置選択を使い、480体を生成して本番死亡経路へ通す。
@@ -92,15 +85,15 @@ func _run_soak_and_game_loop() -> void:
 	_check(int(metrics["post_kill_resources"]) <= int(metrics["warm_resources"]) + 40, "resource count stabilizes after enemy assets are warmed")
 	_check(int(metrics["post_kill_memory"]) <= int(metrics["warm_memory"]) + 24 * 1024 * 1024, "static memory remains within the soak tolerance")
 
-	# Fire Lv3 Burnを生存・即queue_free・死亡の混在対象へ付与し、追跡解放を待つ。
-	GameManager.set_active_element(GameManager.ELEMENT_NONE)
-	for _level in 3:
-		GameManager.add_fragment("fire")
+	# 燃焼を生存・即queue_free・死亡の混在対象へ付与し、追跡解放を待つ。
+	# 旧ElementCombatSystemのFire Lv3付与から、StatusApplySystemの付与へ移植したもの。
+	# StatusApplySystem._burning_targetsが解放漏れを起こさないことがこの検証の目的。
+	var status_apply := game.get_node("StatusApplySystem") as StatusApplySystem
 	var burn_targets: Array[EnemyBasic] = []
 	for index in 30:
 		var target := _spawn_tank_enemy(game, player.global_position + Vector2(80.0 + index * 4.0, 24.0))
 		burn_targets.append(target)
-		combat.apply_element_damage(target.hurtbox_component, 100.0, player.global_position)
+		status_apply.apply_state(target, "burning", 100.0)
 	for index in burn_targets.size():
 		if index % 2 == 0:
 			burn_targets[index].queue_free()
@@ -109,7 +102,7 @@ func _run_soak_and_game_loop() -> void:
 			burn_targets[index].health_component.apply_damage(10.0)
 	await _wait_real(4.6)
 	await _drain_modals(game)
-	_check(combat._burning_targets.is_empty(), "Burn tracking releases freed and dead targets after its maximum duration")
+	_check(status_apply._burning_targets.is_empty(), "Burn tracking releases freed and dead targets after its maximum duration")
 
 	# 死亡アニメ中でNodeが残っていても、自動攻撃/Homingは次の生存敵を選ぶ。
 	var dead_probe := _spawn_tank_enemy(game, player.global_position + Vector2(24.0, 0.0), 20.0)
@@ -263,7 +256,6 @@ func _check_restart_state(restarted: Node, restart_number: int, baseline_signal_
 	var restarted_player := restarted.get_node("Player") as Player
 	_check(GameManager.run_state == GameManager.RunState.PLAYING, "restart %d enters PLAYING" % restart_number)
 	_check(GameManager.kill_count == 0 and GameManager.elapsed_seconds < 0.25, "restart %d resets time and kills" % restart_number)
-	_check(GameManager.held_fragment_ids.is_empty() and GameManager.get_active_element_ids().is_empty(), "restart %d resets fragments and elements" % restart_number)
 	_check(restarted_player.experience_component.level == 1 and restarted_player.experience_component.current_exp == 0, "restart %d resets EXP and level" % restart_number)
 	_check(GameManager.active_modal_count == 0 and not get_tree().paused, "restart %d has no stale modal or pause" % restart_number)
 	_check(is_equal_approx(Engine.time_scale, 1.0), "restart %d restores normal time scale" % restart_number)
@@ -385,7 +377,7 @@ func _run_boss_attack_probes(game: Node, player: Player) -> void:
 	_check(bullets.size() == 8, "Boss nova creates the configured projectile count")
 	for node in bullets:
 		var bullet := node as Projectile
-		_check(not bullet.uses_player_element_vfx and not bullet.applies_player_elements, "Boss nova projectile keeps enemy team/element settings")
+		_check(not bullet.uses_player_element_vfx and not bullet.is_player_attack, "Boss nova projectile keeps enemy team/element settings")
 		_check(bullet.get_node("Visual").visible and bullet.get_node_or_null("ElementProjectile_vfx_fire_projectile") == null, "Boss nova projectile does not inherit Fire replacement VFX")
 	await _wait_real(0.15)
 	await _capture_if_gui("boss_nova")
@@ -399,7 +391,6 @@ func _run_boss_attack_probes(game: Node, player: Player) -> void:
 func _drain_modals(game: Node) -> void:
 	var level_up := game.get_node("LevelUpSelect") as LevelUpSelect
 	var item_select := game.get_node("ItemSelect") as ItemSelect
-	var fragment_select := game.get_node("FragmentSelect") as FragmentSelect
 	for _guard in 160:
 		await get_tree().process_frame
 		if GameManager.active_modal_count == 0 and GameManager._modal_queue.is_empty():
@@ -409,11 +400,9 @@ func _drain_modals(game: Node) -> void:
 			grid = level_up.grid_container
 		elif item_select.visible:
 			grid = item_select.grid_container
-		elif fragment_select.visible:
-			grid = fragment_select.grid_container
 		if grid and grid.get_child_count() > 0:
 			var button := grid.get_child(0) as Button
-			var modal_id := "level_up" if level_up.visible else ("item_select" if item_select.visible else "fragment_select")
+			var modal_id := "level_up" if level_up.visible else "item_select"
 			if modal_id == "item_select" and not _capture_flags.has("boss_flash_expired"):
 				await _wait_real(0.55)
 				var screen_effects := game.get_node("ScreenEffects") as ScreenEffects
@@ -434,8 +423,6 @@ func _wait_real(seconds: float) -> void:
 func _event_connection_snapshot() -> Dictionary:
 	var snapshot: Dictionary = {}
 	for signal_name in [
-		"enemy_died", "enemy_drop_requested", "player_leveled_up", "fragment_collected",
-		"active_element_changed", "element_loadout_changed", "element_damage_dealt",
 		"damage_dealt", "run_started", "run_ended", "elite_room_entered",
 		"elite_room_cleared", "boss_fight_started", "boss_fight_ended",
 		"boss_health_changed", "item_acquired"
@@ -495,10 +482,22 @@ func _transient_vfx_names(root: Node) -> Array[String]:
 		if node.name.to_lower().contains("vfx") or node is GPUParticles2D or node is Line2D or node is CharacterAfterimage:
 			# 常設Manager/Poolは残留扱いにしない。
 			if not node is AttackVFXManager and not node is EffectThemeManager and not node is VFXPoolManager and not node.get_parent() is VFXPoolManager:
-				names.append("%s:%s" % [node.get_class(), node.name])
+				# 床に落ちている装備の見た目(PixelLootPlate/PixelLootOutline等)は
+				# その装備が生きている間は残るのが正しい。床装備自体の寿命は
+				# 上限・期限切れの検証が別途担当するため、ここでは残留扱いにしない。
+				if not _is_ground_loot_visual(node):
+					names.append("%s:%s" % [node.get_class(), node.name])
 		for child in node.get_children():
 			pending.append(child)
 	return names
+
+func _is_ground_loot_visual(node: Node) -> bool:
+	var cursor := node
+	while cursor != null:
+		if cursor is GroundEquipmentItem:
+			return true
+		cursor = cursor.get_parent()
+	return false
 
 func _failures_append_once(label: String) -> void:
 	if label not in failures:

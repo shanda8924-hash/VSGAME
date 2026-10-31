@@ -1,0 +1,4 @@
+[gd_scene load_steps=2 format=3]
+[ext_resource type="Script" path="res://tests/equipment_auto_attack_check.gd" id="1"]
+[node name="EquipmentAutoAttackCheck" type="Node"]
+script = ExtResource("1")

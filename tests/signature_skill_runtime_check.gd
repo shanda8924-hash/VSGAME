@@ -16,14 +16,10 @@ func _ready() -> void:
 
 func _run() -> void:
 	GameManager.selected_character_id = "swordsman"
-	GameManager.debug_request_room_mode_for_next_game()
 	game = GAME_SCENE.instantiate()
 	add_child(game)
 	await get_tree().process_frame
 	await get_tree().physics_frame
-	var controller := game.get_node("RoomRunController") as RoomRunController
-	_check(await _wait_for(func(): return controller.state == RoomRunController.RoomState.COMBAT, 4.0), "runtime reaches combat")
-	controller.process_mode = Node.PROCESS_MODE_DISABLED
 	concept = game.get_node("ConceptSystem") as ConceptSystem
 	concept.completed_skill_triggered.connect(func(skill_id, _level): triggered.append(skill_id))
 	concept.reset_runtime()
@@ -34,7 +30,6 @@ func _run() -> void:
 	_check(signature_definitions.size() == 5, "five elemental signature skills load from data")
 	_check(signature_definitions.all(func(definition): return String(definition.get("trigger_kind", "")) == "cooldown_auto"), "all signature skills use the bounded cooldown trigger")
 
-	GameManager.debug_force_element_state({"element_lightning": 1})
 	_check(concept.acquire_completed_skill("thunderlord_descent") == 1, "lightning signature can be acquired")
 	var level_one_total := concept.get_completed_skill_cooldown_total("thunderlord_descent")
 	var target := targets[0]
@@ -45,7 +40,6 @@ func _run() -> void:
 	_check(concept.get_completed_skill_cooldown("thunderlord_descent") > 0.0, "manual trigger starts the real cooldown lifecycle")
 	_check(_has_signature_vfx("thunderlord_descent"), "lightning signature spawns its dedicated runtime VFX")
 
-	GameManager.debug_force_element_state({"element_lightning": 3})
 	target.health_component.current_hp = 100000.0
 	before = target.health_component.current_hp
 	concept.debug_trigger_completed_skill("thunderlord_descent", target)

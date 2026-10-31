@@ -7,7 +7,6 @@ const HOME_SCENE := preload("res://ui/home/home.tscn")
 const OUTPUT_DIR := "res://artifacts/targeted_regression"
 
 var failures: Array[String] = []
-var iai_trail_events := 0
 
 func _ready() -> void:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUTPUT_DIR))
@@ -18,7 +17,7 @@ func _ready() -> void:
 	await _check_title_mode_selection()
 	for failure in failures:
 		push_error(failure)
-	print("IAI_AND_MODE_CHECK failures=%d iai_trails=%d" % [failures.size(), iai_trail_events])
+	print("IAI_AND_MODE_CHECK failures=%d" % failures.size())
 	AudioManager.stop_all()
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -55,8 +54,6 @@ func _check_real_iai_hit_path() -> void:
 	var player := game.get_node("Player") as Player
 	player.weapon_manager.process_mode = Node.PROCESS_MODE_DISABLED
 	var attack_vfx := game.get_node("AttackVFXManager") as AttackVFXManager
-	attack_vfx.element_effect_spawned.connect(_on_element_effect_spawned)
-	GameManager.debug_force_element_state({"element_fire": 1})
 	var enemy_a := _spawn_enemy(game, player.global_position + Vector2(48, 0), "iai_no_mark_a")
 	var enemy_b := _spawn_enemy(game, player.global_position + Vector2(88, 8), "iai_no_mark_b")
 	var hp_a := enemy_a.health_component.current_hp
@@ -65,11 +62,9 @@ func _check_real_iai_hit_path() -> void:
 	var segment_end := player.global_position + Vector2(120, 0)
 	var hit_enemies: Dictionary = {}
 	player.active_skill_component._damage_iai_segment(segment_start, segment_end, 22.0, 10.0, hit_enemies)
-	var trail := attack_vfx.play_iai_trail(segment_start, segment_end)
 	await get_tree().process_frame
 	_check(hit_enemies.size() == 2, "one IAI segment damages both enemies once")
 	_check(enemy_a.health_component.current_hp < hp_a and enemy_b.health_component.current_hp < hp_b, "IAI damage remains active after mark removal")
-	_check(trail != null and iai_trail_events == 1, "attribute IAI space-slash effect remains connected")
 	_check(get_tree().get_nodes_in_group("iai_slash_marks").is_empty(), "IAI creates no enemy-following horizontal mark")
 	if DisplayServer.get_name() != "headless":
 		await get_tree().create_timer(0.12, true, false, true).timeout
@@ -81,7 +76,6 @@ func _check_real_iai_hit_path() -> void:
 	game.queue_free()
 	await get_tree().process_frame
 	await get_tree().process_frame
-	GameManager.debug_force_element_state({})
 
 func _check_title_mode_selection() -> void:
 	var home := HOME_SCENE.instantiate() as HomeScreen
@@ -99,15 +93,15 @@ func _check_title_mode_selection() -> void:
 	var start := title.get_node("CenterContainer/VBoxContainer/StartButton") as Button
 	var mode_select := title.get_node("CenterContainer/VBoxContainer/ModeSelect") as VBoxContainer
 	var test_button := title.get_node("CenterContainer/VBoxContainer/ModeSelect/TestButton") as Button
-	_check(start.text == "ゲームスタート", "title exposes the Japanese game start action")
+	_check(start.text == "探索を始める", "title exposes the Japanese exploration start action")
 	_check(not mode_select.visible, "mode selection stays hidden before game start")
 	_check(get_viewport().gui_get_focus_owner() == start, "game start receives initial keyboard focus")
 	start.pressed.emit()
 	await get_tree().process_frame
 	var normal_button := title.get_node("CenterContainer/VBoxContainer/ModeSelect/NormalButton") as Button
-	_check(mode_select.visible and not start.visible, "game start opens Normal Game / Test Mode selection")
-	_check(get_viewport().gui_get_focus_owner() == normal_button, "Normal Game receives keyboard focus after opening mode selection")
-	_check(not test_button.disabled and test_button.text.begins_with("テストモード"), "debug build exposes the player-selectable Test Mode")
+	_check(mode_select.visible and not start.visible, "exploration start opens the route selection")
+	_check(get_viewport().gui_get_focus_owner() == normal_button, "normal exploration receives keyboard focus after opening route selection")
+	_check(not test_button.disabled and test_button.text.begins_with("演出確認室"), "debug build exposes the visual test room")
 	test_button.pressed.emit()
 	var lab: DeveloperTestLab
 	for _frame in 180:
@@ -148,10 +142,6 @@ func _spawn_enemy(game: Node, position: Vector2, enemy_id: String) -> EnemyBasic
 	game.add_child(enemy)
 	enemy.global_position = position
 	return enemy
-
-func _on_element_effect_spawned(effect_id: String, _effect: AnimatedSprite2D) -> void:
-	if effect_id.contains("iai_") and effect_id.contains("trail"):
-		iai_trail_events += 1
 
 func _find_button_by_text(root: Node, text_value: String) -> Button:
 	if root is Button and (root as Button).text == text_value:

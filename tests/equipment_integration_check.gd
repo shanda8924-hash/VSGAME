@@ -3,6 +3,7 @@ extends Node
 var failures: Array[String] = []
 
 func _ready() -> void:
+	SaveManager.begin_ephemeral_session() # Keep fixture rewards out of the player's save.
 	await get_tree().process_frame
 	await _run_checks()
 	await _run_drop_runtime_check()
@@ -65,14 +66,17 @@ func _run_checks() -> void:
 	player.health_component.damage_taken_multiplier = 1.0
 	var equipment_ui := ui_scene.instantiate() as EquipmentScreen
 	add_child(equipment_ui)
-	equipment_ui._refresh()
+	# The real open path now builds the inventory lazily, including rarity headings.
+	equipment_ui._open()
 	_check(_count_equipment_slots(equipment_ui) == 6, "character UI shows six slots around portrait")
-	_check(equipment_ui.inventory_list.get_child_count() == 1, "equipment UI shows inventory")
-	var inventory_button := equipment_ui.inventory_list.get_child(0) as Button
-	_check(inventory_button.icon != null, "inventory UI shows item icon")
+	var inventory_buttons: Array[Button] = []
+	for child in equipment_ui.inventory_list.get_children():
+		if child is Button:
+			inventory_buttons.append(child)
+	_check(inventory_buttons.size() == 1, "equipment UI shows inventory")
+	_check(not inventory_buttons.is_empty() and inventory_buttons[0].icon != null, "inventory UI shows item icon")
 	_check((equipment_ui.left_slots.get_child(0) as Button).icon != null, "equipped slot UI shows item icon")
 	_check(equipment_ui.character_portrait.texture != null, "character UI reuses current character sprite")
-	equipment_ui._open()
 	_check(get_tree().paused and equipment_ui.visible and equipment_ui.process_mode == Node.PROCESS_MODE_ALWAYS, "character UI pauses world and remains interactive")
 	Input.action_press("ui_cancel")
 	equipment_ui._process(0.0)
@@ -142,12 +146,19 @@ func _run_checks() -> void:
 	for child in mythic_ground.get_node("Visual").get_children():
 		if child is CPUParticles2D:
 			has_particles = true
-	_check(has_particles, "mythic ground item has particles")
+	_check(not has_particles, "mythic ground item needs no persistent CPU emitters")
 	_check(mythic_ground.get_node_or_null("Visual/RarityRing") == null, "large rarity ring removed")
 	_check(mythic_ground.get_node_or_null("Visual/RarityGlow") == null, "large rarity ring glow removed")
-	_check(mythic_ground.get_node_or_null("Visual/PixelLootPlate") is Polygon2D, "ground item uses compact pixel loot plate")
-	var loot_outline := mythic_ground.get_node_or_null("Visual/PixelLootOutline") as Line2D
-	_check(loot_outline != null and not loot_outline.antialiased, "mythic loot outline is a hard nearest-pixel silhouette")
+	_check(mythic_ground.get_node_or_null("Visual/PixelLootPlate") == null and mythic_ground.get_node_or_null("Visual/PixelLootOutline") == null, "procedural plate and line are replaced by authored pixel art")
+	var loot_seal := mythic_ground.get_node_or_null("Visual/RoyalLootSeal") as Sprite2D
+	_check(loot_seal != null and loot_seal.texture != null and loot_seal.texture.resource_path == GroundEquipmentItem.LOOT_SEAL_TEXTURE_PATH, "drop uses the generated royal seal PNG")
+	_check(loot_seal != null and loot_seal.texture_filter == CanvasItem.TEXTURE_FILTER_NEAREST and loot_seal.modulate == mythic_data.get_rarity_color(), "seal keeps nearest pixels and mythic rarity color")
+	_check(loot_seal != null and not loot_seal.is_processing() and loot_seal.scale.x * 64.0 <= 62.0, "persistent loot effect is one static compact sprite")
+	var awakening := mythic_ground.get_node_or_null("Visual/LootAwakening") as PixelSpriteVFX
+	_check(awakening != null and awakening.get_meta("pixel_vfx_id", "") == "loot_awaken", "drop plays the generated awakening PNG")
+	_check(awakening != null and awakening.sprite_frames.get_frame_count("play") == 6 and is_equal_approx(awakening._duration, 0.7), "awakening has six frames and a bounded 0.7 second lifetime")
+	_check(mythic_ground.get_node_or_null("Visual/LootAmbientParticles") == null and mythic_ground.get_node_or_null("Visual/LootSpawnBurst") == null, "duplicated particle VFX are removed")
+	_check(mythic_ground.get_node_or_null("Visual/LootParticles") == null, "duplicate high-rarity emitter removed")
 	_check(mythic_ground.get_node_or_null("Visual/LootBeam") == null and mythic_ground.get_node_or_null("Visual/LootBeamGlow") == null, "long equipment loot beams stay removed")
 	var player_visual_height := mythic_ground._get_player_visual_height()
 	var item_visual_height := mythic_ground._icon_visual_size.y
@@ -156,6 +167,8 @@ func _run_checks() -> void:
 	var before_position: Vector2 = mythic_ground.get_node("Visual").position
 	await get_tree().create_timer(0.08).timeout
 	_check(mythic_ground.get_node("Visual").position == before_position, "ground item does not bob")
+	await get_tree().create_timer(0.72).timeout
+	_check(mythic_ground.get_node_or_null("Visual/LootAwakening") == null, "awakening removes itself after its short lifetime")
 	mythic_ground.queue_free()
 	var affix_data := _read_json("res://data/elite_affixes/default.json")
 	_check(affix_data.get("affixes", {}).size() == 6, "six elite affixes configured")

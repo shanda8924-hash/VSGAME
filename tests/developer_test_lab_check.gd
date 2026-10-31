@@ -1,7 +1,6 @@
 extends Node
 
 const LAB_SCENE := preload("res://scenes/developer_test_lab.tscn")
-const FUSION_IDS := ["frostfire", "plasma", "solar", "inferno", "superconductor", "aurora", "void_frost", "judgment", "voidstorm", "eclipse"]
 var failures: Array[String] = []
 var _stage := "boot"
 
@@ -16,31 +15,27 @@ func _ready() -> void:
 	_stage = "player"
 	print("LAB_CHECK stage=player")
 	_check(OS.is_debug_build(), "test runtime is a debug build")
-	_check(lab.runtime_game != null and lab.player != null and lab.element_combat != null, "lab embeds the real game scene and systems")
+	_check(lab.runtime_game != null and lab.player != null and lab.status_apply != null, "lab embeds the real game scene and systems")
 	_check(lab.runtime_game.is_in_group("game_runtime_world"), "embedded game is the resolved runtime world")
 	_check(lab.get_node_or_null("LabSplit/DeveloperControlPanel") != null, "developer control panel exists")
 	_check(lab.get_node_or_null("LabSplit/RealGameField") != null, "real game field exists")
 	_check(lab.get_node_or_null("TestModeBadge") != null, "TEST MODE save-disabled badge is visible")
 	_check(SaveManager.is_ephemeral_session_active(), "Lab suspends persistent save writes")
 	_check(_button_count(lab, "RETURN TITLE") == 1, "Lab exposes a return-to-title button")
-	_check(_button_count(lab, "JUMP SELECTED") == 1 and _button_count(lab, "ROOM 36 FINAL") == 1, "Room Lab exposes arbitrary and Final ROOM jumps")
-	_check(_button_count(lab, "TRANSITION STRESS x12") == 1, "Room Lab exposes transition stress")
-	_check(_button_count(lab, "IAI (REAL HIT)") == 5, "all registered gameplay elements expose real IAI checks")
-	for required_label in ["CREATE", "TRIGGER ATTACK", "TRIGGER HIT", "TRIGGER BONUS TRAIT", "TRIGGER INTRO"]:
-		_check(_button_count(lab, required_label) >= 10, "Fusion Lab exposes %s for all ten Fusions" % required_label)
-	_check(_button_count(lab, "PREVIEW ALL FUSIONS") == 1, "Fusion Lab exposes one continuous Pixel Art preview")
-	_check(_button_count(lab, "LIGHTNING → PLASMA → LIGHTNING") == 1, "Fusion Lab exposes Lightning / Plasma comparison")
-	_check(_button_count(lab, "FIRE → PLASMA → FIRE") == 1, "Fusion Lab exposes Fire / Plasma comparison")
-	_check(_button_count(lab, "LIGHTNING → RADIANT ARC → LIGHTNING") == 1, "Fusion Lab exposes Lightning / Radiant Arc comparison")
+	_check(_button_count(lab, "JUMP SELECTED") == 0 and _button_count(lab, "ROOM 36 FINAL") == 0, "Retired ROOM controls are absent")
+	_check(_button_count(lab, "TRANSITION STRESS x12") == 0, "Retired ROOM stress control is absent")
 	_check(_button_count(lab, "WIND BLADE / 風刃") == 1, "VFX Gallery exposes the generated Wind Concept preview")
 	_check(_button_count(lab, "ACQUIRE ALL CONCEPT PARTS") == 1, "Test Lab exposes the Concept inventory preset")
 	_check(_button_count(lab, "OPEN CONCEPT BOARD") == 1, "Test Lab exposes the real Concept Board")
 	_check(_button_count(lab, "TRIGGER DIRECT CRITICAL") == 1 and _button_count(lab, "TRIGGER FIVE DIRECT HITS") == 1 and _button_count(lab, "TRIGGER 20 COMBO") == 1, "Test Lab exposes immediate Concept trigger controls")
 	_check(_button_count(lab, "GRANT / LEVEL UP") == 1 and _button_count(lab, "TRIGGER NOW") == 1 and _button_count(lab, "RESET COOLDOWN") == 1, "Test Lab exposes completed Large Skill grant/trigger/cooldown controls")
-	_check(lab._completed_skill_select != null and lab._completed_skill_select.item_count == 5, "Test Lab selector lists all five elemental Large Skills")
+	var signature_skill_count := 0
+	for definition in lab.concept_system.get_completed_skill_definitions():
+		if bool(definition.get("signature_skill", false)):
+			signature_skill_count += 1
+	_check(lab._completed_skill_select != null and signature_skill_count > 0 and lab._completed_skill_select.item_count == signature_skill_count, "Test Lab selector lists every signature Large Skill")
 	_check(_button_count(lab, "アンコモン素材 ×3") == 1 and _button_count(lab, "レア素材 ×3") == 1 and _button_count(lab, "エピック素材 ×3") == 1, "Test Lab exposes the three requested merge-material rarity presets")
 	_check(_button_count(lab, "合成画面を開く") == 1, "Test Lab opens the real three-slot merge screen")
-	_check(GameManager.get_fusion_display_name("judgment") == "RADIANT ARC / 聖雷", "legacy judgment id presents the redesigned Radiant Arc name")
 
 	var start_level: int = lab.player.experience_component.level
 	lab.add_player_levels(1)
@@ -56,56 +51,35 @@ func _ready() -> void:
 	lab.full_heal()
 	_check(is_equal_approx(lab.player.health_component.current_hp, lab.player.health_component.max_hp), "Full Heal uses HealthComponent")
 
-	_check(lab.set_element_level("fire", 3, false), "Normal mode reaches Fire Lv3 through acquisition")
-	_check(GameManager.get_element_stack("element_fire") == 3, "Normal element state is stored by GameManager")
-	var projectile_before := get_tree().get_nodes_in_group("projectiles").size()
-	lab.trigger_element_transition("light", 1)
-	_check(GameManager.get_element_stack("element_light") == 2, "one-click Light Lv1 to Lv2 transition works")
-	_check(get_tree().get_nodes_in_group("projectiles").size() == projectile_before, "element level transition creates no projectile")
-	_check(lab.set_element_level("dark", 3, true), "Force mode sets Dark Lv3 immediately")
-
-	lab.reset_damage_meter()
-	_stage = "element_attack"
-	print("LAB_CHECK stage=element_attack")
-	lab.trigger_element_attack("fire")
+	# 旧ELEMENTタブ(属性Lv設定・属性攻撃)は属性システムごと廃止済み。
+	# 代替のSTATUSボタンがStatusApplySystemへ繋がっていること、および燃焼の
+	# 継続ダメージが実ダメージ経路を通ってDamage Meterへ届くことを確認する。
+	var dummy: EnemyBasic = lab.spawn_dummy()
+	var dummy_status := dummy.get_node("StatusEffectComponent") as StatusEffectComponent
+	_stage = "status_apply"
+	print("LAB_CHECK stage=status_apply")
+	for state_id in ["burning", "frozen", "charged", "marked", "cursed"]:
+		lab._apply_status_to_dummy(state_id)
 	await get_tree().process_frame
-	_check(lab._damage_total > 0.0 and lab._damage_hits > 0, "real attack path reaches the damage meter")
+	_check(dummy_status.get_states().size() == 5, "Lab STATUS buttons apply all five states to the dummy")
+
+	# Damage Meterは実WeaponManager経路(Lab の TRIGGER PROJECTILE と同じ)で確認する。
+	lab.reset_damage_meter()
+	lab.trigger_projectile()
+	var meter_hit := false
+	for _frame in 180:
+		await get_tree().process_frame
+		if lab._damage_total > 0.0 and lab._damage_hits > 0:
+			meter_hit = true
+			break
+	_check(meter_hit, "real attack path reaches the damage meter")
+	lab._clear_dummy_status()
+	await get_tree().process_frame
+	_check(dummy_status.get_states().is_empty(), "Lab CLEAR removes every applied state")
 	lab.preview_wind_blade_vfx()
 	await get_tree().process_frame
-	var wind_vfx := _find_concept_vfx("concept_wind_blade_v2")
+	var wind_vfx := _find_concept_vfx("concept_wind_blade")
 	_check(wind_vfx != null and wind_vfx.get_node_or_null("WindBladePixelVFX") is AnimatedSprite2D, "Wind Concept preview displays its generated six-frame Pixel Art")
-
-	for fusion_id in FUSION_IDS:
-		_stage = "fusion_%s" % fusion_id
-		print("LAB_CHECK stage=%s" % _stage)
-		_check(lab.create_fusion(fusion_id, false), "Force creates %s" % fusion_id)
-		lab.trigger_fusion_attack(fusion_id)
-		_check(GameManager.active_fusion_id == fusion_id, "%s is active in GameManager" % fusion_id)
-		lab.trigger_fusion_vfx(fusion_id, "hit")
-		var hit_effect := _find_fusion_effect(fusion_id, "hit")
-		_check(hit_effect != null and bool(hit_effect.get_meta("generated_pixel_art", false)), "%s Lab HIT displays generated Pixel Art" % fusion_id)
-		lab.trigger_fusion_bonus(fusion_id)
-		_check(GameManager.active_fusion_id == fusion_id, "%s Lab BONUS TRAIT runs in the selected Fusion" % fusion_id)
-		lab.trigger_fusion_intro(fusion_id)
-		var intro_effect := _find_fusion_effect(fusion_id, "formation")
-		_check(intro_effect != null and bool(intro_effect.get_meta("generated_pixel_art", false)), "%s Lab INTRO displays generated Pixel Art" % fusion_id)
-		# Human-paced gallery use lets the current formation finish before the next
-		# Fusion. Avoid testing all ten presentations as a same-frame burst.
-		await get_tree().create_timer(0.78, true, false, true).timeout
-	_check(lab.create_fusion("plasma", true), "Natural Fusion uses two Lv3 acquisition paths")
-	_check(GameManager.active_fusion_id == "plasma", "Natural Fusion resolves Plasma")
-
-	lab.apply_reward_preset("NO ELEMENT")
-	_stage = "reward"
-	print("LAB_CHECK stage=reward")
-	lab.open_boss_reward()
-	_check(lab.fragment_select.visible, "Boss reward opens without killing a boss")
-	_check(lab.fragment_select.grid_container.get_child_count() == 4, "Boss reward uses the real four-choice pool")
-	for child in lab.fragment_select.grid_container.get_children():
-		if child is Button and not child.disabled:
-			child.pressed.emit()
-			break
-	_check(not lab.fragment_select.visible and not get_tree().paused, "reward selection closes the real modal")
 
 	_stage = "concept"
 	print("LAB_CHECK stage=concept")
@@ -168,7 +142,6 @@ func _ready() -> void:
 	_stage = "reset"
 	print("LAB_CHECK stage=reset")
 	await lab.reset_lab_state()
-	_check(GameManager.get_active_element_ids().is_empty() and GameManager.active_fusion_id == "", "Reset clears Element and Fusion state")
 	_check(lab.concept_system.acquired_ids.is_empty() and lab.concept_system.get_completed_skill_count() == 0, "Reset clears Concept inventory, Board, and completed Large Skills")
 	_check(get_tree().get_nodes_in_group("projectiles").is_empty(), "Reset clears projectiles")
 
@@ -194,13 +167,6 @@ func _button_count(root: Node, text_value: String) -> int:
 	for child in root.get_children():
 		count += _button_count(child, text_value)
 	return count
-
-func _find_fusion_effect(fusion_id: String, mode: String) -> FusionVFXEffect:
-	for effect in get_tree().get_nodes_in_group("transient_vfx"):
-		var fusion_effect := effect as FusionVFXEffect
-		if fusion_effect != null and fusion_effect.fusion_id == fusion_id and fusion_effect.mode == mode:
-			return fusion_effect
-	return null
 
 func _find_concept_vfx(pixel_vfx_id: String) -> ConceptSkillVFX:
 	for effect in get_tree().get_nodes_in_group("transient_vfx"):

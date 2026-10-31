@@ -14,7 +14,6 @@ func _run() -> void:
 	await _check_pixel_ui()
 	await _check_wind_concept_vfx()
 	await _check_equipment_drop_visual()
-	_check_fusion_assets()
 	print("PIXEL_VISUAL_INTEGRATION_CHECK failures=%d" % failures.size())
 	for failure in failures:
 		push_error("PIXEL_VISUAL_INTEGRATION_CHECK: %s" % failure)
@@ -47,9 +46,9 @@ func _check_wind_concept_vfx() -> void:
 	var sprite := effect.get_node_or_null("WindBladePixelVFX") as AnimatedSprite2D
 	_check(sprite != null, "Wind Concept uses the generated Pixel Sprite")
 	if sprite:
-		_check(sprite.sprite_frames.get_frame_count("wind_blade") == 6, "Wind Concept Sprite has six frames")
+		_check(sprite.sprite_frames.get_frame_count("play") == 6, "Wind Concept Sprite has six frames")
 		_check(sprite.texture_filter == CanvasItem.TEXTURE_FILTER_NEAREST, "Wind Concept Sprite uses Nearest")
-	_check(String(effect.get_meta("pixel_vfx_texture", "")) == "res://assets/vfx/concepts/wind_blade_6f_v2.png", "Wind Concept records its connected project asset")
+	_check(String(effect.get_meta("pixel_vfx_texture", "")) == "res://assets/vfx/pixel/concept_wind_blade.png", "Wind Concept records its connected project asset")
 	effect.queue_free()
 	await get_tree().process_frame
 
@@ -68,18 +67,6 @@ func _check_equipment_drop_visual() -> void:
 		_check(ground.find_child(removed_name, true, false) == null, "equipment drop removed %s" % removed_name)
 	ground.queue_free()
 	await get_tree().process_frame
-
-
-func _check_fusion_assets() -> void:
-	var expected := ["frostfire", "plasma", "solar", "inferno", "superconductor", "aurora", "void_frost", "judgment", "voidstorm", "eclipse"]
-	for fusion_id in expected:
-		var data := DataLoader.fusion_vfx_effects.get(fusion_id) as FusionVFXData
-		_check(data != null, "Fusion VFX Resource exists: %s" % fusion_id)
-		if data == null:
-			continue
-		for mode in ["attack", "trail", "hit", "burst", "intro"]:
-			var texture := data.sprite_sheet_for_mode(mode)
-			_check(texture != null and texture.get_width() == 384 and texture.get_height() == 64, "%s %s is a 6x64 Pixel sheet" % [fusion_id, mode])
 
 
 func _check(condition: bool, message: String) -> void:

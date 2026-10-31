@@ -1,0 +1,4 @@
+[gd_scene load_steps=2 format=3]
+[ext_resource type="Script" path="res://tests/dodge_counter_inventory_check.gd" id="1"]
+[node name="DodgeCounterInventoryCheck" type="Node"]
+script = ExtResource("1")

@@ -16,6 +16,10 @@ func _cleanup() -> void:
 	get_tree().change_scene_to_file("res://scenes/title.tscn")
 	for _index in 12:
 		await get_tree().process_frame
+	AudioManager.stop_all()
+	# Let the audio mixer consume stop commands during accelerated fixed-fps checks.
+	var deadline := Time.get_ticks_msec() + 120
+	while Time.get_ticks_msec() < deadline: await get_tree().process_frame
 	if _success_message != "":
 		print(_success_message)
 	get_tree().quit(_exit_code)

@@ -47,11 +47,6 @@ func _ready() -> void:
 	await get_tree().create_timer(0.1, true, false, true).timeout
 	await _capture("03_loot_visibility.png")
 
-	_check(lab.select_tab("ROOM"), "Room tab can be selected")
-	await lab._room_jump(36)
-	_check(lab.room_controller.current_room == 36 and lab.room_controller.state == RoomRunController.RoomState.COMBAT, "Room Lab reaches Final ROOM")
-	await get_tree().create_timer(0.15, true, false, true).timeout
-	await _capture("04_room36_final.png")
 
 	for failure in failures:
 		push_error(failure)

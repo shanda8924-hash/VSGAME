@@ -1,0 +1,4 @@
+[gd_scene load_steps=2 format=3]
+[ext_resource type="Script" path="res://tests/secondary_ui_readability_check.gd" id="1"]
+[node name="SecondaryUIReadabilityCheck" type="Node"]
+script = ExtResource("1")

@@ -32,8 +32,7 @@ func _process(_delta: float) -> void:
 		set_process(false)
 		await get_tree().process_frame
 		var controller := scene.get_node("MapRunController") as MapRunController
-		var room_controller := scene.get_node("RoomRunController") as RoomRunController
-		var passed := GameManager.map_mode_active and not GameManager.room_mode_active and GameManager.current_map_index == 1 and int(controller.debug_get_map_state().get("map_index", 0)) == 1 and room_controller.current_room == 0
+		var passed := GameManager.map_mode_active and not scene.has_node("RoomRunController") and GameManager.current_map_index == 1 and int(controller.debug_get_map_state().get("map_index", 0)) == 1
 		_finish(passed, "MAP_ENTRY_INPUT_CHECK: PASS" if passed else "MAP_ENTRY_INPUT_CHECK: normal entry did not reach MAP 1")
 
 func _ready_for_input() -> bool:
