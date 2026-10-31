@@ -801,6 +801,10 @@ func set_surge_visual(active: bool, animated: bool = true) -> void:
 		_surge_visual_tween.kill()
 	_surge_visual_tween = null
 	var target := Color(1.04, 0.94, 0.98, 1.0) if active else Color.WHITE
+	# 床だけの戦場では画面の縁の暗がりを朱赤に脈打たせる（Phase 1、波の予告と本番）。
+	var painted := get_node_or_null("PaintedSurfaces")
+	if painted and painted.has_method("set_alarm"):
+		painted.set_alarm(active)
 	var layers: Array[CanvasItem] = [_tile_map_layer, _combat_terrain_layer, _decoration_layer, _wall_overlay_layer, _sprite_decorations]
 	if not animated:
 		for layer in layers:

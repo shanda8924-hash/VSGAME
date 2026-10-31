@@ -32,6 +32,8 @@ const BOSS_ATTACK_STRATEGY_SCRIPTS := {
 @export var room_hp_multiplier: float = 1.0
 @export var room_damage_multiplier: float = 1.0
 @export var room_attack_interval_multiplier: float = 1.0
+## 予備動作の倍率。突撃型・群れ型は短く（WaveSpawnerが役割で設定）、見て避ける余地は残す。
+@export var attack_windup_multiplier: float = 1.0
 @export var room_move_speed_multiplier: float = 1.0
 @export var boss_special_interval_multiplier: float = 1.0
 @export var boss_status_duration_multiplier: float = 1.0
@@ -88,6 +90,8 @@ func receive_hit_impact(metadata: Dictionary) -> void:
 		return
 	var heavy := bool(metadata.get("is_critical", false)) or String(metadata.get("source_kind", "")).contains("active_skill")
 	var resistance := 0.4 if enemy_data is BossData else (0.65 if is_in_group("elite_enemies") else 1.0)
+	if is_wall_role():
+		resistance *= 0.5
 	var duration := (0.08 if heavy else 0.05) * resistance
 	_impact_cooldown_until = now + (400 if enemy_data is BossData else 220)
 	_impact_push = (12.0 if heavy else 7.0) * resistance
@@ -120,7 +124,17 @@ func _body_spacing() -> float:
 	return own_radius + target_radius + 2.0
 
 func _normal_reach() -> float:
+	if _is_ranged():
+		return enemy_data.ranged_range
 	return maxf(enemy_data.attack_range, _body_spacing() + 6.0)
+
+## 遠距離型（EnemyData.ranged_range > 0）。立ち止まって弾を撃ち、近接判定は使わない。
+func _is_ranged() -> bool:
+	return enemy_data != null and enemy_data.ranged_range > 0.0 and not enemy_data is BossData
+
+## 壁型（WaveSpawnerがmeta "wall"を付ける）。ノックバックと硬直への耐性を持つ。
+func is_wall_role() -> bool:
+	return get_meta("wall", false)
 
 func _keep_melee_spacing(_delta: float) -> void:
 	if not is_instance_valid(ai_component.target) or enemy_data == null or _movement_locked_by_attack:
@@ -166,7 +180,13 @@ func _ready() -> void:
 		_apply_boss_outline()
 		_setup_boss_attack(enemy_data as BossData)
 	if ai_component.behavior == null:
-		ai_component.behavior = ChaseStrategy.new()
+		if _is_ranged():
+			var ranged := RangedStrategy.new()
+			ranged.hold_distance = enemy_data.ranged_range * 0.82
+			ranged.retreat_distance = enemy_data.ranged_range * 0.42
+			ai_component.behavior = ranged
+		else:
+			ai_component.behavior = ChaseStrategy.new()
 	ai_component.target = get_tree().get_first_node_in_group("player")
 	health_component.died.connect(_on_died)
 	health_component.damaged.connect(_on_damaged)
@@ -340,7 +360,7 @@ func _update_normal_attack(delta: float) -> void:
 
 func _start_normal_attack() -> void:
 	_normal_attack_state = NormalAttackState.WINDUP
-	_normal_attack_timer = maxf(enemy_data.attack_windup, 0.1)
+	_normal_attack_timer = maxf(enemy_data.attack_windup * attack_windup_multiplier, 0.1)
 	movement_component.direction = Vector2.ZERO
 	if animation_component:
 		animation_component.play_attack(randi_range(1, 2))
@@ -357,7 +377,13 @@ func _resolve_normal_attack() -> void:
 		_attack_warning.queue_free()
 	_attack_warning = null
 	var target := ai_component.target
-	if target == null or global_position.distance_to(target.global_position) > _normal_reach():
+	if target == null:
+		return
+	if _is_ranged():
+		if global_position.distance_to(target.global_position) <= _normal_reach() * 1.25:
+			_fire_ranged_shot(target)
+		return
+	if global_position.distance_to(target.global_position) > _normal_reach():
 		return
 	var ray := PhysicsRayQueryParameters2D.create(global_position, target.global_position, 1)
 	ray.exclude = [get_rid(), (target as CollisionObject2D).get_rid()]
@@ -368,9 +394,34 @@ func _resolve_normal_attack() -> void:
 		target_hurtbox.apply_hitbox_damage(contact_hitbox)
 		contact_hitbox.on_hit(target_hurtbox)
 
+## 遠距離型の通常攻撃。ボスのnovaと同じ共通Projectileを敵弾（layer 16）として1発撃つ。
+## 予備動作の時点の位置ではなく発射時のプレイヤー位置へ向けるので、動き続ければ外れる。
+func _fire_ranged_shot(target: Node2D) -> void:
+	var projectile_scene: PackedScene = load("res://entities/projectiles/projectile.tscn")
+	var weapon := WeaponData.new()
+	weapon.base_damage = contact_hitbox.damage
+	weapon.crit_chance = 0.0
+	weapon.crit_multiplier = 1.0
+	weapon.vfx_theme_id = ""
+	var bullet := projectile_scene.instantiate()
+	bullet.name = "EnemyShot"
+	bullet.collision_layer = 16 # PLAYER_HIT_LAYER: PlayerのHurtboxComponent.collision_maskと一致
+	bullet.is_player_attack = false
+	bullet.uses_player_element_vfx = false
+	bullet.speed = 230.0
+	GameManager.get_runtime_world(self).add_child(bullet)
+	bullet.global_position = global_position + (target.global_position - global_position).normalized() * 18.0
+	bullet.launch(target.global_position, weapon)
+	bullet.add_to_group("enemy_shots")
+	bullet.get_node("Visual").modulate = Color(1.0, 0.45, 0.25, 1.0)
+	bullet.get_node("Glow").modulate = Color(1.0, 0.25, 0.1, 0.55)
+	AudioManager.play_sfx("attack_shoot")
+
 func apply_knockback(direction: Vector2, distance: float) -> void:
 	if _is_dead or direction == Vector2.ZERO or distance <= 0.0:
 		return
+	if is_wall_role():
+		distance *= 0.35
 	if _impact_paused:
 		_impact_direction = direction.normalized()
 		_impact_push = maxf(_impact_push, distance)

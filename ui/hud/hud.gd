@@ -800,7 +800,8 @@ func hide_boss_health() -> void:
 	_set_stage_mode(false)
 
 ## MapRunControllerが0.25秒ごとに呼ぶ。時計と文言はここでだけ組み立てる。
-func set_survival_status(map_name: String, elapsed: float, duration: float, kills: int, phase: String, boss_phase: bool = false) -> void:
+## next_event は「次の波まで 0:12」「⚠ 第2波 8秒前」など、目標を常時見せる1行（Phase 1）。
+func set_survival_status(map_name: String, elapsed: float, duration: float, kills: int, phase: String, boss_phase: bool = false, next_event: String = "") -> void:
 	var left := maxi(ceili(duration - elapsed), 0)
 	var fight_time := maxi(int(elapsed - duration), 0)
 	room_status_label.visible = true
@@ -815,7 +816,10 @@ func set_survival_status(map_name: String, elapsed: float, duration: float, kill
 		room_status_label.text = "[center][color=#ff9a8f][b]最終ボス[/b][/color]　%s　ボス戦 %s　撃破 %d[/center]" % [_bare_boss_name(), _format_clock(fight_time), kills]
 	else:
 		_set_stage_mode(false)
-		room_status_label.text = "[center]%s　・　撃破 %d[/center]" % [map_name, kills]
+		var status := "%s　・　撃破 %d" % [map_name, kills]
+		if not next_event.is_empty():
+			status += "\n" + next_event
+		room_status_label.text = "[center]%s[/center]" % status
 		_clock_prefix_label.text = "ボスまで"
 		_clock_label.text = _format_clock(left)
 		_clock_label.add_theme_color_override("font_color", RetroHUDStyle.HP_RED_LIGHT if left <= 30 else RetroHUDStyle.BRONZE_LIGHT)

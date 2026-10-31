@@ -78,6 +78,7 @@ func _load_enemies() -> void:
 		data.attack_interval = float(entry.get("attack_interval", 1.0))
 		data.attack_range = float(entry.get("attack_range", 52.0))
 		data.attack_windup = float(entry.get("attack_windup", 0.45))
+		data.ranged_range = float(entry.get("ranged_range", 0.0))
 		enemies[data.id] = data
 
 func _load_weapons() -> void:

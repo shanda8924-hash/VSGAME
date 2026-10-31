@@ -7,6 +7,14 @@ var OUT := "res://artifacts/open_field_survival"
 var failures: Array[String] = []
 var fired := 0
 var level_times: Dictionary = {}
+# ラムダはローカル変数を値で捕まえるので、信号で増やす数はメンバーに置く。
+var pressure_hit := false
+var rescues := 0
+var surges_started := 0
+var surges_ended := 0
+var hits_taken := 0
+var damage_total := 0.0
+var min_hp_ratio := 1.0
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -65,10 +73,12 @@ func _run() -> void:
 	await frames(30)
 	check(is_equal_approx(time, GameManager.elapsed_seconds), "Menu consumes battle time")
 	GameManager.close_modal()
+	await _surge_phase1()
 	controller.set_process(false)
 	wave.set_process(false)
 	controller._clear_combat_transients(true)
 	await frames(5)
+	await _roles_phase1()
 	player.global_position = Vector2(22000, -17000)
 	await frames(8)
 	var map := GameManager.dungeon_map
@@ -171,15 +181,98 @@ func _run() -> void:
 	await _boss_moves()
 	finish({"peak_early":peak,"late":late,"remote_floor":true,"boss_survives_overtime":true})
 
+## Phase 1: 波の状態機械を実時間を待たずに通す。予告→開始（包囲湧き・役割）→強敵→終了（報酬）。
+func _surge_phase1() -> void:
+	var surface := game.get_node("StageEnvironment/PaintedSurfaces")
+	var times: Array = controller._survival_surge_times()
+	check(times.size() >= 4 and controller._survival_surge_enabled(), "Survival surges are not configured")
+	var first := float(times[0])
+	GameManager.elapsed_seconds = first - 12.0
+	controller._tick_survival()
+	check(game.hud.room_status_label.text.contains("次の波まで") and not controller._surge_active, "HUD does not show the next wave timer")
+	GameManager.elapsed_seconds = first - 8.0
+	controller._tick_survival()
+	check(game.hud.room_status_label.text.contains("秒前") and surface.is_alarm_active(), "Wave warning (HUD + red vignette) missing")
+	var before := wave._active_enemy_count()
+	GameManager.elapsed_seconds = first
+	controller._tick_survival()
+	await frames(2)
+	var state := controller.debug_get_map_state()
+	check(state.surge_active and String(state.surge_role) != "" and wave.get_surge_role() == String(state.surge_role), "Wave did not start with a role")
+	check(wave._active_enemy_count() >= before + 8, "Ring spawn did not surround the player")
+	var role_count := 0
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if String(enemy.get_meta("role", "")) == String(state.surge_role): role_count += 1
+	check(role_count >= 6, "Ring spawn ignores the wave role")
+	check(game.hud.room_status_label.text.contains("第1波"), "HUD hides the active wave")
+	GameManager.elapsed_seconds = first + 16.0
+	controller._tick_survival()
+	await frames(2)
+	check(not get_tree().get_nodes_in_group("enemies").filter(func(n): return n.get_meta("surge_strong", false)).is_empty(), "Mid-wave strong enemy missing")
+	var loot_before := get_tree().get_nodes_in_group("ground_equipment").size()
+	GameManager.elapsed_seconds = first + 31.0
+	controller._tick_survival()
+	await frames(2)
+	state = controller.debug_get_map_state()
+	check(not state.surge_active and int(state.surge_index) == 1 and int(state.surge_reward_count) == 1, "Wave did not finish with a reward")
+	check(get_tree().get_nodes_in_group("ground_equipment").size() > loot_before, "Wave reward equipment missing")
+	check(not surface.is_alarm_active() and wave.get_surge_role() == "", "Wave end leaves alarm/role on")
+	check(game.hud.room_status_label.text.contains("凌いだ"), "Wave end message missing")
+	await capture("surge_end")
+
+## Phase 1: 遠距離型は立ち止まって弾を撃ち、壁型はノックバック耐性と高HPを持つ。
+func _roles_phase1() -> void:
+	var archer: EnemyData = DataLoader.enemies.get("skeleton_archer")
+	check(archer != null and archer.ranged_range > 0.0, "Ranged enemy data missing")
+	var enemy := wave._spawn_enemy_at(archer, player.global_position + Vector2(archer.ranged_range * 0.7, 0), player) as EnemyBasic
+	await frames(2)
+	check(enemy.ai_component.behavior is RangedStrategy and enemy.get_meta("role", "") == "ranged", "Archer does not use the ranged strategy")
+	var shots := 0
+	for i in 150:
+		await frames(1)
+		shots = maxi(shots, get_tree().get_nodes_in_group("enemy_shots").size())
+		if shots > 0: break
+	check(shots > 0, "Ranged enemy never fires at a standing player")
+	var guard := wave._spawn_enemy_at(DataLoader.enemies.get("shield_guard"), player.global_position + Vector2(-260, 0), player) as EnemyBasic
+	await frames(2)
+	check(guard.is_wall_role() and guard.health_component.max_hp > archer.max_hp, "Wall role is not applied")
+	var origin := guard.global_position
+	guard.apply_knockback(Vector2.LEFT, 80.0)
+	await frames(12)
+	var pushed := guard.global_position.distance_to(origin)
+	check(pushed < 40.0, "Wall enemy is knocked back like a regular mob (%.1f)" % pushed)
+	controller._clear_combat_transients(true)
+	for shot in get_tree().get_nodes_in_group("enemy_shots"): shot.queue_free()
+	await frames(3)
+
 func soak() -> void:
 	if DisplayServer.get_name() != "headless": DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	var peak := 0
 	var captured := false
 	var boss_at := 0.0
+	# 無敵なしで3分間自動操作し、HP50%以下へ落ちる圧力があるかを見る（25%未満で救済回復し、死亡で止めない）。
+	EventBus.map_surge_started.connect(func(_m, _i, _r, _d): surges_started += 1)
+	EventBus.map_surge_ended.connect(func(_m, _i, _t, _p): surges_ended += 1)
+	player.health_component.invincible = false
+	player.health_component.damaged.connect(func(amount, current_hp, max_hp):
+		hits_taken += 1
+		damage_total += amount
+		min_hp_ratio = minf(min_hp_ratio, current_hp / max_hp)
+		if current_hp <= max_hp * 0.5: pressure_hit = true
+		if current_hp <= max_hp * 0.25:
+			rescues += 1
+			player.health_component.heal(max_hp)
+	)
+	var density_60 := 0
 	while not GameManager.survival_completed and GameManager.elapsed_seconds < 600:
 		await frames(1)
 		var alive := wave._active_enemy_count()
 		peak = maxi(peak, alive)
+		if GameManager.elapsed_seconds >= 60.0 and GameManager.elapsed_seconds < 62.0: density_60 = maxi(density_60, alive)
+		if GameManager.elapsed_seconds >= 180.0 and not player.health_component.invincible:
+			player.health_component.invincible = true
+			check(pressure_hit, "Three minutes without invincibility never drops HP to 50%")
+			check(density_60 >= 12, "Fewer than 12 enemies alive at 60s (%d)" % density_60)
 		check(alive <= wave._map_enemy_cap, "Natural horde exceeds cap")
 		if not captured and GameManager.elapsed_seconds >= 205:
 			captured = true
@@ -194,7 +287,8 @@ func soak() -> void:
 	check(GameManager.survival_completed and boss_at >= 240 and peak >= 60, "Natural stage failed to complete")
 	check(boss_seconds >= 35 and boss_seconds <= 180, "Baseline final boss duration needs tuning")
 	check(not game.get_node("ResultScreen").visible, "Natural victory forced result")
-	finish({"duration":GameManager.elapsed_seconds,"boss_seconds":boss_seconds,"boss_hp_data":"fixed, not player-scaled","peak":peak,"cap":wave._map_enemy_cap,"kills":GameManager.kill_count,"level":player.experience_component.level,"invincible_test_player":true,"auto_upgrades":true,"clock_not_skipped":true,"level_times":level_times,"upgrade_ranks":player.upgrades_component.survival_upgrade_counts}, "soak")
+	check(surges_started == 4 and surges_ended == 4, "Expected 4 wave start/end events (%d/%d)" % [surges_started, surges_ended])
+	finish({"duration":GameManager.elapsed_seconds,"boss_seconds":boss_seconds,"surges":[surges_started, surges_ended],"pressure_hit_before_180s":pressure_hit,"rescues":rescues,"hits_taken":hits_taken,"damage_total":damage_total,"min_hp_ratio":min_hp_ratio,"player_max_hp":player.health_component.max_hp,"density_60":density_60,"boss_hp_data":"fixed, not player-scaled","peak":peak,"cap":wave._map_enemy_cap,"kills":GameManager.kill_count,"level":player.experience_component.level,"invincible_test_player":true,"auto_upgrades":true,"clock_not_skipped":true,"level_times":level_times,"upgrade_ranks":player.upgrades_component.survival_upgrade_counts}, "soak")
 
 func finish(report: Dictionary, name: String = "check") -> void:
 	report["failures"] = failures

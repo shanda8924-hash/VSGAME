@@ -3,7 +3,7 @@
   "sector_mode": false,
   "sectors_per_floor": 4,
   "combo_timeout_seconds": 3.5,
-  "experience_requirement_multiplier": 0.6,
+  "experience_requirement_multiplier": 0.85,
   "economy": {
     "enemy_kill_gold": 1,
     "elite_kill_bonus": 10,
@@ -17,18 +17,23 @@
     "kills_per_gold": 4
   },
   "surge": {
-    "duration_seconds": 40,
+    "duration_seconds": 30,
     "kill_fractions": [
       0.4,
       0.8
     ],
-    "spawn_interval_multiplier": 0.8,
-    "spawn_batch_multiplier": 1.25,
+    "spawn_interval_multiplier": 0.55,
+    "spawn_batch_multiplier": 1.4,
     "reward_sequence": [
+      "equipment",
       "recovery",
+      "equipment",
       "equipment"
     ],
-    "enabled": false
+    "enabled": true,
+    "warning_seconds": 10,
+    "ring_count": 12,
+    "_comment": "5分サバイバルの波。survival_surge_secondsで開始、warning_seconds前に予告、duration_secondsだけ密度上昇と包囲湧き、終了で報酬。"
   },
   "maps": [
     {
@@ -54,8 +59,8 @@
       "boss_hp_multiplier": 1,
       "boss_damage_multiplier": 1,
       "enemy_progress_offset": 0.0,
-      "enemy_hp_multiplier": 0.38,
-      "enemy_damage_multiplier": 0.7,
+      "enemy_hp_multiplier": 0.75,
+      "enemy_damage_multiplier": 1.0,
       "enemy_cap": 128,
       "spawn_batch": [
         3,
@@ -76,14 +81,26 @@
       ],
       "progression": "five_minute_survival",
       "isolated_rooms": true,
-      "enemy_move_speed_multiplier": 0.65,
+      "enemy_move_speed_multiplier": 0.78,
       "unlock_cost": 0,
       "survival_supply_seconds": [
         75,
         150
       ],
       "tagline": "不死の群れ・基準の5分",
-      "stage_note": "標準の出現曲線。装備箱 1:15、補給箱 2:30"
+      "stage_note": "標準の出現曲線。装備箱 1:15、補給箱 2:30",
+      "survival_surge_seconds": [
+        45,
+        100,
+        155,
+        205
+      ],
+      "survival_surge_roles": [
+        "rush",
+        "swarm",
+        "ranged",
+        "wall"
+      ]
     },
     {
       "index": 2,
@@ -108,8 +125,8 @@
       "boss_hp_multiplier": 1,
       "boss_damage_multiplier": 1,
       "enemy_progress_offset": 150.0,
-      "enemy_hp_multiplier": 0.5,
-      "enemy_damage_multiplier": 0.85,
+      "enemy_hp_multiplier": 0.85,
+      "enemy_damage_multiplier": 1.1,
       "enemy_cap": 128,
       "spawn_batch": [
         3,
@@ -129,14 +146,26 @@
       ],
       "progression": "five_minute_survival",
       "isolated_rooms": true,
-      "enemy_move_speed_multiplier": 0.65,
+      "enemy_move_speed_multiplier": 0.8,
       "unlock_cost": 150,
       "survival_supply_seconds": [
         60,
         140
       ],
       "tagline": "血晶と魔性・序盤から濃い",
-      "stage_note": "群れが早く厚くなる。装備箱 1:00、補給箱 2:20"
+      "stage_note": "群れが早く厚くなる。装備箱 1:00、補給箱 2:20",
+      "survival_surge_seconds": [
+        40,
+        95,
+        150,
+        205
+      ],
+      "survival_surge_roles": [
+        "swarm",
+        "rush",
+        "ranged",
+        "wall"
+      ]
     },
     {
       "index": 3,
@@ -161,8 +190,8 @@
       "boss_hp_multiplier": 1,
       "boss_damage_multiplier": 1,
       "enemy_progress_offset": 300.0,
-      "enemy_hp_multiplier": 0.65,
-      "enemy_damage_multiplier": 1.0,
+      "enemy_hp_multiplier": 0.95,
+      "enemy_damage_multiplier": 1.2,
       "enemy_cap": 128,
       "spawn_batch": [
         3,
@@ -182,7 +211,7 @@
       ],
       "progression": "five_minute_survival",
       "isolated_rooms": true,
-      "enemy_move_speed_multiplier": 0.65,
+      "enemy_move_speed_multiplier": 0.82,
       "unlock_cost": 400,
       "survival_supply_seconds": [
         60,
@@ -190,7 +219,19 @@
         195
       ],
       "tagline": "炉心のオーク・最大密度",
-      "stage_note": "最初から濃く最後まで加速。補給箱が2回（2:00、3:15）"
+      "stage_note": "最初から濃く最後まで加速。補給箱が2回（2:00、3:15）",
+      "survival_surge_seconds": [
+        40,
+        90,
+        140,
+        195
+      ],
+      "survival_surge_roles": [
+        "rush",
+        "ranged",
+        "wall",
+        "swarm"
+      ]
     }
   ],
   "_comment_treasure_rewards": "属性システム停止中は 'attribute' と属性系完成大技につながる 'skill' を使用せず、装備/回復だけを配置する。",
@@ -200,6 +241,7 @@
   "survival_boss_seconds": [
     240
   ],
+  "survival_boss_hp_multiplier": 1.5,
   "survival_supply_seconds": [
     75,
     150

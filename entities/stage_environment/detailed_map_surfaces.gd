@@ -256,3 +256,29 @@ func _setup_vignette() -> void:
 	vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vignette.modulate = VIGNETTE_COLOR.get(theme, Color(0, 0, 0, 0.7))
 	_atmosphere.add_child(vignette)
+	_vignette = vignette
+
+var _vignette: TextureRect
+var _alarm_tween: Tween
+var _alarm_active := false
+
+## 波の予告・本番の間、縁の暗がりを朱赤に脈打たせる。解除で元のテーマ色へ戻す。
+func set_alarm(active: bool) -> void:
+	if _vignette == null or _alarm_active == active:
+		return
+	_alarm_active = active
+	if _alarm_tween and _alarm_tween.is_valid():
+		_alarm_tween.kill()
+	var base: Color = VIGNETTE_COLOR.get(theme, Color(0, 0, 0, 0.7))
+	if not active:
+		_alarm_tween = create_tween()
+		_alarm_tween.tween_property(_vignette, "modulate", base, 0.4)
+		return
+	var dim := Color(0.55, 0.06, 0.03, 0.62)
+	var bright := Color(0.95, 0.18, 0.08, 0.78)
+	_alarm_tween = create_tween().set_loops()
+	_alarm_tween.tween_property(_vignette, "modulate", bright, 0.45).set_trans(Tween.TRANS_SINE)
+	_alarm_tween.tween_property(_vignette, "modulate", dim, 0.55).set_trans(Tween.TRANS_SINE)
+
+func is_alarm_active() -> bool:
+	return _alarm_active

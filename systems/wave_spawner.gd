@@ -38,6 +38,18 @@ const MAP_ENEMY_ROSTERS := {
 		"strong": ["armored_orc", "elite_orc"],
 	},
 }
+## 敵の役割（Phase 1）。波ごとに主役の役割を変え、プレイヤーの対処を変えさせる。
+## rush=速い・低HP、wall=遅い・高HP・ノックバック耐性、ranged=弾で立ち止まりを罰する、
+## swarm=小さく大量。ここに無い敵は役割なし（通常の追跡）。
+const ENEMY_ROLES := {
+	"bat": "rush", "fast_enemy": "rush", "werewolf": "rush", "hellhound": "rush", "orc_rider": "rush",
+	"shield_guard": "wall", "basic_enemy": "wall", "blood_monster_a": "wall", "demoness_b": "wall",
+	"skeleton_archer": "ranged", "demoness_a": "ranged", "ghostfire": "ranged", "warlock": "ranged",
+	"slime": "swarm", "eyeball_monster": "swarm", "lava_slime": "swarm", "hellbat": "swarm",
+}
+const ROLE_DISPLAY_NAMES := {"rush": "突撃", "wall": "壁", "ranged": "弓兵", "swarm": "群れ"}
+## 役割つきの波の間、通常湧きのうちこの割合が主役の役割から選ばれる。
+const SURGE_ROLE_BIAS := 0.6
 const ROOM_RANK_PATTERNS := {
 	"first_guard": ["mob"],
 	"guard": ["mob", "standard"],
@@ -69,6 +81,7 @@ var _map_spawn_batch := Vector2i(1, 2)
 var _map_surge_active := false
 var _map_surge_interval_multiplier := 1.0
 var _map_surge_batch_multiplier := 1.0
+var _surge_role := ""
 var _sector_active := false
 var _sector_room_index := 0
 var _sector_remaining := 0
@@ -203,22 +216,139 @@ func _spawn_enemy() -> void:
 	var spawn_position := _pick_spawn_position(player.global_position)
 	if not spawn_position.is_finite():
 		return
-	var enemy := enemy_scene.instantiate()
+	_spawn_enemy_at(eligible[randi() % eligible.size()], spawn_position, player)
+
+## 1体を生成して戦場へ置く。サバイバルの速度上限・時間経過倍率・役割の補正をここで一括して掛ける。
+func _spawn_enemy_at(data: EnemyData, spawn_position: Vector2, player: Node2D) -> EnemyBasic:
+	var enemy := enemy_scene.instantiate() as EnemyBasic
 	enemy.global_position = spawn_position
-	enemy.enemy_data = eligible[randi() % eligible.size()]
+	enemy.enemy_data = data
 	enemy.room_hp_multiplier = _map_hp_multiplier
 	enemy.room_damage_multiplier = _map_damage_multiplier
+	var role := String(ENEMY_ROLES.get(data.id, ""))
 	if GameManager.survival_mode_active:
 		# Walking pursuers leave room to steer; authored boss moves keep their timings.
 		var character: CharacterData = DataLoader.characters.get(GameManager.selected_character_id)
 		var walk_speed: float = character.move_speed * Player.MOVE_SPEED_MULTIPLIER if character else (player as Player).movement_component.base_speed
-		enemy.room_move_speed_multiplier = minf(_map_move_speed_multiplier, walk_speed * 0.75 / maxf(enemy.enemy_data.move_speed, 1.0))
+		var speed_cap := 0.75
+		if role == "rush": speed_cap = 0.92 # 突撃型だけはほぼ並走できる速さまで許す
+		enemy.room_move_speed_multiplier = minf(_map_move_speed_multiplier, walk_speed * speed_cap / maxf(enemy.enemy_data.move_speed, 1.0))
 	if GameManager.survival_mode_active:
 		var progress := clampf(_map_elapsed() / GameManager.survival_duration_seconds, 0.0, 1.0)
 		enemy.room_hp_multiplier *= 1.0 + progress * 0.9
 		enemy.room_damage_multiplier *= 1.0 + progress * 0.4
+	match role:
+		"wall":
+			enemy.room_hp_multiplier *= 1.8
+			enemy.room_move_speed_multiplier *= 0.7
+			enemy.visual_scale_multiplier *= 1.15
+			enemy.set_meta("wall", true)
+		"rush":
+			enemy.room_hp_multiplier *= 0.7
+			enemy.attack_windup_multiplier = 0.55
+		"swarm":
+			enemy.room_hp_multiplier *= 0.6
+			enemy.attack_windup_multiplier = 0.7
+			enemy.visual_scale_multiplier *= 0.88
+	if role != "":
+		enemy.set_meta("role", role)
 	enemy.set_meta("survival_wave", true)
 	GameManager.get_runtime_world(self).add_child(enemy)
+	return enemy
+
+## 波の主役の役割。空文字で解除。通常湧きの6割がこの役割から選ばれる。
+func set_surge_role(role: String) -> void:
+	_surge_role = role
+
+func get_surge_role() -> String:
+	return _surge_role
+
+## 現在のMAPのmob+standardから、指定の役割を持つ敵だけを集める。
+func _role_pool(role: String) -> Array[EnemyData]:
+	var roster: Dictionary = MAP_ENEMY_ROSTERS.get(GameManager.current_map_index, MAP_ENEMY_ROSTERS[1])
+	var pool: Array[EnemyData] = []
+	for rank_name in ["mob", "standard"]:
+		for id: String in roster.get(rank_name, []):
+			if String(ENEMY_ROLES.get(id, "")) != role:
+				continue
+			var data: EnemyData = DataLoader.enemies.get(id)
+			if data: pool.append(data)
+	return pool
+
+## 包囲湧き：画面外のリング上へ均等な角度で一斉に出す。波の開始合図に使う。
+## 床だけの戦場（floor_only）専用。壁のある層では通常の床マス抽選へ落とす。
+func spawn_ring(count: int, role: String = "") -> int:
+	var player := get_tree().get_first_node_in_group("player") as Player
+	if player == null or enemy_scene == null or count <= 0:
+		return 0
+	var pool := _role_pool(role) if role != "" else []
+	if pool.is_empty():
+		pool = _survival_enemy_pool()
+	if pool.is_empty():
+		return 0
+	var spawned := 0
+	var start_angle := randf() * TAU
+	var map: DungeonMap = GameManager.dungeon_map
+	var floor_only: bool = map != null and bool(map.get_meta("floor_only", false))
+	var half := get_viewport_rect().size / player.camera.zoom * 0.5 + Vector2(72, 72)
+	var shape := CircleShape2D.new()
+	shape.radius = 24.0
+	var query := PhysicsShapeQueryParameters2D.new()
+	query.shape = shape
+	query.collision_mask = 9
+	for index in count:
+		if _active_enemy_count() >= _map_enemy_cap:
+			break
+		var point := Vector2.INF
+		if floor_only:
+			for attempt in 6:
+				var direction := Vector2.from_angle(start_angle + TAU * float(index) / float(count) + randf_range(-0.12, 0.12))
+				var radius := minf(half.x / maxf(absf(direction.x), 0.001), half.y / maxf(absf(direction.y), 0.001)) + 24.0 + attempt * 20.0
+				var candidate := player.global_position + direction * radius
+				query.transform = Transform2D(0, candidate)
+				if get_world_2d().direct_space_state.intersect_shape(query, 1).is_empty():
+					point = candidate
+					break
+		else:
+			point = _pick_spawn_position(player.global_position)
+		if not point.is_finite():
+			continue
+		_spawn_enemy_at(pool[(index + randi() % pool.size()) % pool.size()], point, player)
+		spawned += 1
+	return spawned
+
+## 強敵（strong階級）を1体、画面外へ出す。波の中盤の山場に使う。
+func spawn_strong_enemy() -> EnemyBasic:
+	var player := get_tree().get_first_node_in_group("player") as Node2D
+	if player == null or enemy_scene == null:
+		return null
+	var roster: Dictionary = MAP_ENEMY_ROSTERS.get(GameManager.current_map_index, MAP_ENEMY_ROSTERS[1])
+	var ids: Array = roster.get("strong", [])
+	if ids.is_empty():
+		return null
+	var data: EnemyData = DataLoader.enemies.get(String(ids.pick_random()))
+	if data == null:
+		return null
+	var point := _pick_spawn_position(player.global_position)
+	if not point.is_finite():
+		return null
+	# 上限いっぱいなら、いちばん遠い通常湧きを1体引き取って枠を空ける（上限は超えない）。
+	while _active_enemy_count() >= _map_enemy_cap:
+		var farthest: Node2D = null
+		var farthest_distance := -1.0
+		for enemy in get_tree().get_nodes_in_group("enemies"):
+			if not enemy.get_meta("survival_wave", false) or enemy.is_queued_for_deletion():
+				continue
+			var distance: float = enemy.global_position.distance_squared_to(player.global_position)
+			if distance > farthest_distance:
+				farthest_distance = distance
+				farthest = enemy
+		if farthest == null:
+			return null
+		farthest.queue_free()
+	var enemy := _spawn_enemy_at(data, point, player)
+	enemy.set_meta("surge_strong", true)
+	return enemy
 
 func configure_map_phase(config: Dictionary) -> void:
 	_sector_active = false
@@ -240,6 +370,7 @@ func configure_map_phase(config: Dictionary) -> void:
 	var batch: Array = config.get("spawn_batch", [1, 2])
 	_map_spawn_batch = Vector2i(maxi(int(batch[0]), 1), maxi(int(batch[1]), 1)) if batch.size() >= 2 else Vector2i(1, 2)
 	set_map_surge(false)
+	_surge_role = ""
 	difficulty_curve_id = String(config.get("difficulty_curve_id", "map_exploration"))
 	_timer = 1.0
 	_exploration_enemy_count = int(config.get("exploration_enemy_count", 24))
@@ -428,6 +559,10 @@ func _pick_spawn_position(near_world_pos: Vector2) -> Vector2:
 
 func _survival_enemy_pool() -> Array[EnemyData]:
 	var elapsed := _map_elapsed()
+	if _surge_role != "" and randf() < SURGE_ROLE_BIAS:
+		var role_pool := _role_pool(_surge_role)
+		if not role_pool.is_empty():
+			return role_pool
 	var roll := randf()
 	var rank_name := "mob"
 	if elapsed >= 45.0 and roll < (0.45 if elapsed >= 150.0 else 0.25):

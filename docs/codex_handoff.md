@@ -1,6 +1,12 @@
-# Codex Handoff — 2026-10-31（Phase 4まで）
+# Codex Handoff — 2026-10-31（遊びの骨組み Phase 1まで）
 
-## 次の主題（未着手）：遊びの骨組み — `docs/fun_loop_redesign.md`
+## 今回（遊びの骨組み Phase 1：緊張と山場、2026-10-31）
+- 設計は`docs/fun_loop_redesign.md`。Phase 1を実装：`exploration_run.json`の`surge.enabled: true`＋MAP別`survival_surge_seconds`/`survival_surge_roles`、`MapRunController._tick_survival_surge`（予告10秒→開始30秒→終了報酬、中盤に強敵1体、ボス段階で報酬なし終了）、`WaveSpawner`の`ENEMY_ROLES`（rush/wall/ranged/swarm）・`spawn_ring`・`spawn_strong_enemy`・`set_surge_role`（通常湧きの6割を主役に）、`EnemyData.ranged_range`＋`components/ai/ranged_strategy.gd`＋`EnemyBasic._fire_ranged_shot`（敵弾＝共通Projectile layer 16、`enemy_shots`）、壁型のノックバック×0.35、`hud.set_survival_status(..., next_event)`の2行目、`DetailedMapSurfaces.set_alarm`（縁の朱赤の脈動、`set_surge_visual`経由）。
+- 圧力：難易度カーブの節目を0/30/60/120/180/210秒へ、敵HP倍率0.38→0.75/0.85/0.95、攻撃0.7→1.0/1.1/1.2、速度0.65→0.78/0.8/0.82、突撃/群れの予備動作×0.55/0.7、XP必要量0.6→0.85、終盤ボスHP×1.5。弓兵4種（skeleton_archer/demoness_a/ghostfire/warlock）に`ranged_range`。無敵なし立ち止まり180秒の被弾：16回/47→69回/298（最低HP23%）。
+- 検証：`script_load_check` 0件（新class_nameは`--import`で登録が必要）、`five_minute_survival_check` PASS（波の予告/開始/強敵/終了、弓兵の射撃、壁の耐性を追加）。`--full-run`の無敵なし180秒・60秒12体・波4回の検査も追加。実画面は`tools/capture_surge.tscn`→`docs/screens/surge_*.png`。
+- 次：Phase 2（`data/upgrades/*.json`へtrigger/tags/scales_with、`survival_upgrade_effects.gd`のクールダウン→命中回数、カード3行、HUDビルド表示）。手触りの数値はローカルで遊んで調整する前提。
+
+## 前回の主題：遊びの骨組み — `docs/fun_loop_redesign.md`
 - ユーザー評価「楽しくない」：退屈（敵が弱い・移動だけ）、単調（山場がない）、分かりにくい（目標と得が見えない・スキルの発動条件が読めない）、育成がない（1ダンジョンでキャラが終わる）。
 - 打ち手はPhase 1 緊張と山場（サージ有効化・敵の役割・圧力曲線・次の波までの表示）→ Phase 2 スキルの可読性（trigger/tags/scales_withのデータ化、クールダウン→命中回数ごと、カード3行定型）→ Phase 3 シナジーと進化（連撃、進化レシピ、相性保証）→ Phase 4 育成（装備と熟練の持ち越し、深度付きステージの鎖、負けの持ち帰り）。
 - 所在：`survival_upgrade_effects.gd`のecho 0.6秒／chain 0.7秒のクールダウン、`exploration_run.json`の`surge.enabled: false`、`equipment_component._on_run_ended`の全消去、`SaveManager`のキー。

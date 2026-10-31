@@ -122,6 +122,102 @@ func _process(delta: float) -> void:
 var _survival_boss_index := 0
 var _survival_supply_index := 0
 var _survival_boss_phase := false
+## 5分サバイバルの波（Phase 1）。survival_surge_secondsで開始、warning_seconds前に予告、
+## duration_secondsの間だけ密度上昇＋役割の主役、終了で確定報酬。
+var _survival_surge_warned := false
+var _survival_surge_started_at := 0.0
+var _survival_surge_strong_spawned := false
+var _survival_surge_role := ""
+var _survival_surge_completed := 0
+var _survival_surge_end_message_until := 0.0
+
+func _survival_surge_times() -> Array:
+	return _current_config.get("survival_surge_seconds", _config.get("survival_surge_seconds", []))
+
+func _survival_surge_enabled() -> bool:
+	return bool(_surge_config.get("enabled", true)) and not _survival_surge_times().is_empty()
+
+## 波の状態機械。0.25秒ごとに呼ばれ、HUDへ出す「次の出来事」の文を返す。
+func _tick_survival_surge(elapsed: float, boss_at: float) -> String:
+	if not _survival_surge_enabled() or _survival_boss_phase or GameManager.survival_completed:
+		if _surge_active:
+			_finish_survival_surge(false)
+		return ""
+	var times := _survival_surge_times()
+	var roles: Array = _current_config.get("survival_surge_roles", [])
+	var duration := clampf(float(_surge_config.get("duration_seconds", 30.0)), 10.0, 60.0)
+	var warning := clampf(float(_surge_config.get("warning_seconds", 10.0)), 3.0, 30.0)
+	if _surge_active:
+		_surge_remaining = maxf(_survival_surge_started_at + duration - elapsed, 0.0)
+		if not _survival_surge_strong_spawned and elapsed >= _survival_surge_started_at + duration * 0.5:
+			_survival_surge_strong_spawned = true
+			var strong := wave_spawner.spawn_strong_enemy()
+			if strong:
+				AudioManager.play_sfx("boss_appear")
+		if _surge_remaining <= 0.0:
+			_finish_survival_surge(true)
+			return "[color=#d6c29d]第%d波を凌いだ！　報酬が出現[/color]" % _survival_surge_completed
+		return "[color=#ff9a8f]⚠ 第%d波（%s）　残り %d秒[/color]" % [_surge_index + 1, _role_display(_survival_surge_role), ceili(_surge_remaining)]
+	if elapsed < _survival_surge_end_message_until:
+		return "[color=#d6c29d]第%d波を凌いだ！　報酬が出現[/color]" % _survival_surge_completed
+	if _surge_index >= times.size():
+		return "ボスまで %s" % _format_seconds(boss_at - elapsed)
+	var start_at := float(times[_surge_index])
+	var role := String(roles[_surge_index]) if _surge_index < roles.size() else ""
+	if elapsed >= start_at:
+		_start_survival_surge(role, elapsed)
+		return "[color=#ff9a8f]⚠ 第%d波（%s）　敵群接近！[/color]" % [_surge_index + 1, _role_display(role)]
+	if elapsed >= start_at - warning:
+		if not _survival_surge_warned:
+			_survival_surge_warned = true
+			AudioManager.play_sfx("room_door")
+			stage_environment.set_surge_visual(true)
+		return "[color=#ff9a8f]⚠ 第%d波 %d秒前　%sが来る[/color]" % [_surge_index + 1, ceili(start_at - elapsed), _role_display(role)]
+	return "次の波まで %s" % _format_seconds(start_at - elapsed)
+
+func _start_survival_surge(role: String, elapsed: float) -> void:
+	var duration := clampf(float(_surge_config.get("duration_seconds", 30.0)), 10.0, 60.0)
+	var interval_multiplier := clampf(float(_surge_config.get("spawn_interval_multiplier", 0.55)), 0.1, 1.0)
+	var batch_multiplier := clampf(float(_surge_config.get("spawn_batch_multiplier", 1.4)), 1.0, 2.0)
+	_surge_active = true
+	_surge_remaining = duration
+	_surge_trigger_reason = "time"
+	_survival_surge_started_at = elapsed
+	_survival_surge_strong_spawned = false
+	_survival_surge_role = role
+	_survival_surge_warned = false
+	wave_spawner.set_surge_role(role)
+	wave_spawner.set_map_surge(true, interval_multiplier, batch_multiplier)
+	wave_spawner.spawn_ring(int(_surge_config.get("ring_count", 12)), role)
+	stage_environment.set_surge_visual(true)
+	AudioManager.play_sfx("boss_appear")
+	EventBus.map_surge_started.emit(GameManager.current_map_index, _surge_index + 1, "time", duration)
+
+func _finish_survival_surge(with_reward: bool) -> void:
+	if not _surge_active:
+		return
+	var completed_index := _surge_index
+	_surge_active = false
+	_surge_remaining = 0.0
+	wave_spawner.set_surge_role("")
+	wave_spawner.set_map_surge(false)
+	stage_environment.set_surge_visual(false)
+	_surge_index += 1
+	_survival_surge_completed = _surge_index
+	var reward := {"type": "", "position": player.global_position}
+	if with_reward:
+		reward = _spawn_surge_reward(completed_index)
+		_surge_reward_count += 1
+		_survival_surge_end_message_until = GameManager.elapsed_seconds + 3.0
+		AudioManager.play_sfx("level_up")
+	EventBus.map_surge_ended.emit(GameManager.current_map_index, completed_index + 1, String(reward.get("type", "")), Vector2(reward.get("position", player.global_position)))
+
+func _role_display(role: String) -> String:
+	return String(WaveSpawner.ROLE_DISPLAY_NAMES.get(role, "混成"))
+
+func _format_seconds(seconds: float) -> String:
+	var whole := maxi(ceili(seconds), 0)
+	return "%d:%02d" % [whole / 60, whole % 60]
 
 func _start_survival() -> void:
 	GameManager.elapsed_seconds = 0.0
@@ -133,7 +229,15 @@ func _start_survival() -> void:
 	_survival_boss_index = 0
 	_survival_supply_index = 0
 	_survival_boss_phase = false
+	_surge_active = false
+	_surge_remaining = 0.0
+	_surge_index = 0
+	_surge_reward_count = 0
+	_survival_surge_warned = false
+	_survival_surge_completed = 0
+	_survival_surge_end_message_until = 0.0
 	wave_spawner.configure_map_phase(_current_config)
+	stage_environment.set_surge_visual(false, false)
 	elite_room_manager.clear_map_runtime()
 	elite_room_manager.process_mode = Node.PROCESS_MODE_DISABLED
 	stage_environment.set_boss_seal_visible(false)
@@ -152,13 +256,15 @@ func _tick_survival() -> void:
 		if elapsed >= boss_at and _survival_boss_index == 0:
 			if not _survival_boss_phase:
 				_survival_boss_phase = true
+				_finish_survival_surge(false)
 				wave_spawner.set_spawning_paused(true)
 				_clear_combat_transients(true)
 			var point := wave_spawner._pick_spawn_position(player.global_position)
 			if point.is_finite():
 				var boss := boss_spawner.start_room_boss(GameManager.current_map_index, {
 					"candidates": _current_config.get("boss_candidates", []),
-					"hp_multiplier": 1.0,
+					# 波で成長が速くなった分、固定HPを少し上げる（プレイヤー火力には合わせない）。
+					"hp_multiplier": float(_current_config.get("survival_boss_hp_multiplier", _config.get("survival_boss_hp_multiplier", 1.0))),
 					"damage_multiplier": 1.0,
 					"is_final": true,
 				}, point)
@@ -174,12 +280,14 @@ func _tick_survival() -> void:
 					if _survival_supply_index > 0 or randf() < 0.6:
 						_spawn_treasure(point, "normal", "supply_equipment" if _survival_supply_index > 0 else "equipment", false)
 					_survival_supply_index += 1
+	var next_event := _tick_survival_surge(elapsed, boss_at)
 	var phase := "群れを倒して成長" if elapsed < 120 else "密度上昇：包囲を抜けて戦う"
+	if _surge_active: phase = "第%d波：%sの主役を凌げ" % [_surge_index + 1, _role_display(_survival_surge_role)]
 	if _survival_boss_phase: phase = "ボスを倒せ！　5分を過ぎても撃破まで継続"
 	if GameManager.survival_completed:
 		phase = "ボス撃破！　宝箱と装備を回収" if _boss_reward_pending else "装備を回収し、帰還の階段へ [E]"
 	GameManager.dungeon_map.set_meta("objective_text", phase)
-	hud.set_survival_status(String(_current_config.get("display_name", "")), elapsed, boss_at, _map_kills, phase, _survival_boss_phase)
+	hud.set_survival_status(String(_current_config.get("display_name", "")), elapsed, boss_at, _map_kills, phase, _survival_boss_phase, next_event)
 
 func _finish_survival() -> void:
 	GameManager.survival_completed = true
@@ -1075,6 +1183,8 @@ func debug_get_map_state() -> Dictionary:
 		"surge_remaining": _surge_remaining,
 		"surge_trigger_reason": _surge_trigger_reason,
 		"surge_reward_count": _surge_reward_count,
+		"surge_role": _survival_surge_role,
+		"surge_completed": _survival_surge_completed,
 	}
 
 

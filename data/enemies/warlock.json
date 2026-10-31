@@ -6,5 +6,9 @@
   "move_speed": 65.0,
   "contact_damage": 7.0,
   "exp_value": 2,
-  "min_elapsed_seconds": 180.0
+  "min_elapsed_seconds": 180.0,
+  "ranged_range": 240.0,
+  "attack_interval": 2.0,
+  "attack_windup": 0.6,
+  "attack_range": 240.0
 }

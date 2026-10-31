@@ -17,3 +17,6 @@ class_name EnemyData
 @export var attack_range: float = 52.0
 ## 攻撃モーション開始から命中判定までの、回避可能な予備時間。
 @export var attack_windup: float = 0.45
+## 0より大きいと遠距離型。この距離で立ち止まり、予備動作の後に弾を1発撃つ
+## （立ち止まりを罰する役割、Phase 1）。近接判定は使わない。
+@export var ranged_range: float = 0.0

@@ -4086,3 +4086,36 @@ PC/OpenGLとタッチ操作を含む横画面/Vulkanプレビューで6職を確
   `tools/capture_crafted_ui`／`capture_item_flow`／`capture_iai`／`capture_survival_field`が撮影し、`docs/screens/`へ保存。
 - 既知：`equipment_integration_check`の220件と`forge_balance_check`の長時間化は変更前から。合成音4点は差し替え前提。
 
+
+## 2026-10-31 遊びの骨組み Phase 1：緊張と山場（現行）
+設計メモは`docs/fun_loop_redesign.md`。ユーザー評価「退屈・単調」への打ち手。数値は`data/`に寄せ、コードは仕組みだけを持つ。
+
+### 波（サージ）（`data/maps/exploration_run.json` `surge`、`systems/map_run_controller.gd`）
+- `surge.enabled: true`。MAPごとの`survival_surge_seconds`（MAP1 45/100/155/205、MAP2 40/95/150/205、MAP3 40/90/140/195）で開始、
+  `warning_seconds` 10秒前から予告、`duration_seconds` 30秒の間だけ`spawn_interval ×0.55`・同時数×1.4、終了で`reward_sequence`
+  （装備→回復→装備→装備）の確定報酬をプレイヤーの横へ落とす。波の中盤（15秒）に強敵（`strong`階級、特技つき）を1体混ぜる。
+- 開始時に`WaveSpawner.spawn_ring(ring_count 12, role)`で画面外のリング上へ一斉に湧く（包囲）。予告から終了までは
+  `StageEnvironment.set_surge_visual`→`DetailedMapSurfaces.set_alarm`で画面の縁の暗がりが朱赤に脈打つ。予告音`room_door`、開始音`boss_appear`、
+  終了音`level_up`。ボス段階に入ると波は報酬なしで終わる。EventBus `map_surge_started/ended`はそのまま。
+- HUD（`set_survival_status`の`next_event`）：石板の2行目に「次の波まで m:ss」「⚠ 第N波 X秒前　○○が来る」「⚠ 第N波（○○）残り X秒」
+  「第N波を凌いだ！　報酬が出現」（3秒）、全波終了後は「ボスまで m:ss」。目標の可視化。
+
+### 敵の役割（`systems/wave_spawner.gd` `ENEMY_ROLES`、`entities/enemies/enemy_basic.gd`）
+- rush（突撃：HP×0.7、速度上限を主人公の92%へ）、wall（壁：HP×1.8、速度×0.7、見た目×1.15、ノックバック×0.35・硬直耐性、meta `wall`）、
+  ranged（弓兵：`EnemyData.ranged_range`>0。`RangedStrategy`で射程の82%まで寄って止まり、42%より近いと下がる。予備動作の後に
+  共通Projectileを敵弾（layer 16、`enemy_shots`グループ、橙色）として1発撃つ。発射時の位置を狙うので動き続ければ外れる）、
+  swarm（群れ：HP×0.6、見た目×0.88）。各MAPの`survival_surge_roles`で波ごとの主役を変え、波の間は通常湧きの6割を主役の役割から選ぶ。
+- 遠距離型のデータ：`skeleton_archer` 230px/1.8秒、`demoness_a` 210/1.7、`ghostfire` 190/1.5、`warlock` 240/2.0（`attack_windup` 0.45〜0.6）。
+
+### 圧力曲線（`data/difficulty/five_minute_survival*.json`、`exploration_run.json`）
+- 間隔と同時数の節目を0/30/60/120/180/210秒に置き直し（MAP1 1.0秒3〜4体→0.85/4〜5→0.65/5〜7→0.5/6〜8→0.42/8〜10→0.4/8〜10。MAP2/3は密）。
+- 敵倍率：HP 0.38→0.75/0.85/0.95、攻撃 0.7→1.0/1.1/1.2、速度 0.65→0.78/0.8/0.82（MAP1/2/3）。突撃型は予備動作×0.55、群れ型×0.7
+  （`EnemyBasic.attack_windup_multiplier`）。経験値必要量の倍率0.6→0.85（終盤Lv26前後）。終盤ボスのHPは`survival_boss_hp_multiplier` 1.5
+  （固定HP、プレイヤー火力には合わせない）。
+- 根拠：無敵なしで立ち止まる自動操作の180秒で、変更前は被弾16回・累計47ダメージ・最低HP90%（敵は0.45秒の予備動作の間に斬撃で死ぬ）。
+  変更後は被弾69回・累計298・最低HP23%（25%未満の救済1回）。ボス戦は約50秒。
+
+### 検証
+- `five_minute_survival_check`に追加：波の予告（HUD文＋朱赤の縁）→開始（役割つきの包囲湧き8体以上）→中盤の強敵→終了（報酬の床装備、警報と役割の解除）、
+  弓兵が立ち止まった主人公へ弾を撃つ、壁型のノックバック耐性。`--full-run`では無敵なしで180秒まで自動操作しHP50%以下へ落ちる圧力があること
+  （25%未満で救済回復）、60秒時点の生存12体以上、波の開始/終了イベント4回を確認する。実画面は`tools/capture_surge.tscn`→`docs/screens/surge_*.png`。

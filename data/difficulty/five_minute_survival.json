@@ -8,15 +8,15 @@
     ]
   },
   {
-    "time_seconds": 45,
-    "spawn_interval": 0.8,
+    "time_seconds": 30,
+    "spawn_interval": 0.85,
     "spawn_batch": [
       4,
       5
     ]
   },
   {
-    "time_seconds": 90,
+    "time_seconds": 60,
     "spawn_interval": 0.65,
     "spawn_batch": [
       5,
@@ -24,16 +24,24 @@
     ]
   },
   {
-    "time_seconds": 150,
+    "time_seconds": 120,
     "spawn_interval": 0.5,
     "spawn_batch": [
-      7,
-      9
+      6,
+      8
+    ]
+  },
+  {
+    "time_seconds": 180,
+    "spawn_interval": 0.42,
+    "spawn_batch": [
+      8,
+      10
     ]
   },
   {
     "time_seconds": 210,
-    "spawn_interval": 0.45,
+    "spawn_interval": 0.4,
     "spawn_batch": [
       8,
       10

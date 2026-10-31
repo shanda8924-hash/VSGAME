@@ -366,6 +366,42 @@
       "weight": 2,
       "tasks": [
         {
+          "id": "fun_loop_phase1_surge",
+          "name": "遊びの骨組み Phase 1：波・敵の役割・圧力曲線・次の波の表示",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "サージ有効化（MAP別4回、10秒前予告、30秒の密度上昇と包囲湧き、確定報酬、中盤の強敵）。敵に突撃/壁/弓兵/群れの役割。敵HP0.38→0.75〜0.95、攻撃→1.0〜1.2、XP必要量0.85、ボスHP×1.5。HUDに次の波まで。five_minute_survival_check（波・弓兵・壁）と--full-run（無敵なし180秒でHP50%以下、60秒12体以上、波4回）PASS。手触りの最終調整はローカルで遊んで判断。"
+        },
+        {
+          "id": "fun_loop_phase2_readable_skills",
+          "name": "遊びの骨組み Phase 2：スキルの可読性（発動条件・タグ・相性）",
+          "status": "design",
+          "progress": 10,
+          "priority": "high",
+          "lane": "next",
+          "notes": "docs/fun_loop_redesign.md Phase 2。trigger/tags/scales_withのデータ化、クールダウン→命中回数ごと、カード3行定型、HUDのビルド表示。"
+        },
+        {
+          "id": "fun_loop_phase3_synergy",
+          "name": "遊びの骨組み Phase 3：シナジーと進化",
+          "status": "design",
+          "progress": 5,
+          "priority": "high",
+          "lane": "next",
+          "notes": "連撃、進化レシピ（evolutions.json）、相性カードの保証、リロール。"
+        },
+        {
+          "id": "fun_loop_phase4_growth",
+          "name": "遊びの骨組み Phase 4：育成（装備・熟練の持ち越し、深度の鎖）",
+          "status": "design",
+          "progress": 5,
+          "priority": "high",
+          "lane": "next",
+          "notes": "装備の永続化、職業熟練、MAP1→2→3の深度チェーン、負けたときの持ち帰り。"
+        },
+        {
           "id": "visual_survival_growth",
           "name": "敵を減速・5分の成長・視覚的な強化三択",
           "status": "completed",

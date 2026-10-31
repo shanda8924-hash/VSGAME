@@ -405,6 +405,13 @@
       "decision": "壁・柱・小物を置かない設計は維持し、床の飾り・光だまり・縁の暗がり・浮遊粒を描画層として重ねる。配置は世界座標のハッシュで決め、256px吸着時だけ再描画する。",
       "reason": "1枚の床の繰り返しでは3テーマの差と世界観が伝わらない。一方で衝突物を置くと大群の経路と性能設計が崩れる。",
       "impact": "detailed_map_surfaces.gd、assets/visuals/floor_decals、tools/map_unified。当たり判定・湧き・経路は不変。"
+    },
+    {
+      "date": "2026-10-31",
+      "title": "「楽しくない」評価を受け、見た目ではなく遊びの骨組みを4段階で直す",
+      "decision": "Phase 1 緊張と山場（波の有効化・敵の役割・圧力曲線・次の波の表示）、Phase 2 スキルの可読性、Phase 3 シナジーと進化、Phase 4 育成の順に実装する。数値はdata/へ寄せ、各Phaseで実経路の検査を1〜2個足す。",
+      "reason": "退屈（敵が弱い・移動だけ）、単調（ボスまで山場がない）、分かりにくい（目標と得が見えない・スキルの発動条件が読めない）、育成がない（1ダンジョンで終わる）の4症状は、VFX・UI・ドロップの統一では解消しない。",
+      "impact": "docs/fun_loop_redesign.md。Phase 1はexploration_run.json、difficulty/*.json、wave_spawner.gd、map_run_controller.gd、enemy_basic.gd、ranged_strategy.gd、hud.gd、detailed_map_surfaces.gd。"
     }
   ]
 }
