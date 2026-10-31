@@ -10,25 +10,62 @@ script = ExtResource("1")
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-color = Color(0, 0, 0, 0.6)
+color = Color(0.018, 0.024, 0.034, 0.78)
 
 [node name="CenterContainer" type="CenterContainer" parent="."]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer"]
+[node name="Panel" type="PanelContainer" parent="CenterContainer"]
 layout_mode = 2
-theme_override_constants/separation = 16
 
-[node name="StepTitle" type="Label" parent="CenterContainer/VBoxContainer"]
+[node name="Margin" type="MarginContainer" parent="CenterContainer/Panel"]
 layout_mode = 2
+theme_override_constants/margin_left = 26
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 26
+theme_override_constants/margin_bottom = 22
+
+[node name="VBox" type="VBoxContainer" parent="CenterContainer/Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Seal" type="Control" parent="CenterContainer/Panel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Eyebrow" type="Label" parent="CenterContainer/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.76, 0.61, 0.36, 1)
+theme_override_font_sizes/font_size = 18
+text = "Lv.2 に到達　・　戦闘時間は停止中"
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 20
-text = "レベルアップ! 強化を1つ選んでください"
 
-[node name="GridContainer" type="GridContainer" parent="CenterContainer/VBoxContainer"]
+[node name="Heading" type="Label" parent="CenterContainer/Panel/Margin/VBox"]
 layout_mode = 2
-theme_override_constants/h_separation = 12
+theme_override_colors/font_color = Color(1, 0.88, 0.59, 1)
+theme_override_font_sizes/font_size = 34
+text = "レベルアップ"
+horizontal_alignment = 1
+
+[node name="StepTitle" type="Label" parent="CenterContainer/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.77, 0.81, 0.79, 1)
+theme_override_font_sizes/font_size = 20
+text = "強化を1つ選び、下のボタンで取得する"
+horizontal_alignment = 1
+
+[node name="GridContainer" type="GridContainer" parent="CenterContainer/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/h_separation = 16
 theme_override_constants/v_separation = 12
 columns = 3
+
+[node name="Confirm" type="Button" parent="CenterContainer/Panel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "強化を選択してください"
+disabled = true

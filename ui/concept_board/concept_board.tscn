@@ -20,6 +20,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 
 [node name="Panel" type="PanelContainer" parent="Background/Center"]
+custom_minimum_size = Vector2(1080, 680)
 layout_mode = 2
 
 [node name="Margin" type="MarginContainer" parent="Background/Center/Panel"]
@@ -31,17 +32,29 @@ theme_override_constants/margin_bottom = 18
 
 [node name="VBox" type="VBoxContainer" parent="Background/Center/Panel/Margin"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 9
+
+[node name="Seal" type="Control" parent="Background/Center/Panel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 54)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Eyebrow" type="Label" parent="Background/Center/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.44, 0.83, 0.8, 1)
+theme_override_font_sizes/font_size = 18
+text = "古王の戦術盤"
+horizontal_alignment = 1
 
 [node name="Title" type="Label" parent="Background/Center/Panel/Margin/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 27
+theme_override_font_sizes/font_size = 30
 text = "コンセプトボード"
 horizontal_alignment = 1
 
 [node name="Guide" type="Label" parent="Background/Center/Panel/Margin/VBox"]
 layout_mode = 2
-text = "起点 → スキル → 補助 / 最大2チェーン・6スロット"
+text = "起点 → スキル → 補助　・　最大2連鎖／6枠"
 horizontal_alignment = 1
 
 [node name="ChainRows" type="VBoxContainer" parent="Background/Center/Panel/Margin/VBox"]
@@ -66,9 +79,9 @@ theme_override_constants/separation = 18
 [node name="Clear" type="Button" parent="Background/Center/Panel/Margin/VBox/Controls"]
 custom_minimum_size = Vector2(180, 52)
 layout_mode = 2
-text = "スロットを外す"
+text = "選択枠を外す"
 
 [node name="Done" type="Button" parent="Background/Center/Panel/Margin/VBox/Controls"]
 custom_minimum_size = Vector2(180, 52)
 layout_mode = 2
-text = "決定"
+text = "構築を確定"

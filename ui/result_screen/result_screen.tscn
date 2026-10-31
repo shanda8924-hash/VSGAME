@@ -10,7 +10,19 @@ script = ExtResource("1")
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-color = Color(0, 0, 0, 0.75)
+color = Color(0.005, 0.009, 0.015, 0.84)
+
+[node name="ResultFrame" type="Panel" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -330.0
+offset_top = -300.0
+offset_right = 330.0
+offset_bottom = 300.0
+mouse_filter = 2
 
 [node name="CenterContainer" type="CenterContainer" parent="."]
 anchors_preset = 15
@@ -18,29 +30,56 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 
 [node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer"]
+custom_minimum_size = Vector2(540, 0)
 layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Seal" type="Control" parent="CenterContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 76)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Eyebrow" type="Label" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 0.81, 0.78, 1)
+theme_override_font_sizes/font_size = 18
+text = "探索記録"
+horizontal_alignment = 1
 
 [node name="TitleLabel" type="Label" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.82, 0.32, 1)
 theme_override_font_sizes/font_size = 44
-text = "ゲームオーバー"
+text = "探索失敗"
 horizontal_alignment = 1
 
 [node name="TimeLabel" type="Label" parent="CenterContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
+theme_override_font_sizes/font_size = 22
 horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="KillLabel" type="Label" parent="CenterContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
+theme_override_font_sizes/font_size = 22
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="RewardLabel" type="Label" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.81, 0.35, 1)
+theme_override_font_sizes/font_size = 22
+text = "継承の欠片　+0"
 horizontal_alignment = 1
 
 [node name="RetryButton" type="Button" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
-custom_minimum_size = Vector2(200, 56)
-text = "もう一度"
+custom_minimum_size = Vector2(200, 58)
+text = "再挑戦"
 
 [node name="TitleButton" type="Button" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
-custom_minimum_size = Vector2(200, 56)
+custom_minimum_size = Vector2(200, 54)
 text = "タイトルへ戻る"

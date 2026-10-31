@@ -10,10 +10,11 @@ class_name ItemSelect
 
 signal item_chosen(item_id: String)
 
-const BORDER_COLOR := Color(0.85, 0.65, 0.15, 1.0) # 金色系。強化(青)・属性(各色)とは別の「戦利品」の色
-const NAME_FONT_SIZE := 22
-const DESC_FONT_SIZE := 18
+const BORDER_COLOR := Color("d99565") # 戦利品は髑髏と赤銅のアクセント。
+const NAME_FONT_SIZE := 24
+const DESC_FONT_SIZE := 20
 const DESC_COLOR := Color(0.88, 0.88, 0.93, 1.0)
+const ICON_SIZE := Vector2(72, 72)
 
 @onready var title_label: Label = $CenterContainer/VBoxContainer/StepTitle
 @onready var grid_container: GridContainer = $CenterContainer/VBoxContainer/GridContainer
@@ -21,11 +22,19 @@ const DESC_COLOR := Color(0.88, 0.88, 0.93, 1.0)
 func _ready() -> void:
 	visible = false
 	PixelUIStyle.apply_tree(self)
+	PixelUIStyle.add_ornament($Background, "backdrop", BORDER_COLOR)
+	PixelUIStyle.apply_major_panel($AltarPanel, BORDER_COLOR)
+	var heading := $CenterContainer/VBoxContainer/StepTitle as Label
+	heading.custom_minimum_size = Vector2(680, 68)
+	heading.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	heading.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	PixelUIStyle.FrameArt.plaque(heading)
+	PixelUIStyle.FrameArt.emblem($CenterContainer/VBoxContainer/Seal, true)
 
 ## BossSpawnerがボス撃破時に呼び出す。candidatesは通常1〜3件を想定。
 ## 他のモーダル(LevelUpSelect等)が既に開いている場合は、GameManagerのキューに
 ## 積まれてそちらが閉じた後に自動的に表示される。
-func show_choices(candidates: Array[ItemData], title: String = "ボスを倒した! 戦利品を1つ選んでください") -> void:
+func show_choices(candidates: Array[ItemData], title: String = "ボス撃破　戦利品を選ぶ") -> void:
 	if candidates.is_empty():
 		return
 	GameManager.request_modal(func(): _open(candidates, title))
@@ -35,6 +44,7 @@ func _open(candidates: Array[ItemData], title: String) -> void:
 	visible = true
 	title_label.text = title
 	for child in grid_container.get_children():
+		grid_container.remove_child(child)
 		child.queue_free()
 
 	for item in candidates:
@@ -47,37 +57,17 @@ func _open(candidates: Array[ItemData], title: String) -> void:
 ## 重ねることで2行レイアウトを実現する(子Controlのmouse_filterをIGNOREにして
 ## クリックがボタン自体に通るようにしている)。
 func _build_choice_button(item: ItemData) -> Button:
-	var button := Button.new()
-	button.custom_minimum_size = Vector2(280, 132)
-	button.text = ""
-	_apply_choice_style(button)
+	var icon_texture := _load_icon(item.icon_path)
+	var button := PixelUIStyle.choice_card("王家の戦利品", item.display_name, _resolve_description(item), icon_texture, "受け取る", BORDER_COLOR)
+	button.custom_minimum_size = Vector2(360, 320)
 	button.set_meta("item_id", item.id)
 	button.pressed.connect(_on_choice_pressed.bind(item))
-
-	var vbox := VBoxContainer.new()
-	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	vbox.add_theme_constant_override("separation", 8)
-	button.add_child(vbox)
-
-	var name_label := Label.new()
-	name_label.text = item.display_name
-	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_label.add_theme_font_size_override("font_size", NAME_FONT_SIZE)
-	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	vbox.add_child(name_label)
-
-	var desc_label := Label.new()
-	desc_label.text = _resolve_description(item)
-	desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD
-	desc_label.custom_minimum_size = Vector2(254, 0)
-	desc_label.add_theme_font_size_override("font_size", DESC_FONT_SIZE)
-	desc_label.add_theme_color_override("font_color", DESC_COLOR)
-	desc_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	vbox.add_child(desc_label)
-
 	return button
+
+func _load_icon(path: String) -> Texture2D:
+	if path == "" or not ResourceLoader.exists(path):
+		return null
+	return load(path) as Texture2D
 
 ## data/items/のJSONにdescriptionが用意されていればそれをそのまま使う。
 ## 無い場合(将来descriptionを書き忘れたアイテムが追加された場合も含む)は
@@ -110,6 +100,7 @@ func _apply_choice_style(button: Button) -> void:
 	PixelUIStyle.apply_button(button, BORDER_COLOR)
 
 func _on_choice_pressed(item: ItemData) -> void:
+	if not visible: return
 	AudioManager.play_sfx("ui_click")
 	var player := get_tree().get_first_node_in_group("player")
 	if player:

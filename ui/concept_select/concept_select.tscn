@@ -11,7 +11,7 @@ script = ExtResource("1")
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-color = Color(0.01, 0.015, 0.03, 0.88)
+color = Color(0.01, 0.015, 0.03, 0.9)
 
 [node name="Center" type="CenterContainer" parent="Background"]
 layout_mode = 1
@@ -20,25 +20,47 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 
 [node name="Panel" type="PanelContainer" parent="Background/Center"]
+custom_minimum_size = Vector2(1120, 560)
 layout_mode = 2
 
 [node name="Margin" type="MarginContainer" parent="Background/Center/Panel"]
 layout_mode = 2
-theme_override_constants/margin_left = 24
-theme_override_constants/margin_top = 20
-theme_override_constants/margin_right = 24
+theme_override_constants/margin_left = 30
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 30
 theme_override_constants/margin_bottom = 24
 
 [node name="VBox" type="VBoxContainer" parent="Background/Center/Panel/Margin"]
 layout_mode = 2
-theme_override_constants/separation = 18
+theme_override_constants/separation = 12
+
+[node name="Seal" type="Control" parent="Background/Center/Panel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 70)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Eyebrow" type="Label" parent="Background/Center/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.46, 0.82, 0.8, 1)
+text = "秘奥の継承"
+horizontal_alignment = 1
 
 [node name="Title" type="Label" parent="Background/Center/Panel/Margin/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
-text = "宝箱スキルを1つ選択"
+theme_override_font_sizes/font_size = 30
+theme_override_colors/font_color = Color(0.98, 0.88, 0.64, 1)
+text = "完成大技を一つ選ぶ"
 horizontal_alignment = 1
 
 [node name="Choices" type="HBoxContainer" parent="Background/Center/Panel/Margin/VBox"]
 layout_mode = 2
+size_flags_vertical = 3
+alignment = 1
 theme_override_constants/separation = 14
+
+[node name="InputHint" type="Label" parent="Background/Center/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.71, 0.7, 1)
+text = "左右で比較　・　決定で継承"
+horizontal_alignment = 1

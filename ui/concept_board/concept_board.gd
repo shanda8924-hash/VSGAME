@@ -3,6 +3,12 @@ class_name ConceptBoard
 
 signal board_closed()
 
+const SLOT_ACCENTS := {
+	"trigger": Color("e5b95f"),
+	"skill": Color("70d5cc"),
+	"modifier": Color("b88ae8"),
+}
+
 @export var concept_system_path: NodePath
 
 @onready var concept_system: ConceptSystem = get_node(concept_system_path)
@@ -20,6 +26,11 @@ var _selected_slot: String = "trigger"
 func _ready() -> void:
 	visible = false
 	PixelUIStyle.apply_tree(self)
+	PixelUIStyle.add_ornament($Background, "backdrop", PixelUIStyle.JEWEL)
+	PixelUIStyle.apply_major_panel($Background/Center/Panel, PixelUIStyle.JEWEL)
+	PixelUIStyle.add_ornament($Background/Center/Panel/Margin/VBox/Seal, "emblem")
+	PixelUIStyle.apply_button(clear_button, PixelUIStyle.STONE)
+	PixelUIStyle.apply_button(done_button, PixelUIStyle.BORDER_HOVER)
 	clear_button.pressed.connect(_clear_selected)
 	done_button.pressed.connect(_close)
 	concept_system.board_changed.connect(_refresh)
@@ -48,7 +59,7 @@ func _refresh() -> void:
 		row.add_theme_constant_override("separation", 10)
 		var label := Label.new()
 		label.custom_minimum_size = Vector2(100, 70)
-		label.text = "チェーン %s" % String.chr(65 + chain_index)
+		label.text = "連鎖　%s" % (["一", "二"][chain_index])
 		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		label.add_theme_font_size_override("font_size", 20)
 		row.add_child(label)
@@ -80,7 +91,9 @@ func _build_slot_button(chain_index: int, slot_type: String) -> Button:
 	button.set_meta("chain_index", chain_index)
 	button.set_meta("slot_type", slot_type)
 	var selected := chain_index == _selected_chain and slot_type == _selected_slot
-	PixelUIStyle.apply_button(button, Color("#ffffff") if selected else Color("#586174"))
+	var accent: Color = SLOT_ACCENTS.get(slot_type, PixelUIStyle.STONE)
+	PixelUIStyle.apply_button(button, accent.lightened(0.18) if selected else accent.darkened(0.32))
+	button.add_theme_color_override("font_color", accent.lightened(0.16) if selected else PixelUIStyle.TEXT)
 	button.pressed.connect(_select_slot.bind(chain_index, slot_type))
 	return button
 
@@ -97,11 +110,13 @@ func _refresh_owned() -> void:
 		owned_grid.remove_child(child)
 		child.queue_free()
 	var type_label: String = {"trigger":"起点", "skill":"スキル", "modifier":"補助"}.get(_selected_slot, _selected_slot)
-	owned_title.text = "所持%s — 選択してチェーン %sへ装備" % [type_label, String.chr(65 + _selected_chain)]
+	owned_title.text = "所持%s　・　連鎖%sへ刻む" % [type_label, ["一", "二"][_selected_chain]]
 	var owned := concept_system.get_owned_concepts(_selected_slot)
 	if owned.is_empty():
 		var empty := Label.new()
 		empty.text = "この種類のコンセプトはまだ取得していません"
+		empty.custom_minimum_size = Vector2(760, 44)
+		empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		owned_grid.add_child(empty)
 		return
 	for data in owned:
@@ -110,7 +125,7 @@ func _refresh_owned() -> void:
 		button.text = "%s\n%s" % [data.display_name, data.description]
 		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		button.set_meta("concept_id", data.id)
-		PixelUIStyle.apply_button(button, Color("#6f8ba7"))
+		PixelUIStyle.apply_button(button, SLOT_ACCENTS.get(_selected_slot, PixelUIStyle.STONE))
 		button.pressed.connect(_equip.bind(data.id))
 		owned_grid.add_child(button)
 

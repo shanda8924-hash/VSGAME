@@ -30,7 +30,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 
 [node name="Panel" type="PanelContainer" parent="CenterContainer"]
-custom_minimum_size = Vector2(560, 0)
+custom_minimum_size = Vector2(780, 0)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_1")
 
@@ -45,11 +45,24 @@ theme_override_constants/margin_bottom = 20
 layout_mode = 2
 theme_override_constants/separation = 12
 
+[node name="Seal" type="Control" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 58)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Eyebrow" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.45, 0.81, 0.78, 1)
+text = "時を止め、刻印を確かめる"
+
 [node name="Title" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 22
-text = "一時停止メニュー"
+theme_override_font_sizes/font_size = 32
+theme_override_colors/font_color = Color(0.98, 0.88, 0.64, 1)
+text = "探索記録"
 
 [node name="TabBar" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
 layout_mode = 2
@@ -58,17 +71,17 @@ theme_override_constants/separation = 12
 
 [node name="WeaponTabButton" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/TabBar"]
 layout_mode = 2
-custom_minimum_size = Vector2(150, 36)
+custom_minimum_size = Vector2(180, 48)
 text = "所持武器"
 
 [node name="TalentTabButton" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/TabBar"]
 layout_mode = 2
-custom_minimum_size = Vector2(150, 36)
+custom_minimum_size = Vector2(180, 48)
 text = "天賦図"
 
 [node name="AudioTabButton" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/TabBar"]
 layout_mode = 2
-custom_minimum_size = Vector2(150, 36)
+custom_minimum_size = Vector2(180, 48)
 text = "音量"
 
 [node name="WeaponPanel" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
@@ -76,9 +89,10 @@ layout_mode = 2
 theme_override_constants/separation = 12
 
 [node name="ScrollContainer" type="ScrollContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/WeaponPanel"]
-custom_minimum_size = Vector2(0, 340)
+custom_minimum_size = Vector2(0, 460)
 layout_mode = 2
 size_flags_vertical = 3
+horizontal_scroll_mode = 0
 
 [node name="WeaponList" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/WeaponPanel/ScrollContainer"]
 layout_mode = 2
@@ -89,12 +103,6 @@ theme_override_constants/separation = 10
 layout_mode = 2
 horizontal_alignment = 1
 text = "所持武器はありません"
-visible = false
-
-[node name="TalentPanel" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_constants/separation = 10
 visible = false
 
 [node name="AudioPanel" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
@@ -125,5 +133,5 @@ step = 0.05
 [node name="CloseHint" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 13
-text = "Escキーで閉じる"
+theme_override_font_sizes/font_size = 18
+text = "Escキーで探索へ戻る"

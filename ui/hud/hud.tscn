@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://ui/hud/hud.gd" id="1"]
+[ext_resource type="PackedScene" path="res://ui/common/retro_panel.tscn" id="2"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_expbar"]
 bg_color = Color(0.3, 0.75, 0.95, 1.0)
@@ -25,43 +26,34 @@ theme_override_constants/margin_bottom = 0
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
 layout_mode = 2
 
-[node name="HPBar" type="ProgressBar" parent="MarginContainer/VBoxContainer"]
-layout_mode = 2
-show_percentage = false
-
-[node name="LevelLabel" type="Label" parent="MarginContainer/VBoxContainer"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 14
-text = "Lv.1"
-
 [node name="ExpBar" type="ProgressBar" parent="MarginContainer/VBoxContainer"]
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 theme_override_styles/fill = SubResource("StyleBoxFlat_expbar")
 show_percentage = false
 
-[node name="ActiveElementLabel" type="RichTextLabel" parent="MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(0, 26)
+[node name="WeaponRow" type="HFlowContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 16
-bbcode_enabled = true
-fit_content = true
-scroll_active = false
-text = "属性：なし"
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 2
 
-[node name="WeaponRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+[node name="ItemRow" type="HFlowContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_constants/separation = 4
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 2
 
-[node name="FragmentRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+[node name="CompletedSkillRow" type="HFlowContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 2
 
-[node name="ItemRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+[node name="GoldLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
-
-[node name="CompletedSkillRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
-layout_mode = 2
-theme_override_constants/separation = 5
+theme_override_colors/font_color = Color(1, 0.886, 0.478, 1)
+theme_override_colors/font_outline_color = Color(0.08, 0.03, 0, 1)
+theme_override_constants/outline_size = 1
+theme_override_font_sizes/font_size = 22
+text = "G 0"
 
 [node name="BossHealthContainer" type="VBoxContainer" parent="."]
 anchor_left = 0.5
@@ -83,83 +75,43 @@ text = "Boss"
 layout_mode = 2
 show_percentage = false
 
-[node name="SkillPanel" type="PanelContainer" parent="."]
-anchor_left = 0.5
+[node name="PlayerPanel" parent="." instance=ExtResource("2")]
+anchor_left = 0.0
 anchor_top = 1.0
-anchor_right = 0.5
+anchor_right = 0.0
 anchor_bottom = 1.0
-offset_left = -80.0
-offset_top = -160.0
-offset_right = 80.0
-offset_bottom = -20.0
-grow_horizontal = 2
+offset_left = 16.0
+offset_top = -132.0
+offset_right = 316.0
+offset_bottom = -16.0
+grow_horizontal = 1
 grow_vertical = 0
 
-[node name="MarginContainer" type="MarginContainer" parent="SkillPanel"]
-layout_mode = 2
-theme_override_constants/margin_left = 8
-theme_override_constants/margin_top = 6
-theme_override_constants/margin_right = 8
-theme_override_constants/margin_bottom = 6
-
-[node name="VBoxContainer" type="VBoxContainer" parent="SkillPanel/MarginContainer"]
-layout_mode = 2
-theme_override_constants/separation = 2
-alignment = 1
-
-[node name="SkillName" type="Label" parent="SkillPanel/MarginContainer/VBoxContainer"]
-layout_mode = 2
-horizontal_alignment = 1
-theme_override_font_sizes/font_size = 14
-text = "アクティブスキル"
-
-[node name="IconPanel" type="PanelContainer" parent="SkillPanel/MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(72, 72)
-layout_mode = 2
-size_flags_horizontal = 4
-
-[node name="IconText" type="Label" parent="SkillPanel/MarginContainer/VBoxContainer/IconPanel"]
-layout_mode = 2
-horizontal_alignment = 1
-vertical_alignment = 1
-theme_override_font_sizes/font_size = 28
-text = "SK"
-
-[node name="CooldownShade" type="ColorRect" parent="SkillPanel/MarginContainer/VBoxContainer/IconPanel"]
-layout_mode = 2
-mouse_filter = 2
-color = Color(0, 0, 0, 0)
-
-[node name="CooldownLabel" type="Label" parent="SkillPanel/MarginContainer/VBoxContainer/IconPanel"]
-layout_mode = 2
-mouse_filter = 2
-horizontal_alignment = 1
-vertical_alignment = 1
-theme_override_font_sizes/font_size = 22
-
-[node name="SpaceLabel" type="Label" parent="SkillPanel/MarginContainer/VBoxContainer"]
-layout_mode = 2
-horizontal_alignment = 1
-theme_override_font_sizes/font_size = 16
-text = "SPACE"
-
-[node name="StageDotsWrap" type="CenterContainer" parent="SkillPanel/MarginContainer/VBoxContainer"]
-layout_mode = 2
-
-[node name="RoomStatusLabel" type="Label" parent="."]
+[node name="RoomStatusLabel" type="RichTextLabel" parent="."]
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -280.0
-offset_top = 18.0
-offset_right = 280.0
-offset_bottom = 54.0
+offset_left = -328.0
+offset_top = 10.0
+offset_right = 328.0
+offset_bottom = 78.0
 grow_horizontal = 2
-theme_override_colors/font_color = Color(0.93, 0.88, 0.7, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 6
-theme_override_font_sizes/font_size = 20
-text = "ルーム 1 / 36  ·  戦士の間"
-horizontal_alignment = 1
+mouse_filter = 2
+theme_override_font_sizes/normal_font_size = 20
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+text = "[center]ルーム 1 / 36  ·  戦士の間[/center]"
+
+[node name="BossGaugeWrap" type="Control" parent="."]
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -260.0
+offset_top = 86.0
+offset_right = 260.0
+offset_bottom = 98.0
+grow_horizontal = 2
+mouse_filter = 2
+visible = false
 
 [node name="RoomMessageLabel" type="Label" parent="."]
 anchor_left = 0.5
@@ -171,8 +123,8 @@ offset_bottom = 92.0
 grow_horizontal = 2
 theme_override_colors/font_color = Color(1, 0.83, 0.4, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 5
-theme_override_font_sizes/font_size = 17
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 20
 horizontal_alignment = 1
 
 [node name="RoomClearLabel" type="Label" parent="."]
@@ -188,7 +140,7 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_colors/font_color = Color(1, 0.84, 0.35, 1)
 theme_override_colors/font_outline_color = Color(0.08, 0.03, 0, 1)
-theme_override_constants/outline_size = 10
+theme_override_constants/outline_size = 2
 theme_override_font_sizes/font_size = 52
 text = "ルームクリア"
 horizontal_alignment = 1
@@ -222,7 +174,7 @@ alignment = 1
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.84, 0.38, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 7
+theme_override_constants/outline_size = 1
 theme_override_font_sizes/font_size = 42
 text = "24"
 horizontal_alignment = 1
@@ -230,6 +182,6 @@ horizontal_alignment = 1
 [node name="Caption" type="Label" parent="ComboPanel/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.92, 1, 1)
-theme_override_font_sizes/font_size = 17
+theme_override_font_sizes/font_size = 20
 text = "コンボ"
 horizontal_alignment = 1

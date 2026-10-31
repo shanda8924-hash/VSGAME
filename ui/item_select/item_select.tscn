@@ -10,7 +10,19 @@ script = ExtResource("1")
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-color = Color(0, 0, 0, 0.6)
+color = Color(0.012, 0.019, 0.031, 0.88)
+
+[node name="AltarPanel" type="Panel" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -640.0
+offset_top = -310.0
+offset_right = 640.0
+offset_bottom = 310.0
+mouse_filter = 2
 
 [node name="CenterContainer" type="CenterContainer" parent="."]
 anchors_preset = 15
@@ -19,16 +31,35 @@ anchor_bottom = 1.0
 
 [node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer"]
 layout_mode = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 12
+
+[node name="Seal" type="Control" parent="CenterContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 74)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Eyebrow" type="Label" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.83, 0.67, 0.34, 1)
+text = "王家の戦利品"
 
 [node name="StepTitle" type="Label" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 28
-text = "ボスを倒した! 戦利品を1つ選んでください"
+theme_override_font_sizes/font_size = 32
+theme_override_colors/font_color = Color(0.98, 0.88, 0.64, 1)
+text = "ボス撃破　戦利品を選ぶ"
 
 [node name="GridContainer" type="GridContainer" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_constants/h_separation = 12
+theme_override_constants/h_separation = 16
 theme_override_constants/v_separation = 12
 columns = 3
+
+[node name="InputHint" type="Label" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.74, 0.74, 0.7, 1)
+text = "左右で比較　・　決定で受け取る"
