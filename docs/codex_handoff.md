@@ -1,6 +1,17 @@
-# Codex Handoff — 2026-10-31
+# Codex Handoff — 2026-10-31（Phase 4まで）
 
-## 今回（整理計画 Phase 0：保全）
+## 今回（整理計画 Phase 4：戦闘HUD）
+- `ui/hud/hud.gd`の描画層を組み直した。呼び出し元（MapRunController／BossSpawner／ComboSystem／Player／game.gd）の関数名と引数、Signal購読、`hud.tscn`のノード名は変更していない。戦闘ロジック・数値・入力・保存は未変更。
+- 上中央の石板：「ボスまで m:ss」34px＋240秒までの20分割ゲージ。ボス戦は同じ石板が「最終ボス 名前　ボス戦 m:ss　撃破 N」と朱赤の20分割HPゲージに切り替わる（`room_status_label`の本文に「ボス戦」を含める既存検査は維持）。
+- 左上：LV・職業・主武器名・HP16px・XP10px（370×120）。その下に取得済み強化のアイコン＋段階ピップ。旧「範囲0 貫通0 連鎖0 追撃0」は廃止。
+- 右上：コイン付き所持金。「武装・戦利品」は中身がある時だけ見出しボタンと石板を出す。右下：職業技（アイコン枠・キー札L・クールダウンの影・名前／状態・熟練ピップ）。
+- 操作案内は戦闘20秒で畳み「操作一覧」札へ。タッチでは案内を出さず、HPは左上・技は右上（128〜226）・強化石板は地図ボタンの下。
+- 仕様：§35.3を現行値へ書き換え、末尾に「2026-10-31 戦闘HUDのブラッシュアップ」節を追加。実画面は`docs/screens/hud_before_*.png`／`hud_after_*.png`。
+- 検証：`script_load_check` 209件・失敗0。`pixel_visual_check` PASS（旧HUDで失敗していた「label outside flow」17件は、トレイを非表示のまま検査していたことが原因で、中身がある時に表示する仕様へ変えたことで解消）。`survival_growth_check` PASS。`five_minute_survival_check` PC/OpenGLとタッチ横画面（`--touch-preview`、1280×720）でOPEN_FIELD PASS。
+- 検査の起動：`res://scenes/game.tscn`または`res://tests/*.tscn`をシーン指定で起動する。複数のGodotを同時に走らせると途中で止まる（単独なら完走）ので、検査は直列に回す。
+- 残り：Phase 1（仕様書v4.0・ダッシュボード一本化）、Phase 2（削除）、判断事項D1〜D8。Phase 5のホーム／リザルト／スマホボタンはD1・D3・D5待ち。
+
+## 直前（整理計画 Phase 0：保全）
 - 2026-08-25以降の未コミット変更1390件を9コミットに分けて保存し、`main`ブランチを作成。保全前の状態は`backup/pre-cleanup-20261031`タグ。
 - `.gitignore`に`artifacts/`、`tmp/`、`tools/source_art/`、`.codex-runtime-test/`、`.godot-test-user-visual/`を追加。`artifacts/`は追跡から外しただけで、ファイルはそのまま。
 - `tools/source_art/{open_field_survival,five_minute_survival,survival_growth}`のコード退避コピーはリポジトリ外（`../_backup_20261031/source_art_snapshots/`）へ移動。各`change.diff`は`docs/history/`へ。

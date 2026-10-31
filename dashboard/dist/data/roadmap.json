@@ -709,6 +709,15 @@
       "weight": 0.9,
       "tasks": [
         {
+          "id": "hud_survival_brushup",
+          "name": "戦闘HUDの再構成（時計・ボスHP・強化ピップ）",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "上中央の石板に時計と240秒ゲージ、ボス戦は朱赤HPゲージへ切替。XPをHP直下へ、取得強化をアイコン＋ピップへ、操作案内は20秒で畳む。トレイは中身がある時だけ表示。pixel_visual / survival_growth / five_minute_survival（PC・タッチ）PASS。"
+        },
+        {
           "id": "weapon_aura_wall_visibility",
           "name": "見えない壁修正・浮遊武器拡大とオーラ",
           "status": "completed",

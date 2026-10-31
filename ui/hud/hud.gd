@@ -1,12 +1,11 @@
 extends CanvasLayer
 class_name HUD
-## プレイ中のHUD。HPバーと所持欠片・獲得アイテム(ミニマル表示)を表示する。
-## 【UI方針】親指だけで届く位置に配置する必要はない(HUDは表示専用で操作しないため)。
+## プレイ中のHUD（表示専用。数値計算・抽選・入力はここに持たない）。
 ##
-## 【見た目レイヤーについて】2026年8月、「レトロ16bit(SFC・ロマサガ系)×ブライト＆アニメ調」の
-## デザイン仕様に合わせて描画層を全面的に差し替えた(ui/common/retro_*.gd)。数値計算・
-## シグナル購読・状態遷移(いつ何を表示するか)は以前と完全に同じで、各set_*()/on_*()の
-## 「最終的にどのノードへ書き込むか」だけが変わっている。
+## 2026-10-31 Phase 4：5分サバイバルの情報優先度に合わせて描画層を組み直した。
+## 上中央に時計と終盤ボスの予告ゲージ、左上に職業/LV/HP/XP、その下に取得済み強化の段階、
+## 右上に金貨と（中身がある時だけ）武装・戦利品、右下に職業技。各set_*()/on_*()の
+## 呼び出し元と引数、Signal購読、状態遷移は変えず、最終的な描き先だけが変わっている。
 
 ## 戦利品トレイに個別表示する種類数の上限(仕様書8章)。これを超えた分は
 ## 個別の行を増やさず、末尾の「+N」バッジへまとめる。
@@ -18,6 +17,13 @@ const TRAY_CHIP_HEIGHT := 38.0
 const HP_SEGMENT_COUNT := 10
 const BOSS_SEGMENT_COUNT := 20
 const IAI_PIP_COUNT := 5 # AbilityStageDots.STAGE_COUNTと同じ5段階(職業スキル熟練度)
+
+## 取得済み強化の表示順（data/upgrades/survival_*.json）。
+const SURVIVAL_UPGRADE_IDS: Array[String] = ["survival_area", "survival_haste", "survival_power", "survival_echo", "survival_chain", "survival_guard", "survival_multishot", "survival_pierce"]
+## 操作案内を畳むまでの戦闘時間。
+const GUIDE_COLLAPSE_SECONDS := 20.0
+const COIN_ICON := preload("res://assets/ui/complete_ui_pack/book/icon_coin.png")
+const GOLD_TEXT := Color("ffd87a")
 
 @onready var exp_bar: ProgressBar = $MarginContainer/VBoxContainer/ExpBar
 @onready var weapon_row: HFlowContainer = $MarginContainer/VBoxContainer/WeaponRow
@@ -55,27 +61,54 @@ var _weapon_manager: WeaponManagerComponent = null
 var _active_skill: ActiveSkillComponent = null
 var _tray_container: MarginContainer = null
 var _tray_backdrop: Panel = null
+var _tray_header: Button = null
+var _tray_expanded := true
+var _is_touch := false
 
-# --- PlayerPanel(左下)内の動的ノード ---
+# --- PlayerPanel(左上) ---
 var _lv_badge_label: Label
 var _hp_gauge: ProgressBar
 var _hp_value_label: Label
-var _iai_pips_wrap: Control
-var _skill_caption_label: Label
-var _skill_icon_rect: TextureRect
-var _boss_gauge: RetroSegmentGauge
+var _weapon_name_label: Label
 
+# --- 取得済み強化（左上の下） ---
+var _upgrade_strip: HFlowContainer
+
+# --- 職業技パネル(右下) ---
+var _skill_panel: RetroPanel
+var _skill_icon_rect: TextureRect
+var _skill_shade: ColorRect
+var _skill_key_label: Label
+var _skill_name_label: Label
+var _skill_state_label: Label
+var _iai_pips_wrap: Control
 var _skill_display_name := ""
 var _skill_cooldown_remaining := 0.0
 var _skill_cooldown_total := 0.0
-var _loadout_label: Label
 var _ability_level := 0
+
+# --- 上中央のステージ石板 ---
+var _stage_panel: RetroPanel
+var _clock_row: HBoxContainer
+var _clock_prefix_label: Label
+var _clock_label: Label
+var _boss_gauge: RetroSegmentGauge ## 終盤ボスまでの時間（旧: 撃破カウント）
+var _boss_hp_wrap: Control
+var _boss_hp_gauge: RetroSegmentGauge
+var _boss_display_name := ""
+
+# --- 操作案内(左下、PCのみ) ---
+var _guide_full: Label
+var _guide_chip: Button
+var _guide_collapsed := false
+var _guide_pinned := false
 
 func _ready() -> void:
 	EventBus.item_acquired.connect(_on_item_acquired)
 	EventBus.equipment_picked_up.connect(_on_equipment_picked_up)
 	EventBus.run_gold_changed.connect(_on_run_gold_changed)
 	EventBus.run_started.connect(_on_run_started)
+	_is_touch = DisplayServer.is_touchscreen_available() or "--touch-preview" in OS.get_cmdline_user_args()
 	boss_health_container.visible = false
 	combo_panel.visible = false
 	room_clear_label.visible = false
@@ -85,112 +118,110 @@ func _ready() -> void:
 	if player:
 		_weapon_manager = player.get_node_or_null("WeaponManagerComponent")
 		_active_skill = player.get_node_or_null("ActiveSkillComponent")
-		if _active_skill:
-			_active_skill.skill_configured.connect(_on_skill_configured)
-			_active_skill.cooldown_changed.connect(_on_skill_cooldown_changed)
-			_active_skill.skill_became_ready.connect(_on_skill_became_ready)
-			_active_skill.skill_activated.connect(_on_skill_activated)
-			var data: CharacterData = DataLoader.characters.get(GameManager.selected_character_id)
-			if data:
-				var theme: EffectThemeData = DataLoader.effect_themes.get(data.vfx_theme_id)
-				_on_skill_configured(data.active_skill_name, data.active_skill_icon, data.active_skill_cooldown, theme.enhanced_color if theme else Color.GOLD)
-		if _weapon_manager:
-			_weapon_manager.class_ability_level_changed.connect(_on_class_ability_level_changed)
-			_weapon_manager.weapon_added.connect(func(_weapon_data): _refresh_weapon_tray())
-			set_ability_stage(_weapon_manager.get_class_ability_level())
-	_refresh_weapon_tray()
 	_layout_exploration_hud()
-	_build_loadout_strip()
-	if player:
-		player.get_node("EquipmentComponent").equipment_changed.connect(func(_slot: String, _item: EquipmentData): _refresh_loadout_strip())
+	if _active_skill:
+		_active_skill.skill_configured.connect(_on_skill_configured)
+		_active_skill.cooldown_changed.connect(_on_skill_cooldown_changed)
+		_active_skill.skill_became_ready.connect(_on_skill_became_ready)
+		_active_skill.skill_activated.connect(_on_skill_activated)
+		var data: CharacterData = DataLoader.characters.get(GameManager.selected_character_id)
+		if data:
+			var theme: EffectThemeData = DataLoader.effect_themes.get(data.vfx_theme_id)
+			_on_skill_configured(data.active_skill_name, data.active_skill_icon, data.active_skill_cooldown, theme.enhanced_color if theme else Color.GOLD)
 	if _weapon_manager:
-		_weapon_manager.sector_style_changed.connect(_refresh_loadout_strip)
-	_refresh_loadout_strip()
+		_weapon_manager.class_ability_level_changed.connect(_on_class_ability_level_changed)
+		_weapon_manager.weapon_added.connect(func(_weapon_data): _refresh_weapon_tray())
+		_weapon_manager.sector_style_changed.connect(_refresh_loadout)
+		set_ability_stage(_weapon_manager.get_class_ability_level())
+	if player:
+		player.get_node("EquipmentComponent").equipment_changed.connect(func(_slot: String, _item: EquipmentData): _refresh_loadout())
+	_refresh_weapon_tray()
+	_refresh_loadout()
 	RetroHUDStyle.apply_font(self)
 	_on_run_gold_changed(GameManager.run_gold, 0, "hud_ready")
 
+# ============================================================
+# 配置（1600×900基準。タッチ横画面は操作ボタンと重ならない位置へ）
+# ============================================================
+
 func _layout_exploration_hud() -> void:
-	# HP/XPは左上、技は下中央。Sceneの既存データ参照はreparent後も維持する。
-	player_panel.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
+	# 左上: 職業・LV・HP・XP
+	player_panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
 	player_panel.offset_left = 24
-	player_panel.offset_right = 374
-	player_panel.offset_top = -130
-	player_panel.offset_bottom = -32
+	player_panel.offset_right = 394
+	player_panel.offset_top = 20
+	player_panel.offset_bottom = 140
 	_compact_panel(player_panel)
-	var status_backdrop := Panel.new()
-	status_backdrop.name = "StatusReadabilityPanel"
-	status_backdrop.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-	status_backdrop.offset_left = -340
-	status_backdrop.offset_right = 340
-	status_backdrop.offset_top = 6
-	status_backdrop.offset_bottom = 92
-	status_backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	status_backdrop.add_theme_stylebox_override("panel", PixelUIStyle.FrameArt.box(true, 8))
-	add_child(status_backdrop)
-	move_child(status_backdrop, 0)
-	var root := player_panel.content.get_child(0)
-	exp_bar.reparent(self)
-	exp_bar.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
-	exp_bar.offset_left = 24
-	exp_bar.offset_right = -24
-	exp_bar.offset_top = -18
-	exp_bar.offset_bottom = -10
-	exp_bar.tooltip_text = "経験値"
-	exp_bar.custom_minimum_size = Vector2(0, 8)
-	PixelUIStyle.apply_progress_bar(exp_bar, RetroHUDStyle.IAI_TEAL)
-	var skill_panel := RetroPanel.new()
-	add_child(skill_panel)
-	skill_panel.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
-	skill_panel.offset_left = -374
-	skill_panel.offset_right = -24
-	skill_panel.offset_top = -130
-	skill_panel.offset_bottom = -32
-	_compact_panel(skill_panel)
-	var skills := VBoxContainer.new()
-	var skill_row := HBoxContainer.new()
-	skill_row.add_theme_constant_override("separation", 12)
-	skill_panel.content.add_child(skill_row)
-	_skill_icon_rect = TextureRect.new()
-	_skill_icon_rect.custom_minimum_size = Vector2(46, 46)
-	_skill_icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_skill_icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	_skill_icon_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	_skill_icon_rect.texture = _load_active_skill_icon()
-	skill_row.add_child(_skill_icon_rect)
-	skills.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	skills.alignment = BoxContainer.ALIGNMENT_CENTER
-	skill_row.add_child(skills)
-	_skill_caption_label.reparent(skills)
-	_skill_caption_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_iai_pips_wrap.reparent(skills)
+
+	# 上中央: ステージ石板（時計 → ボス戦ではボスHP）
+	_build_stage_panel()
+
+	# 左上の下: 取得済み強化
+	_upgrade_strip = HFlowContainer.new()
+	_upgrade_strip.name = "UpgradeStrip"
+	_upgrade_strip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_upgrade_strip.add_theme_constant_override("h_separation", 6)
+	_upgrade_strip.add_theme_constant_override("v_separation", 6)
+	add_child(_upgrade_strip)
+	_upgrade_strip.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+	_upgrade_strip.offset_left = 24
+	_upgrade_strip.offset_right = 24 + 560
+	_upgrade_strip.offset_top = 150
+	_upgrade_strip.offset_bottom = 210
+
+	# 右上: 金貨
 	gold_label.reparent(self)
 	gold_label.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
-	gold_label.offset_left = -220
+	gold_label.offset_left = -224
 	gold_label.offset_right = -24
-	gold_label.offset_top = 24
-	gold_label.offset_bottom = 54
+	gold_label.offset_top = 20
+	gold_label.offset_bottom = 58
 	gold_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	gold_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	gold_label.add_theme_font_size_override("font_size", 22)
+	gold_label.add_theme_color_override("font_color", GOLD_TEXT)
+	gold_label.add_theme_constant_override("outline_size", 0)
+	gold_label.tooltip_text = "所持金貨。補給箱のショップで使う"
+	gold_label.mouse_filter = Control.MOUSE_FILTER_STOP
 	var coin_frame := PixelUIStyle.FrameArt.box(true, 10)
+	coin_frame.content_margin_left = 46
+	coin_frame.content_margin_right = 12
 	coin_frame.content_margin_top = 6
 	coin_frame.content_margin_bottom = 6
 	gold_label.add_theme_stylebox_override("normal", coin_frame)
-	gold_label.text = "金貨　0"
+	var coin := TextureRect.new()
+	coin.name = "CoinIcon"
+	coin.texture = COIN_ICON
+	coin.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	coin.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	coin.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	coin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	coin.anchor_top = 0.5
+	coin.anchor_bottom = 0.5
+	coin.offset_left = 12
+	coin.offset_right = 38
+	coin.offset_top = -13
+	coin.offset_bottom = 13
+	gold_label.add_child(coin)
+
+	# 右上の下: 武装・戦利品トレイ（中身がある時だけ）
 	var tray := $MarginContainer as MarginContainer
 	_tray_container = tray
 	tray.theme = PixelUIStyle.shared_theme()
 	tray.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
 	tray.offset_left = -300
 	tray.offset_right = -24
-	tray.offset_top = 68
-	tray.offset_bottom = 530
+	var tray_top := 108.0 if not _is_touch else 236.0
+	tray.offset_top = tray_top
+	tray.offset_bottom = tray_top + 132
 	var tray_backdrop := Panel.new()
 	_tray_backdrop = tray_backdrop
 	tray_backdrop.name = "RelicTrayBackdrop"
 	tray_backdrop.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
 	tray_backdrop.offset_left = -310
 	tray_backdrop.offset_right = -14
-	tray_backdrop.offset_top = 60
-	tray_backdrop.offset_bottom = 540
+	tray_backdrop.offset_top = tray_top - 8
+	tray_backdrop.offset_bottom = tray_top + 142
 	tray_backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(tray_backdrop)
 	move_child(tray_backdrop, tray.get_index())
@@ -199,7 +230,28 @@ func _layout_exploration_hud() -> void:
 	_add_tray_header(tray_column, weapon_row, "武装", PixelUIStyle.BORDER_HOVER)
 	_add_tray_header(tray_column, item_row, "戦利品", Color("e8bd58"))
 	_add_tray_header(tray_column, completed_skill_row, "完成大技", PixelUIStyle.JEWEL)
+	_tray_header = Button.new()
+	_tray_header.name = "TrayHeader"
+	_tray_header.tooltip_text = "取得した武器・戦利品・完成大技を表示／折りたたみ"
+	_tray_header.focus_mode = Control.FOCUS_NONE
+	add_child(_tray_header)
+	_tray_header.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	_tray_header.offset_left = -200
+	_tray_header.offset_right = -24
+	_tray_header.offset_top = tray_top - 44
+	_tray_header.offset_bottom = tray_top - 10
+	_tray_header.add_theme_font_size_override("font_size", 18)
+	PixelUIStyle.apply_button(_tray_header)
+	_tray_header.pressed.connect(func():
+		_tray_expanded = not _tray_expanded
+		_refresh_tray_height()
+	)
 	_refresh_tray_height()
+
+	# 右下: 職業技
+	_build_skill_panel()
+
+	# 下中央: コンボ・入手通知・中央告知は従来位置
 	combo_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 	combo_panel.offset_left = -65
 	combo_panel.offset_right = 65
@@ -208,55 +260,34 @@ func _layout_exploration_hud() -> void:
 	combo_panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	PixelUIStyle.FrameArt.hide_old_ornament(combo_panel)
 	combo_value_label.add_theme_font_size_override("font_size", 24)
-	room_status_label.add_theme_font_size_override("normal_font_size", 20)
-	room_status_label.offset_top = 16
-	room_status_label.offset_bottom = 74
-	boss_gauge_wrap.offset_top = 76
-	boss_gauge_wrap.offset_bottom = 84
-	tray.hide()
-	tray_backdrop.hide()
-	var tray_button := Button.new()
-	tray_button.text = "武装・戦利品"
-	tray_button.tooltip_text = "取得した武器・戦利品・完成大技を表示"
-	add_child(tray_button)
-	tray_button.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
-	tray_button.offset_left = -180
-	tray_button.offset_right = -24
-	tray_button.offset_top = 58
-	tray_button.offset_bottom = 88
-	tray_button.add_theme_font_size_override("font_size", 18)
-	PixelUIStyle.apply_button(tray_button)
-	tray.offset_top = 100
-	tray_backdrop.offset_top = 92
-	tray_button.pressed.connect(func():
-		tray.visible = not tray.visible
-		tray_backdrop.visible = tray.visible
-		_refresh_tray_height()
-	)
-	var guide := Label.new()
-	guide.name = "ControlsGuide"
-	guide.text = "K 回避　L 技　J 反撃　E 調べる\nC 所持品　T 天賦図　M 地図　Esc 停止"
-	add_child(guide)
-	guide.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
-	guide.offset_left = 38
-	guide.offset_right = 538
-	guide.offset_top = -204
-	guide.offset_bottom = -136
-	guide.add_theme_font_size_override("font_size", 18)
-	guide.add_theme_stylebox_override("normal", PixelUIStyle.badge_style(PixelUIStyle.STONE_DARK, Color("0d1622")))
-	guide.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	if DisplayServer.is_touchscreen_available() or "--touch-preview" in OS.get_cmdline_user_args():
-		guide.hide()
-		player_panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
-		player_panel.offset_left = 24
-		player_panel.offset_right = 374
-		player_panel.offset_top = 120
-		player_panel.offset_bottom = 218
-		skill_panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
-		skill_panel.offset_left = -374
-		skill_panel.offset_right = -24
-		skill_panel.offset_top = 120
-		skill_panel.offset_bottom = 218
+
+	# 上中央の下: 目的・短い案内（ステージ石板の直下）
+	room_message_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	room_message_label.offset_left = -360
+	room_message_label.offset_right = 360
+	room_message_label.offset_top = 136
+	room_message_label.offset_bottom = 168
+	room_message_label.add_theme_font_size_override("font_size", 20)
+
+	# 旧ボスHP(ProgressBar)は使わない。Containerの表示フラグだけ互換のため残す。
+	boss_name_label.hide()
+	boss_hp_bar.hide()
+	boss_health_container.offset_top = 0
+	boss_health_container.offset_bottom = 0
+
+	_build_controls_guide()
+
+	if _is_touch:
+		# 画面下は仮想スティックと操作ボタン。HUDは上段へ寄せる。
+		_skill_panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+		_skill_panel.offset_left = -394
+		_skill_panel.offset_right = -24
+		_skill_panel.offset_top = 128
+		_skill_panel.offset_bottom = 226
+		_upgrade_strip.offset_top = 300
+		_upgrade_strip.offset_bottom = 360
+		_upgrade_strip.offset_right = 24 + 400
+		_skill_key_label.hide()
 
 func _compact_panel(host: RetroPanel) -> void:
 	for child in host.get_children():
@@ -266,33 +297,6 @@ func _compact_panel(host: RetroPanel) -> void:
 	for side in ["left", "right", "top", "bottom"]:
 		host.content.add_theme_constant_override("margin_" + side, 12)
 
-func _build_loadout_strip() -> void:
-	_loadout_label = Label.new()
-	_loadout_label.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
-	_loadout_label.offset_left = 24
-	_loadout_label.offset_right = 350
-	_loadout_label.offset_top = 14
-	_loadout_label.offset_bottom = 106
-	_loadout_label.add_theme_font_size_override("font_size", 18)
-	_loadout_label.clip_text = true
-	_loadout_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_loadout_label.add_theme_stylebox_override("normal", PixelUIStyle.FrameArt.box(true, 8))
-	_loadout_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_loadout_label)
-
-func _refresh_loadout_strip() -> void:
-	if _loadout_label == null or _weapon_manager == null:
-		return
-	var player := get_tree().get_first_node_in_group("player") as Player
-	var equipped := player.equipment_component.get_equipped("weapon") if player else null
-	var main_name := equipped.display_name if equipped else _weapon_manager._character_data.display_name if _weapon_manager._character_data else "素手"
-	var secondary := "なし"
-	var instances := _weapon_manager.get_weapon_instances()
-	if not instances.is_empty(): secondary = instances[0].data.display_name
-	var skill := "準備完了" if _skill_cooldown_remaining <= 0.0 else "残り %.1f秒" % _skill_cooldown_remaining
-	_loadout_label.text = "主: %s  /  副: %s\n技: %s  %s\n%s" % [main_name, secondary, _skill_display_name, skill, _weapon_manager.get_sector_style_summary()]
-	_loadout_label.tooltip_text = _loadout_label.text
-
 func _add_tray_header(container: VBoxContainer, before: Control, text: String, accent: Color) -> void:
 	var label := Label.new()
 	label.text = text
@@ -301,31 +305,29 @@ func _add_tray_header(container: VBoxContainer, before: Control, text: String, a
 	container.add_child(label)
 	container.move_child(label, before.get_index())
 
+## トレイは中身がある時だけ表示し、見出しボタンで折りたためる。
 func _refresh_tray_height() -> void:
 	if _tray_container == null or _tray_backdrop == null:
+		return
+	var has_content := weapon_row.get_child_count() + item_row.get_child_count() + completed_skill_row.get_child_count() > 0
+	if _tray_header:
+		_tray_header.visible = has_content
+		_tray_header.text = "武装・戦利品 ▾" if _tray_expanded else "武装・戦利品 ▸"
+	var show_tray := has_content and _tray_expanded
+	_tray_container.visible = show_tray
+	_tray_backdrop.visible = show_tray
+	if not show_tray:
 		return
 	var row_count := ceili(weapon_row.get_child_count() / 2.0)
 	row_count += ceili(item_row.get_child_count() / 2.0)
 	row_count += ceili(completed_skill_row.get_child_count() / 2.0)
-	var height := clampf(132.0 + row_count * (TRAY_CHIP_HEIGHT + 2.0), 132.0, 500.0)
+	var limit := 500.0 if not _is_touch else 190.0
+	var height := clampf(132.0 + row_count * (TRAY_CHIP_HEIGHT + 2.0), 132.0, limit)
 	_tray_container.offset_bottom = _tray_container.offset_top + height
 	_tray_backdrop.offset_bottom = _tray_container.offset_bottom + 10.0
 
-func _load_active_skill_icon() -> Texture2D:
-	var character_id := GameManager.selected_character_id
-	var path := "res://assets/ui/icons/battle_skills/talents/swordsman_root.png" if character_id == "swordsman" else "res://assets/ui/icons/battle_skills/upgrades/class_%s_lv2.png" % character_id
-	return load(path) as Texture2D if ResourceLoader.exists(path) else preload("res://assets/ui/shop/weapon_icon.png")
-
-func _on_run_started() -> void:
-	gold_label.visible = GameManager.map_mode_active
-	_on_run_gold_changed(GameManager.run_gold, 0, "run_started")
-
-func _on_run_gold_changed(current_gold: int, _delta: int, _source: String) -> void:
-	if gold_label:
-		gold_label.text = "金貨　%d G" % maxi(current_gold, 0)
-
 # ============================================================
-# PlayerPanel(左下): LVバッジ・HPゲージ(連続比率)・居合ピップ(5段階)・SPACEキャプション
+# PlayerPanel(左上): LVバッジ・職業名・主武器・HPゲージ・XPバー
 # ============================================================
 
 func _build_player_panel() -> void:
@@ -335,6 +337,7 @@ func _build_player_panel() -> void:
 	content.add_child(root)
 
 	var lv_row := HBoxContainer.new()
+	lv_row.add_theme_constant_override("separation", 8)
 	root.add_child(lv_row)
 	var lv_box := PanelContainer.new()
 	var lv_style := StyleBoxFlat.new()
@@ -344,8 +347,8 @@ func _build_player_panel() -> void:
 	lv_style.set_corner_radius_all(0)
 	lv_style.content_margin_left = 8.0
 	lv_style.content_margin_right = 8.0
-	lv_style.content_margin_top = 2.0
-	lv_style.content_margin_bottom = 2.0
+	lv_style.content_margin_top = 1.0
+	lv_style.content_margin_bottom = 1.0
 	lv_box.add_theme_stylebox_override("panel", lv_style)
 	lv_row.add_child(lv_box)
 	_lv_badge_label = Label.new()
@@ -358,6 +361,15 @@ func _build_player_panel() -> void:
 	profession.text = character.display_name if character else "冒険者"
 	profession.add_theme_font_size_override("font_size", 20)
 	lv_row.add_child(profession)
+	_weapon_name_label = Label.new()
+	_weapon_name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_weapon_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_weapon_name_label.clip_text = true
+	_weapon_name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_weapon_name_label.add_theme_font_size_override("font_size", 18)
+	_weapon_name_label.add_theme_color_override("font_color", RetroHUDStyle.PARCHMENT_DIM)
+	_weapon_name_label.mouse_filter = Control.MOUSE_FILTER_STOP
+	lv_row.add_child(_weapon_name_label)
 
 	var hp_row := HBoxContainer.new()
 	hp_row.add_theme_constant_override("separation", 8)
@@ -365,18 +377,17 @@ func _build_player_panel() -> void:
 	var hp_label := Label.new()
 	hp_label.text = "HP"
 	hp_label.custom_minimum_size = Vector2(30, 0)
-	hp_label.add_theme_font_size_override("font_size", 20)
+	hp_label.add_theme_font_size_override("font_size", 18)
 	hp_label.add_theme_color_override("font_color", RetroHUDStyle.PARCHMENT_DIM)
 	hp_row.add_child(hp_label)
-
 	_hp_gauge = ProgressBar.new()
-	_hp_gauge.custom_minimum_size = Vector2(150, 14)
+	_hp_gauge.custom_minimum_size = Vector2(150, 16)
 	_hp_gauge.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_hp_gauge.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_hp_gauge.show_percentage = false
 	_hp_gauge.add_theme_stylebox_override("background", RetroHUDStyle.track_style())
 	_hp_gauge.add_theme_stylebox_override("fill", RetroHUDStyle.segment_style(RetroHUDStyle.HP_RED_LIGHT))
 	hp_row.add_child(_hp_gauge)
-
 	_hp_value_label = Label.new()
 	_hp_value_label.custom_minimum_size = Vector2(92, 0)
 	_hp_value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -384,19 +395,193 @@ func _build_player_panel() -> void:
 	_hp_value_label.add_theme_color_override("font_color", RetroHUDStyle.PARCHMENT_DIM)
 	hp_row.add_child(_hp_value_label)
 
-	_iai_pips_wrap = Control.new()
-	_iai_pips_wrap.custom_minimum_size = Vector2(0, 18)
-	root.add_child(_iai_pips_wrap)
-	_refresh_iai_pips()
-
-	_skill_caption_label = Label.new()
-	_skill_caption_label.add_theme_font_size_override("font_size", 20)
-	_skill_caption_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_skill_caption_label.add_theme_color_override("font_color", RetroHUDStyle.PARCHMENT_DIM)
-	root.add_child(_skill_caption_label)
-	_refresh_skill_caption()
+	# XPはHPの直下。画面最下端の細い線はやめる。
+	var xp_row := HBoxContainer.new()
+	xp_row.add_theme_constant_override("separation", 8)
+	root.add_child(xp_row)
+	var xp_label := Label.new()
+	xp_label.text = "XP"
+	xp_label.custom_minimum_size = Vector2(30, 0)
+	xp_label.add_theme_font_size_override("font_size", 18)
+	xp_label.add_theme_color_override("font_color", RetroHUDStyle.PARCHMENT_DIM)
+	xp_row.add_child(xp_label)
+	exp_bar.reparent(xp_row)
+	exp_bar.custom_minimum_size = Vector2(0, 10)
+	exp_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	exp_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	exp_bar.tooltip_text = "経験値。満たすとレベルアップ"
+	exp_bar.mouse_filter = Control.MOUSE_FILTER_STOP
+	exp_bar.add_theme_stylebox_override("background", RetroHUDStyle.track_style())
+	exp_bar.add_theme_stylebox_override("fill", RetroHUDStyle.segment_style(RetroHUDStyle.IAI_TEAL_LIGHT))
 
 	RetroHUDStyle.apply_font(root)
+
+## 主武器名（装備中の武器、無ければ職業の素の攻撃）と取得済み強化を更新する。
+func _refresh_loadout() -> void:
+	if _weapon_manager == null:
+		return
+	var player := get_tree().get_first_node_in_group("player") as Player
+	if _weapon_name_label:
+		var equipped := player.equipment_component.get_equipped("weapon") if player else null
+		var main_name := equipped.display_name if equipped else "素手"
+		_weapon_name_label.text = main_name
+		_weapon_name_label.tooltip_text = "主武器: %s" % main_name
+	_refresh_upgrade_strip(player)
+
+func _refresh_upgrade_strip(player: Player) -> void:
+	if _upgrade_strip == null:
+		return
+	for child in _upgrade_strip.get_children():
+		child.queue_free()
+	if player == null or player.upgrades_component == null:
+		_upgrade_strip.hide()
+		return
+	var any := false
+	for id in SURVIVAL_UPGRADE_IDS:
+		var rank: int = player.upgrades_component.get_survival_rank(id)
+		if rank <= 0:
+			continue
+		var upgrade: UpgradeData = DataLoader.upgrades.get(id)
+		if upgrade == null:
+			continue
+		_upgrade_strip.add_child(_build_upgrade_chip(upgrade, rank))
+		any = true
+	_upgrade_strip.visible = any
+
+## 取得済み強化1つぶんの小さな石板：アイコンと段階ピップ（上限なしの強撃は回数）。
+func _build_upgrade_chip(upgrade: UpgradeData, rank: int) -> Control:
+	var chip := PanelContainer.new()
+	var style := PixelUIStyle.badge_style(PixelUIStyle.JEWEL_DARK, Color("111c29"))
+	style.set_content_margin_all(5)
+	chip.add_theme_stylebox_override("panel", style)
+	chip.mouse_filter = Control.MOUSE_FILTER_STOP
+	var maximum := int(upgrade.effect_params.get("max_rank", 0))
+	var stage_text := "Lv.%d / %d" % [rank, maximum] if maximum > 0 else "×%d" % rank
+	chip.tooltip_text = "%s　%s\n%s" % [upgrade.display_name, stage_text, upgrade.description]
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 3)
+	column.alignment = BoxContainer.ALIGNMENT_CENTER
+	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	chip.add_child(column)
+	var icon := TextureRect.new()
+	icon.custom_minimum_size = Vector2(32, 32)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	icon.texture = load(upgrade.icon_path) as Texture2D if upgrade.icon_path != "" and ResourceLoader.exists(upgrade.icon_path) else preload("res://assets/ui/shop/weapon_icon.png")
+	column.add_child(icon)
+	if maximum > 0:
+		var pips := RetroPipRow.build(maximum, rank, RetroHUDStyle.IAI_TEAL_LIGHT)
+		pips.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		column.add_child(pips)
+	else:
+		var count := Label.new()
+		count.text = "×%d" % rank
+		count.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		count.add_theme_font_size_override("font_size", 18)
+		count.add_theme_color_override("font_color", RetroHUDStyle.IAI_TEAL_LIGHT)
+		count.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		column.add_child(count)
+	RetroHUDStyle.apply_font(chip)
+	return chip
+
+# ============================================================
+# 職業技パネル(右下): アイコン・クールダウンの影・キー・名前・状態・熟練ピップ
+# ============================================================
+
+func _build_skill_panel() -> void:
+	_skill_panel = RetroPanel.new()
+	_skill_panel.name = "SkillPanel"
+	add_child(_skill_panel)
+	_skill_panel.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
+	_skill_panel.offset_left = -394
+	_skill_panel.offset_right = -24
+	_skill_panel.offset_top = -122
+	_skill_panel.offset_bottom = -24
+	_compact_panel(_skill_panel)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	_skill_panel.content.add_child(row)
+
+	var slot := Control.new()
+	slot.custom_minimum_size = Vector2(62, 62)
+	slot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(slot)
+	var slot_frame := Panel.new()
+	slot_frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	slot_frame.add_theme_stylebox_override("panel", RetroHUDStyle.track_style(RetroHUDStyle.BRONZE, RetroHUDStyle.VOID_DEEP))
+	slot_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	slot.add_child(slot_frame)
+	_skill_icon_rect = TextureRect.new()
+	_skill_icon_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_skill_icon_rect.offset_left = 5
+	_skill_icon_rect.offset_top = 5
+	_skill_icon_rect.offset_right = -5
+	_skill_icon_rect.offset_bottom = -5
+	_skill_icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_skill_icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_skill_icon_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_skill_icon_rect.texture = _load_active_skill_icon()
+	_skill_icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	slot.add_child(_skill_icon_rect)
+	# クールダウンは下から満ちる影。残り時間の割合だけ影が残る。
+	_skill_shade = ColorRect.new()
+	_skill_shade.color = Color(0.02, 0.04, 0.06, 0.72)
+	_skill_shade.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+	_skill_shade.offset_left = 1
+	_skill_shade.offset_right = -1
+	_skill_shade.offset_bottom = -1
+	_skill_shade.offset_top = -1
+	_skill_shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	slot.add_child(_skill_shade)
+	_skill_key_label = Label.new()
+	_skill_key_label.text = "L"
+	_skill_key_label.add_theme_font_size_override("font_size", 18)
+	_skill_key_label.add_theme_color_override("font_color", RetroHUDStyle.BRONZE_LIGHT)
+	var key_style := PixelUIStyle.badge_style(RetroHUDStyle.BRONZE_DARK, RetroHUDStyle.VOID_DEEP)
+	key_style.content_margin_left = 6
+	key_style.content_margin_right = 6
+	key_style.content_margin_top = 0
+	key_style.content_margin_bottom = 0
+	key_style.shadow_size = 0
+	_skill_key_label.add_theme_stylebox_override("normal", key_style)
+	_skill_key_label.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+	_skill_key_label.offset_left = -6
+	_skill_key_label.offset_top = -8
+	_skill_key_label.offset_right = 18
+	_skill_key_label.offset_bottom = 16
+	_skill_key_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	slot.add_child(_skill_key_label)
+
+	var column := VBoxContainer.new()
+	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	column.alignment = BoxContainer.ALIGNMENT_CENTER
+	column.add_theme_constant_override("separation", 3)
+	row.add_child(column)
+	_skill_name_label = Label.new()
+	_skill_name_label.add_theme_font_size_override("font_size", 20)
+	_skill_name_label.clip_text = true
+	_skill_name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	column.add_child(_skill_name_label)
+	_skill_state_label = Label.new()
+	_skill_state_label.add_theme_font_size_override("font_size", 18)
+	_skill_state_label.add_theme_color_override("font_color", RetroHUDStyle.IAI_TEAL_LIGHT)
+	column.add_child(_skill_state_label)
+	_iai_pips_wrap = Control.new()
+	_iai_pips_wrap.custom_minimum_size = Vector2(0, 16)
+	_iai_pips_wrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	column.add_child(_iai_pips_wrap)
+	_refresh_iai_pips()
+	_refresh_skill_caption()
+	RetroHUDStyle.apply_font(_skill_panel)
+
+func _load_active_skill_icon() -> Texture2D:
+	var character_id := GameManager.selected_character_id
+	var path := "res://assets/ui/icons/battle_skills/talents/swordsman_root.png" if character_id == "swordsman" else "res://assets/ui/icons/battle_skills/upgrades/class_%s_lv2.png" % character_id
+	return load(path) as Texture2D if ResourceLoader.exists(path) else preload("res://assets/ui/shop/weapon_icon.png")
 
 func _refresh_iai_pips() -> void:
 	if _iai_pips_wrap == null:
@@ -406,30 +591,24 @@ func _refresh_iai_pips() -> void:
 	_iai_pips_wrap.add_child(RetroPipRow.build(IAI_PIP_COUNT, _ability_level, RetroHUDStyle.IAI_TEAL_LIGHT))
 
 func _refresh_skill_caption() -> void:
-	if _skill_caption_label == null:
+	if _skill_name_label == null:
 		return
 	var cooling := _skill_cooldown_remaining > 0.01
-	var state_text := "あと %.1f秒" % _skill_cooldown_remaining if cooling else "使用可能"
-	var name_text := _skill_display_name if _skill_display_name != "" else "アクティブスキル"
-	_skill_caption_label.text = "[L]  %s  ・  %s" % [name_text, state_text]
-	_skill_caption_label.add_theme_color_override("font_color", RetroHUDStyle.PARCHMENT_DIM if cooling else RetroHUDStyle.IAI_TEAL_LIGHT)
-
-# ============================================================
-# TopBanner: 撃破カウント用ボスゲージ(MAPモードのみ表示)
-# ============================================================
-
-func _build_boss_gauge() -> void:
-	_boss_gauge = RetroSegmentGauge.new()
-	_boss_gauge.set_anchors_preset(Control.PRESET_FULL_RECT)
-	boss_gauge_wrap.add_child(_boss_gauge)
-	_boss_gauge.configure(BOSS_SEGMENT_COUNT, RetroHUDStyle.BOSS_PURPLE_LIGHT, RetroHUDStyle.VOID, true)
+	_skill_name_label.text = _skill_display_name if _skill_display_name != "" else "職業技"
+	_skill_state_label.text = "あと %.1f秒" % _skill_cooldown_remaining if cooling else "使用可能"
+	_skill_state_label.add_theme_color_override("font_color", RetroHUDStyle.PARCHMENT_DIM if cooling else RetroHUDStyle.IAI_TEAL_LIGHT)
+	if _skill_shade:
+		var ratio := clampf(_skill_cooldown_remaining / maxf(_skill_cooldown_total, 0.01), 0.0, 1.0) if cooling else 0.0
+		_skill_shade.visible = ratio > 0.0
+		_skill_shade.offset_top = -1.0 - floorf(60.0 * ratio)
+	if _skill_icon_rect:
+		_skill_icon_rect.modulate = Color(0.62, 0.62, 0.66, 1.0) if cooling else Color.WHITE
 
 func _on_class_ability_level_changed(new_level: int) -> void:
 	set_ability_stage(new_level)
 
-## 職業スキルの熟練度(ability_level)をPlayerPanelの居合ピップで表示する
-## (キャラクターの経験値ゲージ(set_experience())とは完全に別の概念・別のデータ・
-## 別の見た目。同じバーに重ねたり色を似せたりしない)。
+## 職業スキルの熟練度(ability_level)を技パネルのピップで表示する
+## (キャラクターの経験値ゲージ(set_experience())とは完全に別の概念・別のデータ)。
 func set_ability_stage(ability_level: int) -> void:
 	_ability_level = ability_level
 	_refresh_iai_pips()
@@ -437,7 +616,7 @@ func set_ability_stage(ability_level: int) -> void:
 func _on_skill_configured(display_name: String, _icon_text: String, cooldown: float, _color: Color) -> void:
 	_skill_display_name = display_name
 	if "/" in _skill_display_name:
-		_skill_display_name = _skill_display_name.get_slice("/", 1)
+		_skill_display_name = _skill_display_name.get_slice("/", 1).strip_edges()
 	_skill_cooldown_total = cooldown
 	_on_skill_cooldown_changed(0.0, cooldown)
 
@@ -445,74 +624,168 @@ func _on_skill_cooldown_changed(remaining: float, total: float) -> void:
 	_skill_cooldown_remaining = remaining
 	_skill_cooldown_total = total
 	_refresh_skill_caption()
-	_refresh_loadout_strip()
 
 func _on_skill_activated() -> void:
-	if player_panel == null:
+	if _skill_panel == null:
 		return
-	player_panel.scale = Vector2(0.97, 0.97)
+	_skill_panel.pivot_offset = _skill_panel.size
+	_skill_panel.scale = Vector2(0.97, 0.97)
 	var tween := create_tween()
-	tween.tween_property(player_panel, "scale", Vector2.ONE, 0.12).set_trans(Tween.TRANS_BACK)
+	tween.tween_property(_skill_panel, "scale", Vector2.ONE, 0.12).set_trans(Tween.TRANS_BACK)
 
 func _on_skill_became_ready() -> void:
-	if _skill_caption_label == null:
+	if _skill_state_label == null:
 		return
 	var tween := create_tween()
-	tween.tween_property(_skill_caption_label, "modulate", Color(1.8, 1.8, 1.8, 1.0), 0.12)
-	tween.tween_property(_skill_caption_label, "modulate", Color.WHITE, 0.35)
+	tween.tween_property(_skill_state_label, "modulate", Color(1.8, 1.8, 1.8, 1.0), 0.12)
+	tween.tween_property(_skill_state_label, "modulate", Color.WHITE, 0.35)
 
-func set_health(current: float, max_hp: float) -> void:
-	if _hp_gauge:
-		_hp_gauge.max_value = maxf(max_hp, 1.0)
-		_hp_gauge.value = current
-	if _hp_value_label:
-		_hp_value_label.text = "%d/%d" % [int(round(current)), int(round(max_hp))]
+# ============================================================
+# 上中央のステージ石板: 時計・終盤ボスまでの予告ゲージ → ボス戦ではボス名とHP
+# ============================================================
 
-## 経験値ゲージ(2026年8月追加)。scenes/game.gdがExperienceComponent.exp_changed/
-## leveled_upを購読して呼ぶ(HPバーと同じ「game.gdが仲介する」方式に合わせる)。
-func set_experience(current_exp: int, exp_to_next_level: int, level: int) -> void:
-	if _lv_badge_label:
-		_lv_badge_label.text = "LV %d" % level
-	exp_bar.max_value = maxf(exp_to_next_level, 1)
-	exp_bar.value = current_exp
+func _build_stage_panel() -> void:
+	_stage_panel = RetroPanel.new()
+	_stage_panel.name = "StagePanel"
+	add_child(_stage_panel)
+	move_child(_stage_panel, 0)
+	_stage_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	_stage_panel.offset_left = -280
+	_stage_panel.offset_right = 280
+	_stage_panel.offset_top = 12
+	_stage_panel.offset_bottom = 128
+	_compact_panel(_stage_panel)
+	for side in ["top", "bottom"]:
+		_stage_panel.content.add_theme_constant_override("margin_" + side, 8)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 4)
+	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_stage_panel.content.add_child(column)
 
-## BossSpawnerがボスを出現させたときに呼ぶ。画面上部中央にボス専用のHPバーを表示する。
+	# 1行目: ステージ名・撃破数（ボス戦ではボス名と経過）。既存のRichTextLabelを移す。
+	room_status_label.reparent(column)
+	room_status_label.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+	room_status_label.custom_minimum_size = Vector2(0, 28)
+	room_status_label.fit_content = true
+	room_status_label.scroll_active = false
+	room_status_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	room_status_label.add_theme_font_size_override("normal_font_size", 20)
+
+	# 2行目: 大きな時計
+	_clock_row = HBoxContainer.new()
+	_clock_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	_clock_row.add_theme_constant_override("separation", 10)
+	_clock_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	column.add_child(_clock_row)
+	_clock_prefix_label = Label.new()
+	_clock_prefix_label.text = "ボスまで"
+	_clock_prefix_label.add_theme_font_size_override("font_size", 18)
+	_clock_prefix_label.add_theme_color_override("font_color", RetroHUDStyle.PARCHMENT_DIM)
+	_clock_prefix_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_clock_row.add_child(_clock_prefix_label)
+	_clock_label = Label.new()
+	_clock_label.text = "4:00"
+	_clock_label.add_theme_font_size_override("font_size", 34)
+	_clock_label.add_theme_color_override("font_color", RetroHUDStyle.BRONZE_LIGHT)
+	_clock_row.add_child(_clock_label)
+
+	# 2行目（ボス戦）: ボスHPの20分割ゲージ
+	_boss_hp_wrap = Control.new()
+	_boss_hp_wrap.custom_minimum_size = Vector2(0, 18)
+	_boss_hp_wrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_boss_hp_wrap.visible = false
+	column.add_child(_boss_hp_wrap)
+	_boss_hp_gauge = RetroSegmentGauge.new()
+	_boss_hp_gauge.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_boss_hp_wrap.add_child(_boss_hp_gauge)
+	_boss_hp_gauge.configure(BOSS_SEGMENT_COUNT, RetroHUDStyle.HP_RED_LIGHT, RetroHUDStyle.VOID, true)
+
+	# 3行目: 終盤ボスまでの進行（既存のBossGaugeWrapを移す）
+	boss_gauge_wrap.reparent(column)
+	boss_gauge_wrap.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+	boss_gauge_wrap.custom_minimum_size = Vector2(0, 10)
+	boss_gauge_wrap.visible = true
+
+func _build_boss_gauge() -> void:
+	_boss_gauge = RetroSegmentGauge.new()
+	_boss_gauge.set_anchors_preset(Control.PRESET_FULL_RECT)
+	boss_gauge_wrap.add_child(_boss_gauge)
+	_boss_gauge.configure(BOSS_SEGMENT_COUNT, RetroHUDStyle.BRONZE_LIGHT, RetroHUDStyle.VOID, false)
+
+func _set_stage_mode(boss_mode: bool) -> void:
+	if _clock_row:
+		_clock_row.visible = not boss_mode
+	if _boss_hp_wrap:
+		_boss_hp_wrap.visible = boss_mode
+	if boss_gauge_wrap:
+		boss_gauge_wrap.visible = not boss_mode
+	# ボス戦は2段（名前・HP）なので石板を低くし、余白を残さない。
+	if _stage_panel:
+		_stage_panel.offset_bottom = 90 if boss_mode else 128
+
+func _format_clock(seconds: int) -> String:
+	seconds = maxi(seconds, 0)
+	return "%d:%02d" % [seconds / 60, seconds % 60]
+
+## BossSpawnerがボスを出現させたときに呼ぶ。石板の中段をボスHPゲージへ切り替える。
 func show_boss_health(display_name: String, current: float, max_hp: float) -> void:
 	boss_health_container.visible = true
-	if GameManager.map_mode_active and not GameManager.survival_mode_active:
-		room_status_label.visible = false
-		boss_gauge_wrap.visible = false
+	_boss_display_name = display_name
 	boss_name_label.text = display_name
 	boss_hp_bar.max_value = max_hp
 	boss_hp_bar.value = current
+	_set_stage_mode(true)
+	if _boss_hp_gauge:
+		_boss_hp_gauge.set_value(current, max_hp)
+	if not GameManager.survival_mode_active:
+		room_status_label.text = "[center][color=#ff9a8f][b]ボス[/b][/color]　%s[/center]" % _bare_boss_name()
+
+## BossSpawnerは「最終ボス　名前」の形で渡してくる。見出しの色分けは石板側で行うので、
+## 接頭辞を外した名前だけを使う。
+func _bare_boss_name() -> String:
+	if _boss_display_name == "":
+		return "終盤のボス"
+	var pieces := _boss_display_name.split("　", false)
+	if pieces.size() >= 2 and pieces[0] in ["最終ボス", "ボス"]:
+		return "　".join(pieces.slice(1))
+	return _boss_display_name
 
 func update_boss_health(current: float, max_hp: float) -> void:
 	boss_hp_bar.max_value = max_hp
 	boss_hp_bar.value = current
+	if _boss_hp_gauge:
+		_boss_hp_gauge.set_value(current, max_hp)
 
 func hide_boss_health() -> void:
 	boss_health_container.visible = false
-	if GameManager.map_mode_active:
-		room_status_label.visible = true
-		boss_gauge_wrap.visible = true
+	_boss_display_name = ""
+	_set_stage_mode(false)
 
+## MapRunControllerが0.25秒ごとに呼ぶ。時計と文言はここでだけ組み立てる。
 func set_survival_status(map_name: String, elapsed: float, duration: float, kills: int, phase: String, boss_phase: bool = false) -> void:
 	var left := maxi(ceili(duration - elapsed), 0)
+	var fight_time := maxi(int(elapsed - duration), 0)
 	room_status_label.visible = true
-	var clock := "ボスまで %d:%02d" % [left / 60, left % 60]
-	if boss_phase:
-		var fight_time := maxi(int(elapsed - duration), 0)
-		clock = "ボス戦 %d:%02d" % [fight_time / 60, fight_time % 60]
-	if GameManager.survival_completed: clock = "撃破成功"
-	room_status_label.text = "[center]%s　[color=#d6c29d][b]%s[/b][/color]　撃破 %d\n%s[/center]" % [map_name, clock, kills, phase]
-	boss_gauge_wrap.visible = not boss_phase
-	if _boss_gauge: _boss_gauge.set_value(minf(elapsed, duration), duration)
-	boss_health_container.offset_top = 98.0
-	boss_health_container.offset_bottom = 154.0
-	room_message_label.offset_top = 162.0
-	room_message_label.offset_bottom = 194.0
+	if GameManager.survival_completed:
+		_set_stage_mode(false)
+		room_status_label.text = "[center]%s　・　[color=#d6c29d][b]撃破成功[/b][/color]　・　撃破 %d[/center]" % [map_name, kills]
+		_clock_prefix_label.text = "討伐時間"
+		_clock_label.text = _format_clock(int(elapsed))
+		if _boss_gauge: _boss_gauge.set_value(duration, duration)
+	elif boss_phase:
+		_set_stage_mode(true)
+		room_status_label.text = "[center][color=#ff9a8f][b]最終ボス[/b][/color]　%s　ボス戦 %s　撃破 %d[/center]" % [_bare_boss_name(), _format_clock(fight_time), kills]
+	else:
+		_set_stage_mode(false)
+		room_status_label.text = "[center]%s　・　撃破 %d[/center]" % [map_name, kills]
+		_clock_prefix_label.text = "ボスまで"
+		_clock_label.text = _format_clock(left)
+		_clock_label.add_theme_color_override("font_color", RetroHUDStyle.HP_RED_LIGHT if left <= 30 else RetroHUDStyle.BRONZE_LIGHT)
+		if _boss_gauge: _boss_gauge.set_value(minf(elapsed, duration), duration)
 	room_message_label.text = ""
+	_update_controls_guide(elapsed)
 
+## 旧MAP進行（Developer Test Lab用）。時計の代わりに撃破数を石板へ出す。
 func set_map_status(map_index: int, total_maps: int, map_name: String, elapsed: float, fallback_seconds: float, kills: int, required_kills: int, boss_ready: bool, objective: String = "") -> void:
 	var fallback_left := maxi(int(ceil(fallback_seconds - elapsed)), 0)
 	var map_line := "MAP [color=#%s][b]%d / %d[/b][/color] ・ %s" % [RetroHUDStyle.BRONZE_LIGHT.to_html(false), map_index, total_maps, map_name]
@@ -522,15 +795,14 @@ func set_map_status(map_index: int, total_maps: int, map_name: String, elapsed: 
 	if boss_ready:
 		boss_line = "[color=#%s]封印解除！ ボス門へ[/color]" % RetroHUDStyle.BRONZE_LIGHT.to_html(false)
 	else:
-		boss_line = "封印解除 [color=#%s]%d / %d[/color] ・ 時間解放まで [color=#%s]%d:%02d[/color]" % [
+		boss_line = "封印解除 [color=#%s]%d / %d[/color] ・ 時間解放まで [color=#%s]%s[/color]" % [
 			RetroHUDStyle.BOSS_PURPLE_LIGHT.to_html(false), mini(kills, required_kills), required_kills,
-			RetroHUDStyle.HP_RED_LIGHT.to_html(false), fallback_left / 60, fallback_left % 60,
+			RetroHUDStyle.HP_RED_LIGHT.to_html(false), _format_clock(fallback_left),
 		]
 	if not objective.is_empty(): boss_line = objective
 	room_status_label.text = "[center]%s\n%s[/center]" % [map_line, boss_line]
-	room_message_label.offset_top = 110.0
-	room_message_label.offset_bottom = 142.0
 	room_message_label.text = ""
+	if _clock_row: _clock_row.visible = false
 	if boss_health_container.visible:
 		return
 	boss_gauge_wrap.visible = true
@@ -539,6 +811,97 @@ func set_map_status(map_index: int, total_maps: int, map_name: String, elapsed: 
 
 func set_room_message(message: String) -> void:
 	room_message_label.text = message
+
+func set_exploration_status(map_index: int, map_name: String, region: String, objective: String, visited: int, total: int, floor_index: int = 1, floors_per_map: int = 20) -> void:
+	room_status_label.text = "[center]MAP %d / 3 ・ 地下%d / %d層 ・ %s\n%s ・ %s  [M][/center]" % [map_index, floor_index, floors_per_map, map_name, region, objective]
+	if _clock_row: _clock_row.visible = false
+	if not boss_health_container.visible:
+		boss_gauge_wrap.visible = false
+
+# ============================================================
+# 操作案内(左下、PCのみ): 開始20秒で畳み、小さな札のホバー／押下で再表示
+# ============================================================
+
+func _build_controls_guide() -> void:
+	_guide_full = Label.new()
+	_guide_full.name = "ControlsGuide"
+	_guide_full.text = "K 回避　L 技　J 反撃　E 調べる\nC 所持品　T 天賦図　M 地図　Esc 停止"
+	add_child(_guide_full)
+	_guide_full.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
+	_guide_full.offset_left = 24
+	_guide_full.offset_right = 524
+	_guide_full.offset_top = -96
+	_guide_full.offset_bottom = -28
+	_guide_full.add_theme_font_size_override("font_size", 18)
+	_guide_full.add_theme_stylebox_override("normal", PixelUIStyle.badge_style(PixelUIStyle.STONE_DARK, Color("0d1622")))
+	_guide_full.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_guide_chip = Button.new()
+	_guide_chip.name = "ControlsGuideChip"
+	_guide_chip.text = "操作一覧"
+	_guide_chip.tooltip_text = "操作キーの一覧を表示"
+	_guide_chip.focus_mode = Control.FOCUS_NONE
+	add_child(_guide_chip)
+	_guide_chip.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
+	_guide_chip.offset_left = 24
+	_guide_chip.offset_right = 164
+	_guide_chip.offset_top = -62
+	_guide_chip.offset_bottom = -24
+	_guide_chip.add_theme_font_size_override("font_size", 18)
+	PixelUIStyle.apply_button(_guide_chip)
+	_guide_chip.visible = false
+	_guide_chip.mouse_entered.connect(func(): if _guide_collapsed: _guide_full.visible = true)
+	_guide_chip.mouse_exited.connect(func(): if _guide_collapsed and not _guide_pinned: _guide_full.visible = false)
+	_guide_chip.pressed.connect(func():
+		_guide_pinned = not _guide_pinned
+		_guide_full.visible = _guide_pinned or not _guide_collapsed
+	)
+	if _is_touch:
+		_guide_full.hide()
+		_guide_chip.hide()
+
+func _update_controls_guide(elapsed: float) -> void:
+	if _is_touch or _guide_full == null or _guide_collapsed:
+		return
+	if elapsed < GUIDE_COLLAPSE_SECONDS:
+		return
+	_guide_collapsed = true
+	_guide_chip.visible = true
+	var tween := create_tween()
+	tween.tween_property(_guide_full, "modulate:a", 0.0, 0.3)
+	tween.tween_callback(func():
+		_guide_full.visible = _guide_pinned
+		_guide_full.modulate.a = 1.0
+	)
+
+# ============================================================
+# 金貨・HP・XP
+# ============================================================
+
+func _on_run_started() -> void:
+	gold_label.visible = GameManager.map_mode_active
+	_on_run_gold_changed(GameManager.run_gold, 0, "run_started")
+
+func _on_run_gold_changed(current_gold: int, _delta: int, _source: String) -> void:
+	if gold_label:
+		gold_label.text = "%d G" % maxi(current_gold, 0)
+
+func set_health(current: float, max_hp: float) -> void:
+	if _hp_gauge:
+		_hp_gauge.max_value = maxf(max_hp, 1.0)
+		_hp_gauge.value = current
+	if _hp_value_label:
+		_hp_value_label.text = "%d/%d" % [int(round(current)), int(round(max_hp))]
+
+## 経験値ゲージ。scenes/game.gdがExperienceComponent.exp_changed/leveled_upを購読して呼ぶ。
+func set_experience(current_exp: int, exp_to_next_level: int, level: int) -> void:
+	if _lv_badge_label:
+		_lv_badge_label.text = "LV %d" % level
+	exp_bar.max_value = maxf(exp_to_next_level, 1)
+	exp_bar.value = current_exp
+
+# ============================================================
+# 入手通知・中央告知・コンボ
+# ============================================================
 
 func _on_equipment_picked_up(equipment: EquipmentData) -> void:
 	if equipment == null:
@@ -552,8 +915,8 @@ func _on_equipment_picked_up(equipment: EquipmentData) -> void:
 		_loot_toast.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 		_loot_toast.offset_left = -210.0
 		_loot_toast.offset_right = 210.0
-		_loot_toast.offset_top = -116.0
-		_loot_toast.offset_bottom = -82.0
+		_loot_toast.offset_top = -160.0
+		_loot_toast.offset_bottom = -126.0
 		_loot_toast.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		add_child(_loot_toast)
 		RetroHUDStyle.apply_font(_loot_toast)
@@ -588,7 +951,7 @@ func hide_room_clear() -> void:
 	room_clear_label.visible = false
 
 ## 操作を止めない短い中央表示。画像や全画面暗転を生成せず、既存HUDだけで
-## Boss ROOMに入ったことを伝える。
+## ボス出現を伝える。
 func show_boss_intro(display_name: String, final_boss: bool = false) -> void:
 	_cancel_room_announcement()
 	room_clear_label.text = "%s\n%s" % ["最終ボス出現" if final_boss else "ボス出現", display_name]
@@ -623,19 +986,21 @@ func reset_combo_display() -> void:
 	_combo_tween.tween_property(combo_panel, "modulate", Color(1, 1, 1, 0), 0.22)
 	_combo_tween.tween_callback(func(): combo_panel.visible = false)
 
+# ============================================================
+# 武装・戦利品トレイ（右上）。中身がある時だけ表示する。
+# ============================================================
 
-## 所持武器トレイ(HUD左上、欠片・戦利品の行とは別行)。VS/Brotato的な常時アイコン表示に倣い、
-## WeaponManagerComponentが保持する完成武器を一覧表示する。アイコン画像は未用意のため、
-## 他のトレイ(戦利品・欠片)と同じくテキスト略称で暫定表示する。
+## 所持武器トレイ。WeaponManagerComponentが保持する完成武器（遺物武器）を一覧表示する。
 func _refresh_weapon_tray() -> void:
 	for child in weapon_row.get_children():
 		child.queue_free()
 	if _weapon_manager == null:
+		_refresh_tray_height.call_deferred()
 		return
 	for instance in _weapon_manager.get_weapon_instances():
 		weapon_row.add_child(_build_weapon_icon(instance))
 	_refresh_tray_height.call_deferred()
-	_refresh_loadout_strip()
+	_refresh_loadout()
 
 ## ホバー時にツールチップ(武器名・攻撃力・攻撃間隔・属性)を出すため、
 ## Label既定のmouse_filter(IGNORE)をSTOPへ変更しtooltip_textを設定する。
@@ -778,8 +1143,8 @@ func _show_item_popup(display_name: String) -> void:
 	popup.anchor_right = 0.5
 	popup.offset_left = -220.0
 	popup.offset_right = 220.0
-	popup.offset_top = 140.0
-	popup.offset_bottom = 180.0
+	popup.offset_top = 176.0
+	popup.offset_bottom = 216.0
 	popup.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	popup.modulate = Color(1.0, 0.9, 0.4, 0.0)
 	add_child(popup)
@@ -789,8 +1154,3 @@ func _show_item_popup(display_name: String) -> void:
 	tween.tween_interval(1.8)
 	tween.tween_property(popup, "modulate:a", 0.0, 0.6)
 	tween.finished.connect(popup.queue_free)
-
-func set_exploration_status(map_index: int, map_name: String, region: String, objective: String, visited: int, total: int, floor_index: int = 1, floors_per_map: int = 20) -> void:
-	room_status_label.text = "[center]MAP %d / 3 ・ 地下%d / %d層 ・ %s\n%s ・ %s  [M][/center]" % [map_index, floor_index, floors_per_map, map_name, region, objective]
-	if not boss_health_container.visible:
-		boss_gauge_wrap.visible = false
