@@ -1,0 +1,14 @@
+{
+  "id": "reward_heal",
+  "display_name": "癒しの灯",
+  "category": "reward",
+  "effect_type": "reward_heal",
+  "value": 0.35,
+  "description": "最大HPの35%を回復する。強化を取り尽くした時だけ出る。",
+  "icon_path": "res://assets/ui/shop/recovery_icon.png",
+  "effect_params": {
+    "preview": "reward",
+    "caption": "HP +35%",
+    "tagline": "HPを回復する"
+  }
+}

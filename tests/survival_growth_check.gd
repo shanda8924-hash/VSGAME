@@ -205,6 +205,38 @@ func _run() -> void:
 		_auto_choose=false
 		check(choices_taken.count==levels_added and not ui.visible and GameManager.active_modal_count==0,"Queued levels lose choices or leave pause behind")
 		ui.option_selected.disconnect(count_choice)
+		for upgrade in ui._get_compatible_upgrades():
+			check(upgrade.category!="reward","Reward card mixed into the normal pool")
+		if character=="soldier":
+			# 強化を取り尽くして1枚しか残らない時、空いた2枠が報酬（金貨／回復）で埋まる。
+			var exhausted: Array[UpgradeData]=[DataLoader.upgrades.survival_power]
+			actor.health_component.invincible=false
+			actor.health_component.current_hp=actor.health_component.max_hp*0.4
+			ui._fill_with_rewards(exhausted,actor)
+			check(exhausted.size()==3 and exhausted[1].id=="reward_heal" and exhausted[2].id=="reward_gold","Exhausted pool not filled with rewards (heal first when hurt)")
+			var full: Array[UpgradeData]=[DataLoader.upgrades.survival_area,DataLoader.upgrades.survival_echo,DataLoader.upgrades.survival_chain]
+			ui._fill_with_rewards(full,actor)
+			check(full.size()==3 and full.all(func(u): return u.category!="reward"),"Rewards replaced real upgrades")
+			actor.experience_component.add_exp(actor.experience_component.exp_to_next_level)
+			await frames(3)
+			ui._show_choices(exhausted)
+			await frames(4)
+			await capture("reward_cards")
+			var screen:=get_viewport().get_visible_rect().size
+			for card: Control in ui.grid_container.get_children():
+				var rect:=card.get_global_rect()
+				check(rect.end.x<=screen.x and rect.end.y<=screen.y,"Reward card outside screen")
+			var gold_before:=GameManager.run_gold
+			var hp_before:=actor.health_component.current_hp
+			actor.upgrades_component.apply_upgrade(DataLoader.upgrades.reward_gold)
+			check(GameManager.run_gold==gold_before+40,"Gold reward not paid")
+			actor.upgrades_component.apply_upgrade(DataLoader.upgrades.reward_heal)
+			check(is_equal_approx(actor.health_component.current_hp,minf(hp_before+actor.health_component.max_hp*0.35,actor.health_component.max_hp)),"Heal reward not applied")
+			await click_control(ui.grid_container.get_child(2) as Button)
+			await click_control(ui.confirm_button)
+			await frames(3)
+			check(not ui.visible and GameManager.run_gold==gold_before+80,"Choosing the gold card through the UI did not pay")
+			actor.health_component.invincible=true
 		report[character]={"choice_confirmation":true,"visible_effect_damage":true,"slower_pursuers":true,"caps":true}
 	var f:=FileAccess.open(OUT+"/check.json",FileAccess.WRITE)
 	f.store_string(JSON.stringify({"failures":failures,"classes":report,"silent":true,"ephemeral_save":true},"\t"));f.close()

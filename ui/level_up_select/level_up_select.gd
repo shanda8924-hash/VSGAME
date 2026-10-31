@@ -13,6 +13,8 @@ const COMBAT_COLOR := Color("79d7e8")
 const CLASS_COLOR := Color("f2c14e")
 ## 秘技（新しく増える自動発動の大技）は橙。戦闘強化・職業技と一目で分ける。
 const ARCANA_COLOR := Color("ff9a5c")
+## 報酬（強化を取り尽くした後の金貨／回復）は若草色。段階は持たない。
+const REWARD_COLOR := Color("a9d98a")
 ## 秘技の所持枠。
 const ARCANA_SLOTS := 2
 const SELECTED_COLOR := Color("8fe0d6")
@@ -64,7 +66,21 @@ func _open(new_level: int = 0) -> void:
 		if picked == null: break
 		chosen.append(picked)
 		rest.erase(picked)
+	_fill_with_rewards(chosen, actor)
 	_show_choices(chosen)
+
+## 強化を取り尽くして3枚に満たない時だけ、空いた枠を報酬カード（金貨／回復）で埋める。
+## HPが減っている時は回復を先に出す。サバイバル以外の旧モードには出さない。
+func _fill_with_rewards(chosen: Array[UpgradeData], actor: Player) -> void:
+	if not GameManager.survival_mode_active or chosen.size() >= SLOT_COUNT:
+		return
+	var order: Array[String] = ["reward_gold", "reward_heal"]
+	if actor and actor.health_component.current_hp < actor.health_component.max_hp:
+		order = ["reward_heal", "reward_gold"]
+	for id in order:
+		if chosen.size() >= SLOT_COUNT: break
+		var reward: UpgradeData = DataLoader.upgrades.get(id)
+		if reward and reward not in chosen: chosen.append(reward)
 
 func _show_choices(chosen: Array[UpgradeData]) -> void:
 	for child in grid_container.get_children():
@@ -206,7 +222,7 @@ func _get_current_school() -> String:
 ## 職業技は段階ごとの効果が職業で異なるため、架空の動きを描かず"class"(静止)にする。
 ## 以前は説明文の単語から推測していたため、内容と無関係な動きが出ていた。
 func _preview_kind(upgrade: UpgradeData) -> String:
-	if upgrade.category in ["survival", "arcana"]:
+	if upgrade.category in ["survival", "arcana", "reward"]:
 		return String(upgrade.effect_params.get("preview", "power"))
 	return "class" if upgrade.class_character_id != "" else "static"
 
@@ -214,7 +230,8 @@ func _build_choice_button(upgrade: UpgradeData) -> Button:
 	var actor := get_tree().get_first_node_in_group("player") as Player
 	var is_class := upgrade.class_character_id != ""
 	var is_arcana := upgrade.category == "arcana"
-	var accent := ARCANA_COLOR if is_arcana else (CLASS_COLOR if is_class else COMBAT_COLOR)
+	var is_reward := upgrade.category == "reward"
+	var accent := REWARD_COLOR if is_reward else (ARCANA_COLOR if is_arcana else (CLASS_COLOR if is_class else COMBAT_COLOR))
 	var rank := _current_rank(upgrade, actor)
 	var button := Button.new()
 	button.custom_minimum_size = CARD_SIZE
@@ -236,7 +253,10 @@ func _build_choice_button(upgrade: UpgradeData) -> Button:
 	column.add_theme_constant_override("separation", 8)
 	margin.add_child(column)
 	var icon := _build_header(column, button, upgrade, accent)
-	column.add_child(_build_rank_row(rank, _max_rank(upgrade), accent, is_class))
+	if is_reward:
+		column.add_child(_build_reward_row())
+	else:
+		column.add_child(_build_rank_row(rank, _max_rank(upgrade), accent, is_class))
 	var preview := UpgradePreview.new()
 	preview.name = "UpgradePreview"
 	preview.custom_minimum_size.y = 190
@@ -346,6 +366,18 @@ func _build_rank_row(rank: int, max_rank: int, accent: Color, is_class: bool) ->
 	row.add_child(text)
 	return row
 
+## 報酬カードは段階を持たないので、ピップの代わりに「何度でも」の1行だけ置く。
+func _build_reward_row() -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.name = "RankRow"
+	var text := Label.new()
+	text.name = "RankText"
+	text.text = "強化を取り尽くした報酬・何度でも"
+	text.add_theme_font_size_override("font_size", 18)
+	text.add_theme_color_override("font_color", PixelUIStyle.TEXT_MUTED)
+	row.add_child(text)
+	return row
+
 ## 秘技は段階ごとに何が増えるかが違うので、次の段階の説明文を出す。
 func _card_description(upgrade: UpgradeData, rank: int) -> String:
 	if upgrade.category == "arcana":
@@ -358,6 +390,10 @@ func _configure_preview(preview: Control, upgrade: UpgradeData, rank: int, accen
 	preview.set("kind", _preview_kind(upgrade))
 	preview.set("rank", rank)
 	preview.set("accent", accent)
+	if upgrade.category == "reward":
+		preview.set("reward_icon", _load_upgrade_icon(upgrade, null))
+		preview.set("reward_caption", String(upgrade.effect_params.get("caption", upgrade.display_name)))
+		return
 	if upgrade.category == "arcana":
 		var sheet_path := String(upgrade.effect_params.get("vfx_sheet", ""))
 		preview.set("arcana_sheet", load(sheet_path) as Texture2D if ResourceLoader.exists(sheet_path) else null)
@@ -406,6 +442,8 @@ func _category_text(upgrade: UpgradeData) -> String:
 		var arcana_actor := get_tree().get_first_node_in_group("player") as Player
 		var owned := arcana_actor != null and arcana_actor.upgrades_component.get_survival_rank(upgrade.id) > 0
 		return "秘技" if owned else "秘技　NEW!"
+	if upgrade.category == "reward":
+		return "報酬"
 	return "戦闘強化" if upgrade.category == "survival" else "強化"
 
 ## 説明文の数値(18%・0.18秒・1体など)だけを種類の色で強調する。

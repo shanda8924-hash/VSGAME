@@ -36,6 +36,9 @@ var class_icon: Texture2D
 var arcana_sheet: Texture2D
 var arcana_counts: Array = [1]
 var arcana_unit := ""
+## 報酬カード（金貨／回復）用：比較の左右を描かず、図柄と得られる量だけを中央に出す。
+var reward_icon: Texture2D
+var reward_caption := ""
 var elapsed := 0.0
 var _hero: Texture2D
 var _enemy: Texture2D
@@ -51,13 +54,16 @@ func _ready() -> void:
 	_enemy = SpriteSheetBuilder.build_portrait_texture(DataLoader.enemies.slime.sprite_folder)
 
 func _process(delta: float) -> void:
-	if not is_visible_in_tree() or kind == "class":
+	if not is_visible_in_tree() or kind in ["class", "reward"]:
 		return
 	elapsed += delta
 	queue_redraw()
 
 func _draw() -> void:
 	draw_style_box(_inset_box, Rect2(Vector2.ZERO, size))
+	if kind == "reward":
+		_draw_reward()
+		return
 	var half := size.x * 0.5
 	draw_line(Vector2(half, 6.0), Vector2(half, size.y - 6.0), Color("343a46"), 1.0, false)
 	_draw_arrow(Vector2(half, CAPTION_HEIGHT * 0.5 + 2.0))
@@ -109,6 +115,18 @@ func _draw_caption(origin: Vector2, width: float, text: String, color: Color) ->
 
 func _draw_arrow(center: Vector2) -> void:
 	draw_colored_polygon(PackedVector2Array([center + Vector2(-3, -5), center + Vector2(4, 0), center + Vector2(-3, 5)]), accent)
+
+## 報酬カード: 図柄を整数倍で中央に置き、その下に得られる量を書く。
+func _draw_reward() -> void:
+	var caption_y := size.y - 18.0
+	if reward_icon:
+		var source := reward_icon.get_size()
+		var scale := maxf(floorf(minf((size.x - 24.0) / source.x, (size.y - 64.0) / source.y)), 1.0)
+		var drawn := source * scale
+		draw_texture_rect(reward_icon, Rect2(Vector2((size.x - drawn.x) * 0.5, (size.y - 40.0 - drawn.y) * 0.5), drawn), false)
+	var font := RetroHUDStyle.retro_font()
+	if font:
+		draw_string(font, Vector2(0.0, caption_y), reward_caption, HORIZONTAL_ALIGNMENT_CENTER, size.x, 22, accent)
 
 # ---------------------------------------------------------------------------
 # 各強化の場面

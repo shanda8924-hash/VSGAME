@@ -161,6 +161,14 @@ func apply_character_passives(character_data: CharacterData) -> void:
 ## class_school(文字列)を渡す必要があるため、通常のeffect_type/valueディスパッチャ
 ## (_apply_effect())を経由せずここで直接処理する(代償も持たないため早期returnでよい)。
 func apply_upgrade(upgrade: UpgradeData) -> void:
+	if upgrade.category == "reward":
+		# 強化を取り尽くした後の報酬。段階を持たず、何度でも即時に効く。
+		match upgrade.effect_type:
+			"reward_gold": GameManager.add_run_gold(int(upgrade.value), "level_up_reward")
+			"reward_heal":
+				var health := _get_sibling("HealthComponent") as HealthComponent
+				if health: health.heal(health.max_hp * upgrade.value)
+		return
 	if upgrade.category == "arcana":
 		# 秘技（自動発動の大技）。段階はsurvival_upgrade_countsで数え、実体はConceptSystemが持つ。
 		var arcana_rank := get_survival_rank(upgrade.id)

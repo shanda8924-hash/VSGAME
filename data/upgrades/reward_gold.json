@@ -1,0 +1,14 @@
+{
+  "id": "reward_gold",
+  "display_name": "金貨袋",
+  "category": "reward",
+  "effect_type": "reward_gold",
+  "value": 40,
+  "description": "所持金が40増える。強化を取り尽くした時だけ出る。",
+  "icon_path": "res://assets/ui/complete_ui_pack/book/icon_coin.png",
+  "effect_params": {
+    "preview": "reward",
+    "caption": "金貨 +40",
+    "tagline": "所持金が増える"
+  }
+}

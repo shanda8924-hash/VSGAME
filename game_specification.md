@@ -4026,3 +4026,21 @@ PC/OpenGLとタッチ操作を含む横画面/Vulkanプレビューで6職を確
 検証：`script_load_check` 209件・失敗0、`pixel_visual_check`、`survival_growth_check`、
 `five_minute_survival_check`（PC/OpenGL、タッチ横画面）。実画面は`docs/screens/hud_after_*.png`、
 変更前は`docs/screens/hud_before_*.png`。
+
+## 2026-10-31 強化を取り尽くした後の報酬カード（現行）
+
+レベルアップの候補（戦闘強化・秘技・職業技）が3枚に満たない時だけ、空いた枠を「報酬」カードで埋める。
+上限なしの強撃は残り続けるため、通常は「強撃＋報酬2枚」の形になる。候補が3枚ある間は報酬を出さない。
+
+- 金貨袋（`reward_gold`）：所持金+40（`GameManager.add_run_gold`、source `level_up_reward`）。ショップ商品は165〜245。
+- 癒しの灯（`reward_heal`）：最大HPの35%を回復。HPが減っている時は金貨より先に並ぶ。
+- 段階を持たず何度でも選べる。`survival_upgrade_counts`に記録せず、HUDの強化石板にも出さない。
+- カードは若草色（`a9d98a`）で種類名「報酬」、段階ピップの代わりに「強化を取り尽くした報酬・何度でも」。
+  比較プレビューは左右を描かず、図柄（コイン／回復薬）と量を中央に出す。
+- サバイバル以外の旧モード（Test Lab）には出さない。
+- データ：`data/upgrades/reward_gold.json`、`reward_heal.json`（category `reward`）。
+  実装：`ui/level_up_select/level_up_select.gd`の`_fill_with_rewards`、`components/player_upgrades_component.gd`の`apply_upgrade`。
+
+検証：`script_load_check`、`survival_growth_check`（通常抽選に報酬が混ざらない、1枚しか残らない時に
+回復→金貨の順で埋まる、3枚ある時は差し替えない、金貨・回復の実反映、UIのクリック→取得で金貨が入る、
+カードが画面内）、`five_minute_survival_check` PC。

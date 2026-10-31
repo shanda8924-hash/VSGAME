@@ -1,11 +1,18 @@
 # Codex Handoff — 2026-10-31（Phase 4まで）
 
-## 今回（秘技：レベルアップで増える大技、2026-10-31）
+## 今回（強化を取り尽くした後の報酬カード、2026-10-31）
+- レベルアップ候補が3枚未満の時だけ、空き枠を`reward_gold`（金貨袋+40）と`reward_heal`（癒しの灯、最大HP35%回復）で埋める。HPが減っていれば回復が先。サバイバル以外には出さない。
+- `level_up_select.gd`の`_fill_with_rewards`、カードは若草色「報酬」・ピップ無し、プレビューは図柄＋量。`PlayerUpgradesComponent.apply_upgrade`の`reward`分岐。段階は記録しない。
+- 仕様末尾に「2026-10-31 強化を取り尽くした後の報酬カード」節。実画面は`docs/screens/level_up_reward_cards.png`。ダッシュボード1.6.22。
+- 検証（Linux版Godot 4.7.1＋Xvfb、クラウド環境）：`script_load_check`失敗0、`survival_growth_check` PASS（報酬検査を追加）、`five_minute_survival_check` PC PASS。
+- 秘技の次の段階で残り：戦技8種の見た目強化、覚醒（150秒補給箱）。
+
+## 直前（秘技：レベルアップで増える大技、2026-10-31）
 - 旧完成大技のうち自動発動の5種（雷帝落雷・煉火天柱・氷槍豪雨・光刃陣・虚無断界）を、属性と無関係の「秘技」としてレベルアップに出す。§43の「通常Runに出さない」をユーザー判断で撤回。
 - `data/upgrades/arcana_*.json`（category `arcana`、max_rank 5、`level_lines`・`strike_counts`・`vfx_sheet`）。`data/skills/completed_skills.json`の5種を5段階化し`strike_count_by_level`を追加。
 - 所持枠2。未所持の間は毎回1枚は秘技が出る。重みは新規2.0・育成中2.6。カードは橙で「秘技 NEW!」、プレビューは実VFXシートを段階の数だけ落として見せる。
 - `ConceptSystem._activate_signature_skill`は段階の数だけ離れた別の敵へ0.12秒ずつずらして落とす。`PlayerUpgradesComponent`は`arcana`で`acquire_completed_skill`、`get_arcana_count()`。HUDは左上の強化石板の先頭に秘技（橙ピップ）、トレイ見出しは「秘技」。
-- 次の段階（未着手）：戦技8種の見た目強化、覚醒（150秒補給箱）、全取得後の金貨／回復カード。
+- 次の段階：戦技8種の見た目強化、覚醒（150秒補給箱）は未着手。全取得後の金貨／回復カードは実装済み（上記）。
 - 検証：`script_load_check`、`five_minute_survival_check` PC、`survival_growth_check`（秘技をプールに許可する1行を修正）。実画面は`docs/screens/arcana_*.png`。
 
 ## 直前（D5〜D8、2026-10-31）

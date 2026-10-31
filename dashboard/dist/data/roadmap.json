@@ -482,6 +482,15 @@
           "priority": "high",
           "lane": "now",
           "notes": "JEV推奨順2。攻撃範囲を床に固定して示し、予兆後だけ命中、空振り後は反撃可能。突進は直線、叩きつけは円、Novaは放射方向を表示。死亡で予兆と遅延攻撃を取り消す。"
+        },
+        {
+          "id": "level_up_reward_cards",
+          "name": "強化を取り尽くした後の金貨／回復カード",
+          "status": "completed",
+          "progress": 100,
+          "priority": "medium",
+          "lane": "now",
+          "notes": "候補が3枚未満の時だけ金貨袋（+40）と癒しの灯（HP35%回復）で埋める。HPが減っていれば回復が先。survival_growth_checkで抽選・表示・実反映・UI取得を検査。"
         }
       ]
     },
