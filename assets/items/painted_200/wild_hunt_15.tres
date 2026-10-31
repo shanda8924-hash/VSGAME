@@ -1,0 +1,8 @@
+[gd_resource type="AtlasTexture" load_steps=2 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/items/painted_200/sheet_4.png" id="1"]
+
+[resource]
+atlas = ExtResource("1")
+region = Rect2(1006, 496, 245, 238)
+filter_clip = true

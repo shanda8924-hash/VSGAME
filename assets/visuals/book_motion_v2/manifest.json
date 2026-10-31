@@ -1,0 +1,26 @@
+[
+  {
+    "id": "cover",
+    "seed": 2610048100,
+    "prompt_id": "75041a88-8d73-462a-8a2e-79275383aecd",
+    "number": 279,
+    "node_errors": {},
+    "output": {
+      "filename": "cover_00001_.png",
+      "subfolder": "VSGAME\\book_motion_v2_20261004",
+      "type": "output"
+    }
+  },
+  {
+    "id": "paper",
+    "seed": 2610048101,
+    "prompt_id": "3e2eb9f2-f00a-4495-9826-97428865898f",
+    "number": 280,
+    "node_errors": {},
+    "output": {
+      "filename": "paper_00001_.png",
+      "subfolder": "VSGAME\\book_motion_v2_20261004",
+      "type": "output"
+    }
+  }
+]

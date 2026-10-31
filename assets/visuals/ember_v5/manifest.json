@@ -1,0 +1,1668 @@
+[
+  {
+    "id": "wanderer_iron_sword",
+    "path": "assets\\visuals\\ember_v5\\equipment\\wanderer_iron_sword.png",
+    "family": "icon",
+    "prompt_id": "7a36f5dc-7384-4035-9f93-04c623c4aa20",
+    "seed": 2610044000
+  },
+  {
+    "id": "traveler_shortbow",
+    "path": "assets\\visuals\\ember_v5\\equipment\\traveler_shortbow.png",
+    "family": "icon",
+    "prompt_id": "134423d1-1b91-4f92-a6ad-77802de56983",
+    "seed": 2610044001
+  },
+  {
+    "id": "leather_scout_cap",
+    "path": "assets\\visuals\\ember_v5\\equipment\\leather_scout_cap.png",
+    "family": "icon",
+    "prompt_id": "83e5ffa7-a591-41a7-a72b-676c539c009f",
+    "seed": 2610044002
+  },
+  {
+    "id": "traveler_leather_coat",
+    "path": "assets\\visuals\\ember_v5\\equipment\\traveler_leather_coat.png",
+    "family": "icon",
+    "prompt_id": "e08978e6-baf1-4c90-86e6-f51868795c49",
+    "seed": 2610044003
+  },
+  {
+    "id": "map1_wall",
+    "path": "assets\\visuals\\ember_v5\\map1_wall.png",
+    "family": "map",
+    "prompt_id": "93abfabd-a6ff-4f65-88d8-05301278641f",
+    "seed": 2610044005
+  },
+  {
+    "id": "map2_wall",
+    "path": "assets\\visuals\\ember_v5\\map2_wall.png",
+    "family": "map",
+    "prompt_id": "ca017f01-2d3e-4c4f-89ca-f30cefbe0c53",
+    "seed": 2610044007
+  },
+  {
+    "id": "map3_wall",
+    "path": "assets\\visuals\\ember_v5\\map3_wall.png",
+    "family": "map",
+    "prompt_id": "18fabb0a-ba54-4d68-b731-df4d04670348",
+    "seed": 2610044009
+  },
+  {
+    "id": "book_closed",
+    "path": "assets\\visuals\\ember_v5\\book_closed.png",
+    "family": "book",
+    "prompt_id": "d2a570c7-8789-4ad5-99c4-bba680fcc4d1",
+    "seed": 2610044010
+  },
+  {
+    "id": "book_open",
+    "path": "assets\\visuals\\ember_v5\\book_open.png",
+    "family": "book",
+    "prompt_id": "7f08d0c1-132a-42e5-90b7-6cbaa12afd33",
+    "seed": 2610044011
+  },
+  {
+    "id": "map1_floor_v2",
+    "path": "assets\\visuals\\ember_v5\\map1_floor.png",
+    "family": "map",
+    "prompt_id": "b8d2bfbe-250a-4d74-98df-ea278a46c41a",
+    "seed": 2610044012
+  },
+  {
+    "id": "map2_floor_v2",
+    "path": "assets\\visuals\\ember_v5\\map2_floor.png",
+    "family": "map",
+    "prompt_id": "937a342d-74c1-4f29-93b4-ae21b0c004ac",
+    "seed": 2610044013
+  },
+  {
+    "id": "map3_floor_v2",
+    "path": "assets\\visuals\\ember_v5\\map3_floor.png",
+    "family": "map",
+    "prompt_id": "da0ab951-8c2f-4b9f-b8f8-b97fbb7d103d",
+    "seed": 2610044014
+  },
+  {
+    "id": "ui_panel",
+    "path": "assets\\visuals\\ember_v5\\ui_panel.png",
+    "family": "skin",
+    "prompt_id": "001d5ac6-e13e-4050-8ff6-f17b2750f084",
+    "seed": 2610044015
+  },
+  {
+    "id": "ui_inset",
+    "path": "assets\\visuals\\ember_v5\\ui_inset.png",
+    "family": "skin",
+    "prompt_id": "281660da-e287-4890-a991-8a8c68828342",
+    "seed": 2610044016
+  },
+  {
+    "id": "landmark_0",
+    "path": "assets\\visuals\\ember_v5\\landmark_0.png",
+    "family": "landmark",
+    "prompt_id": "421c315a-9db0-404a-aaf1-665323ad0096",
+    "seed": 2610044017
+  },
+  {
+    "id": "landmark_1",
+    "path": "assets\\visuals\\ember_v5\\landmark_1.png",
+    "family": "landmark",
+    "prompt_id": "4b0e6772-e862-416c-941a-86761bc00b64",
+    "seed": 2610044018
+  },
+  {
+    "id": "landmark_2",
+    "path": "assets\\visuals\\ember_v5\\landmark_2.png",
+    "family": "landmark",
+    "prompt_id": "9e6b6ec5-cf9f-4c65-8a7d-fc62773b5f38",
+    "seed": 2610044019
+  },
+  {
+    "id": "landmark_3",
+    "path": "assets\\visuals\\ember_v5\\landmark_3.png",
+    "family": "landmark",
+    "prompt_id": "b9c3f289-642e-453e-a6f0-40972c00fa75",
+    "seed": 2610044020
+  },
+  {
+    "id": "scout_gloves",
+    "path": "assets\\visuals\\ember_v5\\equipment\\scout_gloves.png",
+    "family": "icon",
+    "prompt_id": "bd31c31d-e372-41b2-ac3c-bbd9e80be61f",
+    "seed": 2610044021
+  },
+  {
+    "id": "moonblue_dagger",
+    "path": "assets\\visuals\\ember_v5\\equipment\\moonblue_dagger.png",
+    "family": "icon",
+    "prompt_id": "d89d92fe-93b5-4e60-bf75-cfefc42d91b7",
+    "seed": 2610044022
+  },
+  {
+    "id": "frostblue_spear",
+    "path": "assets\\visuals\\ember_v5\\equipment\\frostblue_spear.png",
+    "family": "icon",
+    "prompt_id": "50e1c65d-aae6-479b-8953-e3b878dc7bc3",
+    "seed": 2610044023
+  },
+  {
+    "id": "azure_knight_helm",
+    "path": "assets\\visuals\\ember_v5\\equipment\\azure_knight_helm.png",
+    "family": "icon",
+    "prompt_id": "d44a8f71-b18a-4c64-956f-f255b3afd5a7",
+    "seed": 2610044024
+  },
+  {
+    "id": "ripple_chainmail",
+    "path": "assets\\visuals\\ember_v5\\equipment\\ripple_chainmail.png",
+    "family": "icon",
+    "prompt_id": "04d2bf0f-d482-4a0f-8246-76e82f2e34a3",
+    "seed": 2610044025
+  },
+  {
+    "id": "windrunner_boots",
+    "path": "assets\\visuals\\ember_v5\\equipment\\windrunner_boots.png",
+    "family": "icon",
+    "prompt_id": "119b72fc-5eeb-4522-ad8c-fc9c212038ad",
+    "seed": 2610044026
+  },
+  {
+    "id": "rune_greatsword",
+    "path": "assets\\visuals\\ember_v5\\equipment\\rune_greatsword.png",
+    "family": "icon",
+    "prompt_id": "fdb54237-d70f-4d90-b78d-64e872c874ca",
+    "seed": 2610044027
+  },
+  {
+    "id": "star_sorcerer_staff",
+    "path": "assets\\visuals\\ember_v5\\equipment\\star_sorcerer_staff.png",
+    "family": "icon",
+    "prompt_id": "146714ab-8df8-4b27-a24c-87f156bd7392",
+    "seed": 2610044028
+  },
+  {
+    "id": "arcane_mage_robe",
+    "path": "assets\\visuals\\ember_v5\\equipment\\arcane_mage_robe.png",
+    "family": "icon",
+    "prompt_id": "ace93ad5-b170-4046-a73a-247fb6bb65b1",
+    "seed": 2610044029
+  },
+  {
+    "id": "spellweave_gauntlets",
+    "path": "assets\\visuals\\ember_v5\\equipment\\spellweave_gauntlets.png",
+    "family": "icon",
+    "prompt_id": "17f66fb8-613f-4d48-b030-61c6d75cf67d",
+    "seed": 2610044030
+  },
+  {
+    "id": "amethyst_ring",
+    "path": "assets\\visuals\\ember_v5\\equipment\\amethyst_ring.png",
+    "family": "icon",
+    "prompt_id": "6c6e8b9d-7d60-48c5-996e-1d9f0ef03587",
+    "seed": 2610044031
+  },
+  {
+    "id": "sunfire_battle_axe",
+    "path": "assets\\visuals\\ember_v5\\equipment\\sunfire_battle_axe.png",
+    "family": "icon",
+    "prompt_id": "44def940-e7c2-4818-b977-e28a8ecdea65",
+    "seed": 2610044032
+  },
+  {
+    "id": "phoenix_crossbow",
+    "path": "assets\\visuals\\ember_v5\\equipment\\phoenix_crossbow.png",
+    "family": "icon",
+    "prompt_id": "992a5984-72b5-4aab-bd99-1a8f555682c5",
+    "seed": 2610044033
+  },
+  {
+    "id": "lionking_helm",
+    "path": "assets\\visuals\\ember_v5\\equipment\\lionking_helm.png",
+    "family": "icon",
+    "prompt_id": "2aa6da75-63b9-48d6-beac-42b0609d1e94",
+    "seed": 2610044034
+  },
+  {
+    "id": "dragonclaw_gauntlets",
+    "path": "assets\\visuals\\ember_v5\\equipment\\dragonclaw_gauntlets.png",
+    "family": "icon",
+    "prompt_id": "5a393063-ed44-4de3-8f0f-5e919f404af3",
+    "seed": 2610044035
+  },
+  {
+    "id": "solar_amulet",
+    "path": "assets\\visuals\\ember_v5\\equipment\\solar_amulet.png",
+    "family": "icon",
+    "prompt_id": "5accd742-b7ba-4920-b78a-7bef57c0ec41",
+    "seed": 2610044036
+  },
+  {
+    "id": "void_twin_claws",
+    "path": "assets\\visuals\\ember_v5\\equipment\\void_twin_claws.png",
+    "family": "icon",
+    "prompt_id": "0c8e9820-4dbf-4553-b7a8-0f45acb669b5",
+    "seed": 2610044037
+  },
+  {
+    "id": "endtime_grimoire",
+    "path": "assets\\visuals\\ember_v5\\equipment\\endtime_grimoire.png",
+    "family": "icon",
+    "prompt_id": "b3a68e93-961f-4c69-909c-0c98b9634855",
+    "seed": 2610044038
+  },
+  {
+    "id": "voidwalker_boots",
+    "path": "assets\\visuals\\ember_v5\\equipment\\voidwalker_boots.png",
+    "family": "icon",
+    "prompt_id": "29a82dc0-1e29-45c7-9184-0951c8460c9a",
+    "seed": 2610044039
+  },
+  {
+    "id": "starfall_greaves",
+    "path": "assets\\visuals\\ember_v5\\equipment\\starfall_greaves.png",
+    "family": "icon",
+    "prompt_id": "dc5f36d5-44b0-460c-929f-07457e5b01dc",
+    "seed": 2610044040
+  },
+  {
+    "id": "heart_of_the_abyss",
+    "path": "assets\\visuals\\ember_v5\\equipment\\heart_of_the_abyss.png",
+    "family": "icon",
+    "prompt_id": "c63c07d1-b8de-4641-973e-c1cb8158dadb",
+    "seed": 2610044041
+  },
+  {
+    "id": "royal_guard_01",
+    "path": "assets\\visuals\\ember_v5\\equipment\\royal_guard_01.png",
+    "family": "icon",
+    "prompt_id": "03f739cd-7bf1-410d-a585-e592e0704aa3",
+    "seed": 2610044042
+  },
+  {
+    "id": "royal_guard_02",
+    "path": "assets\\visuals\\ember_v5\\equipment\\royal_guard_02.png",
+    "family": "icon",
+    "prompt_id": "1f24e99a-d9ba-42f9-a8aa-60acf2f118dc",
+    "seed": 2610044043
+  },
+  {
+    "id": "royal_guard_03",
+    "path": "assets\\visuals\\ember_v5\\equipment\\royal_guard_03.png",
+    "family": "icon",
+    "prompt_id": "56919ae4-05b7-4631-b6c3-625fb57b1880",
+    "seed": 2610044044
+  },
+  {
+    "id": "royal_guard_04",
+    "path": "assets\\visuals\\ember_v5\\equipment\\royal_guard_04.png",
+    "family": "icon",
+    "prompt_id": "39aa2582-4521-45ae-aaf1-85014a8a462f",
+    "seed": 2610044045
+  },
+  {
+    "id": "royal_guard_05",
+    "path": "assets\\visuals\\ember_v5\\equipment\\royal_guard_05.png",
+    "family": "icon",
+    "prompt_id": "010197fe-2c32-406a-a48d-069e08a0264e",
+    "seed": 2610044046
+  },
+  {
+    "id": "royal_guard_06",
+    "path": "assets\\visuals\\ember_v5\\equipment\\royal_guard_06.png",
+    "family": "icon",
+    "prompt_id": "f189d5d4-89fc-4875-b1ab-544642d0b9c3",
+    "seed": 2610044047
+  },
+  {
+    "id": "royal_guard_07",
+    "path": "assets\\visuals\\ember_v5\\equipment\\royal_guard_07.png",
+    "family": "icon",
+    "prompt_id": "a14c17b0-08d8-4b4c-bd6c-627ce900df37",
+    "seed": 2610044048
+  },
+  {
+    "id": "royal_guard_08",
+    "path": "assets\\visuals\\ember_v5\\equipment\\royal_guard_08.png",
+    "family": "icon",
+    "prompt_id": "5d9a7879-908f-4669-8eb7-93a0ac4f0459",
+    "seed": 2610044049
+  },
+  {
+    "id": "royal_guard_09",
+    "path": "assets\\visuals\\ember_v5\\equipment\\royal_guard_09.png",
+    "family": "icon",
+    "prompt_id": "e7427d10-aa39-4305-9aef-ab4086324bfd",
+    "seed": 2610044050
+  },
+  {
+    "id": "royal_guard_10",
+    "path": "assets\\visuals\\ember_v5\\equipment\\royal_guard_10.png",
+    "family": "icon",
+    "prompt_id": "2fb1cea1-97f3-418b-9fc8-9c3f3f57de91",
+    "seed": 2610044051
+  },
+  {
+    "id": "royal_guard_11",
+    "path": "assets\\visuals\\ember_v5\\equipment\\royal_guard_11.png",
+    "family": "icon",
+    "prompt_id": "991736d1-a915-4a95-8514-2edd140d4afa",
+    "seed": 2610044052
+  },
+  {
+    "id": "royal_guard_12",
+    "path": "assets\\visuals\\ember_v5\\equipment\\royal_guard_12.png",
+    "family": "icon",
+    "prompt_id": "85642441-b9b4-4805-b21d-e2f433d0cfc7",
+    "seed": 2610044053
+  },
+  {
+    "id": "royal_guard_13",
+    "path": "assets\\visuals\\ember_v5\\equipment\\royal_guard_13.png",
+    "family": "icon",
+    "prompt_id": "1476e312-1038-42c3-8f50-937c63841268",
+    "seed": 2610044054
+  },
+  {
+    "id": "royal_guard_14",
+    "path": "assets\\visuals\\ember_v5\\equipment\\royal_guard_14.png",
+    "family": "icon",
+    "prompt_id": "e5776e60-cbaa-4cad-8e54-6e35f85936a3",
+    "seed": 2610044055
+  },
+  {
+    "id": "royal_guard_15",
+    "path": "assets\\visuals\\ember_v5\\equipment\\royal_guard_15.png",
+    "family": "icon",
+    "prompt_id": "cf990cf2-97df-446d-bbf4-d749cc727cb6",
+    "seed": 2610044056
+  },
+  {
+    "id": "royal_guard_16",
+    "path": "assets\\visuals\\ember_v5\\equipment\\royal_guard_16.png",
+    "family": "icon",
+    "prompt_id": "67a626fb-94ff-4f45-8c4b-1cb7861cf765",
+    "seed": 2610044057
+  },
+  {
+    "id": "royal_guard_17",
+    "path": "assets\\visuals\\ember_v5\\equipment\\royal_guard_17.png",
+    "family": "icon",
+    "prompt_id": "7c1e48f6-df1a-4a84-9d8b-f49f745e0c4c",
+    "seed": 2610044058
+  },
+  {
+    "id": "royal_guard_18",
+    "path": "assets\\visuals\\ember_v5\\equipment\\royal_guard_18.png",
+    "family": "icon",
+    "prompt_id": "9e994e9c-bb33-44b1-8523-99ccba67e5f7",
+    "seed": 2610044059
+  },
+  {
+    "id": "royal_guard_19",
+    "path": "assets\\visuals\\ember_v5\\equipment\\royal_guard_19.png",
+    "family": "icon",
+    "prompt_id": "22216420-f0c0-4286-9db9-c1655c27a511",
+    "seed": 2610044060
+  },
+  {
+    "id": "royal_guard_20",
+    "path": "assets\\visuals\\ember_v5\\equipment\\royal_guard_20.png",
+    "family": "icon",
+    "prompt_id": "67ae6f3e-da65-4a6f-b0a5-cb019878b3f1",
+    "seed": 2610044061
+  },
+  {
+    "id": "royal_guard_21",
+    "path": "assets\\visuals\\ember_v5\\equipment\\royal_guard_21.png",
+    "family": "icon",
+    "prompt_id": "ea3bfbab-d701-43ea-b3ed-362d269b877c",
+    "seed": 2610044062
+  },
+  {
+    "id": "royal_guard_22",
+    "path": "assets\\visuals\\ember_v5\\equipment\\royal_guard_22.png",
+    "family": "icon",
+    "prompt_id": "3a938bad-f383-40d5-8d6f-c2fa623049bf",
+    "seed": 2610044063
+  },
+  {
+    "id": "royal_guard_23",
+    "path": "assets\\visuals\\ember_v5\\equipment\\royal_guard_23.png",
+    "family": "icon",
+    "prompt_id": "80efc45a-c47c-46ff-95fb-aba73cad3428",
+    "seed": 2610044064
+  },
+  {
+    "id": "royal_guard_24",
+    "path": "assets\\visuals\\ember_v5\\equipment\\royal_guard_24.png",
+    "family": "icon",
+    "prompt_id": "6cc21677-3843-448b-b1f6-22c9ea1855f8",
+    "seed": 2610044065
+  },
+  {
+    "id": "royal_guard_25",
+    "path": "assets\\visuals\\ember_v5\\equipment\\royal_guard_25.png",
+    "family": "icon",
+    "prompt_id": "ac9d3e14-502f-4216-b005-3b975df86855",
+    "seed": 2610044066
+  },
+  {
+    "id": "amethyst_mine_01",
+    "path": "assets\\visuals\\ember_v5\\equipment\\amethyst_mine_01.png",
+    "family": "icon",
+    "prompt_id": "5bcc6f08-9f37-4281-932b-fb04fcc78f9e",
+    "seed": 2610044067
+  },
+  {
+    "id": "amethyst_mine_02",
+    "path": "assets\\visuals\\ember_v5\\equipment\\amethyst_mine_02.png",
+    "family": "icon",
+    "prompt_id": "da5f4ba1-f90e-4ede-a5ef-ed932cb1d60f",
+    "seed": 2610044068
+  },
+  {
+    "id": "amethyst_mine_03",
+    "path": "assets\\visuals\\ember_v5\\equipment\\amethyst_mine_03.png",
+    "family": "icon",
+    "prompt_id": "f674c473-f454-4cf5-b167-8475471988cf",
+    "seed": 2610044069
+  },
+  {
+    "id": "amethyst_mine_04",
+    "path": "assets\\visuals\\ember_v5\\equipment\\amethyst_mine_04.png",
+    "family": "icon",
+    "prompt_id": "10ccc683-380c-484c-9763-b9146bde9415",
+    "seed": 2610044070
+  },
+  {
+    "id": "amethyst_mine_05",
+    "path": "assets\\visuals\\ember_v5\\equipment\\amethyst_mine_05.png",
+    "family": "icon",
+    "prompt_id": "801242e0-c930-4a58-804e-eb7c66a82d7c",
+    "seed": 2610044071
+  },
+  {
+    "id": "amethyst_mine_06",
+    "path": "assets\\visuals\\ember_v5\\equipment\\amethyst_mine_06.png",
+    "family": "icon",
+    "prompt_id": "ce6c7e1f-888e-4559-ae34-7460f3a32f5f",
+    "seed": 2610044072
+  },
+  {
+    "id": "amethyst_mine_07",
+    "path": "assets\\visuals\\ember_v5\\equipment\\amethyst_mine_07.png",
+    "family": "icon",
+    "prompt_id": "18141efe-97c4-4fa4-ba64-f3ab72ef43ce",
+    "seed": 2610044073
+  },
+  {
+    "id": "amethyst_mine_08",
+    "path": "assets\\visuals\\ember_v5\\equipment\\amethyst_mine_08.png",
+    "family": "icon",
+    "prompt_id": "68cbf355-9f2d-4c7d-97de-465a022a0683",
+    "seed": 2610044074
+  },
+  {
+    "id": "amethyst_mine_09",
+    "path": "assets\\visuals\\ember_v5\\equipment\\amethyst_mine_09.png",
+    "family": "icon",
+    "prompt_id": "16444842-1290-4716-991e-ebe0bf870c6d",
+    "seed": 2610044075
+  },
+  {
+    "id": "amethyst_mine_10",
+    "path": "assets\\visuals\\ember_v5\\equipment\\amethyst_mine_10.png",
+    "family": "icon",
+    "prompt_id": "d9d03e33-47a5-48c7-9273-06c2dce818fe",
+    "seed": 2610044076
+  },
+  {
+    "id": "amethyst_mine_11",
+    "path": "assets\\visuals\\ember_v5\\equipment\\amethyst_mine_11.png",
+    "family": "icon",
+    "prompt_id": "820bd611-2b11-4812-a901-4fae7f447858",
+    "seed": 2610044077
+  },
+  {
+    "id": "amethyst_mine_12",
+    "path": "assets\\visuals\\ember_v5\\equipment\\amethyst_mine_12.png",
+    "family": "icon",
+    "prompt_id": "12be2749-4695-4d50-a643-acc9cb226639",
+    "seed": 2610044078
+  },
+  {
+    "id": "amethyst_mine_13",
+    "path": "assets\\visuals\\ember_v5\\equipment\\amethyst_mine_13.png",
+    "family": "icon",
+    "prompt_id": "9496e3e0-1eea-4b8c-be66-0536057f1ef4",
+    "seed": 2610044079
+  },
+  {
+    "id": "amethyst_mine_14",
+    "path": "assets\\visuals\\ember_v5\\equipment\\amethyst_mine_14.png",
+    "family": "icon",
+    "prompt_id": "c6faff48-dd16-44a7-98c4-adaf8a00b7fa",
+    "seed": 2610044080
+  },
+  {
+    "id": "amethyst_mine_15",
+    "path": "assets\\visuals\\ember_v5\\equipment\\amethyst_mine_15.png",
+    "family": "icon",
+    "prompt_id": "d898ef3d-ea85-4acd-995f-c33342353df0",
+    "seed": 2610044081
+  },
+  {
+    "id": "amethyst_mine_16",
+    "path": "assets\\visuals\\ember_v5\\equipment\\amethyst_mine_16.png",
+    "family": "icon",
+    "prompt_id": "9b758ddf-b504-4462-a6e0-d3a3ce0fd514",
+    "seed": 2610044082
+  },
+  {
+    "id": "amethyst_mine_17",
+    "path": "assets\\visuals\\ember_v5\\equipment\\amethyst_mine_17.png",
+    "family": "icon",
+    "prompt_id": "1f2c93f8-2394-4273-92f2-69e11e291a8c",
+    "seed": 2610044083
+  },
+  {
+    "id": "amethyst_mine_18",
+    "path": "assets\\visuals\\ember_v5\\equipment\\amethyst_mine_18.png",
+    "family": "icon",
+    "prompt_id": "2c4575cb-4304-4b7a-8b7d-992e7d053f3e",
+    "seed": 2610044084
+  },
+  {
+    "id": "amethyst_mine_19",
+    "path": "assets\\visuals\\ember_v5\\equipment\\amethyst_mine_19.png",
+    "family": "icon",
+    "prompt_id": "643a5897-d345-4932-ac52-8a21b723c9bd",
+    "seed": 2610044085
+  },
+  {
+    "id": "amethyst_mine_20",
+    "path": "assets\\visuals\\ember_v5\\equipment\\amethyst_mine_20.png",
+    "family": "icon",
+    "prompt_id": "c04bcf42-69f3-4685-8646-4b80e7f65820",
+    "seed": 2610044086
+  },
+  {
+    "id": "amethyst_mine_21",
+    "path": "assets\\visuals\\ember_v5\\equipment\\amethyst_mine_21.png",
+    "family": "icon",
+    "prompt_id": "d631bf18-a755-4385-9274-5620c7c1b0f8",
+    "seed": 2610044087
+  },
+  {
+    "id": "amethyst_mine_22",
+    "path": "assets\\visuals\\ember_v5\\equipment\\amethyst_mine_22.png",
+    "family": "icon",
+    "prompt_id": "99f7ad51-f00f-4fad-9636-cbf6dd03204e",
+    "seed": 2610044088
+  },
+  {
+    "id": "amethyst_mine_23",
+    "path": "assets\\visuals\\ember_v5\\equipment\\amethyst_mine_23.png",
+    "family": "icon",
+    "prompt_id": "58abdd06-1212-4cf3-83c0-e84f30d8ac8d",
+    "seed": 2610044089
+  },
+  {
+    "id": "amethyst_mine_24",
+    "path": "assets\\visuals\\ember_v5\\equipment\\amethyst_mine_24.png",
+    "family": "icon",
+    "prompt_id": "b7f52c8f-830b-4642-acfd-8e9da770a8ea",
+    "seed": 2610044090
+  },
+  {
+    "id": "amethyst_mine_25",
+    "path": "assets\\visuals\\ember_v5\\equipment\\amethyst_mine_25.png",
+    "family": "icon",
+    "prompt_id": "56d9f266-0f0e-433e-b5a4-22dbd889d461",
+    "seed": 2610044091
+  },
+  {
+    "id": "ruin_forge_01",
+    "path": "assets\\visuals\\ember_v5\\equipment\\ruin_forge_01.png",
+    "family": "icon",
+    "prompt_id": "a0f953fc-e2a4-4846-94c8-9887bf3f8a69",
+    "seed": 2610044092
+  },
+  {
+    "id": "ruin_forge_02",
+    "path": "assets\\visuals\\ember_v5\\equipment\\ruin_forge_02.png",
+    "family": "icon",
+    "prompt_id": "cafcef4d-ec29-4d76-a177-dfabeabc8705",
+    "seed": 2610044093
+  },
+  {
+    "id": "ruin_forge_03",
+    "path": "assets\\visuals\\ember_v5\\equipment\\ruin_forge_03.png",
+    "family": "icon",
+    "prompt_id": "e2dca679-a561-4650-93fb-c3bb737b1c8c",
+    "seed": 2610044094
+  },
+  {
+    "id": "ruin_forge_04",
+    "path": "assets\\visuals\\ember_v5\\equipment\\ruin_forge_04.png",
+    "family": "icon",
+    "prompt_id": "ac99ef02-2da1-45de-9edf-45ed42770478",
+    "seed": 2610044095
+  },
+  {
+    "id": "ruin_forge_05",
+    "path": "assets\\visuals\\ember_v5\\equipment\\ruin_forge_05.png",
+    "family": "icon",
+    "prompt_id": "34d9fd9c-ba0f-486f-9048-b3454edc4d49",
+    "seed": 2610044096
+  },
+  {
+    "id": "ruin_forge_06",
+    "path": "assets\\visuals\\ember_v5\\equipment\\ruin_forge_06.png",
+    "family": "icon",
+    "prompt_id": "24e4e1d7-8e30-4612-b164-a2b2e8905e2e",
+    "seed": 2610044097
+  },
+  {
+    "id": "ruin_forge_07",
+    "path": "assets\\visuals\\ember_v5\\equipment\\ruin_forge_07.png",
+    "family": "icon",
+    "prompt_id": "3da798de-bdb4-4c03-80e7-8f6b1af21d18",
+    "seed": 2610044098
+  },
+  {
+    "id": "ruin_forge_08",
+    "path": "assets\\visuals\\ember_v5\\equipment\\ruin_forge_08.png",
+    "family": "icon",
+    "prompt_id": "7c91dd3e-6fb6-40fb-93d2-b5bc1c1c5ffc",
+    "seed": 2610044099
+  },
+  {
+    "id": "ruin_forge_09",
+    "path": "assets\\visuals\\ember_v5\\equipment\\ruin_forge_09.png",
+    "family": "icon",
+    "prompt_id": "85c20eba-8e2c-4d55-b96a-8c4c80a20a74",
+    "seed": 2610044100
+  },
+  {
+    "id": "ruin_forge_10",
+    "path": "assets\\visuals\\ember_v5\\equipment\\ruin_forge_10.png",
+    "family": "icon",
+    "prompt_id": "efcc2801-613e-450a-8603-7d14ac47315b",
+    "seed": 2610044101
+  },
+  {
+    "id": "ruin_forge_11",
+    "path": "assets\\visuals\\ember_v5\\equipment\\ruin_forge_11.png",
+    "family": "icon",
+    "prompt_id": "96889d18-5b23-4f08-b93e-a120ba75cc61",
+    "seed": 2610044102
+  },
+  {
+    "id": "ruin_forge_12",
+    "path": "assets\\visuals\\ember_v5\\equipment\\ruin_forge_12.png",
+    "family": "icon",
+    "prompt_id": "fc490785-43c7-475c-a497-84db148305af",
+    "seed": 2610044103
+  },
+  {
+    "id": "ruin_forge_13",
+    "path": "assets\\visuals\\ember_v5\\equipment\\ruin_forge_13.png",
+    "family": "icon",
+    "prompt_id": "f87a947e-da83-4d6d-ad67-1b5f5d549ac8",
+    "seed": 2610044104
+  },
+  {
+    "id": "ruin_forge_14",
+    "path": "assets\\visuals\\ember_v5\\equipment\\ruin_forge_14.png",
+    "family": "icon",
+    "prompt_id": "392b97d0-135d-49a9-a6ed-79c35708ec63",
+    "seed": 2610044105
+  },
+  {
+    "id": "ruin_forge_15",
+    "path": "assets\\visuals\\ember_v5\\equipment\\ruin_forge_15.png",
+    "family": "icon",
+    "prompt_id": "73c2b020-2083-4a5d-b11f-d6cd4be924d6",
+    "seed": 2610044106
+  },
+  {
+    "id": "ruin_forge_16",
+    "path": "assets\\visuals\\ember_v5\\equipment\\ruin_forge_16.png",
+    "family": "icon",
+    "prompt_id": "69eb749b-8343-4c22-8fc1-2697d9d49159",
+    "seed": 2610044107
+  },
+  {
+    "id": "ruin_forge_17",
+    "path": "assets\\visuals\\ember_v5\\equipment\\ruin_forge_17.png",
+    "family": "icon",
+    "prompt_id": "ded8236b-f467-4df9-8a11-959b3ad09273",
+    "seed": 2610044108
+  },
+  {
+    "id": "ruin_forge_18",
+    "path": "assets\\visuals\\ember_v5\\equipment\\ruin_forge_18.png",
+    "family": "icon",
+    "prompt_id": "22a1ecfe-3f5f-48a6-980b-a1fd81d1f888",
+    "seed": 2610044109
+  },
+  {
+    "id": "ruin_forge_19",
+    "path": "assets\\visuals\\ember_v5\\equipment\\ruin_forge_19.png",
+    "family": "icon",
+    "prompt_id": "bd62b18b-f8d6-47e4-9167-4ad61cdc73ae",
+    "seed": 2610044110
+  },
+  {
+    "id": "ruin_forge_20",
+    "path": "assets\\visuals\\ember_v5\\equipment\\ruin_forge_20.png",
+    "family": "icon",
+    "prompt_id": "f26c1594-b7a7-4225-bef1-01e9d6d71742",
+    "seed": 2610044111
+  },
+  {
+    "id": "ruin_forge_21",
+    "path": "assets\\visuals\\ember_v5\\equipment\\ruin_forge_21.png",
+    "family": "icon",
+    "prompt_id": "a55acf7f-8e0c-493d-984b-d7bf21be92ed",
+    "seed": 2610044112
+  },
+  {
+    "id": "ruin_forge_22",
+    "path": "assets\\visuals\\ember_v5\\equipment\\ruin_forge_22.png",
+    "family": "icon",
+    "prompt_id": "856a7749-bec9-4da6-93b1-7920a052d103",
+    "seed": 2610044113
+  },
+  {
+    "id": "ruin_forge_23",
+    "path": "assets\\visuals\\ember_v5\\equipment\\ruin_forge_23.png",
+    "family": "icon",
+    "prompt_id": "e8773891-1590-4ce5-a270-81aa0a3ee86f",
+    "seed": 2610044114
+  },
+  {
+    "id": "ruin_forge_24",
+    "path": "assets\\visuals\\ember_v5\\equipment\\ruin_forge_24.png",
+    "family": "icon",
+    "prompt_id": "8c323254-0504-4ed9-923c-4b471b40d097",
+    "seed": 2610044115
+  },
+  {
+    "id": "ruin_forge_25",
+    "path": "assets\\visuals\\ember_v5\\equipment\\ruin_forge_25.png",
+    "family": "icon",
+    "prompt_id": "3c2ca938-1305-4f2e-a145-f7846794db71",
+    "seed": 2610044116
+  },
+  {
+    "id": "wild_hunt_01",
+    "path": "assets\\visuals\\ember_v5\\equipment\\wild_hunt_01.png",
+    "family": "icon",
+    "prompt_id": "8b038a3b-ffb0-4004-acef-8e52c4ab6f83",
+    "seed": 2610044117
+  },
+  {
+    "id": "wild_hunt_02",
+    "path": "assets\\visuals\\ember_v5\\equipment\\wild_hunt_02.png",
+    "family": "icon",
+    "prompt_id": "a7ee77ac-2132-463b-b31a-97d463a07560",
+    "seed": 2610044118
+  },
+  {
+    "id": "wild_hunt_03",
+    "path": "assets\\visuals\\ember_v5\\equipment\\wild_hunt_03.png",
+    "family": "icon",
+    "prompt_id": "71e89446-48ce-434f-95f4-172bf7148ee2",
+    "seed": 2610044119
+  },
+  {
+    "id": "wild_hunt_04",
+    "path": "assets\\visuals\\ember_v5\\equipment\\wild_hunt_04.png",
+    "family": "icon",
+    "prompt_id": "1e870aaf-06a5-44a8-b1fd-d6033fe95e3f",
+    "seed": 2610044120
+  },
+  {
+    "id": "wild_hunt_05",
+    "path": "assets\\visuals\\ember_v5\\equipment\\wild_hunt_05.png",
+    "family": "icon",
+    "prompt_id": "f5e742c9-81a4-433a-aa6f-04ec3a2ae287",
+    "seed": 2610044121
+  },
+  {
+    "id": "wild_hunt_06",
+    "path": "assets\\visuals\\ember_v5\\equipment\\wild_hunt_06.png",
+    "family": "icon",
+    "prompt_id": "53955d84-a08f-44b3-a1e0-297cc12c1c08",
+    "seed": 2610044122
+  },
+  {
+    "id": "wild_hunt_07",
+    "path": "assets\\visuals\\ember_v5\\equipment\\wild_hunt_07.png",
+    "family": "icon",
+    "prompt_id": "72cd2972-aa30-4f36-be25-7080be693543",
+    "seed": 2610044123
+  },
+  {
+    "id": "wild_hunt_08",
+    "path": "assets\\visuals\\ember_v5\\equipment\\wild_hunt_08.png",
+    "family": "icon",
+    "prompt_id": "461c80b8-1df4-4bb7-b483-6a30f4d3b8ed",
+    "seed": 2610044124
+  },
+  {
+    "id": "wild_hunt_09",
+    "path": "assets\\visuals\\ember_v5\\equipment\\wild_hunt_09.png",
+    "family": "icon",
+    "prompt_id": "4e63eaf6-fa3d-4b25-a43b-388f2a2b1f61",
+    "seed": 2610044125
+  },
+  {
+    "id": "wild_hunt_10",
+    "path": "assets\\visuals\\ember_v5\\equipment\\wild_hunt_10.png",
+    "family": "icon",
+    "prompt_id": "02715e59-f2fc-4a77-9a50-022e8b354f08",
+    "seed": 2610044126
+  },
+  {
+    "id": "wild_hunt_11",
+    "path": "assets\\visuals\\ember_v5\\equipment\\wild_hunt_11.png",
+    "family": "icon",
+    "prompt_id": "d473dbe8-b9e4-41e1-a446-daa10912b862",
+    "seed": 2610044127
+  },
+  {
+    "id": "wild_hunt_12",
+    "path": "assets\\visuals\\ember_v5\\equipment\\wild_hunt_12.png",
+    "family": "icon",
+    "prompt_id": "c8d3d321-9c6b-414c-8e79-3ee135fd670c",
+    "seed": 2610044128
+  },
+  {
+    "id": "wild_hunt_13",
+    "path": "assets\\visuals\\ember_v5\\equipment\\wild_hunt_13.png",
+    "family": "icon",
+    "prompt_id": "dbe3bfa7-4282-4e8c-8bea-2075d9dad7b3",
+    "seed": 2610044129
+  },
+  {
+    "id": "wild_hunt_14",
+    "path": "assets\\visuals\\ember_v5\\equipment\\wild_hunt_14.png",
+    "family": "icon",
+    "prompt_id": "192cf91e-45c3-4f59-8033-ec88e24db86d",
+    "seed": 2610044130
+  },
+  {
+    "id": "wild_hunt_15",
+    "path": "assets\\visuals\\ember_v5\\equipment\\wild_hunt_15.png",
+    "family": "icon",
+    "prompt_id": "3c1f4c63-78a6-4a16-8783-b8164a1e34d7",
+    "seed": 2610044131
+  },
+  {
+    "id": "wild_hunt_16",
+    "path": "assets\\visuals\\ember_v5\\equipment\\wild_hunt_16.png",
+    "family": "icon",
+    "prompt_id": "7351911f-96c8-4fa4-8981-39b1ed8a9580",
+    "seed": 2610044132
+  },
+  {
+    "id": "wild_hunt_17",
+    "path": "assets\\visuals\\ember_v5\\equipment\\wild_hunt_17.png",
+    "family": "icon",
+    "prompt_id": "1b20707a-7c2d-402c-b153-5ada538dcdc8",
+    "seed": 2610044133
+  },
+  {
+    "id": "wild_hunt_18",
+    "path": "assets\\visuals\\ember_v5\\equipment\\wild_hunt_18.png",
+    "family": "icon",
+    "prompt_id": "3ef78ff9-f6e1-4893-9134-8baf5a5735c8",
+    "seed": 2610044134
+  },
+  {
+    "id": "wild_hunt_19",
+    "path": "assets\\visuals\\ember_v5\\equipment\\wild_hunt_19.png",
+    "family": "icon",
+    "prompt_id": "544b9ec0-36e1-4fd1-bcb5-156c5be7e1dc",
+    "seed": 2610044135
+  },
+  {
+    "id": "wild_hunt_20",
+    "path": "assets\\visuals\\ember_v5\\equipment\\wild_hunt_20.png",
+    "family": "icon",
+    "prompt_id": "4b8b5f9c-0d21-443a-a6fd-97e05b113309",
+    "seed": 2610044136
+  },
+  {
+    "id": "wild_hunt_21",
+    "path": "assets\\visuals\\ember_v5\\equipment\\wild_hunt_21.png",
+    "family": "icon",
+    "prompt_id": "62deedb7-b852-4a48-bd63-6ff952f22d79",
+    "seed": 2610044137
+  },
+  {
+    "id": "wild_hunt_22",
+    "path": "assets\\visuals\\ember_v5\\equipment\\wild_hunt_22.png",
+    "family": "icon",
+    "prompt_id": "ce06caec-a13f-4383-8359-10110c2dc1de",
+    "seed": 2610044138
+  },
+  {
+    "id": "wild_hunt_23",
+    "path": "assets\\visuals\\ember_v5\\equipment\\wild_hunt_23.png",
+    "family": "icon",
+    "prompt_id": "43f7bcbc-26d3-4e63-a898-e7eab8a7d909",
+    "seed": 2610044139
+  },
+  {
+    "id": "wild_hunt_24",
+    "path": "assets\\visuals\\ember_v5\\equipment\\wild_hunt_24.png",
+    "family": "icon",
+    "prompt_id": "37189905-5f7c-4ddc-bfdc-e9d2134bfad7",
+    "seed": 2610044140
+  },
+  {
+    "id": "wild_hunt_25",
+    "path": "assets\\visuals\\ember_v5\\equipment\\wild_hunt_25.png",
+    "family": "icon",
+    "prompt_id": "0d41ed73-f876-43d6-823d-2c42027748a2",
+    "seed": 2610044141
+  },
+  {
+    "id": "sealed_abbey_01",
+    "path": "assets\\visuals\\ember_v5\\equipment\\sealed_abbey_01.png",
+    "family": "icon",
+    "prompt_id": "2d180450-a50f-4896-8a96-d3bad2cec2f8",
+    "seed": 2610044142
+  },
+  {
+    "id": "sealed_abbey_02",
+    "path": "assets\\visuals\\ember_v5\\equipment\\sealed_abbey_02.png",
+    "family": "icon",
+    "prompt_id": "cfa7c62b-7678-470d-aecd-cad4426cd416",
+    "seed": 2610044143
+  },
+  {
+    "id": "sealed_abbey_03",
+    "path": "assets\\visuals\\ember_v5\\equipment\\sealed_abbey_03.png",
+    "family": "icon",
+    "prompt_id": "491840c1-2afb-4c60-829c-aa18889b4062",
+    "seed": 2610044144
+  },
+  {
+    "id": "sealed_abbey_04",
+    "path": "assets\\visuals\\ember_v5\\equipment\\sealed_abbey_04.png",
+    "family": "icon",
+    "prompt_id": "dbf56ac8-539e-4f61-9c3c-fa2511d55f16",
+    "seed": 2610044145
+  },
+  {
+    "id": "sealed_abbey_05",
+    "path": "assets\\visuals\\ember_v5\\equipment\\sealed_abbey_05.png",
+    "family": "icon",
+    "prompt_id": "af131461-bc9f-4e31-a149-e957f627af24",
+    "seed": 2610044146
+  },
+  {
+    "id": "sealed_abbey_06",
+    "path": "assets\\visuals\\ember_v5\\equipment\\sealed_abbey_06.png",
+    "family": "icon",
+    "prompt_id": "9ebda3aa-35e2-4779-a23e-e5dd099c3251",
+    "seed": 2610044147
+  },
+  {
+    "id": "sealed_abbey_07",
+    "path": "assets\\visuals\\ember_v5\\equipment\\sealed_abbey_07.png",
+    "family": "icon",
+    "prompt_id": "8e772d0f-900a-42c7-92ef-e215ded98271",
+    "seed": 2610044148
+  },
+  {
+    "id": "sealed_abbey_08",
+    "path": "assets\\visuals\\ember_v5\\equipment\\sealed_abbey_08.png",
+    "family": "icon",
+    "prompt_id": "bf269de8-b033-4fa1-9a43-317e9cd18487",
+    "seed": 2610044149
+  },
+  {
+    "id": "sealed_abbey_09",
+    "path": "assets\\visuals\\ember_v5\\equipment\\sealed_abbey_09.png",
+    "family": "icon",
+    "prompt_id": "ad6751cb-0c93-4e60-bc38-44315dc1732e",
+    "seed": 2610044150
+  },
+  {
+    "id": "sealed_abbey_10",
+    "path": "assets\\visuals\\ember_v5\\equipment\\sealed_abbey_10.png",
+    "family": "icon",
+    "prompt_id": "85d69c0d-c00e-42fa-8435-f2de7db67acb",
+    "seed": 2610044151
+  },
+  {
+    "id": "sealed_abbey_11",
+    "path": "assets\\visuals\\ember_v5\\equipment\\sealed_abbey_11.png",
+    "family": "icon",
+    "prompt_id": "ec81fa8d-c850-46fa-a4fa-4e2994467b05",
+    "seed": 2610044152
+  },
+  {
+    "id": "sealed_abbey_12",
+    "path": "assets\\visuals\\ember_v5\\equipment\\sealed_abbey_12.png",
+    "family": "icon",
+    "prompt_id": "e09e6d34-ee6f-49d4-966f-ace67443a2bf",
+    "seed": 2610044153
+  },
+  {
+    "id": "sealed_abbey_13",
+    "path": "assets\\visuals\\ember_v5\\equipment\\sealed_abbey_13.png",
+    "family": "icon",
+    "prompt_id": "f1477768-fc1a-4a06-9ef2-0c3397a4e343",
+    "seed": 2610044154
+  },
+  {
+    "id": "sealed_abbey_14",
+    "path": "assets\\visuals\\ember_v5\\equipment\\sealed_abbey_14.png",
+    "family": "icon",
+    "prompt_id": "6fc109dd-d134-4803-8c1d-1200dd2bcab4",
+    "seed": 2610044155
+  },
+  {
+    "id": "sealed_abbey_15",
+    "path": "assets\\visuals\\ember_v5\\equipment\\sealed_abbey_15.png",
+    "family": "icon",
+    "prompt_id": "fc79aeff-7346-4a79-b27c-711ecbad09bc",
+    "seed": 2610044156
+  },
+  {
+    "id": "sealed_abbey_16",
+    "path": "assets\\visuals\\ember_v5\\equipment\\sealed_abbey_16.png",
+    "family": "icon",
+    "prompt_id": "a688f60f-28ae-4009-a33b-3e70488cfb37",
+    "seed": 2610044157
+  },
+  {
+    "id": "sealed_abbey_17",
+    "path": "assets\\visuals\\ember_v5\\equipment\\sealed_abbey_17.png",
+    "family": "icon",
+    "prompt_id": "2c7ca82e-8790-413b-90c2-59d261f9dc47",
+    "seed": 2610044158
+  },
+  {
+    "id": "sealed_abbey_18",
+    "path": "assets\\visuals\\ember_v5\\equipment\\sealed_abbey_18.png",
+    "family": "icon",
+    "prompt_id": "49f49b45-115c-48ed-9801-e923a1069169",
+    "seed": 2610044159
+  },
+  {
+    "id": "sealed_abbey_19",
+    "path": "assets\\visuals\\ember_v5\\equipment\\sealed_abbey_19.png",
+    "family": "icon",
+    "prompt_id": "acb29b00-06b7-47da-aac8-966894429d0f",
+    "seed": 2610044160
+  },
+  {
+    "id": "sealed_abbey_20",
+    "path": "assets\\visuals\\ember_v5\\equipment\\sealed_abbey_20.png",
+    "family": "icon",
+    "prompt_id": "57fb497e-3cb2-4fed-ac9c-a58a09ec4ad7",
+    "seed": 2610044161
+  },
+  {
+    "id": "sealed_abbey_21",
+    "path": "assets\\visuals\\ember_v5\\equipment\\sealed_abbey_21.png",
+    "family": "icon",
+    "prompt_id": "5f0912d5-c28b-429e-bc51-18ddbbb85073",
+    "seed": 2610044162
+  },
+  {
+    "id": "sealed_abbey_22",
+    "path": "assets\\visuals\\ember_v5\\equipment\\sealed_abbey_22.png",
+    "family": "icon",
+    "prompt_id": "d9c0df0d-9d63-408e-aefb-542e93ee7e27",
+    "seed": 2610044163
+  },
+  {
+    "id": "sealed_abbey_23",
+    "path": "assets\\visuals\\ember_v5\\equipment\\sealed_abbey_23.png",
+    "family": "icon",
+    "prompt_id": "4b972a7d-f12c-4462-a93f-40f9365a1785",
+    "seed": 2610044164
+  },
+  {
+    "id": "sealed_abbey_24",
+    "path": "assets\\visuals\\ember_v5\\equipment\\sealed_abbey_24.png",
+    "family": "icon",
+    "prompt_id": "0c40fdf9-567a-4d7c-bfae-7cd027d580da",
+    "seed": 2610044165
+  },
+  {
+    "id": "sealed_abbey_25",
+    "path": "assets\\visuals\\ember_v5\\equipment\\sealed_abbey_25.png",
+    "family": "icon",
+    "prompt_id": "76ad5f11-4af5-4092-9852-acd55339ad7d",
+    "seed": 2610044166
+  },
+  {
+    "id": "abyss_watch_01",
+    "path": "assets\\visuals\\ember_v5\\equipment\\abyss_watch_01.png",
+    "family": "icon",
+    "prompt_id": "29e42bc2-9314-4651-874d-3ff0b3bf7357",
+    "seed": 2610044167
+  },
+  {
+    "id": "abyss_watch_02",
+    "path": "assets\\visuals\\ember_v5\\equipment\\abyss_watch_02.png",
+    "family": "icon",
+    "prompt_id": "0e7b912b-3557-452c-b755-3db4b1d23344",
+    "seed": 2610044168
+  },
+  {
+    "id": "abyss_watch_03",
+    "path": "assets\\visuals\\ember_v5\\equipment\\abyss_watch_03.png",
+    "family": "icon",
+    "prompt_id": "4a96aa24-876d-43cf-8444-55ce3fe72aa6",
+    "seed": 2610044169
+  },
+  {
+    "id": "abyss_watch_04",
+    "path": "assets\\visuals\\ember_v5\\equipment\\abyss_watch_04.png",
+    "family": "icon",
+    "prompt_id": "d051e1cc-6b7d-48a5-8390-a0361ced5b8f",
+    "seed": 2610044170
+  },
+  {
+    "id": "abyss_watch_05",
+    "path": "assets\\visuals\\ember_v5\\equipment\\abyss_watch_05.png",
+    "family": "icon",
+    "prompt_id": "a0948f71-3fd5-4682-b7c9-f772f23ae045",
+    "seed": 2610044171
+  },
+  {
+    "id": "abyss_watch_06",
+    "path": "assets\\visuals\\ember_v5\\equipment\\abyss_watch_06.png",
+    "family": "icon",
+    "prompt_id": "d817f562-ccfe-4a6f-970c-00bc01abd482",
+    "seed": 2610044172
+  },
+  {
+    "id": "abyss_watch_07",
+    "path": "assets\\visuals\\ember_v5\\equipment\\abyss_watch_07.png",
+    "family": "icon",
+    "prompt_id": "b63a5044-2e9a-46a1-a5e4-584cb5693d04",
+    "seed": 2610044173
+  },
+  {
+    "id": "abyss_watch_08",
+    "path": "assets\\visuals\\ember_v5\\equipment\\abyss_watch_08.png",
+    "family": "icon",
+    "prompt_id": "ec63783b-4303-483d-80b0-2cfb2560e7fa",
+    "seed": 2610044174
+  },
+  {
+    "id": "abyss_watch_09",
+    "path": "assets\\visuals\\ember_v5\\equipment\\abyss_watch_09.png",
+    "family": "icon",
+    "prompt_id": "51c64835-75e7-4d96-ad81-13b65cc9d580",
+    "seed": 2610044175
+  },
+  {
+    "id": "abyss_watch_10",
+    "path": "assets\\visuals\\ember_v5\\equipment\\abyss_watch_10.png",
+    "family": "icon",
+    "prompt_id": "d3ea7444-2e90-4181-a705-7f5bf21bf5bd",
+    "seed": 2610044176
+  },
+  {
+    "id": "abyss_watch_11",
+    "path": "assets\\visuals\\ember_v5\\equipment\\abyss_watch_11.png",
+    "family": "icon",
+    "prompt_id": "c637292c-e343-4f0b-931c-362f888e1cc8",
+    "seed": 2610044177
+  },
+  {
+    "id": "abyss_watch_12",
+    "path": "assets\\visuals\\ember_v5\\equipment\\abyss_watch_12.png",
+    "family": "icon",
+    "prompt_id": "e57d5eff-42c4-4b42-a4bb-8e7e0fa5f185",
+    "seed": 2610044178
+  },
+  {
+    "id": "abyss_watch_13",
+    "path": "assets\\visuals\\ember_v5\\equipment\\abyss_watch_13.png",
+    "family": "icon",
+    "prompt_id": "ce70efd8-a582-45e1-9039-3ba3c2520e74",
+    "seed": 2610044179
+  },
+  {
+    "id": "abyss_watch_14",
+    "path": "assets\\visuals\\ember_v5\\equipment\\abyss_watch_14.png",
+    "family": "icon",
+    "prompt_id": "414dbbaf-1197-449f-965d-c43e74b6265c",
+    "seed": 2610044180
+  },
+  {
+    "id": "abyss_watch_15",
+    "path": "assets\\visuals\\ember_v5\\equipment\\abyss_watch_15.png",
+    "family": "icon",
+    "prompt_id": "e13963d3-c94b-4fcf-b52a-56436ffadc06",
+    "seed": 2610044181
+  },
+  {
+    "id": "abyss_watch_16",
+    "path": "assets\\visuals\\ember_v5\\equipment\\abyss_watch_16.png",
+    "family": "icon",
+    "prompt_id": "ffa99791-297f-490d-924f-32cfa878e0aa",
+    "seed": 2610044182
+  },
+  {
+    "id": "abyss_watch_17",
+    "path": "assets\\visuals\\ember_v5\\equipment\\abyss_watch_17.png",
+    "family": "icon",
+    "prompt_id": "85b1f214-3a50-4d2b-b224-948a0aa45b74",
+    "seed": 2610044183
+  },
+  {
+    "id": "abyss_watch_18",
+    "path": "assets\\visuals\\ember_v5\\equipment\\abyss_watch_18.png",
+    "family": "icon",
+    "prompt_id": "0051ccfc-9731-4943-a5cd-aa1ebf5a1c9d",
+    "seed": 2610044184
+  },
+  {
+    "id": "abyss_watch_19",
+    "path": "assets\\visuals\\ember_v5\\equipment\\abyss_watch_19.png",
+    "family": "icon",
+    "prompt_id": "223f2593-01c0-4245-824b-f4eb3b7883a8",
+    "seed": 2610044185
+  },
+  {
+    "id": "abyss_watch_20",
+    "path": "assets\\visuals\\ember_v5\\equipment\\abyss_watch_20.png",
+    "family": "icon",
+    "prompt_id": "3c2e3695-06ad-4115-b22f-7bbe9b1d2b28",
+    "seed": 2610044186
+  },
+  {
+    "id": "abyss_watch_21",
+    "path": "assets\\visuals\\ember_v5\\equipment\\abyss_watch_21.png",
+    "family": "icon",
+    "prompt_id": "f6ea23c4-8bbd-45e1-88fb-8aa1b80deb38",
+    "seed": 2610044187
+  },
+  {
+    "id": "abyss_watch_22",
+    "path": "assets\\visuals\\ember_v5\\equipment\\abyss_watch_22.png",
+    "family": "icon",
+    "prompt_id": "69e020eb-d60e-4a0b-b601-2b6ae85cad46",
+    "seed": 2610044188
+  },
+  {
+    "id": "abyss_watch_23",
+    "path": "assets\\visuals\\ember_v5\\equipment\\abyss_watch_23.png",
+    "family": "icon",
+    "prompt_id": "038cda5a-380d-4182-87af-79a1614c5ac0",
+    "seed": 2610044189
+  },
+  {
+    "id": "abyss_watch_24",
+    "path": "assets\\visuals\\ember_v5\\equipment\\abyss_watch_24.png",
+    "family": "icon",
+    "prompt_id": "2e33a8c2-c8a2-41fc-9c15-2610c0a0ccfe",
+    "seed": 2610044190
+  },
+  {
+    "id": "abyss_watch_25",
+    "path": "assets\\visuals\\ember_v5\\equipment\\abyss_watch_25.png",
+    "family": "icon",
+    "prompt_id": "a82b115c-a1a3-4557-a08a-e0b2cff6e69a",
+    "seed": 2610044191
+  },
+  {
+    "id": "fallen_dynasty_01",
+    "path": "assets\\visuals\\ember_v5\\equipment\\fallen_dynasty_01.png",
+    "family": "icon",
+    "prompt_id": "be71d626-5afa-4fa6-bf22-c793c90fcd74",
+    "seed": 2610044192
+  },
+  {
+    "id": "fallen_dynasty_02",
+    "path": "assets\\visuals\\ember_v5\\equipment\\fallen_dynasty_02.png",
+    "family": "icon",
+    "prompt_id": "7738c610-6769-48b9-92e7-ca5950a33665",
+    "seed": 2610044193
+  },
+  {
+    "id": "fallen_dynasty_03",
+    "path": "assets\\visuals\\ember_v5\\equipment\\fallen_dynasty_03.png",
+    "family": "icon",
+    "prompt_id": "e2d54b77-0f2f-415c-af42-b9be4c89a246",
+    "seed": 2610044194
+  },
+  {
+    "id": "fallen_dynasty_04",
+    "path": "assets\\visuals\\ember_v5\\equipment\\fallen_dynasty_04.png",
+    "family": "icon",
+    "prompt_id": "bc910ff7-aa80-4851-b791-876708cbfe28",
+    "seed": 2610044195
+  },
+  {
+    "id": "fallen_dynasty_05",
+    "path": "assets\\visuals\\ember_v5\\equipment\\fallen_dynasty_05.png",
+    "family": "icon",
+    "prompt_id": "c331e2d3-23a3-4d2e-8f7f-4f7cffc5d859",
+    "seed": 2610044196
+  },
+  {
+    "id": "fallen_dynasty_06",
+    "path": "assets\\visuals\\ember_v5\\equipment\\fallen_dynasty_06.png",
+    "family": "icon",
+    "prompt_id": "4bc8f158-be2b-4a3b-9d92-d16d2fae2102",
+    "seed": 2610044197
+  },
+  {
+    "id": "fallen_dynasty_07",
+    "path": "assets\\visuals\\ember_v5\\equipment\\fallen_dynasty_07.png",
+    "family": "icon",
+    "prompt_id": "3abff8b7-a8c5-4a9c-95b9-c862ff53d3e6",
+    "seed": 2610044198
+  },
+  {
+    "id": "fallen_dynasty_08",
+    "path": "assets\\visuals\\ember_v5\\equipment\\fallen_dynasty_08.png",
+    "family": "icon",
+    "prompt_id": "e43d8cb6-a25d-4c9c-92db-0cdf5d92b744",
+    "seed": 2610044199
+  },
+  {
+    "id": "fallen_dynasty_09",
+    "path": "assets\\visuals\\ember_v5\\equipment\\fallen_dynasty_09.png",
+    "family": "icon",
+    "prompt_id": "c2115006-cc92-48d3-b14b-882fc8f22067",
+    "seed": 2610044200
+  },
+  {
+    "id": "fallen_dynasty_10",
+    "path": "assets\\visuals\\ember_v5\\equipment\\fallen_dynasty_10.png",
+    "family": "icon",
+    "prompt_id": "8a027ca6-7a0a-41a6-847f-3ecd003e21e3",
+    "seed": 2610044201
+  },
+  {
+    "id": "fallen_dynasty_11",
+    "path": "assets\\visuals\\ember_v5\\equipment\\fallen_dynasty_11.png",
+    "family": "icon",
+    "prompt_id": "380620e0-24fd-4891-85da-e68c35b002f0",
+    "seed": 2610044202
+  },
+  {
+    "id": "fallen_dynasty_12",
+    "path": "assets\\visuals\\ember_v5\\equipment\\fallen_dynasty_12.png",
+    "family": "icon",
+    "prompt_id": "04050ece-1b5c-47eb-85c3-ae577bdcc4a7",
+    "seed": 2610044203
+  },
+  {
+    "id": "fallen_dynasty_13",
+    "path": "assets\\visuals\\ember_v5\\equipment\\fallen_dynasty_13.png",
+    "family": "icon",
+    "prompt_id": "d43ad1c0-8eda-4f19-a410-cb9c57430567",
+    "seed": 2610044204
+  },
+  {
+    "id": "fallen_dynasty_14",
+    "path": "assets\\visuals\\ember_v5\\equipment\\fallen_dynasty_14.png",
+    "family": "icon",
+    "prompt_id": "e78b6c85-4bc7-499c-99a5-8aa419f7ac29",
+    "seed": 2610044205
+  },
+  {
+    "id": "fallen_dynasty_15",
+    "path": "assets\\visuals\\ember_v5\\equipment\\fallen_dynasty_15.png",
+    "family": "icon",
+    "prompt_id": "120ccbe0-f24c-4bdf-bfcd-d25e56a86821",
+    "seed": 2610044206
+  },
+  {
+    "id": "fallen_dynasty_16",
+    "path": "assets\\visuals\\ember_v5\\equipment\\fallen_dynasty_16.png",
+    "family": "icon",
+    "prompt_id": "1c5ac77c-f53c-4ff1-8dc9-66b6f0d3f99b",
+    "seed": 2610044207
+  },
+  {
+    "id": "fallen_dynasty_17",
+    "path": "assets\\visuals\\ember_v5\\equipment\\fallen_dynasty_17.png",
+    "family": "icon",
+    "prompt_id": "e22ecd64-3772-4a47-ad95-724c3a5bc01a",
+    "seed": 2610044208
+  },
+  {
+    "id": "fallen_dynasty_18",
+    "path": "assets\\visuals\\ember_v5\\equipment\\fallen_dynasty_18.png",
+    "family": "icon",
+    "prompt_id": "adf46db4-72eb-4b2b-8405-ee75067cc052",
+    "seed": 2610044209
+  },
+  {
+    "id": "fallen_dynasty_19",
+    "path": "assets\\visuals\\ember_v5\\equipment\\fallen_dynasty_19.png",
+    "family": "icon",
+    "prompt_id": "28ca6bd2-84bc-4623-ba59-db92d46e4487",
+    "seed": 2610044210
+  },
+  {
+    "id": "fallen_dynasty_20",
+    "path": "assets\\visuals\\ember_v5\\equipment\\fallen_dynasty_20.png",
+    "family": "icon",
+    "prompt_id": "bca7e002-a223-43f3-8d6c-a8efa1ce8d1b",
+    "seed": 2610044211
+  },
+  {
+    "id": "fallen_dynasty_21",
+    "path": "assets\\visuals\\ember_v5\\equipment\\fallen_dynasty_21.png",
+    "family": "icon",
+    "prompt_id": "bf186ca6-3b9f-41e0-bfe7-538c8f5a4cce",
+    "seed": 2610044212
+  },
+  {
+    "id": "fallen_dynasty_22",
+    "path": "assets\\visuals\\ember_v5\\equipment\\fallen_dynasty_22.png",
+    "family": "icon",
+    "prompt_id": "3ad27a53-f986-4fab-9b98-707de1a7bfa2",
+    "seed": 2610044213
+  },
+  {
+    "id": "fallen_dynasty_23",
+    "path": "assets\\visuals\\ember_v5\\equipment\\fallen_dynasty_23.png",
+    "family": "icon",
+    "prompt_id": "aad41c06-0d87-4f21-9c71-3cb6f798f125",
+    "seed": 2610044214
+  },
+  {
+    "id": "fallen_dynasty_24",
+    "path": "assets\\visuals\\ember_v5\\equipment\\fallen_dynasty_24.png",
+    "family": "icon",
+    "prompt_id": "2617879b-6ab7-42cb-9bdd-cb271eae243c",
+    "seed": 2610044215
+  },
+  {
+    "id": "fallen_dynasty_25",
+    "path": "assets\\visuals\\ember_v5\\equipment\\fallen_dynasty_25.png",
+    "family": "icon",
+    "prompt_id": "94190811-4722-4494-995b-a23628d2e147",
+    "seed": 2610044216
+  },
+  {
+    "id": "backdrop_title",
+    "path": "assets\\visuals\\ember_v5\\backdrop_title.png",
+    "family": "backdrop",
+    "prompt_id": "0c8ebae4-418c-4477-8466-48c45ac8e04e",
+    "seed": 2610044217
+  },
+  {
+    "id": "backdrop_home",
+    "path": "assets\\visuals\\ember_v5\\backdrop_home.png",
+    "family": "backdrop",
+    "prompt_id": "db2c65c2-cc6d-4023-a2ab-3459f57daafa",
+    "seed": 2610044218
+  },
+  {
+    "id": "prop_0",
+    "path": "assets\\visuals\\ember_v5\\prop_0.png",
+    "family": "prop",
+    "prompt_id": "6abef957-e1ab-4525-8446-2e3d6137d0fa",
+    "seed": 2610044219
+  },
+  {
+    "id": "prop_1",
+    "path": "assets\\visuals\\ember_v5\\prop_1.png",
+    "family": "prop",
+    "prompt_id": "45f6db84-273c-4e1a-869f-bf7447d22a08",
+    "seed": 2610044220
+  },
+  {
+    "id": "prop_2",
+    "path": "assets\\visuals\\ember_v5\\prop_2.png",
+    "family": "prop",
+    "prompt_id": "7e56ba70-73c8-4dcb-81b4-a06cd36d9429",
+    "seed": 2610044221
+  },
+  {
+    "id": "prop_3",
+    "path": "assets\\visuals\\ember_v5\\prop_3.png",
+    "family": "prop",
+    "prompt_id": "f7089815-37f4-4a88-b159-aeee9c224ec4",
+    "seed": 2610044222
+  },
+  {
+    "id": "repair_royal_guard_09",
+    "path": "assets\\visuals\\ember_v5\\equipment\\royal_guard_09.png",
+    "family": "icon_repair",
+    "prompt_id": "45346bb6-1dc3-4294-8ba2-7d1528e90d1d",
+    "seed": 2610044223
+  },
+  {
+    "id": "repair_royal_guard_10",
+    "path": "assets\\visuals\\ember_v5\\equipment\\royal_guard_10.png",
+    "family": "icon_repair",
+    "prompt_id": "3890779b-13e6-4184-aede-466789cc2c4c",
+    "seed": 2610044224
+  },
+  {
+    "id": "repair_amethyst_mine_07",
+    "path": "assets\\visuals\\ember_v5\\equipment\\amethyst_mine_07.png",
+    "family": "icon_repair",
+    "prompt_id": "9512223f-c745-4848-8159-9b0d2abfbabb",
+    "seed": 2610044225
+  },
+  {
+    "id": "repair_amethyst_mine_09",
+    "path": "assets\\visuals\\ember_v5\\equipment\\amethyst_mine_09.png",
+    "family": "icon_repair",
+    "prompt_id": "f1f48c45-f2b8-4917-a917-a9fbc1abd516",
+    "seed": 2610044226
+  },
+  {
+    "id": "repair_amethyst_mine_10",
+    "path": "assets\\visuals\\ember_v5\\equipment\\amethyst_mine_10.png",
+    "family": "icon_repair",
+    "prompt_id": "0363131a-56e7-4859-b82b-39cf0aeacf9a",
+    "seed": 2610044227
+  },
+  {
+    "id": "repair_ruin_forge_10",
+    "path": "assets\\visuals\\ember_v5\\equipment\\ruin_forge_10.png",
+    "family": "icon_repair",
+    "prompt_id": "1a5867bb-29aa-4b99-b6ef-3f10b1ac5c76",
+    "seed": 2610044228
+  },
+  {
+    "id": "repair_wild_hunt_08",
+    "path": "assets\\visuals\\ember_v5\\equipment\\wild_hunt_08.png",
+    "family": "icon_repair",
+    "prompt_id": "5b9d1f94-9900-40ee-8d40-3257f7462648",
+    "seed": 2610044229
+  },
+  {
+    "id": "repair_sealed_abbey_10",
+    "path": "assets\\visuals\\ember_v5\\equipment\\sealed_abbey_10.png",
+    "family": "icon_repair",
+    "prompt_id": "6ab25402-b941-4e72-9269-cf8987919a3b",
+    "seed": 2610044230
+  },
+  {
+    "id": "repair_fallen_dynasty_08",
+    "path": "assets\\visuals\\ember_v5\\equipment\\fallen_dynasty_08.png",
+    "family": "icon_repair",
+    "prompt_id": "088d9901-ae49-4cc2-b3b7-4cc41a09423e",
+    "seed": 2610044231
+  },
+  {
+    "id": "repair_fallen_dynasty_09",
+    "path": "assets\\visuals\\ember_v5\\equipment\\fallen_dynasty_09.png",
+    "family": "icon_repair",
+    "prompt_id": "e6d91f90-ea70-4fbb-b353-95beaec6b47c",
+    "seed": 2610044232
+  },
+  {
+    "id": "repair_fallen_dynasty_10",
+    "path": "assets\\visuals\\ember_v5\\equipment\\fallen_dynasty_10.png",
+    "family": "icon_repair",
+    "prompt_id": "83a30e98-8600-4f37-9fe1-2ee96c81f89a",
+    "seed": 2610044233
+  },
+  {
+    "id": "repair_royal_guard_11",
+    "path": "assets\\visuals\\ember_v5\\equipment\\royal_guard_11.png",
+    "family": "icon_repair",
+    "prompt_id": "f51ff39d-6875-470e-ae3f-91b82d3f16f9",
+    "seed": 2610044234
+  },
+  {
+    "id": "repair_amethyst_mine_11",
+    "path": "assets\\visuals\\ember_v5\\equipment\\amethyst_mine_11.png",
+    "family": "icon_repair",
+    "prompt_id": "18ad45f7-9273-459e-a34f-f4db485fd5d6",
+    "seed": 2610044235
+  },
+  {
+    "id": "repair_ruin_forge_11",
+    "path": "assets\\visuals\\ember_v5\\equipment\\ruin_forge_11.png",
+    "family": "icon_repair",
+    "prompt_id": "f724cb22-e14c-42d7-9a87-be5f5aa44a3e",
+    "seed": 2610044236
+  },
+  {
+    "id": "repair_wild_hunt_11",
+    "path": "assets\\visuals\\ember_v5\\equipment\\wild_hunt_11.png",
+    "family": "icon_repair",
+    "prompt_id": "ecba5e31-7bf0-46dc-b634-08094def6f07",
+    "seed": 2610044237
+  },
+  {
+    "id": "repair_sealed_abbey_11",
+    "path": "assets\\visuals\\ember_v5\\equipment\\sealed_abbey_11.png",
+    "family": "icon_repair",
+    "prompt_id": "d123bc5b-fb09-42d7-894f-cd854f8bd464",
+    "seed": 2610044238
+  },
+  {
+    "id": "repair_abyss_watch_11",
+    "path": "assets\\visuals\\ember_v5\\equipment\\abyss_watch_11.png",
+    "family": "icon_repair",
+    "prompt_id": "0ee9ea37-573b-4c8b-b0e7-14e858e3840d",
+    "seed": 2610044239
+  },
+  {
+    "id": "repair_fallen_dynasty_11",
+    "path": "assets\\visuals\\ember_v5\\equipment\\fallen_dynasty_11.png",
+    "family": "icon_repair",
+    "prompt_id": "0ea0afcf-704e-4799-89f0-0a595346c772",
+    "seed": 2610044240
+  }
+]

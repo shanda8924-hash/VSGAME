@@ -1,0 +1,9 @@
+{
+  "method": "Exact eight authored Attack01 body frames from the native Aseprite; white source fx omitted; no detached-weapon transform and no image generation",
+  "source": "assets/sprites/boss/Minotaur/Minotaur.aseprite",
+  "source_sha256": "8896dc2b5f89465a75f697e6ea38e20040a62dbb9829510f070be741c1a7c311",
+  "limitations": "Original three-quarter authored body clip is preserved for every heading; front/back labels select the world-space crescent, NOT newly drawn character views.",
+  "palette_subset_asserted": true,
+  "full_body_articulation": "Grip, forearms, shoulders and torso use the original Attack01 animation in all eight frames; the weapon is never animated independently.",
+  "legacy_weapon_edge_cleanup": "The retained decomposition reference assigns inner blade contour (57..59,55) to the weapon and keeps one connected body."
+}

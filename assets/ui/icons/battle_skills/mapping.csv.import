@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://bb27sxd3dxq02"
+
+[deps]
+
+files=["res://assets/ui/icons/battle_skills/mapping.id.translation", "res://assets/ui/icons/battle_skills/mapping.file.translation", "res://assets/ui/icons/battle_skills/mapping.source.translation", "res://assets/ui/icons/battle_skills/mapping.source.translation", "res://assets/ui/icons/battle_skills/mapping.source.translation"]
+
+source_file="res://assets/ui/icons/battle_skills/mapping.csv"
+dest_files=["res://assets/ui/icons/battle_skills/mapping.id.translation", "res://assets/ui/icons/battle_skills/mapping.file.translation", "res://assets/ui/icons/battle_skills/mapping.source.translation", "res://assets/ui/icons/battle_skills/mapping.source.translation", "res://assets/ui/icons/battle_skills/mapping.source.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true
