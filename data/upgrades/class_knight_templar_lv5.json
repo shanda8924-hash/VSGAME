@@ -1,1 +1,1 @@
-{"id":"class_knight_templar_lv5","display_name":"聖なる波動 Lv5","category":"melee","effect_type":"class_ability_level_up","value":1.0,"description":"職業専用強化: 二重波動(2回連続発生)","class_character_id":"knight_templar","class_ability_level":5}
+{"id":"class_knight_templar_lv5","display_name":"聖なる波動 Lv5","category":"melee","effect_type":"class_ability_level_up","value":1.0,"description":"職業専用強化: 二重波動(2回連続発生)","class_character_id":"knight_templar","class_ability_level":5,"icon_path":"res://assets/ui/icons/battle_skills/upgrades/class_knight_templar_lv5.png"}

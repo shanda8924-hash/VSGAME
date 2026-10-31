@@ -3,5 +3,6 @@
   "display_name": "幸運のお守り",
   "effect_type": "crit_rate_up",
   "value": 0.10,
+  "icon_path": "res://assets/ui/icons/shikashi/items/lucky_charm.png",
   "description": "会心率が10%上昇する"
 }

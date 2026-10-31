@@ -4,5 +4,6 @@
   "effect_type": "damage_up",
   "category": "common",
   "value": 0.15,
-  "description": "攻撃力+15%"
+  "description": "攻撃力+15%",
+  "icon_path": "res://assets/ui/icons/battle_skills/upgrades/damage_up.png"
 }

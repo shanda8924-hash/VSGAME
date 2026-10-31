@@ -1,1 +1,30 @@
-{"id":"soldier","display_name":"ソルジャー","sprite_folder":"player/Soldier","max_hp":100.0,"move_speed":140.0,"unlock_cost":0,"preferred_element":"fire","attack_pattern_id":"melee_arc","base_damage":14.0,"attack_interval":0.9,"attack_range":70.0,"vfx_theme_id":"fire","attack_pattern_params":{"arc_half_angle_degrees":58.0,"step_distance":15.0,"impact_delay":0.18,"hitbox_active_seconds":0.08,"knockback_distance":8.0},"active_skill_id":"soldier_war_cry","active_skill_name":"WAR CRY / ウォークライ","active_skill_icon":"WC","active_skill_cooldown":15.0,"active_skill_params":{"duration":5.0,"attack_interval_multiplier":0.6,"move_speed_multiplier":1.35}}
+{
+  "id": "soldier",
+  "display_name": "ソルジャー",
+  "sprite_folder": "player/Soldier",
+  "max_hp": 100.0,
+  "move_speed": 140.0,
+  "unlock_cost": 0,
+  "preferred_element": "fire",
+  "attack_pattern_id": "melee_arc",
+  "base_damage": 7.0,
+  "attack_interval": 0.9,
+  "attack_range": 70.0,
+  "vfx_theme_id": "fire",
+  "attack_pattern_params": {
+    "arc_half_angle_degrees": 58.0,
+    "step_distance": 15.0,
+    "impact_delay": 0.18,
+    "hitbox_active_seconds": 0.08,
+    "knockback_distance": 8.0
+  },
+  "active_skill_id": "soldier_war_cry",
+  "active_skill_name": "WAR CRY / ウォークライ",
+  "active_skill_icon": "WC",
+  "active_skill_cooldown": 15.0,
+  "active_skill_params": {
+    "duration": 5.0,
+    "attack_interval_multiplier": 0.6,
+    "move_speed_multiplier": 1.35
+  }
+}

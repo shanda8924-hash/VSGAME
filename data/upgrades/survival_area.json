@@ -1,0 +1,15 @@
+{
+  "id": "survival_area",
+  "display_name": "広域攻撃",
+  "category": "survival",
+  "effect_type": "survival_area",
+  "value": 0.18,
+  "description": "斬撃と索敵範囲が18%広がる。近接は横の敵も巻き込む。",
+  "icon_path": "res://assets/ui/icons/battle_skills/upgrades/melee_wide_swing.png",
+  "effect_params": {
+    "max_rank": 3,
+    "preview": "area",
+    "tagline": "範囲が広がる",
+    "requires_projectile": false
+  }
+}

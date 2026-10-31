@@ -1,0 +1,15 @@
+{
+  "id": "survival_pierce",
+  "display_name": "貫通射撃",
+  "category": "survival",
+  "effect_type": "survival_pierce",
+  "value": 1,
+  "description": "矢と魔法弾が敵を1体貫通する。最大2体追加。",
+  "icon_path": "res://assets/ui/icons/battle_skills/upgrades/long_range_focus.png",
+  "effect_params": {
+    "max_rank": 2,
+    "preview": "pierce",
+    "tagline": "敵の列を撃ち抜く",
+    "requires_projectile": true
+  }
+}

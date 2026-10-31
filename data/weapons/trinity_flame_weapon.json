@@ -1,11 +1,11 @@
 {
   "id": "trinity_flame_weapon",
   "display_name": "光闇業炎の大剣",
-  "description": "炎+光+闇の超融合武器。3属性ぶんの着弾演出をまとめて発動する。",
+  "description": "三つの相を灼く上位遺物。",
   "base_damage": 52.0,
   "attack_interval": 1.3,
   "attack_range": 270.0,
-  "required_fragment_ids": ["fire", "light", "dark"],
+  "is_relic": true,
   "vfx_theme_id": "trinity_flame",
   "crit_chance": 0.2,
   "crit_multiplier": 2.2

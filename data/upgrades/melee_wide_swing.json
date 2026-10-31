@@ -1,8 +1,9 @@
 {
   "id": "melee_wide_swing",
-  "display_name": "WIDE SWING / 旋風",
+  "display_name": "旋風",
   "category": "melee",
   "effect_type": "melee_range_up",
   "value": 0.15,
-  "description": "近接通常攻撃範囲+15%"
+  "description": "近接通常攻撃範囲+15%",
+  "icon_path": "res://assets/ui/icons/battle_skills/upgrades/melee_wide_swing.png"
 }

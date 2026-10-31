@@ -4,5 +4,6 @@
   "effect_type": "multishot_chance_up",
   "category": "ranged",
   "value": 0.10,
-  "description": "追加の矢を発射する確率+10%"
+  "description": "追加の矢を発射する確率+10%",
+  "icon_path": "res://assets/ui/icons/battle_skills/upgrades/multishot_chance_up.png"
 }

@@ -6,5 +6,6 @@
   "effect_type": "move_speed_multiplier",
   "value": 0.15,
   "downside_type": "damage_up",
-  "downside_value": 0.10
+  "downside_value": 0.10,
+  "icon_path": "res://assets/ui/icons/battle_skills/upgrades/swift_striker.png"
 }

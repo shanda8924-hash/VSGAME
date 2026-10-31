@@ -4,5 +4,6 @@
   "effect_type": "homing_upgrade",
   "category": "ranged",
   "value": 0.2,
-  "description": "矢の誘導性能上昇"
+  "description": "矢の誘導性能上昇",
+  "icon_path": "res://assets/ui/icons/battle_skills/upgrades/homing_upgrade.png"
 }

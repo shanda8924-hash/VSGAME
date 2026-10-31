@@ -1,0 +1,1 @@
+{"id":"a1_burning_damage","display_name":"灼熱追撃","effect_type":"burning_damage","category":"element_fire","value":0.25,"description":"燃焼中の敵への全ダメージ +25%（重複可）","icon_path":"res://assets/ui/icons/battle_skills/upgrades/a1_burning_damage.png"}

@@ -1,0 +1,15 @@
+{
+  "id": "blood_monster_b",
+  "display_name": "ブラッドモンスターB",
+  "sprite_folder": "enemy/Blood Monster_B/Blood Monster_B",
+  "max_hp": 8970,
+  "move_speed": 85,
+  "contact_damage": 12,
+  "exp_value": 20,
+  "min_elapsed_seconds": 90.0,
+  "special_attack_id": "blood_spear",
+  "visual_scale": 1.7,
+  "attack_pattern_id": "",
+  "attack_interval": 1.5,
+  "attack_windup": 0.6
+}

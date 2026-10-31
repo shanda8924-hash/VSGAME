@@ -1,10 +1,10 @@
 {
   "id": "holy_frost_weapon",
   "display_name": "聖氷の剣",
-  "description": "氷+光の合成武器。対象を減速させつつ貫通ビームを描く。",
+  "description": "澄んだ冷気を封じた遺物武器。",
   "base_damage": 24.0,
   "attack_interval": 1.1,
   "attack_range": 215.0,
-  "required_fragment_ids": ["ice", "light"],
+  "is_relic": true,
   "vfx_theme_id": "holy_frost"
 }

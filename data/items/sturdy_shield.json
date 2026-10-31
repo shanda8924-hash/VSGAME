@@ -3,5 +3,6 @@
   "display_name": "頑丈な盾",
   "effect_type": "damage_taken_multiplier",
   "value": 0.15,
+  "icon_path": "res://assets/ui/icons/shikashi/items/sturdy_shield.png",
   "description": "被ダメージが15%軽減される"
 }

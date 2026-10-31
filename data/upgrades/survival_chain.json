@@ -1,0 +1,15 @@
+{
+  "id": "survival_chain",
+  "display_name": "雷光連鎖",
+  "category": "survival",
+  "effect_type": "survival_chain",
+  "value": 0,
+  "description": "命中から近くの敵へ雷が渡る。1段階ごとに対象が1体増える。",
+  "icon_path": "res://assets/ui/icons/battle_skills/upgrades/a1_charged_chain.png",
+  "effect_params": {
+    "max_rank": 3,
+    "preview": "chain",
+    "tagline": "隣の敵へ雷が渡る",
+    "requires_projectile": false
+  }
+}

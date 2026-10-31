@@ -5,11 +5,12 @@
     "description_keys": ["skill.thunder_chain.lv1", "skill.thunder_chain.lv2", "skill.thunder_chain.lv3"],
     "required_elements": ["lightning"],
     "trigger_kind": "on_critical",
-    "trigger_element": "lightning",
+    "trigger_state": "charged",
     "skill_id": "skill_thunder_strike",
     "modifier_id": "modifier_chain",
     "max_level": 3,
     "color": "#ffe45c",
+    "icon_path": "res://assets/ui/icons/battle_skills/completed/thunder_chain.png",
     "icon": "⚡"
   },
   {
@@ -18,12 +19,13 @@
     "description_keys": ["skill.lightning_charge.lv1", "skill.lightning_charge.lv2", "skill.lightning_charge.lv3"],
     "required_elements": ["lightning"],
     "trigger_kind": "charge_critical",
-    "trigger_element": "lightning",
+    "trigger_state": "charged",
     "trigger_count_by_level": [4, 3, 2],
     "skill_id": "skill_thunder_strike",
     "modifier_id": "modifier_area",
     "max_level": 3,
     "color": "#d9b7ff",
+    "icon_path": "res://assets/ui/icons/battle_skills/completed/lightning_charge.png",
     "icon": "◉"
   },
   {
@@ -32,12 +34,13 @@
     "description_keys": ["skill.overload.lv1", "skill.overload.lv2", "skill.overload.lv3"],
     "required_elements": ["lightning"],
     "trigger_kind": "nth_hit",
-    "trigger_element": "lightning",
+    "trigger_state": "charged",
     "trigger_count_by_level": [5, 4, 3],
     "skill_id": "skill_thunder_strike",
     "modifier_id": "modifier_area",
     "max_level": 3,
     "color": "#a56dff",
+    "icon_path": "res://assets/ui/icons/battle_skills/completed/overload.png",
     "icon": "✦"
   },
   {
@@ -46,12 +49,13 @@
     "description_keys": ["skill.burning_burst.lv1", "skill.burning_burst.lv2", "skill.burning_burst.lv3"],
     "required_elements": ["fire"],
     "trigger_kind": "on_kill",
-    "trigger_element": "fire",
+    "trigger_state": "burning",
     "target_condition": "burning",
     "skill_id": "skill_fire_burst",
     "modifier_id": "modifier_area",
     "max_level": 3,
     "color": "#ff7043",
+    "icon_path": "res://assets/ui/icons/battle_skills/completed/burning_burst.png",
     "icon": "🔥"
   },
   {
@@ -60,13 +64,14 @@
     "description_keys": ["skill.burn_spread.lv1", "skill.burn_spread.lv2", "skill.burn_spread.lv3"],
     "required_elements": ["fire"],
     "trigger_kind": "nth_hit",
-    "trigger_element": "fire",
+    "trigger_state": "burning",
     "target_condition": "burning",
     "trigger_count_by_level": [5, 4, 3],
     "skill_id": "skill_fire_burst",
     "modifier_id": "modifier_chain",
     "max_level": 3,
     "color": "#ff9a52",
+    "icon_path": "res://assets/ui/icons/battle_skills/completed/burn_spread.png",
     "icon": "✹"
   },
   {
@@ -75,12 +80,13 @@
     "description_keys": ["skill.scorching_followup.lv1", "skill.scorching_followup.lv2", "skill.scorching_followup.lv3"],
     "required_elements": ["fire"],
     "trigger_kind": "on_critical",
-    "trigger_element": "fire",
+    "trigger_state": "burning",
     "target_condition": "burning",
     "skill_id": "skill_fire_burst",
     "modifier_id": "modifier_focus",
     "max_level": 3,
     "color": "#ff4f2f",
+    "icon_path": "res://assets/ui/icons/battle_skills/completed/scorching_followup.png",
     "icon": "◆"
   },
   {
@@ -89,13 +95,14 @@
     "description_keys": ["skill.ice_shatter.lv1", "skill.ice_shatter.lv2", "skill.ice_shatter.lv3"],
     "required_elements": ["ice"],
     "trigger_kind": "nth_hit",
-    "trigger_element": "ice",
+    "trigger_state": "frozen",
     "target_condition": "cold",
     "trigger_count_by_level": [4, 3, 2],
     "skill_id": "skill_ice_nova",
     "modifier_id": "modifier_area",
     "max_level": 3,
     "color": "#72d7ff",
+    "icon_path": "res://assets/ui/icons/battle_skills/completed/ice_shatter.png",
     "icon": "❄"
   },
   {
@@ -104,13 +111,14 @@
     "description_keys": ["skill.cold_accumulation.lv1", "skill.cold_accumulation.lv2", "skill.cold_accumulation.lv3"],
     "required_elements": ["ice"],
     "trigger_kind": "nth_hit",
-    "trigger_element": "ice",
+    "trigger_state": "frozen",
     "trigger_count_by_level": [5, 4, 3],
     "apply_freeze": true,
     "skill_id": "skill_ice_nova",
     "modifier_id": "modifier_focus",
     "max_level": 3,
     "color": "#a8edff",
+    "icon_path": "res://assets/ui/icons/battle_skills/completed/cold_accumulation.png",
     "icon": "◇"
   },
   {
@@ -119,12 +127,13 @@
     "description_keys": ["skill.frozen_followup.lv1", "skill.frozen_followup.lv2", "skill.frozen_followup.lv3"],
     "required_elements": ["ice"],
     "trigger_kind": "on_critical",
-    "trigger_element": "ice",
+    "trigger_state": "frozen",
     "target_condition": "cold",
     "skill_id": "skill_ice_nova",
     "modifier_id": "modifier_focus",
     "max_level": 3,
     "color": "#d9f8ff",
+    "icon_path": "res://assets/ui/icons/battle_skills/completed/frozen_followup.png",
     "icon": "✧"
   },
   {
@@ -133,12 +142,13 @@
     "description_keys": ["skill.conductive_flame.lv1", "skill.conductive_flame.lv2", "skill.conductive_flame.lv3"],
     "required_elements": ["fire", "lightning"],
     "trigger_kind": "on_critical",
-    "trigger_element": "lightning",
+    "trigger_state": "charged",
     "target_condition": "burning",
     "skill_id": "skill_thunder_strike",
     "modifier_id": "modifier_area",
     "max_level": 3,
     "color": "#ff86e8",
+    "icon_path": "res://assets/ui/icons/battle_skills/completed/conductive_flame.png",
     "icon": "⚡🔥"
   },
   {
@@ -147,13 +157,14 @@
     "description_keys": ["skill.thermal_shock.lv1", "skill.thermal_shock.lv2", "skill.thermal_shock.lv3"],
     "required_elements": ["fire", "ice"],
     "trigger_kind": "on_hit",
-    "trigger_element": "fire",
+    "trigger_state": "burning",
     "target_condition": "cold",
     "consume_cold": true,
     "skill_id": "skill_fire_burst",
     "modifier_id": "modifier_area",
     "max_level": 3,
     "color": "#ffb26b",
+    "icon_path": "res://assets/ui/icons/battle_skills/completed/thermal_shock.png",
     "icon": "🔥❄"
   },
   {
@@ -162,12 +173,13 @@
     "description_keys": ["skill.superconduction.lv1", "skill.superconduction.lv2", "skill.superconduction.lv3"],
     "required_elements": ["lightning", "ice"],
     "trigger_kind": "on_critical",
-    "trigger_element": "lightning",
+    "trigger_state": "charged",
     "target_condition": "cold",
     "skill_id": "skill_thunder_strike",
     "modifier_id": "modifier_chain",
     "max_level": 3,
     "color": "#9ef6ff",
+    "icon_path": "res://assets/ui/icons/battle_skills/completed/superconduction.png",
     "icon": "⚡❄"
   },
   {
@@ -176,11 +188,12 @@
     "description_keys": ["skill.halo_followup.lv1", "skill.halo_followup.lv2", "skill.halo_followup.lv3"],
     "required_elements": ["light"],
     "trigger_kind": "on_critical",
-    "trigger_element": "light",
+    "trigger_state": "marked",
     "skill_id": "skill_light_burst",
     "modifier_id": "modifier_focus",
     "max_level": 3,
     "color": "#fff1a8",
+    "icon_path": "res://assets/ui/icons/battle_skills/completed/halo_followup.png",
     "icon": "☀"
   },
   {
@@ -189,12 +202,13 @@
     "description_keys": ["skill.flash_accumulation.lv1", "skill.flash_accumulation.lv2", "skill.flash_accumulation.lv3"],
     "required_elements": ["light"],
     "trigger_kind": "nth_hit",
-    "trigger_element": "light",
+    "trigger_state": "marked",
     "trigger_count_by_level": [5, 4, 3],
     "skill_id": "skill_light_burst",
     "modifier_id": "modifier_area",
     "max_level": 3,
     "color": "#fff7cf",
+    "icon_path": "res://assets/ui/icons/battle_skills/completed/flash_accumulation.png",
     "icon": "✦"
   },
   {
@@ -203,11 +217,12 @@
     "description_keys": ["skill.revelation.lv1", "skill.revelation.lv2", "skill.revelation.lv3"],
     "required_elements": ["light"],
     "trigger_kind": "on_kill",
-    "trigger_element": "light",
+    "trigger_state": "marked",
     "skill_id": "skill_light_burst",
     "modifier_id": "modifier_chain",
     "max_level": 3,
     "color": "#ffe57d",
+    "icon_path": "res://assets/ui/icons/battle_skills/completed/revelation.png",
     "icon": "✧"
   },
   {
@@ -216,11 +231,12 @@
     "description_keys": ["skill.void_slash.lv1", "skill.void_slash.lv2", "skill.void_slash.lv3"],
     "required_elements": ["dark"],
     "trigger_kind": "on_critical",
-    "trigger_element": "dark",
+    "trigger_state": "cursed",
     "skill_id": "skill_dark_rift",
     "modifier_id": "modifier_chain",
     "max_level": 3,
     "color": "#b56cff",
+    "icon_path": "res://assets/ui/icons/battle_skills/completed/void_slash.png",
     "icon": "☾"
   },
   {
@@ -229,12 +245,13 @@
     "description_keys": ["skill.dark_corrosion.lv1", "skill.dark_corrosion.lv2", "skill.dark_corrosion.lv3"],
     "required_elements": ["dark"],
     "trigger_kind": "nth_hit",
-    "trigger_element": "dark",
+    "trigger_state": "cursed",
     "trigger_count_by_level": [5, 4, 3],
     "skill_id": "skill_dark_rift",
     "modifier_id": "modifier_area",
     "max_level": 3,
     "color": "#8f51d6",
+    "icon_path": "res://assets/ui/icons/battle_skills/completed/dark_corrosion.png",
     "icon": "◈"
   },
   {
@@ -243,11 +260,12 @@
     "description_keys": ["skill.soul_devour.lv1", "skill.soul_devour.lv2", "skill.soul_devour.lv3"],
     "required_elements": ["dark"],
     "trigger_kind": "on_kill",
-    "trigger_element": "dark",
+    "trigger_state": "cursed",
     "skill_id": "skill_dark_rift",
     "modifier_id": "modifier_focus",
     "max_level": 3,
     "color": "#d18cff",
+    "icon_path": "res://assets/ui/icons/battle_skills/completed/soul_devour.png",
     "icon": "●"
   },
   {
@@ -256,7 +274,7 @@
     "description_keys": ["skill.thunderlord_descent.lv1", "skill.thunderlord_descent.lv2", "skill.thunderlord_descent.lv3"],
     "required_elements": ["lightning"],
     "trigger_kind": "cooldown_auto",
-    "trigger_element": "lightning",
+    "trigger_state": "charged",
     "skill_id": "skill_thunder_strike",
     "modifier_id": "modifier_chain",
     "max_level": 3,
@@ -267,6 +285,7 @@
     "signature_skill": true,
     "vfx_profile": "thunderlord_descent",
     "color": "#f6e65b",
+    "icon_path": "res://assets/ui/icons/battle_skills/completed/thunderlord_descent.png",
     "icon": "⚡"
   },
   {
@@ -275,7 +294,7 @@
     "description_keys": ["skill.inferno_pillar.lv1", "skill.inferno_pillar.lv2", "skill.inferno_pillar.lv3"],
     "required_elements": ["fire"],
     "trigger_kind": "cooldown_auto",
-    "trigger_element": "fire",
+    "trigger_state": "burning",
     "skill_id": "skill_fire_burst",
     "modifier_id": "modifier_area",
     "max_level": 3,
@@ -286,6 +305,7 @@
     "signature_skill": true,
     "vfx_profile": "inferno_pillar",
     "color": "#ff7138",
+    "icon_path": "res://assets/ui/icons/battle_skills/completed/inferno_pillar.png",
     "icon": "▲"
   },
   {
@@ -294,7 +314,7 @@
     "description_keys": ["skill.glacial_spear_rain.lv1", "skill.glacial_spear_rain.lv2", "skill.glacial_spear_rain.lv3"],
     "required_elements": ["ice"],
     "trigger_kind": "cooldown_auto",
-    "trigger_element": "ice",
+    "trigger_state": "frozen",
     "skill_id": "skill_ice_nova",
     "modifier_id": "modifier_echo",
     "max_level": 3,
@@ -305,6 +325,7 @@
     "signature_skill": true,
     "vfx_profile": "glacial_spear_rain",
     "color": "#81e6ff",
+    "icon_path": "res://assets/ui/icons/battle_skills/completed/glacial_spear_rain.png",
     "icon": "◆"
   },
   {
@@ -313,7 +334,7 @@
     "description_keys": ["skill.radiant_blade_array.lv1", "skill.radiant_blade_array.lv2", "skill.radiant_blade_array.lv3"],
     "required_elements": ["light"],
     "trigger_kind": "cooldown_auto",
-    "trigger_element": "light",
+    "trigger_state": "marked",
     "skill_id": "skill_light_burst",
     "modifier_id": "modifier_area",
     "max_level": 3,
@@ -324,6 +345,7 @@
     "signature_skill": true,
     "vfx_profile": "radiant_blade_array",
     "color": "#fff0a0",
+    "icon_path": "res://assets/ui/icons/battle_skills/completed/radiant_blade_array.png",
     "icon": "✦"
   },
   {
@@ -332,7 +354,7 @@
     "description_keys": ["skill.void_severance.lv1", "skill.void_severance.lv2", "skill.void_severance.lv3"],
     "required_elements": ["dark"],
     "trigger_kind": "cooldown_auto",
-    "trigger_element": "dark",
+    "trigger_state": "cursed",
     "skill_id": "skill_dark_rift",
     "modifier_id": "modifier_area",
     "max_level": 3,
@@ -343,6 +365,7 @@
     "signature_skill": true,
     "vfx_profile": "void_severance",
     "color": "#a968e8",
+    "icon_path": "res://assets/ui/icons/battle_skills/completed/void_severance.png",
     "icon": "◈"
   }
 ]

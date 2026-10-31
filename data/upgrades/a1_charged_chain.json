@@ -1,0 +1,1 @@
+{"id":"a1_charged_chain","display_name":"導電路","effect_type":"charged_chain","category":"state_charged","value":1.0,"description":"帯電中の敵を倒すと、近くの敵1体へ帯電を伝播（重複で対象+1）","icon_path":"res://assets/ui/icons/battle_skills/upgrades/a1_charged_chain.png"}

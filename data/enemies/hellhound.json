@@ -1,0 +1,10 @@
+{
+  "id": "hellhound",
+  "display_name": "ヘルハウンド",
+  "sprite_folder": "enemy/Hellhound/Hellhound",
+  "max_hp": 86.0,
+  "move_speed": 130.0,
+  "contact_damage": 10.0,
+  "exp_value": 2,
+  "min_elapsed_seconds": 180.0
+}

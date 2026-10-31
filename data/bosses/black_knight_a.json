@@ -6,6 +6,6 @@
   "move_speed": 50.0,
   "contact_damage": 39.6,
   "exp_value": 25,
-  "visual_scale": 1.35,
+  "visual_scale": 1.97,
   "attack_pattern_id": "charge"
 }

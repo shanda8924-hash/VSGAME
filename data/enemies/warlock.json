@@ -1,0 +1,10 @@
+{
+  "id": "warlock",
+  "display_name": "ウォーロック",
+  "sprite_folder": "enemy/Warlock/Warlock",
+  "max_hp": 92.0,
+  "move_speed": 65.0,
+  "contact_damage": 7.0,
+  "exp_value": 2,
+  "min_elapsed_seconds": 180.0
+}

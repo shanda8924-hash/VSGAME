@@ -1,0 +1,15 @@
+{
+  "id": "survival_multishot",
+  "display_name": "多重射撃",
+  "category": "survival",
+  "effect_type": "survival_multishot",
+  "value": 1,
+  "description": "一度の発射が1本増える。矢と魔法弾に有効、最大2本追加。",
+  "icon_path": "res://assets/ui/icons/battle_skills/upgrades/multishot_chance_up.png",
+  "effect_params": {
+    "max_rank": 2,
+    "preview": "multishot",
+    "tagline": "弾の本数が増える",
+    "requires_projectile": true
+  }
+}

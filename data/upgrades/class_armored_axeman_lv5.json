@@ -1,1 +1,1 @@
-{"id":"class_armored_axeman_lv5","display_name":"大斧の型 Lv5","category":"melee","effect_type":"class_ability_level_up","value":1.0,"description":"職業専用強化: 返し斬り追加","class_character_id":"armored_axeman","class_ability_level":5}
+{"id":"class_armored_axeman_lv5","display_name":"大斧の型 Lv5","category":"melee","effect_type":"class_ability_level_up","value":1.0,"description":"職業専用強化: 返し斬り追加","class_character_id":"armored_axeman","class_ability_level":5,"icon_path":"res://assets/ui/icons/battle_skills/upgrades/class_armored_axeman_lv5.png"}

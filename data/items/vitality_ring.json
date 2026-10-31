@@ -3,5 +3,6 @@
   "display_name": "生命の指輪",
   "effect_type": "max_hp_bonus",
   "value": 20.0,
+  "icon_path": "res://assets/ui/icons/shikashi/items/vitality_ring.png",
   "description": "最大HPが20上昇する(その場で回復もする)"
 }

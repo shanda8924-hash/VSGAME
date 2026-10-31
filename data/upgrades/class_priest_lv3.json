@@ -1,1 +1,1 @@
-{"id":"class_priest_lv3","display_name":"祈祷奥義 Lv3","category":"ranged","effect_type":"class_ability_level_up","value":1.0,"description":"職業専用強化: 発動間隔-20%","class_character_id":"priest","class_ability_level":3}
+{"id":"class_priest_lv3","display_name":"祈祷奥義 Lv3","category":"ranged","effect_type":"class_ability_level_up","value":1.0,"description":"職業専用強化: 発動間隔-20%","class_character_id":"priest","class_ability_level":3,"icon_path":"res://assets/ui/icons/battle_skills/upgrades/class_priest_lv3.png"}

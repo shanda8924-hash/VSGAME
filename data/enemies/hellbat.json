@@ -1,0 +1,10 @@
+{
+  "id": "hellbat",
+  "display_name": "ヘルバット",
+  "sprite_folder": "enemy/Hellbat/Hellbat",
+  "max_hp": 32.0,
+  "move_speed": 140.0,
+  "contact_damage": 3.0,
+  "exp_value": 1,
+  "min_elapsed_seconds": 0.0
+}

@@ -4,199 +4,4454 @@
     "display_name": "旅鉄の剣",
     "slot": "weapon",
     "rarity": "uncommon",
-    "icon_path": "res://assets/items/weapons/weapon_sword_uncommon_001.png",
-    "stats": ["attack_power", "attack_speed", "crit_rate"]
+    "icon_path": "res://assets/items/painted_200/wanderer_iron_sword.tres",
+    "stats": [
+      "attack_power",
+      "attack_speed",
+      "crit_rate"
+    ],
+    "collection": "継承装備",
+    "art_sheet": 0,
+    "art_cell": 0,
+    "art_region": [
+      3,
+      3,
+      245,
+      240
+    ],
+    "attack_kind": "slash"
   },
   {
     "id": "traveler_shortbow",
     "display_name": "旅人の短弓",
     "slot": "weapon",
     "rarity": "uncommon",
-    "icon_path": "res://assets/items/weapons/weapon_bow_uncommon_001.png",
-    "stats": ["attack_power", "attack_speed", "crit_rate"]
+    "icon_path": "res://assets/items/painted_200/traveler_shortbow.tres",
+    "stats": [
+      "attack_power",
+      "attack_speed",
+      "crit_rate"
+    ],
+    "collection": "継承装備",
+    "art_sheet": 0,
+    "art_cell": 1,
+    "art_region": [
+      254,
+      3,
+      245,
+      240
+    ],
+    "attack_kind": "bow"
   },
   {
     "id": "leather_scout_cap",
     "display_name": "革のスカウト帽",
     "slot": "head",
     "rarity": "uncommon",
-    "icon_path": "res://assets/items/head/head_cap_uncommon_001.png",
-    "stats": ["defense", "max_hp", "move_speed"]
+    "icon_path": "res://assets/items/painted_200/leather_scout_cap.tres",
+    "stats": [
+      "defense",
+      "max_hp",
+      "move_speed"
+    ],
+    "collection": "継承装備",
+    "art_sheet": 0,
+    "art_cell": 2,
+    "art_region": [
+      505,
+      3,
+      244,
+      240
+    ]
   },
   {
     "id": "traveler_leather_coat",
     "display_name": "旅人の革服",
     "slot": "body",
     "rarity": "uncommon",
-    "icon_path": "res://assets/items/body/body_coat_uncommon_001.png",
-    "stats": ["defense", "max_hp", "move_speed"]
+    "icon_path": "res://assets/items/painted_200/traveler_leather_coat.tres",
+    "stats": [
+      "defense",
+      "max_hp",
+      "move_speed"
+    ],
+    "collection": "継承装備",
+    "art_sheet": 0,
+    "art_cell": 3,
+    "art_region": [
+      755,
+      3,
+      245,
+      240
+    ]
   },
   {
     "id": "scout_gloves",
     "display_name": "斥候の手袋",
     "slot": "arms",
     "rarity": "uncommon",
-    "icon_path": "res://assets/items/arms/arms_gloves_uncommon_001.png",
-    "stats": ["attack_power", "attack_speed", "move_speed"]
+    "icon_path": "res://assets/items/painted_200/scout_gloves.tres",
+    "stats": [
+      "attack_power",
+      "attack_speed",
+      "move_speed"
+    ],
+    "collection": "継承装備",
+    "art_sheet": 0,
+    "art_cell": 4,
+    "art_region": [
+      1006,
+      3,
+      245,
+      240
+    ]
   },
   {
     "id": "moonblue_dagger",
     "display_name": "月青の短剣",
     "slot": "weapon",
     "rarity": "rare",
-    "icon_path": "res://assets/items/weapons/weapon_dagger_rare_001.png",
-    "stats": ["attack_power", "attack_speed", "crit_rate", "crit_damage"]
+    "icon_path": "res://assets/items/painted_200/moonblue_dagger.tres",
+    "stats": [
+      "attack_power",
+      "attack_speed",
+      "crit_rate",
+      "crit_damage"
+    ],
+    "collection": "継承装備",
+    "art_sheet": 0,
+    "art_cell": 5,
+    "art_region": [
+      3,
+      249,
+      245,
+      235
+    ],
+    "attack_kind": "light"
   },
   {
     "id": "frostblue_spear",
     "display_name": "霜青の槍",
     "slot": "weapon",
     "rarity": "rare",
-    "icon_path": "res://assets/items/weapons/weapon_spear_rare_001.png",
-    "stats": ["attack_power", "crit_rate", "crit_damage"]
+    "icon_path": "res://assets/items/painted_200/frostblue_spear.tres",
+    "stats": [
+      "attack_power",
+      "crit_rate",
+      "crit_damage"
+    ],
+    "collection": "継承装備",
+    "art_sheet": 0,
+    "art_cell": 6,
+    "art_region": [
+      254,
+      249,
+      245,
+      235
+    ],
+    "attack_kind": "thrust"
   },
   {
     "id": "azure_knight_helm",
     "display_name": "蒼鋼の騎士兜",
     "slot": "head",
     "rarity": "rare",
-    "icon_path": "res://assets/items/head/head_helm_rare_001.png",
-    "stats": ["defense", "max_hp", "crit_rate"]
+    "icon_path": "res://assets/items/painted_200/azure_knight_helm.tres",
+    "stats": [
+      "defense",
+      "max_hp",
+      "crit_rate"
+    ],
+    "collection": "継承装備",
+    "art_sheet": 0,
+    "art_cell": 7,
+    "art_region": [
+      505,
+      249,
+      244,
+      235
+    ]
   },
   {
     "id": "ripple_chainmail",
     "display_name": "波紋の鎖帷子",
     "slot": "body",
     "rarity": "rare",
-    "icon_path": "res://assets/items/body/body_mail_rare_001.png",
-    "stats": ["defense", "max_hp", "move_speed"]
+    "icon_path": "res://assets/items/painted_200/ripple_chainmail.tres",
+    "stats": [
+      "defense",
+      "max_hp",
+      "move_speed"
+    ],
+    "collection": "継承装備",
+    "art_sheet": 0,
+    "art_cell": 8,
+    "art_region": [
+      755,
+      249,
+      245,
+      235
+    ]
   },
   {
     "id": "windrunner_boots",
     "display_name": "風走りのブーツ",
     "slot": "legs",
     "rarity": "rare",
-    "icon_path": "res://assets/items/legs/legs_boots_rare_001.png",
-    "stats": ["move_speed", "defense", "attack_speed"]
+    "icon_path": "res://assets/items/painted_200/windrunner_boots.tres",
+    "stats": [
+      "move_speed",
+      "defense",
+      "attack_speed"
+    ],
+    "collection": "継承装備",
+    "art_sheet": 0,
+    "art_cell": 9,
+    "art_region": [
+      1006,
+      249,
+      245,
+      235
+    ]
   },
   {
     "id": "rune_greatsword",
     "display_name": "ルーン大剣",
     "slot": "weapon",
     "rarity": "epic",
-    "icon_path": "res://assets/items/weapons/weapon_greatsword_epic_001.png",
-    "stats": ["attack_power", "crit_rate", "crit_damage", "attack_speed"]
+    "icon_path": "res://assets/items/painted_200/rune_greatsword.tres",
+    "stats": [
+      "attack_power",
+      "crit_rate",
+      "crit_damage",
+      "attack_speed"
+    ],
+    "collection": "継承装備",
+    "art_sheet": 0,
+    "art_cell": 10,
+    "art_region": [
+      3,
+      490,
+      245,
+      235
+    ],
+    "attack_kind": "heavy"
   },
   {
     "id": "star_sorcerer_staff",
     "display_name": "星術の杖",
     "slot": "weapon",
     "rarity": "epic",
-    "icon_path": "res://assets/items/weapons/weapon_staff_epic_001.png",
-    "stats": ["attack_power", "attack_speed", "crit_rate", "crit_damage"]
+    "icon_path": "res://assets/items/painted_200/star_sorcerer_staff.tres",
+    "stats": [
+      "attack_power",
+      "attack_speed",
+      "crit_rate",
+      "crit_damage"
+    ],
+    "collection": "継承装備",
+    "art_sheet": 0,
+    "art_cell": 11,
+    "art_region": [
+      254,
+      490,
+      245,
+      235
+    ],
+    "attack_kind": "magic"
   },
   {
     "id": "arcane_mage_robe",
     "display_name": "秘術師のローブ",
     "slot": "body",
     "rarity": "epic",
-    "icon_path": "res://assets/items/body/body_robe_epic_001.png",
-    "stats": ["defense", "max_hp", "attack_power", "crit_rate"]
+    "icon_path": "res://assets/items/painted_200/arcane_mage_robe.tres",
+    "stats": [
+      "defense",
+      "max_hp",
+      "attack_power",
+      "crit_rate"
+    ],
+    "collection": "継承装備",
+    "art_sheet": 0,
+    "art_cell": 12,
+    "art_region": [
+      505,
+      490,
+      244,
+      235
+    ]
   },
   {
     "id": "spellweave_gauntlets",
     "display_name": "魔紋の篭手",
     "slot": "arms",
     "rarity": "epic",
-    "icon_path": "res://assets/items/arms/arms_gauntlets_epic_001.png",
-    "stats": ["attack_power", "attack_speed", "crit_damage", "defense"]
+    "icon_path": "res://assets/items/painted_200/spellweave_gauntlets.tres",
+    "stats": [
+      "attack_power",
+      "attack_speed",
+      "crit_damage",
+      "defense"
+    ],
+    "collection": "継承装備",
+    "art_sheet": 0,
+    "art_cell": 13,
+    "art_region": [
+      755,
+      490,
+      245,
+      235
+    ]
   },
   {
     "id": "amethyst_ring",
     "display_name": "紫晶の指輪",
     "slot": "accessory",
     "rarity": "epic",
-    "icon_path": "res://assets/items/accessories/accessory_ring_epic_001.png",
-    "stats": ["crit_rate", "crit_damage", "attack_power", "max_hp"]
+    "icon_path": "res://assets/items/painted_200/amethyst_ring.tres",
+    "stats": [
+      "crit_rate",
+      "crit_damage",
+      "attack_power",
+      "max_hp"
+    ],
+    "collection": "継承装備",
+    "art_sheet": 0,
+    "art_cell": 14,
+    "art_region": [
+      1006,
+      490,
+      245,
+      235
+    ]
   },
   {
     "id": "sunfire_battle_axe",
     "display_name": "太陽炎の戦斧",
     "slot": "weapon",
     "rarity": "legendary",
-    "icon_path": "res://assets/items/weapons/weapon_axe_legendary_001.png",
-    "stats": ["attack_power", "crit_rate", "crit_damage", "attack_speed", "max_hp"]
+    "icon_path": "res://assets/items/painted_200/sunfire_battle_axe.tres",
+    "stats": [
+      "attack_power",
+      "crit_rate",
+      "crit_damage",
+      "attack_speed",
+      "max_hp"
+    ],
+    "collection": "継承装備",
+    "art_sheet": 0,
+    "art_cell": 15,
+    "art_region": [
+      3,
+      731,
+      245,
+      232
+    ],
+    "attack_kind": "axe"
   },
   {
     "id": "phoenix_crossbow",
     "display_name": "不死鳥の弩",
     "slot": "weapon",
     "rarity": "legendary",
-    "icon_path": "res://assets/items/weapons/weapon_crossbow_legendary_001.png",
-    "stats": ["attack_power", "attack_speed", "crit_rate", "crit_damage", "move_speed"]
+    "icon_path": "res://assets/items/painted_200/phoenix_crossbow.tres",
+    "stats": [
+      "attack_power",
+      "attack_speed",
+      "crit_rate",
+      "crit_damage",
+      "move_speed"
+    ],
+    "collection": "継承装備",
+    "art_sheet": 0,
+    "art_cell": 16,
+    "art_region": [
+      254,
+      731,
+      245,
+      232
+    ],
+    "attack_kind": "bow"
   },
   {
     "id": "lionking_helm",
     "display_name": "獅子王の兜",
     "slot": "head",
     "rarity": "legendary",
-    "icon_path": "res://assets/items/head/head_helm_legendary_001.png",
-    "stats": ["defense", "max_hp", "attack_power", "crit_rate"]
+    "icon_path": "res://assets/items/painted_200/lionking_helm.tres",
+    "stats": [
+      "defense",
+      "max_hp",
+      "attack_power",
+      "crit_rate"
+    ],
+    "collection": "継承装備",
+    "art_sheet": 0,
+    "art_cell": 17,
+    "art_region": [
+      505,
+      731,
+      244,
+      232
+    ]
   },
   {
     "id": "dragonclaw_gauntlets",
     "display_name": "竜爪の篭手",
     "slot": "arms",
     "rarity": "legendary",
-    "icon_path": "res://assets/items/arms/arms_gauntlets_legendary_001.png",
-    "stats": ["attack_power", "attack_speed", "crit_damage", "defense"]
+    "icon_path": "res://assets/items/painted_200/dragonclaw_gauntlets.tres",
+    "stats": [
+      "attack_power",
+      "attack_speed",
+      "crit_damage",
+      "defense"
+    ],
+    "collection": "継承装備",
+    "art_sheet": 0,
+    "art_cell": 18,
+    "art_region": [
+      755,
+      731,
+      245,
+      232
+    ]
   },
   {
     "id": "solar_amulet",
     "display_name": "陽輪の護符",
     "slot": "accessory",
     "rarity": "legendary",
-    "icon_path": "res://assets/items/accessories/accessory_amulet_legendary_001.png",
-    "stats": ["attack_power", "max_hp", "crit_rate", "crit_damage", "defense"]
+    "icon_path": "res://assets/items/painted_200/solar_amulet.tres",
+    "stats": [
+      "attack_power",
+      "max_hp",
+      "crit_rate",
+      "crit_damage",
+      "defense"
+    ],
+    "collection": "継承装備",
+    "art_sheet": 0,
+    "art_cell": 19,
+    "art_region": [
+      1006,
+      731,
+      245,
+      232
+    ]
   },
   {
     "id": "void_twin_claws",
     "display_name": "虚無の双爪",
     "slot": "weapon",
     "rarity": "mythic",
-    "icon_path": "res://assets/items/weapons/weapon_claw_mythic_001.png",
-    "stats": ["attack_power", "attack_speed", "crit_rate", "crit_damage", "move_speed", "defense"]
+    "icon_path": "res://assets/items/painted_200/void_twin_claws.tres",
+    "stats": [
+      "attack_power",
+      "attack_speed",
+      "crit_rate",
+      "crit_damage",
+      "move_speed",
+      "defense"
+    ],
+    "collection": "継承装備",
+    "art_sheet": 0,
+    "art_cell": 20,
+    "art_region": [
+      3,
+      969,
+      245,
+      238
+    ],
+    "attack_kind": "light"
   },
   {
     "id": "endtime_grimoire",
     "display_name": "終焉の魔導書",
     "slot": "weapon",
     "rarity": "mythic",
-    "icon_path": "res://assets/items/weapons/weapon_grimoire_mythic_001.png",
-    "stats": ["attack_power", "attack_speed", "crit_rate", "crit_damage", "max_hp", "defense"]
+    "icon_path": "res://assets/items/painted_200/endtime_grimoire.tres",
+    "stats": [
+      "attack_power",
+      "attack_speed",
+      "crit_rate",
+      "crit_damage",
+      "max_hp",
+      "defense"
+    ],
+    "collection": "継承装備",
+    "art_sheet": 0,
+    "art_cell": 21,
+    "art_region": [
+      254,
+      969,
+      245,
+      238
+    ],
+    "attack_kind": "magic"
   },
   {
     "id": "voidwalker_boots",
     "display_name": "虚空歩きの靴",
     "slot": "legs",
     "rarity": "mythic",
-    "icon_path": "res://assets/items/legs/legs_boots_mythic_001.png",
-    "stats": ["move_speed", "defense", "max_hp", "attack_speed", "crit_rate"]
+    "icon_path": "res://assets/items/painted_200/voidwalker_boots.tres",
+    "stats": [
+      "move_speed",
+      "defense",
+      "max_hp",
+      "attack_speed",
+      "crit_rate"
+    ],
+    "collection": "継承装備",
+    "art_sheet": 0,
+    "art_cell": 22,
+    "art_region": [
+      505,
+      969,
+      244,
+      238
+    ]
   },
   {
     "id": "starfall_greaves",
     "display_name": "星堕ちの脚甲",
     "slot": "legs",
     "rarity": "mythic",
-    "icon_path": "res://assets/items/legs/legs_greaves_mythic_001.png",
-    "stats": ["move_speed", "defense", "max_hp", "attack_power", "crit_damage"]
+    "icon_path": "res://assets/items/painted_200/starfall_greaves.tres",
+    "stats": [
+      "move_speed",
+      "defense",
+      "max_hp",
+      "attack_power",
+      "crit_damage"
+    ],
+    "collection": "継承装備",
+    "art_sheet": 0,
+    "art_cell": 23,
+    "art_region": [
+      755,
+      969,
+      245,
+      238
+    ]
   },
   {
     "id": "heart_of_the_abyss",
     "display_name": "深淵の心核",
     "slot": "accessory",
     "rarity": "mythic",
-    "icon_path": "res://assets/items/accessories/accessory_relic_mythic_001.png",
-    "stats": ["attack_power", "defense", "max_hp", "move_speed", "attack_speed", "crit_rate", "crit_damage"]
+    "icon_path": "res://assets/items/painted_200/heart_of_the_abyss.tres",
+    "stats": [
+      "attack_power",
+      "defense",
+      "max_hp",
+      "move_speed",
+      "attack_speed",
+      "crit_rate",
+      "crit_damage"
+    ],
+    "collection": "継承装備",
+    "art_sheet": 0,
+    "art_cell": 24,
+    "art_region": [
+      1006,
+      969,
+      245,
+      238
+    ]
+  },
+  {
+    "id": "royal_guard_01",
+    "display_name": "城門守りの長剣",
+    "slot": "weapon",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/painted_200/royal_guard_01.tres",
+    "stats": [
+      "attack_power",
+      "attack_speed",
+      "move_speed",
+      "crit_rate"
+    ],
+    "collection": "王国軍",
+    "art_sheet": 1,
+    "art_cell": 0,
+    "art_region": [
+      3,
+      3,
+      245,
+      228
+    ],
+    "attack_kind": "slash"
+  },
+  {
+    "id": "royal_guard_02",
+    "display_name": "処刑隊の大鉈",
+    "slot": "weapon",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/painted_200/royal_guard_02.tres",
+    "stats": [
+      "attack_power",
+      "max_hp",
+      "defense",
+      "crit_damage"
+    ],
+    "collection": "王国軍",
+    "art_sheet": 1,
+    "art_cell": 1,
+    "art_region": [
+      254,
+      3,
+      245,
+      228
+    ],
+    "attack_kind": "heavy"
+  },
+  {
+    "id": "royal_guard_03",
+    "display_name": "尖塔衛士の長槍",
+    "slot": "weapon",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/painted_200/royal_guard_03.tres",
+    "stats": [
+      "attack_power",
+      "crit_rate",
+      "crit_damage",
+      "attack_speed"
+    ],
+    "collection": "王国軍",
+    "art_sheet": 1,
+    "art_cell": 2,
+    "art_region": [
+      505,
+      3,
+      244,
+      228
+    ],
+    "attack_kind": "thrust"
+  },
+  {
+    "id": "royal_guard_04",
+    "display_name": "鉄衛の戦鎚",
+    "slot": "weapon",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/painted_200/royal_guard_04.tres",
+    "stats": [
+      "attack_power",
+      "attack_speed",
+      "move_speed",
+      "crit_rate"
+    ],
+    "collection": "王国軍",
+    "art_sheet": 1,
+    "art_cell": 3,
+    "art_region": [
+      755,
+      3,
+      245,
+      228
+    ],
+    "attack_kind": "hammer"
+  },
+  {
+    "id": "royal_guard_05",
+    "display_name": "城壁射手の弩",
+    "slot": "weapon",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/painted_200/royal_guard_05.tres",
+    "stats": [
+      "attack_power",
+      "max_hp",
+      "defense",
+      "crit_damage"
+    ],
+    "collection": "王国軍",
+    "art_sheet": 1,
+    "art_cell": 4,
+    "art_region": [
+      1006,
+      3,
+      245,
+      228
+    ],
+    "attack_kind": "bow"
+  },
+  {
+    "id": "royal_guard_06",
+    "display_name": "軍師の指揮杖",
+    "slot": "weapon",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/painted_200/royal_guard_06.tres",
+    "stats": [
+      "attack_power",
+      "crit_rate",
+      "crit_damage",
+      "attack_speed"
+    ],
+    "collection": "王国軍",
+    "art_sheet": 1,
+    "art_cell": 5,
+    "art_region": [
+      3,
+      237,
+      245,
+      224
+    ],
+    "attack_kind": "magic"
+  },
+  {
+    "id": "royal_guard_07",
+    "display_name": "城塞兵の面頬",
+    "slot": "head",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/painted_200/royal_guard_07.tres",
+    "stats": [
+      "max_hp",
+      "attack_speed",
+      "move_speed",
+      "defense"
+    ],
+    "collection": "王国軍",
+    "art_sheet": 1,
+    "art_cell": 6,
+    "art_region": [
+      254,
+      237,
+      245,
+      224
+    ]
+  },
+  {
+    "id": "royal_guard_08",
+    "display_name": "赤羽の衛士兜",
+    "slot": "head",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/painted_200/royal_guard_08.tres",
+    "stats": [
+      "defense",
+      "max_hp",
+      "crit_rate",
+      "crit_damage"
+    ],
+    "collection": "王国軍",
+    "art_sheet": 1,
+    "art_cell": 7,
+    "art_region": [
+      505,
+      237,
+      244,
+      224
+    ]
+  },
+  {
+    "id": "royal_guard_09",
+    "display_name": "工兵の鉄帽",
+    "slot": "head",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/painted_200/royal_guard_09.tres",
+    "stats": [
+      "max_hp",
+      "attack_speed",
+      "move_speed",
+      "defense"
+    ],
+    "collection": "王国軍",
+    "art_sheet": 1,
+    "art_cell": 8,
+    "art_region": [
+      755,
+      237,
+      245,
+      224
+    ]
+  },
+  {
+    "id": "royal_guard_10",
+    "display_name": "軍師の礼帽",
+    "slot": "head",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/painted_200/royal_guard_10.tres",
+    "stats": [
+      "defense",
+      "max_hp",
+      "crit_rate",
+      "crit_damage"
+    ],
+    "collection": "王国軍",
+    "art_sheet": 1,
+    "art_cell": 9,
+    "art_region": [
+      1006,
+      237,
+      245,
+      224
+    ]
+  },
+  {
+    "id": "royal_guard_11",
+    "display_name": "鉄衛の胸甲",
+    "slot": "body",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/painted_200/royal_guard_11.tres",
+    "stats": [
+      "defense",
+      "move_speed",
+      "attack_speed",
+      "crit_rate"
+    ],
+    "collection": "王国軍",
+    "art_sheet": 1,
+    "art_cell": 10,
+    "art_region": [
+      3,
+      467,
+      245,
+      226
+    ]
+  },
+  {
+    "id": "royal_guard_12",
+    "display_name": "城壁兵の鎖衣",
+    "slot": "body",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/painted_200/royal_guard_12.tres",
+    "stats": [
+      "max_hp",
+      "defense",
+      "attack_power",
+      "crit_damage"
+    ],
+    "collection": "王国軍",
+    "art_sheet": 1,
+    "art_cell": 11,
+    "art_region": [
+      254,
+      467,
+      245,
+      226
+    ]
+  },
+  {
+    "id": "royal_guard_13",
+    "display_name": "工兵の鋲革服",
+    "slot": "body",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/painted_200/royal_guard_13.tres",
+    "stats": [
+      "defense",
+      "move_speed",
+      "attack_speed",
+      "crit_rate"
+    ],
+    "collection": "王国軍",
+    "art_sheet": 1,
+    "art_cell": 12,
+    "art_region": [
+      505,
+      467,
+      244,
+      226
+    ]
+  },
+  {
+    "id": "royal_guard_14",
+    "display_name": "旗手の軍衣",
+    "slot": "body",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/painted_200/royal_guard_14.tres",
+    "stats": [
+      "max_hp",
+      "defense",
+      "attack_power",
+      "crit_damage"
+    ],
+    "collection": "王国軍",
+    "art_sheet": 1,
+    "art_cell": 13,
+    "art_region": [
+      755,
+      467,
+      245,
+      226
+    ]
+  },
+  {
+    "id": "royal_guard_15",
+    "display_name": "城塞兵の鉄篭手",
+    "slot": "arms",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/painted_200/royal_guard_15.tres",
+    "stats": [
+      "defense",
+      "max_hp",
+      "attack_power",
+      "attack_speed"
+    ],
+    "collection": "王国軍",
+    "art_sheet": 1,
+    "art_cell": 14,
+    "art_region": [
+      1006,
+      467,
+      245,
+      226
+    ]
+  },
+  {
+    "id": "royal_guard_16",
+    "display_name": "弩兵の指抜き手袋",
+    "slot": "arms",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/painted_200/royal_guard_16.tres",
+    "stats": [
+      "attack_power",
+      "attack_speed",
+      "crit_rate",
+      "crit_damage"
+    ],
+    "collection": "王国軍",
+    "art_sheet": 1,
+    "art_cell": 15,
+    "art_region": [
+      3,
+      699,
+      245,
+      233
+    ]
+  },
+  {
+    "id": "royal_guard_17",
+    "display_name": "工兵の作業腕甲",
+    "slot": "arms",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/painted_200/royal_guard_17.tres",
+    "stats": [
+      "defense",
+      "max_hp",
+      "attack_power",
+      "attack_speed"
+    ],
+    "collection": "王国軍",
+    "art_sheet": 1,
+    "art_cell": 16,
+    "art_region": [
+      254,
+      699,
+      245,
+      233
+    ]
+  },
+  {
+    "id": "royal_guard_18",
+    "display_name": "鉄衛の脚甲",
+    "slot": "legs",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/painted_200/royal_guard_18.tres",
+    "stats": [
+      "move_speed",
+      "defense",
+      "max_hp",
+      "attack_speed"
+    ],
+    "collection": "王国軍",
+    "art_sheet": 1,
+    "art_cell": 17,
+    "art_region": [
+      505,
+      699,
+      244,
+      233
+    ]
+  },
+  {
+    "id": "royal_guard_19",
+    "display_name": "斥候隊の長靴",
+    "slot": "legs",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/painted_200/royal_guard_19.tres",
+    "stats": [
+      "move_speed",
+      "crit_rate",
+      "attack_speed",
+      "crit_damage"
+    ],
+    "collection": "王国軍",
+    "art_sheet": 1,
+    "art_cell": 18,
+    "art_region": [
+      755,
+      699,
+      245,
+      233
+    ]
+  },
+  {
+    "id": "royal_guard_20",
+    "display_name": "軍師の編上げ靴",
+    "slot": "legs",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/painted_200/royal_guard_20.tres",
+    "stats": [
+      "move_speed",
+      "defense",
+      "max_hp",
+      "attack_speed"
+    ],
+    "collection": "王国軍",
+    "art_sheet": 1,
+    "art_cell": 19,
+    "art_region": [
+      1006,
+      699,
+      245,
+      233
+    ]
+  },
+  {
+    "id": "royal_guard_21",
+    "display_name": "城門の鍵章",
+    "slot": "accessory",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/painted_200/royal_guard_21.tres",
+    "stats": [
+      "crit_rate",
+      "crit_damage",
+      "attack_power",
+      "attack_speed"
+    ],
+    "collection": "王国軍",
+    "art_sheet": 1,
+    "art_cell": 20,
+    "art_region": [
+      3,
+      938,
+      245,
+      313
+    ]
+  },
+  {
+    "id": "royal_guard_22",
+    "display_name": "赤獅子の徽章",
+    "slot": "accessory",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/painted_200/royal_guard_22.tres",
+    "stats": [
+      "max_hp",
+      "defense",
+      "move_speed",
+      "crit_rate"
+    ],
+    "collection": "王国軍",
+    "art_sheet": 1,
+    "art_cell": 21,
+    "art_region": [
+      254,
+      938,
+      245,
+      313
+    ]
+  },
+  {
+    "id": "royal_guard_23",
+    "display_name": "古参兵の印環",
+    "slot": "accessory",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/painted_200/royal_guard_23.tres",
+    "stats": [
+      "attack_speed",
+      "move_speed",
+      "attack_power",
+      "crit_damage"
+    ],
+    "collection": "王国軍",
+    "art_sheet": 1,
+    "art_cell": 22,
+    "art_region": [
+      505,
+      938,
+      244,
+      313
+    ]
+  },
+  {
+    "id": "royal_guard_24",
+    "display_name": "軍旗の留金",
+    "slot": "accessory",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/painted_200/royal_guard_24.tres",
+    "stats": [
+      "crit_rate",
+      "crit_damage",
+      "attack_power",
+      "attack_speed"
+    ],
+    "collection": "王国軍",
+    "art_sheet": 1,
+    "art_cell": 23,
+    "art_region": [
+      755,
+      938,
+      245,
+      313
+    ]
+  },
+  {
+    "id": "royal_guard_25",
+    "display_name": "誓約の鎖飾り",
+    "slot": "accessory",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/painted_200/royal_guard_25.tres",
+    "stats": [
+      "max_hp",
+      "defense",
+      "move_speed",
+      "crit_rate"
+    ],
+    "collection": "王国軍",
+    "art_sheet": 1,
+    "art_cell": 24,
+    "art_region": [
+      1006,
+      938,
+      245,
+      313
+    ]
+  },
+  {
+    "id": "amethyst_mine_01",
+    "display_name": "紫晶割りの鶴嘴",
+    "slot": "weapon",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/painted_200/amethyst_mine_01.tres",
+    "stats": [
+      "attack_power",
+      "max_hp",
+      "defense",
+      "crit_damage"
+    ],
+    "collection": "紫晶鉱山",
+    "art_sheet": 2,
+    "art_cell": 0,
+    "art_region": [
+      3,
+      3,
+      245,
+      239
+    ],
+    "attack_kind": "hammer"
+  },
+  {
+    "id": "amethyst_mine_02",
+    "display_name": "坑道番の鉈",
+    "slot": "weapon",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/painted_200/amethyst_mine_02.tres",
+    "stats": [
+      "attack_power",
+      "crit_rate",
+      "crit_damage",
+      "attack_speed"
+    ],
+    "collection": "紫晶鉱山",
+    "art_sheet": 2,
+    "art_cell": 1,
+    "art_region": [
+      254,
+      3,
+      245,
+      239
+    ],
+    "attack_kind": "slash"
+  },
+  {
+    "id": "amethyst_mine_03",
+    "display_name": "鉱脈穿ちの槍",
+    "slot": "weapon",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/painted_200/amethyst_mine_03.tres",
+    "stats": [
+      "attack_power",
+      "attack_speed",
+      "move_speed",
+      "crit_rate"
+    ],
+    "collection": "紫晶鉱山",
+    "art_sheet": 2,
+    "art_cell": 2,
+    "art_region": [
+      505,
+      3,
+      244,
+      239
+    ],
+    "attack_kind": "thrust"
+  },
+  {
+    "id": "amethyst_mine_04",
+    "display_name": "石砕きの大槌",
+    "slot": "weapon",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/painted_200/amethyst_mine_04.tres",
+    "stats": [
+      "attack_power",
+      "max_hp",
+      "defense",
+      "crit_damage"
+    ],
+    "collection": "紫晶鉱山",
+    "art_sheet": 2,
+    "art_cell": 3,
+    "art_region": [
+      755,
+      3,
+      245,
+      239
+    ],
+    "attack_kind": "hammer"
+  },
+  {
+    "id": "amethyst_mine_05",
+    "display_name": "坑夫の連弩",
+    "slot": "weapon",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/painted_200/amethyst_mine_05.tres",
+    "stats": [
+      "attack_power",
+      "crit_rate",
+      "crit_damage",
+      "attack_speed"
+    ],
+    "collection": "紫晶鉱山",
+    "art_sheet": 2,
+    "art_cell": 4,
+    "art_region": [
+      1006,
+      3,
+      245,
+      239
+    ],
+    "attack_kind": "bow"
+  },
+  {
+    "id": "amethyst_mine_06",
+    "display_name": "晶導師の測量杖",
+    "slot": "weapon",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/painted_200/amethyst_mine_06.tres",
+    "stats": [
+      "attack_power",
+      "attack_speed",
+      "move_speed",
+      "crit_rate"
+    ],
+    "collection": "紫晶鉱山",
+    "art_sheet": 2,
+    "art_cell": 5,
+    "art_region": [
+      3,
+      248,
+      245,
+      238
+    ],
+    "attack_kind": "magic"
+  },
+  {
+    "id": "amethyst_mine_07",
+    "display_name": "坑夫の灯火帽",
+    "slot": "head",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/painted_200/amethyst_mine_07.tres",
+    "stats": [
+      "defense",
+      "max_hp",
+      "crit_rate",
+      "crit_damage"
+    ],
+    "collection": "紫晶鉱山",
+    "art_sheet": 2,
+    "art_cell": 6,
+    "art_region": [
+      254,
+      248,
+      245,
+      238
+    ]
+  },
+  {
+    "id": "amethyst_mine_08",
+    "display_name": "紫晶の額当て",
+    "slot": "head",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/painted_200/amethyst_mine_08.tres",
+    "stats": [
+      "max_hp",
+      "attack_speed",
+      "move_speed",
+      "defense"
+    ],
+    "collection": "紫晶鉱山",
+    "art_sheet": 2,
+    "art_cell": 7,
+    "art_region": [
+      505,
+      248,
+      244,
+      238
+    ]
+  },
+  {
+    "id": "amethyst_mine_09",
+    "display_name": "粉塵除けの頭巾",
+    "slot": "head",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/painted_200/amethyst_mine_09.tres",
+    "stats": [
+      "defense",
+      "max_hp",
+      "crit_rate",
+      "crit_damage"
+    ],
+    "collection": "紫晶鉱山",
+    "art_sheet": 2,
+    "art_cell": 8,
+    "art_region": [
+      755,
+      248,
+      245,
+      238
+    ]
+  },
+  {
+    "id": "amethyst_mine_10",
+    "display_name": "監督官の硬革帽",
+    "slot": "head",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/painted_200/amethyst_mine_10.tres",
+    "stats": [
+      "max_hp",
+      "attack_speed",
+      "move_speed",
+      "defense"
+    ],
+    "collection": "紫晶鉱山",
+    "art_sheet": 2,
+    "art_cell": 9,
+    "art_region": [
+      1006,
+      248,
+      245,
+      238
+    ]
+  },
+  {
+    "id": "amethyst_mine_11",
+    "display_name": "採掘師の防塵服",
+    "slot": "body",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/painted_200/amethyst_mine_11.tres",
+    "stats": [
+      "max_hp",
+      "defense",
+      "attack_power",
+      "crit_damage"
+    ],
+    "collection": "紫晶鉱山",
+    "art_sheet": 2,
+    "art_cell": 10,
+    "art_region": [
+      3,
+      492,
+      245,
+      242
+    ]
+  },
+  {
+    "id": "amethyst_mine_12",
+    "display_name": "晶石張りの胸当て",
+    "slot": "body",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/painted_200/amethyst_mine_12.tres",
+    "stats": [
+      "defense",
+      "move_speed",
+      "attack_speed",
+      "crit_rate"
+    ],
+    "collection": "紫晶鉱山",
+    "art_sheet": 2,
+    "art_cell": 11,
+    "art_region": [
+      254,
+      492,
+      245,
+      242
+    ]
+  },
+  {
+    "id": "amethyst_mine_13",
+    "display_name": "運搬夫の厚革胴着",
+    "slot": "body",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/painted_200/amethyst_mine_13.tres",
+    "stats": [
+      "max_hp",
+      "defense",
+      "attack_power",
+      "crit_damage"
+    ],
+    "collection": "紫晶鉱山",
+    "art_sheet": 2,
+    "art_cell": 12,
+    "art_region": [
+      505,
+      492,
+      244,
+      242
+    ]
+  },
+  {
+    "id": "amethyst_mine_14",
+    "display_name": "鉱脈読みの外套",
+    "slot": "body",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/painted_200/amethyst_mine_14.tres",
+    "stats": [
+      "defense",
+      "move_speed",
+      "attack_speed",
+      "crit_rate"
+    ],
+    "collection": "紫晶鉱山",
+    "art_sheet": 2,
+    "art_cell": 13,
+    "art_region": [
+      755,
+      492,
+      245,
+      242
+    ]
+  },
+  {
+    "id": "amethyst_mine_15",
+    "display_name": "岩穿ちの手甲",
+    "slot": "arms",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/painted_200/amethyst_mine_15.tres",
+    "stats": [
+      "attack_power",
+      "attack_speed",
+      "crit_rate",
+      "crit_damage"
+    ],
+    "collection": "紫晶鉱山",
+    "art_sheet": 2,
+    "art_cell": 14,
+    "art_region": [
+      1006,
+      492,
+      245,
+      242
+    ]
+  },
+  {
+    "id": "amethyst_mine_16",
+    "display_name": "晶導の腕輪",
+    "slot": "arms",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/painted_200/amethyst_mine_16.tres",
+    "stats": [
+      "defense",
+      "max_hp",
+      "attack_power",
+      "attack_speed"
+    ],
+    "collection": "紫晶鉱山",
+    "art_sheet": 2,
+    "art_cell": 15,
+    "art_region": [
+      3,
+      740,
+      245,
+      240
+    ]
+  },
+  {
+    "id": "amethyst_mine_17",
+    "display_name": "巻上げ工の革手袋",
+    "slot": "arms",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/painted_200/amethyst_mine_17.tres",
+    "stats": [
+      "attack_power",
+      "attack_speed",
+      "crit_rate",
+      "crit_damage"
+    ],
+    "collection": "紫晶鉱山",
+    "art_sheet": 2,
+    "art_cell": 16,
+    "art_region": [
+      254,
+      740,
+      245,
+      240
+    ]
+  },
+  {
+    "id": "amethyst_mine_18",
+    "display_name": "坑道歩きの鋲靴",
+    "slot": "legs",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/painted_200/amethyst_mine_18.tres",
+    "stats": [
+      "move_speed",
+      "crit_rate",
+      "attack_speed",
+      "crit_damage"
+    ],
+    "collection": "紫晶鉱山",
+    "art_sheet": 2,
+    "art_cell": 17,
+    "art_region": [
+      505,
+      740,
+      244,
+      240
+    ]
+  },
+  {
+    "id": "amethyst_mine_19",
+    "display_name": "落盤除けの脚当て",
+    "slot": "legs",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/painted_200/amethyst_mine_19.tres",
+    "stats": [
+      "move_speed",
+      "defense",
+      "max_hp",
+      "attack_speed"
+    ],
+    "collection": "紫晶鉱山",
+    "art_sheet": 2,
+    "art_cell": 18,
+    "art_region": [
+      755,
+      740,
+      245,
+      240
+    ]
+  },
+  {
+    "id": "amethyst_mine_20",
+    "display_name": "測量師の軽靴",
+    "slot": "legs",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/painted_200/amethyst_mine_20.tres",
+    "stats": [
+      "move_speed",
+      "crit_rate",
+      "attack_speed",
+      "crit_damage"
+    ],
+    "collection": "紫晶鉱山",
+    "art_sheet": 2,
+    "art_cell": 19,
+    "art_region": [
+      1006,
+      740,
+      245,
+      240
+    ]
+  },
+  {
+    "id": "amethyst_mine_21",
+    "display_name": "紫晶の鉱脈眼",
+    "slot": "accessory",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/painted_200/amethyst_mine_21.tres",
+    "stats": [
+      "max_hp",
+      "defense",
+      "move_speed",
+      "crit_rate"
+    ],
+    "collection": "紫晶鉱山",
+    "art_sheet": 2,
+    "art_cell": 20,
+    "art_region": [
+      3,
+      986,
+      245,
+      265
+    ]
+  },
+  {
+    "id": "amethyst_mine_22",
+    "display_name": "坑道の方位磁針",
+    "slot": "accessory",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/painted_200/amethyst_mine_22.tres",
+    "stats": [
+      "attack_speed",
+      "move_speed",
+      "attack_power",
+      "crit_damage"
+    ],
+    "collection": "紫晶鉱山",
+    "art_sheet": 2,
+    "art_cell": 21,
+    "art_region": [
+      254,
+      986,
+      245,
+      265
+    ]
+  },
+  {
+    "id": "amethyst_mine_23",
+    "display_name": "守坑の石環",
+    "slot": "accessory",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/painted_200/amethyst_mine_23.tres",
+    "stats": [
+      "crit_rate",
+      "crit_damage",
+      "attack_power",
+      "attack_speed"
+    ],
+    "collection": "紫晶鉱山",
+    "art_sheet": 2,
+    "art_cell": 22,
+    "art_region": [
+      505,
+      986,
+      244,
+      265
+    ]
+  },
+  {
+    "id": "amethyst_mine_24",
+    "display_name": "鉱主の銅印",
+    "slot": "accessory",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/painted_200/amethyst_mine_24.tres",
+    "stats": [
+      "max_hp",
+      "defense",
+      "move_speed",
+      "crit_rate"
+    ],
+    "collection": "紫晶鉱山",
+    "art_sheet": 2,
+    "art_cell": 23,
+    "art_region": [
+      755,
+      986,
+      245,
+      265
+    ]
+  },
+  {
+    "id": "amethyst_mine_25",
+    "display_name": "古いカンテラ飾り",
+    "slot": "accessory",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/painted_200/amethyst_mine_25.tres",
+    "stats": [
+      "attack_speed",
+      "move_speed",
+      "attack_power",
+      "crit_damage"
+    ],
+    "collection": "紫晶鉱山",
+    "art_sheet": 2,
+    "art_cell": 24,
+    "art_region": [
+      1006,
+      986,
+      245,
+      265
+    ]
+  },
+  {
+    "id": "ruin_forge_01",
+    "display_name": "炉番の焼刃",
+    "slot": "weapon",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/painted_200/ruin_forge_01.tres",
+    "stats": [
+      "attack_power",
+      "crit_rate",
+      "crit_damage",
+      "attack_speed"
+    ],
+    "collection": "終焉の炉心",
+    "art_sheet": 3,
+    "art_cell": 0,
+    "art_region": [
+      3,
+      3,
+      245,
+      224
+    ],
+    "attack_kind": "slash"
+  },
+  {
+    "id": "ruin_forge_02",
+    "display_name": "鋳造師の大斧",
+    "slot": "weapon",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/painted_200/ruin_forge_02.tres",
+    "stats": [
+      "attack_power",
+      "attack_speed",
+      "move_speed",
+      "crit_rate"
+    ],
+    "collection": "終焉の炉心",
+    "art_sheet": 3,
+    "art_cell": 1,
+    "art_region": [
+      254,
+      3,
+      245,
+      224
+    ],
+    "attack_kind": "axe"
+  },
+  {
+    "id": "ruin_forge_03",
+    "display_name": "灼鉄の投槍",
+    "slot": "weapon",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/painted_200/ruin_forge_03.tres",
+    "stats": [
+      "attack_power",
+      "max_hp",
+      "defense",
+      "crit_damage"
+    ],
+    "collection": "終焉の炉心",
+    "art_sheet": 3,
+    "art_cell": 2,
+    "art_region": [
+      505,
+      3,
+      244,
+      224
+    ],
+    "attack_kind": "thrust"
+  },
+  {
+    "id": "ruin_forge_04",
+    "display_name": "炉心砕きの鎚",
+    "slot": "weapon",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/painted_200/ruin_forge_04.tres",
+    "stats": [
+      "attack_power",
+      "crit_rate",
+      "crit_damage",
+      "attack_speed"
+    ],
+    "collection": "終焉の炉心",
+    "art_sheet": 3,
+    "art_cell": 3,
+    "art_region": [
+      755,
+      3,
+      245,
+      224
+    ],
+    "attack_kind": "hammer"
+  },
+  {
+    "id": "ruin_forge_05",
+    "display_name": "歯車仕掛けの弩",
+    "slot": "weapon",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/painted_200/ruin_forge_05.tres",
+    "stats": [
+      "attack_power",
+      "attack_speed",
+      "move_speed",
+      "crit_rate"
+    ],
+    "collection": "終焉の炉心",
+    "art_sheet": 3,
+    "art_cell": 4,
+    "art_region": [
+      1006,
+      3,
+      245,
+      224
+    ],
+    "attack_kind": "bow"
+  },
+  {
+    "id": "ruin_forge_06",
+    "display_name": "溶銅の導杖",
+    "slot": "weapon",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/painted_200/ruin_forge_06.tres",
+    "stats": [
+      "attack_power",
+      "max_hp",
+      "defense",
+      "crit_damage"
+    ],
+    "collection": "終焉の炉心",
+    "art_sheet": 3,
+    "art_cell": 5,
+    "art_region": [
+      3,
+      233,
+      245,
+      228
+    ],
+    "attack_kind": "magic"
+  },
+  {
+    "id": "ruin_forge_07",
+    "display_name": "炉番の遮熱兜",
+    "slot": "head",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/painted_200/ruin_forge_07.tres",
+    "stats": [
+      "max_hp",
+      "attack_speed",
+      "move_speed",
+      "defense"
+    ],
+    "collection": "終焉の炉心",
+    "art_sheet": 3,
+    "art_cell": 6,
+    "art_region": [
+      254,
+      233,
+      245,
+      228
+    ]
+  },
+  {
+    "id": "ruin_forge_08",
+    "display_name": "鋳造師の面",
+    "slot": "head",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/painted_200/ruin_forge_08.tres",
+    "stats": [
+      "defense",
+      "max_hp",
+      "crit_rate",
+      "crit_damage"
+    ],
+    "collection": "終焉の炉心",
+    "art_sheet": 3,
+    "art_cell": 7,
+    "art_region": [
+      505,
+      233,
+      244,
+      228
+    ]
+  },
+  {
+    "id": "ruin_forge_09",
+    "display_name": "炉心の鉄冠",
+    "slot": "head",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/painted_200/ruin_forge_09.tres",
+    "stats": [
+      "max_hp",
+      "attack_speed",
+      "move_speed",
+      "defense"
+    ],
+    "collection": "終焉の炉心",
+    "art_sheet": 3,
+    "art_cell": 8,
+    "art_region": [
+      755,
+      233,
+      245,
+      228
+    ]
+  },
+  {
+    "id": "ruin_forge_10",
+    "display_name": "歯車技師の帽子",
+    "slot": "head",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/painted_200/ruin_forge_10.tres",
+    "stats": [
+      "defense",
+      "max_hp",
+      "crit_rate",
+      "crit_damage"
+    ],
+    "collection": "終焉の炉心",
+    "art_sheet": 3,
+    "art_cell": 9,
+    "art_region": [
+      1006,
+      233,
+      245,
+      228
+    ]
+  },
+  {
+    "id": "ruin_forge_11",
+    "display_name": "鋳鉄の胸甲",
+    "slot": "body",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/painted_200/ruin_forge_11.tres",
+    "stats": [
+      "defense",
+      "move_speed",
+      "attack_speed",
+      "crit_rate"
+    ],
+    "collection": "終焉の炉心",
+    "art_sheet": 3,
+    "art_cell": 10,
+    "art_region": [
+      3,
+      467,
+      245,
+      248
+    ]
+  },
+  {
+    "id": "ruin_forge_12",
+    "display_name": "炉守りの革前掛け",
+    "slot": "body",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/painted_200/ruin_forge_12.tres",
+    "stats": [
+      "max_hp",
+      "defense",
+      "attack_power",
+      "crit_damage"
+    ],
+    "collection": "終焉の炉心",
+    "art_sheet": 3,
+    "art_cell": 11,
+    "art_region": [
+      254,
+      467,
+      245,
+      248
+    ]
+  },
+  {
+    "id": "ruin_forge_13",
+    "display_name": "排熱機構の胴鎧",
+    "slot": "body",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/painted_200/ruin_forge_13.tres",
+    "stats": [
+      "defense",
+      "move_speed",
+      "attack_speed",
+      "crit_rate"
+    ],
+    "collection": "終焉の炉心",
+    "art_sheet": 3,
+    "art_cell": 12,
+    "art_region": [
+      505,
+      467,
+      244,
+      248
+    ]
+  },
+  {
+    "id": "ruin_forge_14",
+    "display_name": "煤染めの長衣",
+    "slot": "body",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/painted_200/ruin_forge_14.tres",
+    "stats": [
+      "max_hp",
+      "defense",
+      "attack_power",
+      "crit_damage"
+    ],
+    "collection": "終焉の炉心",
+    "art_sheet": 3,
+    "art_cell": 13,
+    "art_region": [
+      755,
+      467,
+      245,
+      248
+    ]
+  },
+  {
+    "id": "ruin_forge_15",
+    "display_name": "鋳造師の耐熱手袋",
+    "slot": "arms",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/painted_200/ruin_forge_15.tres",
+    "stats": [
+      "defense",
+      "max_hp",
+      "attack_power",
+      "attack_speed"
+    ],
+    "collection": "終焉の炉心",
+    "art_sheet": 3,
+    "art_cell": 14,
+    "art_region": [
+      1006,
+      467,
+      245,
+      248
+    ]
+  },
+  {
+    "id": "ruin_forge_16",
+    "display_name": "歯車の連結篭手",
+    "slot": "arms",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/painted_200/ruin_forge_16.tres",
+    "stats": [
+      "attack_power",
+      "attack_speed",
+      "crit_rate",
+      "crit_damage"
+    ],
+    "collection": "終焉の炉心",
+    "art_sheet": 3,
+    "art_cell": 15,
+    "art_region": [
+      3,
+      721,
+      245,
+      239
+    ]
+  },
+  {
+    "id": "ruin_forge_17",
+    "display_name": "炉鎖の腕甲",
+    "slot": "arms",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/painted_200/ruin_forge_17.tres",
+    "stats": [
+      "defense",
+      "max_hp",
+      "attack_power",
+      "attack_speed"
+    ],
+    "collection": "終焉の炉心",
+    "art_sheet": 3,
+    "art_cell": 16,
+    "art_region": [
+      254,
+      721,
+      245,
+      239
+    ]
+  },
+  {
+    "id": "ruin_forge_18",
+    "display_name": "鉄床踏みの重靴",
+    "slot": "legs",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/painted_200/ruin_forge_18.tres",
+    "stats": [
+      "move_speed",
+      "defense",
+      "max_hp",
+      "attack_speed"
+    ],
+    "collection": "終焉の炉心",
+    "art_sheet": 3,
+    "art_cell": 17,
+    "art_region": [
+      505,
+      721,
+      244,
+      239
+    ]
+  },
+  {
+    "id": "ruin_forge_19",
+    "display_name": "排熱管の脚甲",
+    "slot": "legs",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/painted_200/ruin_forge_19.tres",
+    "stats": [
+      "move_speed",
+      "crit_rate",
+      "attack_speed",
+      "crit_damage"
+    ],
+    "collection": "終焉の炉心",
+    "art_sheet": 3,
+    "art_cell": 18,
+    "art_region": [
+      755,
+      721,
+      245,
+      239
+    ]
+  },
+  {
+    "id": "ruin_forge_20",
+    "display_name": "炉灰渡りの革靴",
+    "slot": "legs",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/painted_200/ruin_forge_20.tres",
+    "stats": [
+      "move_speed",
+      "defense",
+      "max_hp",
+      "attack_speed"
+    ],
+    "collection": "終焉の炉心",
+    "art_sheet": 3,
+    "art_cell": 19,
+    "art_region": [
+      1006,
+      721,
+      245,
+      239
+    ]
+  },
+  {
+    "id": "ruin_forge_21",
+    "display_name": "炉心の圧力計",
+    "slot": "accessory",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/painted_200/ruin_forge_21.tres",
+    "stats": [
+      "attack_speed",
+      "move_speed",
+      "attack_power",
+      "crit_damage"
+    ],
+    "collection": "終焉の炉心",
+    "art_sheet": 3,
+    "art_cell": 20,
+    "art_region": [
+      3,
+      966,
+      245,
+      285
+    ]
+  },
+  {
+    "id": "ruin_forge_22",
+    "display_name": "歯車の印環",
+    "slot": "accessory",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/painted_200/ruin_forge_22.tres",
+    "stats": [
+      "crit_rate",
+      "crit_damage",
+      "attack_power",
+      "attack_speed"
+    ],
+    "collection": "終焉の炉心",
+    "art_sheet": 3,
+    "art_cell": 21,
+    "art_region": [
+      254,
+      966,
+      245,
+      285
+    ]
+  },
+  {
+    "id": "ruin_forge_23",
+    "display_name": "赤熱の鋳型札",
+    "slot": "accessory",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/painted_200/ruin_forge_23.tres",
+    "stats": [
+      "max_hp",
+      "defense",
+      "move_speed",
+      "crit_rate"
+    ],
+    "collection": "終焉の炉心",
+    "art_sheet": 3,
+    "art_cell": 22,
+    "art_region": [
+      505,
+      966,
+      244,
+      285
+    ]
+  },
+  {
+    "id": "ruin_forge_24",
+    "display_name": "鍛冶神の留具",
+    "slot": "accessory",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/painted_200/ruin_forge_24.tres",
+    "stats": [
+      "attack_speed",
+      "move_speed",
+      "attack_power",
+      "crit_damage"
+    ],
+    "collection": "終焉の炉心",
+    "art_sheet": 3,
+    "art_cell": 23,
+    "art_region": [
+      755,
+      966,
+      245,
+      285
+    ]
+  },
+  {
+    "id": "ruin_forge_25",
+    "display_name": "封炉の鎖鍵",
+    "slot": "accessory",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/painted_200/ruin_forge_25.tres",
+    "stats": [
+      "crit_rate",
+      "crit_damage",
+      "attack_power",
+      "attack_speed"
+    ],
+    "collection": "終焉の炉心",
+    "art_sheet": 3,
+    "art_cell": 24,
+    "art_region": [
+      1006,
+      966,
+      245,
+      285
+    ]
+  },
+  {
+    "id": "wild_hunt_01",
+    "display_name": "枝角の曲刀",
+    "slot": "weapon",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/painted_200/wild_hunt_01.tres",
+    "stats": [
+      "attack_power",
+      "attack_speed",
+      "move_speed",
+      "crit_rate"
+    ],
+    "collection": "辺境の狩人",
+    "art_sheet": 4,
+    "art_cell": 0,
+    "art_region": [
+      3,
+      3,
+      245,
+      238
+    ],
+    "attack_kind": "slash"
+  },
+  {
+    "id": "wild_hunt_02",
+    "display_name": "解体師の双短剣",
+    "slot": "weapon",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/painted_200/wild_hunt_02.tres",
+    "stats": [
+      "attack_power",
+      "max_hp",
+      "defense",
+      "crit_damage"
+    ],
+    "collection": "辺境の狩人",
+    "art_sheet": 4,
+    "art_cell": 1,
+    "art_region": [
+      254,
+      3,
+      245,
+      238
+    ],
+    "attack_kind": "light"
+  },
+  {
+    "id": "wild_hunt_03",
+    "display_name": "獣牙の長槍",
+    "slot": "weapon",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/painted_200/wild_hunt_03.tres",
+    "stats": [
+      "attack_power",
+      "crit_rate",
+      "crit_damage",
+      "attack_speed"
+    ],
+    "collection": "辺境の狩人",
+    "art_sheet": 4,
+    "art_cell": 2,
+    "art_region": [
+      505,
+      3,
+      244,
+      238
+    ],
+    "attack_kind": "thrust"
+  },
+  {
+    "id": "wild_hunt_04",
+    "display_name": "山狩りの手斧",
+    "slot": "weapon",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/painted_200/wild_hunt_04.tres",
+    "stats": [
+      "attack_power",
+      "attack_speed",
+      "move_speed",
+      "crit_rate"
+    ],
+    "collection": "辺境の狩人",
+    "art_sheet": 4,
+    "art_cell": 3,
+    "art_region": [
+      755,
+      3,
+      245,
+      238
+    ],
+    "attack_kind": "axe"
+  },
+  {
+    "id": "wild_hunt_05",
+    "display_name": "月森の長弓",
+    "slot": "weapon",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/painted_200/wild_hunt_05.tres",
+    "stats": [
+      "attack_power",
+      "max_hp",
+      "defense",
+      "crit_damage"
+    ],
+    "collection": "辺境の狩人",
+    "art_sheet": 4,
+    "art_cell": 4,
+    "art_region": [
+      1006,
+      3,
+      245,
+      238
+    ],
+    "attack_kind": "bow"
+  },
+  {
+    "id": "wild_hunt_06",
+    "display_name": "梟守りの枝杖",
+    "slot": "weapon",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/painted_200/wild_hunt_06.tres",
+    "stats": [
+      "attack_power",
+      "crit_rate",
+      "crit_damage",
+      "attack_speed"
+    ],
+    "collection": "辺境の狩人",
+    "art_sheet": 4,
+    "art_cell": 5,
+    "art_region": [
+      3,
+      247,
+      245,
+      243
+    ],
+    "attack_kind": "magic"
+  },
+  {
+    "id": "wild_hunt_07",
+    "display_name": "灰狼の頭巾",
+    "slot": "head",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/painted_200/wild_hunt_07.tres",
+    "stats": [
+      "defense",
+      "max_hp",
+      "crit_rate",
+      "crit_damage"
+    ],
+    "collection": "辺境の狩人",
+    "art_sheet": 4,
+    "art_cell": 6,
+    "art_region": [
+      254,
+      247,
+      245,
+      243
+    ]
+  },
+  {
+    "id": "wild_hunt_08",
+    "display_name": "枝角の狩猟帽",
+    "slot": "head",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/painted_200/wild_hunt_08.tres",
+    "stats": [
+      "max_hp",
+      "attack_speed",
+      "move_speed",
+      "defense"
+    ],
+    "collection": "辺境の狩人",
+    "art_sheet": 4,
+    "art_cell": 7,
+    "art_region": [
+      505,
+      247,
+      244,
+      243
+    ]
+  },
+  {
+    "id": "wild_hunt_09",
+    "display_name": "夜目の革面",
+    "slot": "head",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/painted_200/wild_hunt_09.tres",
+    "stats": [
+      "defense",
+      "max_hp",
+      "crit_rate",
+      "crit_damage"
+    ],
+    "collection": "辺境の狩人",
+    "art_sheet": 4,
+    "art_cell": 8,
+    "art_region": [
+      755,
+      247,
+      245,
+      243
+    ]
+  },
+  {
+    "id": "wild_hunt_10",
+    "display_name": "梟羽の冠",
+    "slot": "head",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/painted_200/wild_hunt_10.tres",
+    "stats": [
+      "max_hp",
+      "attack_speed",
+      "move_speed",
+      "defense"
+    ],
+    "collection": "辺境の狩人",
+    "art_sheet": 4,
+    "art_cell": 9,
+    "art_region": [
+      1006,
+      247,
+      245,
+      243
+    ]
+  },
+  {
+    "id": "wild_hunt_11",
+    "display_name": "苔革の狩猟服",
+    "slot": "body",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/painted_200/wild_hunt_11.tres",
+    "stats": [
+      "max_hp",
+      "defense",
+      "attack_power",
+      "crit_damage"
+    ],
+    "collection": "辺境の狩人",
+    "art_sheet": 4,
+    "art_cell": 10,
+    "art_region": [
+      3,
+      496,
+      245,
+      238
+    ]
+  },
+  {
+    "id": "wild_hunt_12",
+    "display_name": "狼毛の胴衣",
+    "slot": "body",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/painted_200/wild_hunt_12.tres",
+    "stats": [
+      "defense",
+      "move_speed",
+      "attack_speed",
+      "crit_rate"
+    ],
+    "collection": "辺境の狩人",
+    "art_sheet": 4,
+    "art_cell": 11,
+    "art_region": [
+      254,
+      496,
+      245,
+      238
+    ]
+  },
+  {
+    "id": "wild_hunt_13",
+    "display_name": "罠師の多袋外套",
+    "slot": "body",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/painted_200/wild_hunt_13.tres",
+    "stats": [
+      "max_hp",
+      "defense",
+      "attack_power",
+      "crit_damage"
+    ],
+    "collection": "辺境の狩人",
+    "art_sheet": 4,
+    "art_cell": 12,
+    "art_region": [
+      505,
+      496,
+      244,
+      238
+    ]
+  },
+  {
+    "id": "wild_hunt_14",
+    "display_name": "月森の薄鎖衣",
+    "slot": "body",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/painted_200/wild_hunt_14.tres",
+    "stats": [
+      "defense",
+      "move_speed",
+      "attack_speed",
+      "crit_rate"
+    ],
+    "collection": "辺境の狩人",
+    "art_sheet": 4,
+    "art_cell": 13,
+    "art_region": [
+      755,
+      496,
+      245,
+      238
+    ]
+  },
+  {
+    "id": "wild_hunt_15",
+    "display_name": "弓引きの片篭手",
+    "slot": "arms",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/painted_200/wild_hunt_15.tres",
+    "stats": [
+      "attack_power",
+      "attack_speed",
+      "crit_rate",
+      "crit_damage"
+    ],
+    "collection": "辺境の狩人",
+    "art_sheet": 4,
+    "art_cell": 14,
+    "art_region": [
+      1006,
+      496,
+      245,
+      238
+    ]
+  },
+  {
+    "id": "wild_hunt_16",
+    "display_name": "獣爪の革手甲",
+    "slot": "arms",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/painted_200/wild_hunt_16.tres",
+    "stats": [
+      "defense",
+      "max_hp",
+      "attack_power",
+      "attack_speed"
+    ],
+    "collection": "辺境の狩人",
+    "art_sheet": 4,
+    "art_cell": 15,
+    "art_region": [
+      3,
+      740,
+      245,
+      235
+    ]
+  },
+  {
+    "id": "wild_hunt_17",
+    "display_name": "罠結びの手袋",
+    "slot": "arms",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/painted_200/wild_hunt_17.tres",
+    "stats": [
+      "attack_power",
+      "attack_speed",
+      "crit_rate",
+      "crit_damage"
+    ],
+    "collection": "辺境の狩人",
+    "art_sheet": 4,
+    "art_cell": 16,
+    "art_region": [
+      254,
+      740,
+      245,
+      235
+    ]
+  },
+  {
+    "id": "wild_hunt_18",
+    "display_name": "忍び葉の長靴",
+    "slot": "legs",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/painted_200/wild_hunt_18.tres",
+    "stats": [
+      "move_speed",
+      "crit_rate",
+      "attack_speed",
+      "crit_damage"
+    ],
+    "collection": "辺境の狩人",
+    "art_sheet": 4,
+    "art_cell": 17,
+    "art_region": [
+      505,
+      740,
+      244,
+      235
+    ]
+  },
+  {
+    "id": "wild_hunt_19",
+    "display_name": "狼走りの毛靴",
+    "slot": "legs",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/painted_200/wild_hunt_19.tres",
+    "stats": [
+      "move_speed",
+      "defense",
+      "max_hp",
+      "attack_speed"
+    ],
+    "collection": "辺境の狩人",
+    "art_sheet": 4,
+    "art_cell": 18,
+    "art_region": [
+      755,
+      740,
+      245,
+      235
+    ]
+  },
+  {
+    "id": "wild_hunt_20",
+    "display_name": "岩越えの脚帯",
+    "slot": "legs",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/painted_200/wild_hunt_20.tres",
+    "stats": [
+      "move_speed",
+      "crit_rate",
+      "attack_speed",
+      "crit_damage"
+    ],
+    "collection": "辺境の狩人",
+    "art_sheet": 4,
+    "art_cell": 19,
+    "art_region": [
+      1006,
+      740,
+      245,
+      235
+    ]
+  },
+  {
+    "id": "wild_hunt_21",
+    "display_name": "白狼牙の首飾り",
+    "slot": "accessory",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/painted_200/wild_hunt_21.tres",
+    "stats": [
+      "crit_rate",
+      "crit_damage",
+      "attack_power",
+      "attack_speed"
+    ],
+    "collection": "辺境の狩人",
+    "art_sheet": 4,
+    "art_cell": 20,
+    "art_region": [
+      3,
+      981,
+      245,
+      270
+    ]
+  },
+  {
+    "id": "wild_hunt_22",
+    "display_name": "狩人の骨笛",
+    "slot": "accessory",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/painted_200/wild_hunt_22.tres",
+    "stats": [
+      "max_hp",
+      "defense",
+      "move_speed",
+      "crit_rate"
+    ],
+    "collection": "辺境の狩人",
+    "art_sheet": 4,
+    "art_cell": 21,
+    "art_region": [
+      254,
+      981,
+      245,
+      270
+    ]
+  },
+  {
+    "id": "wild_hunt_23",
+    "display_name": "梟目の指輪",
+    "slot": "accessory",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/painted_200/wild_hunt_23.tres",
+    "stats": [
+      "attack_speed",
+      "move_speed",
+      "attack_power",
+      "crit_damage"
+    ],
+    "collection": "辺境の狩人",
+    "art_sheet": 4,
+    "art_cell": 22,
+    "art_region": [
+      505,
+      981,
+      244,
+      270
+    ]
+  },
+  {
+    "id": "wild_hunt_24",
+    "display_name": "罠師の銀鈴",
+    "slot": "accessory",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/painted_200/wild_hunt_24.tres",
+    "stats": [
+      "crit_rate",
+      "crit_damage",
+      "attack_power",
+      "attack_speed"
+    ],
+    "collection": "辺境の狩人",
+    "art_sheet": 4,
+    "art_cell": 23,
+    "art_region": [
+      755,
+      981,
+      245,
+      270
+    ]
+  },
+  {
+    "id": "wild_hunt_25",
+    "display_name": "月森の葉章",
+    "slot": "accessory",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/painted_200/wild_hunt_25.tres",
+    "stats": [
+      "max_hp",
+      "defense",
+      "move_speed",
+      "crit_rate"
+    ],
+    "collection": "辺境の狩人",
+    "art_sheet": 4,
+    "art_cell": 24,
+    "art_region": [
+      1006,
+      981,
+      245,
+      270
+    ]
+  },
+  {
+    "id": "sealed_abbey_01",
+    "display_name": "封印官の儀礼剣",
+    "slot": "weapon",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/painted_200/sealed_abbey_01.tres",
+    "stats": [
+      "attack_power",
+      "max_hp",
+      "defense",
+      "crit_damage"
+    ],
+    "collection": "封印修道院",
+    "art_sheet": 5,
+    "art_cell": 0,
+    "art_region": [
+      3,
+      3,
+      245,
+      240
+    ],
+    "attack_kind": "slash"
+  },
+  {
+    "id": "sealed_abbey_02",
+    "display_name": "巡礼の鉄棍",
+    "slot": "weapon",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/painted_200/sealed_abbey_02.tres",
+    "stats": [
+      "attack_power",
+      "crit_rate",
+      "crit_damage",
+      "attack_speed"
+    ],
+    "collection": "封印修道院",
+    "art_sheet": 5,
+    "art_cell": 1,
+    "art_region": [
+      254,
+      3,
+      245,
+      240
+    ],
+    "attack_kind": "hammer"
+  },
+  {
+    "id": "sealed_abbey_03",
+    "display_name": "鐘楼守りの斧槍",
+    "slot": "weapon",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/painted_200/sealed_abbey_03.tres",
+    "stats": [
+      "attack_power",
+      "attack_speed",
+      "move_speed",
+      "crit_rate"
+    ],
+    "collection": "封印修道院",
+    "art_sheet": 5,
+    "art_cell": 2,
+    "art_region": [
+      505,
+      3,
+      244,
+      240
+    ],
+    "attack_kind": "thrust"
+  },
+  {
+    "id": "sealed_abbey_04",
+    "display_name": "懺悔の戦鎚",
+    "slot": "weapon",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/painted_200/sealed_abbey_04.tres",
+    "stats": [
+      "attack_power",
+      "max_hp",
+      "defense",
+      "crit_damage"
+    ],
+    "collection": "封印修道院",
+    "art_sheet": 5,
+    "art_cell": 3,
+    "art_region": [
+      755,
+      3,
+      245,
+      240
+    ],
+    "attack_kind": "hammer"
+  },
+  {
+    "id": "sealed_abbey_05",
+    "display_name": "聖歌隊の小弩",
+    "slot": "weapon",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/painted_200/sealed_abbey_05.tres",
+    "stats": [
+      "attack_power",
+      "crit_rate",
+      "crit_damage",
+      "attack_speed"
+    ],
+    "collection": "封印修道院",
+    "art_sheet": 5,
+    "art_cell": 4,
+    "art_region": [
+      1006,
+      3,
+      245,
+      240
+    ],
+    "attack_kind": "bow"
+  },
+  {
+    "id": "sealed_abbey_06",
+    "display_name": "祈祷書の導杖",
+    "slot": "weapon",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/painted_200/sealed_abbey_06.tres",
+    "stats": [
+      "attack_power",
+      "attack_speed",
+      "move_speed",
+      "crit_rate"
+    ],
+    "collection": "封印修道院",
+    "art_sheet": 5,
+    "art_cell": 5,
+    "art_region": [
+      3,
+      249,
+      245,
+      239
+    ],
+    "attack_kind": "magic"
+  },
+  {
+    "id": "sealed_abbey_07",
+    "display_name": "封印官の仮面兜",
+    "slot": "head",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/painted_200/sealed_abbey_07.tres",
+    "stats": [
+      "max_hp",
+      "attack_speed",
+      "move_speed",
+      "defense"
+    ],
+    "collection": "封印修道院",
+    "art_sheet": 5,
+    "art_cell": 6,
+    "art_region": [
+      254,
+      249,
+      245,
+      239
+    ]
+  },
+  {
+    "id": "sealed_abbey_08",
+    "display_name": "巡礼の深頭巾",
+    "slot": "head",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/painted_200/sealed_abbey_08.tres",
+    "stats": [
+      "defense",
+      "max_hp",
+      "crit_rate",
+      "crit_damage"
+    ],
+    "collection": "封印修道院",
+    "art_sheet": 5,
+    "art_cell": 7,
+    "art_region": [
+      505,
+      249,
+      244,
+      239
+    ]
+  },
+  {
+    "id": "sealed_abbey_09",
+    "display_name": "聖歌の金環",
+    "slot": "head",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/painted_200/sealed_abbey_09.tres",
+    "stats": [
+      "max_hp",
+      "attack_speed",
+      "move_speed",
+      "defense"
+    ],
+    "collection": "封印修道院",
+    "art_sheet": 5,
+    "art_cell": 8,
+    "art_region": [
+      755,
+      249,
+      245,
+      239
+    ]
+  },
+  {
+    "id": "sealed_abbey_10",
+    "display_name": "鐘楼番の革帽",
+    "slot": "head",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/painted_200/sealed_abbey_10.tres",
+    "stats": [
+      "defense",
+      "max_hp",
+      "crit_rate",
+      "crit_damage"
+    ],
+    "collection": "封印修道院",
+    "art_sheet": 5,
+    "art_cell": 9,
+    "art_region": [
+      1006,
+      249,
+      245,
+      239
+    ]
+  },
+  {
+    "id": "sealed_abbey_11",
+    "display_name": "封蝋紋の法衣",
+    "slot": "body",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/painted_200/sealed_abbey_11.tres",
+    "stats": [
+      "defense",
+      "move_speed",
+      "attack_speed",
+      "crit_rate"
+    ],
+    "collection": "封印修道院",
+    "art_sheet": 5,
+    "art_cell": 10,
+    "art_region": [
+      3,
+      494,
+      245,
+      237
+    ]
+  },
+  {
+    "id": "sealed_abbey_12",
+    "display_name": "巡礼の鎖外套",
+    "slot": "body",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/painted_200/sealed_abbey_12.tres",
+    "stats": [
+      "max_hp",
+      "defense",
+      "attack_power",
+      "crit_damage"
+    ],
+    "collection": "封印修道院",
+    "art_sheet": 5,
+    "art_cell": 11,
+    "art_region": [
+      254,
+      494,
+      245,
+      237
+    ]
+  },
+  {
+    "id": "sealed_abbey_13",
+    "display_name": "守鐘の板金鎧",
+    "slot": "body",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/painted_200/sealed_abbey_13.tres",
+    "stats": [
+      "defense",
+      "move_speed",
+      "attack_speed",
+      "crit_rate"
+    ],
+    "collection": "封印修道院",
+    "art_sheet": 5,
+    "art_cell": 12,
+    "art_region": [
+      505,
+      494,
+      244,
+      237
+    ]
+  },
+  {
+    "id": "sealed_abbey_14",
+    "display_name": "写本師の長衣",
+    "slot": "body",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/painted_200/sealed_abbey_14.tres",
+    "stats": [
+      "max_hp",
+      "defense",
+      "attack_power",
+      "crit_damage"
+    ],
+    "collection": "封印修道院",
+    "art_sheet": 5,
+    "art_cell": 13,
+    "art_region": [
+      755,
+      494,
+      245,
+      237
+    ]
+  },
+  {
+    "id": "sealed_abbey_15",
+    "display_name": "祈り糸の手袋",
+    "slot": "arms",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/painted_200/sealed_abbey_15.tres",
+    "stats": [
+      "defense",
+      "max_hp",
+      "attack_power",
+      "attack_speed"
+    ],
+    "collection": "封印修道院",
+    "art_sheet": 5,
+    "art_cell": 14,
+    "art_region": [
+      1006,
+      494,
+      245,
+      237
+    ]
+  },
+  {
+    "id": "sealed_abbey_16",
+    "display_name": "封蝋の腕甲",
+    "slot": "arms",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/painted_200/sealed_abbey_16.tres",
+    "stats": [
+      "attack_power",
+      "attack_speed",
+      "crit_rate",
+      "crit_damage"
+    ],
+    "collection": "封印修道院",
+    "art_sheet": 5,
+    "art_cell": 15,
+    "art_region": [
+      3,
+      737,
+      245,
+      239
+    ]
+  },
+  {
+    "id": "sealed_abbey_17",
+    "display_name": "守鐘の鉄篭手",
+    "slot": "arms",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/painted_200/sealed_abbey_17.tres",
+    "stats": [
+      "defense",
+      "max_hp",
+      "attack_power",
+      "attack_speed"
+    ],
+    "collection": "封印修道院",
+    "art_sheet": 5,
+    "art_cell": 16,
+    "art_region": [
+      254,
+      737,
+      245,
+      239
+    ]
+  },
+  {
+    "id": "sealed_abbey_18",
+    "display_name": "巡礼の歩み靴",
+    "slot": "legs",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/painted_200/sealed_abbey_18.tres",
+    "stats": [
+      "move_speed",
+      "defense",
+      "max_hp",
+      "attack_speed"
+    ],
+    "collection": "封印修道院",
+    "art_sheet": 5,
+    "art_cell": 17,
+    "art_region": [
+      505,
+      737,
+      244,
+      239
+    ]
+  },
+  {
+    "id": "sealed_abbey_19",
+    "display_name": "祭儀の銀脚甲",
+    "slot": "legs",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/painted_200/sealed_abbey_19.tres",
+    "stats": [
+      "move_speed",
+      "crit_rate",
+      "attack_speed",
+      "crit_damage"
+    ],
+    "collection": "封印修道院",
+    "art_sheet": 5,
+    "art_cell": 18,
+    "art_region": [
+      755,
+      737,
+      245,
+      239
+    ]
+  },
+  {
+    "id": "sealed_abbey_20",
+    "display_name": "写本師の布靴",
+    "slot": "legs",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/painted_200/sealed_abbey_20.tres",
+    "stats": [
+      "move_speed",
+      "defense",
+      "max_hp",
+      "attack_speed"
+    ],
+    "collection": "封印修道院",
+    "art_sheet": 5,
+    "art_cell": 19,
+    "art_region": [
+      1006,
+      737,
+      245,
+      239
+    ]
+  },
+  {
+    "id": "sealed_abbey_21",
+    "display_name": "封蝋の聖印",
+    "slot": "accessory",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/painted_200/sealed_abbey_21.tres",
+    "stats": [
+      "max_hp",
+      "defense",
+      "move_speed",
+      "crit_rate"
+    ],
+    "collection": "封印修道院",
+    "art_sheet": 5,
+    "art_cell": 20,
+    "art_region": [
+      3,
+      982,
+      245,
+      269
+    ]
+  },
+  {
+    "id": "sealed_abbey_22",
+    "display_name": "祈祷の数珠",
+    "slot": "accessory",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/painted_200/sealed_abbey_22.tres",
+    "stats": [
+      "attack_speed",
+      "move_speed",
+      "attack_power",
+      "crit_damage"
+    ],
+    "collection": "封印修道院",
+    "art_sheet": 5,
+    "art_cell": 21,
+    "art_region": [
+      254,
+      982,
+      245,
+      269
+    ]
+  },
+  {
+    "id": "sealed_abbey_23",
+    "display_name": "鐘楼の小鐘",
+    "slot": "accessory",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/painted_200/sealed_abbey_23.tres",
+    "stats": [
+      "crit_rate",
+      "crit_damage",
+      "attack_power",
+      "attack_speed"
+    ],
+    "collection": "封印修道院",
+    "art_sheet": 5,
+    "art_cell": 22,
+    "art_region": [
+      505,
+      982,
+      244,
+      269
+    ]
+  },
+  {
+    "id": "sealed_abbey_24",
+    "display_name": "写本の頁留め",
+    "slot": "accessory",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/painted_200/sealed_abbey_24.tres",
+    "stats": [
+      "max_hp",
+      "defense",
+      "move_speed",
+      "crit_rate"
+    ],
+    "collection": "封印修道院",
+    "art_sheet": 5,
+    "art_cell": 23,
+    "art_region": [
+      755,
+      982,
+      245,
+      269
+    ]
+  },
+  {
+    "id": "sealed_abbey_25",
+    "display_name": "巡礼者の誓環",
+    "slot": "accessory",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/painted_200/sealed_abbey_25.tres",
+    "stats": [
+      "attack_speed",
+      "move_speed",
+      "attack_power",
+      "crit_damage"
+    ],
+    "collection": "封印修道院",
+    "art_sheet": 5,
+    "art_cell": 24,
+    "art_region": [
+      1006,
+      982,
+      245,
+      269
+    ]
+  },
+  {
+    "id": "abyss_watch_01",
+    "display_name": "深淵裂きの長剣",
+    "slot": "weapon",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/painted_200/abyss_watch_01.tres",
+    "stats": [
+      "attack_power",
+      "crit_rate",
+      "crit_damage",
+      "attack_speed"
+    ],
+    "collection": "深淵の監視者",
+    "art_sheet": 6,
+    "art_cell": 0,
+    "art_region": [
+      3,
+      3,
+      245,
+      246
+    ],
+    "attack_kind": "slash"
+  },
+  {
+    "id": "abyss_watch_02",
+    "display_name": "影縫いの鉤刃",
+    "slot": "weapon",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/painted_200/abyss_watch_02.tres",
+    "stats": [
+      "attack_power",
+      "attack_speed",
+      "move_speed",
+      "crit_rate"
+    ],
+    "collection": "深淵の監視者",
+    "art_sheet": 6,
+    "art_cell": 1,
+    "art_region": [
+      254,
+      3,
+      245,
+      246
+    ],
+    "attack_kind": "slash"
+  },
+  {
+    "id": "abyss_watch_03",
+    "display_name": "墓守りの大鎌",
+    "slot": "weapon",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/painted_200/abyss_watch_03.tres",
+    "stats": [
+      "attack_power",
+      "max_hp",
+      "defense",
+      "crit_damage"
+    ],
+    "collection": "深淵の監視者",
+    "art_sheet": 6,
+    "art_cell": 2,
+    "art_region": [
+      505,
+      3,
+      244,
+      246
+    ],
+    "attack_kind": "scythe"
+  },
+  {
+    "id": "abyss_watch_04",
+    "display_name": "骸骨砕きの棍",
+    "slot": "weapon",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/painted_200/abyss_watch_04.tres",
+    "stats": [
+      "attack_power",
+      "crit_rate",
+      "crit_damage",
+      "attack_speed"
+    ],
+    "collection": "深淵の監視者",
+    "art_sheet": 6,
+    "art_cell": 3,
+    "art_region": [
+      755,
+      3,
+      245,
+      246
+    ],
+    "attack_kind": "hammer"
+  },
+  {
+    "id": "abyss_watch_05",
+    "display_name": "黒羽の複合弓",
+    "slot": "weapon",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/painted_200/abyss_watch_05.tres",
+    "stats": [
+      "attack_power",
+      "attack_speed",
+      "move_speed",
+      "crit_rate"
+    ],
+    "collection": "深淵の監視者",
+    "art_sheet": 6,
+    "art_cell": 4,
+    "art_region": [
+      1006,
+      3,
+      245,
+      246
+    ],
+    "attack_kind": "bow"
+  },
+  {
+    "id": "abyss_watch_06",
+    "display_name": "沈黙の魔導書",
+    "slot": "weapon",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/painted_200/abyss_watch_06.tres",
+    "stats": [
+      "attack_power",
+      "max_hp",
+      "defense",
+      "crit_damage"
+    ],
+    "collection": "深淵の監視者",
+    "art_sheet": 6,
+    "art_cell": 5,
+    "art_region": [
+      3,
+      255,
+      245,
+      241
+    ],
+    "attack_kind": "magic"
+  },
+  {
+    "id": "abyss_watch_07",
+    "display_name": "監視者の黒面",
+    "slot": "head",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/painted_200/abyss_watch_07.tres",
+    "stats": [
+      "defense",
+      "max_hp",
+      "crit_rate",
+      "crit_damage"
+    ],
+    "collection": "深淵の監視者",
+    "art_sheet": 6,
+    "art_cell": 6,
+    "art_region": [
+      254,
+      255,
+      245,
+      241
+    ]
+  },
+  {
+    "id": "abyss_watch_08",
+    "display_name": "墓守りの覆面",
+    "slot": "head",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/painted_200/abyss_watch_08.tres",
+    "stats": [
+      "max_hp",
+      "attack_speed",
+      "move_speed",
+      "defense"
+    ],
+    "collection": "深淵の監視者",
+    "art_sheet": 6,
+    "art_cell": 7,
+    "art_region": [
+      505,
+      255,
+      244,
+      241
+    ]
+  },
+  {
+    "id": "abyss_watch_09",
+    "display_name": "骸冠の鉄兜",
+    "slot": "head",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/painted_200/abyss_watch_09.tres",
+    "stats": [
+      "defense",
+      "max_hp",
+      "crit_rate",
+      "crit_damage"
+    ],
+    "collection": "深淵の監視者",
+    "art_sheet": 6,
+    "art_cell": 8,
+    "art_region": [
+      755,
+      255,
+      245,
+      241
+    ]
+  },
+  {
+    "id": "abyss_watch_10",
+    "display_name": "黒羽の額輪",
+    "slot": "head",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/painted_200/abyss_watch_10.tres",
+    "stats": [
+      "max_hp",
+      "attack_speed",
+      "move_speed",
+      "defense"
+    ],
+    "collection": "深淵の監視者",
+    "art_sheet": 6,
+    "art_cell": 9,
+    "art_region": [
+      1006,
+      255,
+      245,
+      241
+    ]
+  },
+  {
+    "id": "abyss_watch_11",
+    "display_name": "黒曜の胴鎧",
+    "slot": "body",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/painted_200/abyss_watch_11.tres",
+    "stats": [
+      "max_hp",
+      "defense",
+      "attack_power",
+      "crit_damage"
+    ],
+    "collection": "深淵の監視者",
+    "art_sheet": 6,
+    "art_cell": 10,
+    "art_region": [
+      3,
+      502,
+      245,
+      246
+    ]
+  },
+  {
+    "id": "abyss_watch_12",
+    "display_name": "葬送の長衣",
+    "slot": "body",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/painted_200/abyss_watch_12.tres",
+    "stats": [
+      "defense",
+      "move_speed",
+      "attack_speed",
+      "crit_rate"
+    ],
+    "collection": "深淵の監視者",
+    "art_sheet": 6,
+    "art_cell": 11,
+    "art_region": [
+      254,
+      502,
+      245,
+      246
+    ]
+  },
+  {
+    "id": "abyss_watch_13",
+    "display_name": "監視者の鎖帷子",
+    "slot": "body",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/painted_200/abyss_watch_13.tres",
+    "stats": [
+      "max_hp",
+      "defense",
+      "attack_power",
+      "crit_damage"
+    ],
+    "collection": "深淵の監視者",
+    "art_sheet": 6,
+    "art_cell": 12,
+    "art_region": [
+      505,
+      502,
+      244,
+      246
+    ]
+  },
+  {
+    "id": "abyss_watch_14",
+    "display_name": "骨留めの革外套",
+    "slot": "body",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/painted_200/abyss_watch_14.tres",
+    "stats": [
+      "defense",
+      "move_speed",
+      "attack_speed",
+      "crit_rate"
+    ],
+    "collection": "深淵の監視者",
+    "art_sheet": 6,
+    "art_cell": 13,
+    "art_region": [
+      755,
+      502,
+      245,
+      246
+    ]
+  },
+  {
+    "id": "abyss_watch_15",
+    "display_name": "影縫いの手甲",
+    "slot": "arms",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/painted_200/abyss_watch_15.tres",
+    "stats": [
+      "attack_power",
+      "attack_speed",
+      "crit_rate",
+      "crit_damage"
+    ],
+    "collection": "深淵の監視者",
+    "art_sheet": 6,
+    "art_cell": 14,
+    "art_region": [
+      1006,
+      502,
+      245,
+      246
+    ]
+  },
+  {
+    "id": "abyss_watch_16",
+    "display_name": "墓守りの骨篭手",
+    "slot": "arms",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/painted_200/abyss_watch_16.tres",
+    "stats": [
+      "defense",
+      "max_hp",
+      "attack_power",
+      "attack_speed"
+    ],
+    "collection": "深淵の監視者",
+    "art_sheet": 6,
+    "art_cell": 15,
+    "art_region": [
+      3,
+      754,
+      245,
+      231
+    ]
+  },
+  {
+    "id": "abyss_watch_17",
+    "display_name": "沈黙の布手袋",
+    "slot": "arms",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/painted_200/abyss_watch_17.tres",
+    "stats": [
+      "attack_power",
+      "attack_speed",
+      "crit_rate",
+      "crit_damage"
+    ],
+    "collection": "深淵の監視者",
+    "art_sheet": 6,
+    "art_cell": 16,
+    "art_region": [
+      254,
+      754,
+      245,
+      231
+    ]
+  },
+  {
+    "id": "abyss_watch_18",
+    "display_name": "黒曜の脚甲",
+    "slot": "legs",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/painted_200/abyss_watch_18.tres",
+    "stats": [
+      "move_speed",
+      "crit_rate",
+      "attack_speed",
+      "crit_damage"
+    ],
+    "collection": "深淵の監視者",
+    "art_sheet": 6,
+    "art_cell": 17,
+    "art_region": [
+      505,
+      754,
+      244,
+      231
+    ]
+  },
+  {
+    "id": "abyss_watch_19",
+    "display_name": "葬列の革靴",
+    "slot": "legs",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/painted_200/abyss_watch_19.tres",
+    "stats": [
+      "move_speed",
+      "defense",
+      "max_hp",
+      "attack_speed"
+    ],
+    "collection": "深淵の監視者",
+    "art_sheet": 6,
+    "art_cell": 18,
+    "art_region": [
+      755,
+      754,
+      245,
+      231
+    ]
+  },
+  {
+    "id": "abyss_watch_20",
+    "display_name": "影踏みの足袋",
+    "slot": "legs",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/painted_200/abyss_watch_20.tres",
+    "stats": [
+      "move_speed",
+      "crit_rate",
+      "attack_speed",
+      "crit_damage"
+    ],
+    "collection": "深淵の監視者",
+    "art_sheet": 6,
+    "art_cell": 19,
+    "art_region": [
+      1006,
+      754,
+      245,
+      231
+    ]
+  },
+  {
+    "id": "abyss_watch_21",
+    "display_name": "封眼の銀環",
+    "slot": "accessory",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/painted_200/abyss_watch_21.tres",
+    "stats": [
+      "attack_speed",
+      "move_speed",
+      "attack_power",
+      "crit_damage"
+    ],
+    "collection": "深淵の監視者",
+    "art_sheet": 6,
+    "art_cell": 20,
+    "art_region": [
+      3,
+      991,
+      245,
+      260
+    ]
+  },
+  {
+    "id": "abyss_watch_22",
+    "display_name": "墓標の欠片",
+    "slot": "accessory",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/painted_200/abyss_watch_22.tres",
+    "stats": [
+      "crit_rate",
+      "crit_damage",
+      "attack_power",
+      "attack_speed"
+    ],
+    "collection": "深淵の監視者",
+    "art_sheet": 6,
+    "art_cell": 21,
+    "art_region": [
+      254,
+      991,
+      245,
+      260
+    ]
+  },
+  {
+    "id": "abyss_watch_23",
+    "display_name": "黒羽の留針",
+    "slot": "accessory",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/painted_200/abyss_watch_23.tres",
+    "stats": [
+      "max_hp",
+      "defense",
+      "move_speed",
+      "crit_rate"
+    ],
+    "collection": "深淵の監視者",
+    "art_sheet": 6,
+    "art_cell": 22,
+    "art_region": [
+      505,
+      991,
+      244,
+      260
+    ]
+  },
+  {
+    "id": "abyss_watch_24",
+    "display_name": "記憶の骨札",
+    "slot": "accessory",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/painted_200/abyss_watch_24.tres",
+    "stats": [
+      "attack_speed",
+      "move_speed",
+      "attack_power",
+      "crit_damage"
+    ],
+    "collection": "深淵の監視者",
+    "art_sheet": 6,
+    "art_cell": 23,
+    "art_region": [
+      755,
+      991,
+      245,
+      260
+    ]
+  },
+  {
+    "id": "abyss_watch_25",
+    "display_name": "監視者の砂時計",
+    "slot": "accessory",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/painted_200/abyss_watch_25.tres",
+    "stats": [
+      "crit_rate",
+      "crit_damage",
+      "attack_power",
+      "attack_speed"
+    ],
+    "collection": "深淵の監視者",
+    "art_sheet": 6,
+    "art_cell": 24,
+    "art_region": [
+      1006,
+      991,
+      245,
+      260
+    ]
+  },
+  {
+    "id": "fallen_dynasty_01",
+    "display_name": "王統の儀剣",
+    "slot": "weapon",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/painted_200/fallen_dynasty_01.tres",
+    "stats": [
+      "attack_power",
+      "attack_speed",
+      "move_speed",
+      "crit_rate"
+    ],
+    "collection": "失われた王家",
+    "art_sheet": 7,
+    "art_cell": 0,
+    "art_region": [
+      3,
+      3,
+      245,
+      244
+    ],
+    "attack_kind": "slash"
+  },
+  {
+    "id": "fallen_dynasty_02",
+    "display_name": "女王の銀刺剣",
+    "slot": "weapon",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/painted_200/fallen_dynasty_02.tres",
+    "stats": [
+      "attack_power",
+      "max_hp",
+      "defense",
+      "crit_damage"
+    ],
+    "collection": "失われた王家",
+    "art_sheet": 7,
+    "art_cell": 1,
+    "art_region": [
+      254,
+      3,
+      245,
+      244
+    ],
+    "attack_kind": "thrust"
+  },
+  {
+    "id": "fallen_dynasty_03",
+    "display_name": "獅鷲の斧槍",
+    "slot": "weapon",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/painted_200/fallen_dynasty_03.tres",
+    "stats": [
+      "attack_power",
+      "crit_rate",
+      "crit_damage",
+      "attack_speed"
+    ],
+    "collection": "失われた王家",
+    "art_sheet": 7,
+    "art_cell": 2,
+    "art_region": [
+      505,
+      3,
+      244,
+      244
+    ],
+    "attack_kind": "thrust"
+  },
+  {
+    "id": "fallen_dynasty_04",
+    "display_name": "玉座守りの戦鎚",
+    "slot": "weapon",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/painted_200/fallen_dynasty_04.tres",
+    "stats": [
+      "attack_power",
+      "attack_speed",
+      "move_speed",
+      "crit_rate"
+    ],
+    "collection": "失われた王家",
+    "art_sheet": 7,
+    "art_cell": 3,
+    "art_region": [
+      755,
+      3,
+      245,
+      244
+    ],
+    "attack_kind": "hammer"
+  },
+  {
+    "id": "fallen_dynasty_05",
+    "display_name": "王猟の機巧弩",
+    "slot": "weapon",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/painted_200/fallen_dynasty_05.tres",
+    "stats": [
+      "attack_power",
+      "max_hp",
+      "defense",
+      "crit_damage"
+    ],
+    "collection": "失われた王家",
+    "art_sheet": 7,
+    "art_cell": 4,
+    "art_region": [
+      1006,
+      3,
+      245,
+      244
+    ],
+    "attack_kind": "bow"
+  },
+  {
+    "id": "fallen_dynasty_06",
+    "display_name": "星図の王笏",
+    "slot": "weapon",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/painted_200/fallen_dynasty_06.tres",
+    "stats": [
+      "attack_power",
+      "crit_rate",
+      "crit_damage",
+      "attack_speed"
+    ],
+    "collection": "失われた王家",
+    "art_sheet": 7,
+    "art_cell": 5,
+    "art_region": [
+      3,
+      253,
+      245,
+      242
+    ],
+    "attack_kind": "magic"
+  },
+  {
+    "id": "fallen_dynasty_07",
+    "display_name": "欠けた戴冠兜",
+    "slot": "head",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/painted_200/fallen_dynasty_07.tres",
+    "stats": [
+      "max_hp",
+      "attack_speed",
+      "move_speed",
+      "defense"
+    ],
+    "collection": "失われた王家",
+    "art_sheet": 7,
+    "art_cell": 6,
+    "art_region": [
+      254,
+      253,
+      245,
+      242
+    ]
+  },
+  {
+    "id": "fallen_dynasty_08",
+    "display_name": "女王の銀冠",
+    "slot": "head",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/painted_200/fallen_dynasty_08.tres",
+    "stats": [
+      "defense",
+      "max_hp",
+      "crit_rate",
+      "crit_damage"
+    ],
+    "collection": "失われた王家",
+    "art_sheet": 7,
+    "art_cell": 7,
+    "art_region": [
+      505,
+      253,
+      244,
+      242
+    ]
+  },
+  {
+    "id": "fallen_dynasty_09",
+    "display_name": "獅鷲衛の翼兜",
+    "slot": "head",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/painted_200/fallen_dynasty_09.tres",
+    "stats": [
+      "max_hp",
+      "attack_speed",
+      "move_speed",
+      "defense"
+    ],
+    "collection": "失われた王家",
+    "art_sheet": 7,
+    "art_cell": 8,
+    "art_region": [
+      755,
+      253,
+      245,
+      242
+    ]
+  },
+  {
+    "id": "fallen_dynasty_10",
+    "display_name": "星詠みの宝冠",
+    "slot": "head",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/painted_200/fallen_dynasty_10.tres",
+    "stats": [
+      "defense",
+      "max_hp",
+      "crit_rate",
+      "crit_damage"
+    ],
+    "collection": "失われた王家",
+    "art_sheet": 7,
+    "art_cell": 9,
+    "art_region": [
+      1006,
+      253,
+      245,
+      242
+    ]
+  },
+  {
+    "id": "fallen_dynasty_11",
+    "display_name": "王統の金縁鎧",
+    "slot": "body",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/painted_200/fallen_dynasty_11.tres",
+    "stats": [
+      "defense",
+      "move_speed",
+      "attack_speed",
+      "crit_rate"
+    ],
+    "collection": "失われた王家",
+    "art_sheet": 7,
+    "art_cell": 10,
+    "art_region": [
+      3,
+      501,
+      245,
+      218
+    ]
+  },
+  {
+    "id": "fallen_dynasty_12",
+    "display_name": "女王の礼装衣",
+    "slot": "body",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/painted_200/fallen_dynasty_12.tres",
+    "stats": [
+      "max_hp",
+      "defense",
+      "attack_power",
+      "crit_damage"
+    ],
+    "collection": "失われた王家",
+    "art_sheet": 7,
+    "art_cell": 11,
+    "art_region": [
+      254,
+      501,
+      245,
+      218
+    ]
+  },
+  {
+    "id": "fallen_dynasty_13",
+    "display_name": "獅鷲衛の重鎧",
+    "slot": "body",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/painted_200/fallen_dynasty_13.tres",
+    "stats": [
+      "defense",
+      "move_speed",
+      "attack_speed",
+      "crit_rate"
+    ],
+    "collection": "失われた王家",
+    "art_sheet": 7,
+    "art_cell": 12,
+    "art_region": [
+      505,
+      501,
+      244,
+      218
+    ]
+  },
+  {
+    "id": "fallen_dynasty_14",
+    "display_name": "星詠みの織衣",
+    "slot": "body",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/painted_200/fallen_dynasty_14.tres",
+    "stats": [
+      "max_hp",
+      "defense",
+      "attack_power",
+      "crit_damage"
+    ],
+    "collection": "失われた王家",
+    "art_sheet": 7,
+    "art_cell": 13,
+    "art_region": [
+      755,
+      501,
+      245,
+      218
+    ]
+  },
+  {
+    "id": "fallen_dynasty_15",
+    "display_name": "王権の彫金篭手",
+    "slot": "arms",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/painted_200/fallen_dynasty_15.tres",
+    "stats": [
+      "defense",
+      "max_hp",
+      "attack_power",
+      "attack_speed"
+    ],
+    "collection": "失われた王家",
+    "art_sheet": 7,
+    "art_cell": 14,
+    "art_region": [
+      1006,
+      501,
+      245,
+      218
+    ]
+  },
+  {
+    "id": "fallen_dynasty_16",
+    "display_name": "女王の銀糸手袋",
+    "slot": "arms",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/painted_200/fallen_dynasty_16.tres",
+    "stats": [
+      "attack_power",
+      "attack_speed",
+      "crit_rate",
+      "crit_damage"
+    ],
+    "collection": "失われた王家",
+    "art_sheet": 7,
+    "art_cell": 15,
+    "art_region": [
+      3,
+      725,
+      245,
+      235
+    ]
+  },
+  {
+    "id": "fallen_dynasty_17",
+    "display_name": "獅鷲爪の腕甲",
+    "slot": "arms",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/painted_200/fallen_dynasty_17.tres",
+    "stats": [
+      "defense",
+      "max_hp",
+      "attack_power",
+      "attack_speed"
+    ],
+    "collection": "失われた王家",
+    "art_sheet": 7,
+    "art_cell": 16,
+    "art_region": [
+      254,
+      725,
+      245,
+      235
+    ]
+  },
+  {
+    "id": "fallen_dynasty_18",
+    "display_name": "玉座守りの金脚甲",
+    "slot": "legs",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/painted_200/fallen_dynasty_18.tres",
+    "stats": [
+      "move_speed",
+      "defense",
+      "max_hp",
+      "attack_speed"
+    ],
+    "collection": "失われた王家",
+    "art_sheet": 7,
+    "art_cell": 17,
+    "art_region": [
+      505,
+      725,
+      244,
+      235
+    ]
+  },
+  {
+    "id": "fallen_dynasty_19",
+    "display_name": "王猟の礼長靴",
+    "slot": "legs",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/painted_200/fallen_dynasty_19.tres",
+    "stats": [
+      "move_speed",
+      "crit_rate",
+      "attack_speed",
+      "crit_damage"
+    ],
+    "collection": "失われた王家",
+    "art_sheet": 7,
+    "art_cell": 18,
+    "art_region": [
+      755,
+      725,
+      245,
+      235
+    ]
+  },
+  {
+    "id": "fallen_dynasty_20",
+    "display_name": "星詠みの銀靴",
+    "slot": "legs",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/painted_200/fallen_dynasty_20.tres",
+    "stats": [
+      "move_speed",
+      "defense",
+      "max_hp",
+      "attack_speed"
+    ],
+    "collection": "失われた王家",
+    "art_sheet": 7,
+    "art_cell": 19,
+    "art_region": [
+      1006,
+      725,
+      245,
+      235
+    ]
+  },
+  {
+    "id": "fallen_dynasty_21",
+    "display_name": "王統の宝璽",
+    "slot": "accessory",
+    "rarity": "epic",
+    "icon_path": "res://assets/items/painted_200/fallen_dynasty_21.tres",
+    "stats": [
+      "crit_rate",
+      "crit_damage",
+      "attack_power",
+      "attack_speed"
+    ],
+    "collection": "失われた王家",
+    "art_sheet": 7,
+    "art_cell": 20,
+    "art_region": [
+      3,
+      966,
+      245,
+      285
+    ]
+  },
+  {
+    "id": "fallen_dynasty_22",
+    "display_name": "女王の涙石",
+    "slot": "accessory",
+    "rarity": "legendary",
+    "icon_path": "res://assets/items/painted_200/fallen_dynasty_22.tres",
+    "stats": [
+      "max_hp",
+      "defense",
+      "move_speed",
+      "crit_rate"
+    ],
+    "collection": "失われた王家",
+    "art_sheet": 7,
+    "art_cell": 21,
+    "art_region": [
+      254,
+      966,
+      245,
+      285
+    ]
+  },
+  {
+    "id": "fallen_dynasty_23",
+    "display_name": "獅鷲勲章",
+    "slot": "accessory",
+    "rarity": "mythic",
+    "icon_path": "res://assets/items/painted_200/fallen_dynasty_23.tres",
+    "stats": [
+      "attack_speed",
+      "move_speed",
+      "attack_power",
+      "crit_damage"
+    ],
+    "collection": "失われた王家",
+    "art_sheet": 7,
+    "art_cell": 22,
+    "art_region": [
+      505,
+      966,
+      244,
+      285
+    ]
+  },
+  {
+    "id": "fallen_dynasty_24",
+    "display_name": "失王の懐中時計",
+    "slot": "accessory",
+    "rarity": "uncommon",
+    "icon_path": "res://assets/items/painted_200/fallen_dynasty_24.tres",
+    "stats": [
+      "crit_rate",
+      "crit_damage",
+      "attack_power",
+      "attack_speed"
+    ],
+    "collection": "失われた王家",
+    "art_sheet": 7,
+    "art_cell": 23,
+    "art_region": [
+      755,
+      966,
+      245,
+      285
+    ]
+  },
+  {
+    "id": "fallen_dynasty_25",
+    "display_name": "星図の天球環",
+    "slot": "accessory",
+    "rarity": "rare",
+    "icon_path": "res://assets/items/painted_200/fallen_dynasty_25.tres",
+    "stats": [
+      "max_hp",
+      "defense",
+      "move_speed",
+      "crit_rate"
+    ],
+    "collection": "失われた王家",
+    "art_sheet": 7,
+    "art_cell": 24,
+    "art_region": [
+      1006,
+      966,
+      245,
+      285
+    ]
   }
 ]

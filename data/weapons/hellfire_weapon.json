@@ -1,10 +1,10 @@
 {
   "id": "hellfire_weapon",
   "display_name": "業炎の剣",
-  "description": "炎+闇の合成武器。着弾後、発射地点側にも闇の吸収演出が発生する。",
+  "description": "深紅の残滓を封じた遺物武器。",
   "base_damage": 29.0,
   "attack_interval": 1.15,
   "attack_range": 210.0,
-  "required_fragment_ids": ["fire", "dark"],
+  "is_relic": true,
   "vfx_theme_id": "hellfire"
 }

@@ -6,5 +6,6 @@
   "effect_type": "damage_up",
   "value": 0.25,
   "downside_type": "move_speed_multiplier",
-  "downside_value": 0.05
+  "downside_value": 0.05,
+  "icon_path": "res://assets/ui/icons/battle_skills/upgrades/reckless_power.png"
 }

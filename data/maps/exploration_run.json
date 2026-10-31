@@ -1,72 +1,185 @@
 {
   "total_maps": 3,
+  "sector_mode": false,
+  "sectors_per_floor": 4,
   "combo_timeout_seconds": 3.5,
+  "experience_requirement_multiplier": 0.6,
+  "economy": {
+    "enemy_kill_gold": 1,
+    "elite_kill_bonus": 10,
+    "elite_room_clear_bonus": 18,
+    "surge_clear_bonus": 20,
+    "boss_clear_gold_by_map": {
+      "1": 50,
+      "2": 65,
+      "3": 80
+    },
+    "kills_per_gold": 4
+  },
+  "surge": {
+    "duration_seconds": 40,
+    "kill_fractions": [
+      0.4,
+      0.8
+    ],
+    "spawn_interval_multiplier": 0.8,
+    "spawn_batch_multiplier": 1.25,
+    "reward_sequence": [
+      "recovery",
+      "equipment"
+    ],
+    "enabled": false
+  },
   "maps": [
     {
       "index": 1,
       "display_name": "忘却の地下回廊",
-      "width": 78,
-      "height": 78,
-      "room_count": 10,
-      "elite_rooms": 1,
-      "target_duration_seconds": 600.0,
-      "boss_fallback_seconds": 900.0,
-      "boss_kill_requirement": 420,
-      "boss_candidates": ["minotaur", "demon_a", "black_knight_a"],
-      "boss_hp_multiplier": 2.2,
-      "boss_damage_multiplier": 0.62,
+      "width": 96,
+      "height": 96,
+      "room_count": 1,
+      "elite_rooms": 0,
+      "target_duration_seconds": 300,
+      "boss_fallback_seconds": 240,
+      "boss_kill_requirement": 120,
+      "surge_fallback_seconds": [
+        75,
+        150
+      ],
+      "surge_equipment_rarity": "uncommon",
+      "hazard_damage": 5.0,
+      "boss_candidates": [
+        "armored_skeleton",
+        "greatsword_skeleton"
+      ],
+      "boss_hp_multiplier": 1,
+      "boss_damage_multiplier": 1,
       "enemy_progress_offset": 0.0,
-      "enemy_hp_multiplier": 2.5,
-      "enemy_damage_multiplier": 1.0,
-      "enemy_cap": 32,
-      "spawn_batch": [1, 2],
-      "difficulty_curve_id": "map_exploration",
-      "treasure_rewards": ["equipment", "skill", "recovery", "equipment"],
-      "treasure_rarities": ["normal", "normal", "normal", "rare"]
+      "enemy_hp_multiplier": 0.38,
+      "enemy_damage_multiplier": 0.7,
+      "enemy_cap": 128,
+      "spawn_batch": [
+        3,
+        10
+      ],
+      "difficulty_curve_id": "five_minute_survival",
+      "treasure_rewards": [
+        "equipment",
+        "equipment",
+        "recovery",
+        "equipment"
+      ],
+      "treasure_rarities": [
+        "normal",
+        "normal",
+        "normal",
+        "rare"
+      ],
+      "progression": "five_minute_survival",
+      "isolated_rooms": true,
+      "enemy_move_speed_multiplier": 0.65
     },
     {
       "index": 2,
       "display_name": "紫晶の深層",
-      "width": 86,
-      "height": 86,
-      "room_count": 11,
-      "elite_rooms": 2,
-      "target_duration_seconds": 660.0,
-      "boss_fallback_seconds": 960.0,
-      "boss_kill_requirement": 650,
-      "boss_candidates": ["black_knight_b", "demon_c", "demon_d"],
-      "boss_hp_multiplier": 3.8,
-      "boss_damage_multiplier": 0.72,
+      "width": 96,
+      "height": 96,
+      "room_count": 1,
+      "elite_rooms": 0,
+      "target_duration_seconds": 300,
+      "boss_fallback_seconds": 270,
+      "boss_kill_requirement": 160,
+      "surge_fallback_seconds": [
+        75,
+        150
+      ],
+      "surge_equipment_rarity": "rare",
+      "hazard_damage": 6.0,
+      "boss_candidates": [
+        "blood_monster_b",
+        "werebear"
+      ],
+      "boss_hp_multiplier": 1,
+      "boss_damage_multiplier": 1,
       "enemy_progress_offset": 150.0,
-      "enemy_hp_multiplier": 3.25,
-      "enemy_damage_multiplier": 1.10,
-      "enemy_cap": 40,
-      "spawn_batch": [1, 3],
-      "difficulty_curve_id": "map_exploration",
-      "treasure_rewards": ["skill", "equipment", "attribute", "skill"],
-      "treasure_rarities": ["normal", "normal", "rare", "rare"]
+      "enemy_hp_multiplier": 0.5,
+      "enemy_damage_multiplier": 0.85,
+      "enemy_cap": 128,
+      "spawn_batch": [
+        3,
+        10
+      ],
+      "difficulty_curve_id": "five_minute_survival",
+      "treasure_rewards": [
+        "equipment",
+        "equipment",
+        "equipment"
+      ],
+      "treasure_rarities": [
+        "normal",
+        "normal",
+        "rare",
+        "rare"
+      ],
+      "progression": "five_minute_survival",
+      "isolated_rooms": true,
+      "enemy_move_speed_multiplier": 0.65
     },
     {
       "index": 3,
       "display_name": "終焉の炉心",
-      "width": 94,
-      "height": 94,
-      "room_count": 12,
-      "elite_rooms": 2,
-      "target_duration_seconds": 720.0,
-      "boss_fallback_seconds": 1020.0,
-      "boss_kill_requirement": 900,
-      "boss_candidates": ["flame_golem", "demon_e", "black_knight_c"],
-      "boss_hp_multiplier": 5.8,
-      "boss_damage_multiplier": 0.82,
+      "width": 96,
+      "height": 96,
+      "room_count": 1,
+      "elite_rooms": 0,
+      "target_duration_seconds": 300,
+      "boss_fallback_seconds": 300,
+      "boss_kill_requirement": 200,
+      "surge_fallback_seconds": [
+        75,
+        150
+      ],
+      "surge_equipment_rarity": "epic",
+      "hazard_damage": 7.0,
+      "boss_candidates": [
+        "armored_orc",
+        "elite_orc"
+      ],
+      "boss_hp_multiplier": 1,
+      "boss_damage_multiplier": 1,
       "enemy_progress_offset": 300.0,
-      "enemy_hp_multiplier": 4.0,
-      "enemy_damage_multiplier": 1.20,
-      "enemy_cap": 48,
-      "spawn_batch": [2, 3],
-      "difficulty_curve_id": "map_exploration",
-      "treasure_rewards": ["equipment", "skill", "recovery", "attribute"],
-      "treasure_rarities": ["normal", "rare", "rare", "rare"]
+      "enemy_hp_multiplier": 0.65,
+      "enemy_damage_multiplier": 1.0,
+      "enemy_cap": 128,
+      "spawn_batch": [
+        3,
+        10
+      ],
+      "difficulty_curve_id": "five_minute_survival",
+      "treasure_rewards": [
+        "equipment",
+        "equipment",
+        "recovery"
+      ],
+      "treasure_rarities": [
+        "normal",
+        "rare",
+        "rare",
+        "rare"
+      ],
+      "progression": "five_minute_survival",
+      "isolated_rooms": true,
+      "enemy_move_speed_multiplier": 0.65
     }
+  ],
+  "_comment_treasure_rewards": "属性システム停止中は 'attribute' と属性系完成大技につながる 'skill' を使用せず、装備/回復だけを配置する。",
+  "floors_per_map": 1,
+  "total_floors": 1,
+  "survival_duration_seconds": 300,
+  "survival_boss_seconds": [
+    240
+  ],
+  "survival_supply_seconds": [
+    75,
+    150
   ]
 }

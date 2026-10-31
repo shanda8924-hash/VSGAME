@@ -1,10 +1,10 @@
 {
   "id": "steam_burst_weapon",
   "display_name": "蒸気爆発剣",
-  "description": "炎+氷の合成武器。着弾時に蒸気の爆発演出が発生する。",
+  "description": "高圧蒸気を封じた遺物武器。",
   "base_damage": 25.0,
   "attack_interval": 1.2,
   "attack_range": 220.0,
-  "required_fragment_ids": ["fire", "ice"],
+  "is_relic": true,
   "vfx_theme_id": "steam"
 }

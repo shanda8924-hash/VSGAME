@@ -1,10 +1,10 @@
 {
   "id": "thunder_flame_weapon",
   "display_name": "雷炎の剣",
-  "description": "炎+雷の合成武器。着弾点周辺の敵へ稲妻が連鎖する。",
+  "description": "荒々しい熱雷を封じた遺物武器。",
   "base_damage": 30.0,
   "attack_interval": 1.0,
   "attack_range": 240.0,
-  "required_fragment_ids": ["fire", "lightning"],
+  "is_relic": true,
   "vfx_theme_id": "thunder_flame"
 }

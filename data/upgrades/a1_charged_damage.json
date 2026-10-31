@@ -1,0 +1,1 @@
+{"id":"a1_charged_damage","display_name":"感電追撃","effect_type":"charged_damage","category":"element_lightning","value":0.25,"description":"帯電中の敵への全ダメージ +25%（重複可）","icon_path":"res://assets/ui/icons/battle_skills/upgrades/a1_charged_damage.png"}

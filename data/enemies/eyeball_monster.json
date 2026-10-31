@@ -1,0 +1,10 @@
+{
+  "id": "eyeball_monster",
+  "display_name": "アイボールモンスター",
+  "sprite_folder": "enemy/Eyeball Monster/Eyeball Monster",
+  "max_hp": 36.0,
+  "move_speed": 110.0,
+  "contact_damage": 3.0,
+  "exp_value": 1,
+  "min_elapsed_seconds": 0.0
+}

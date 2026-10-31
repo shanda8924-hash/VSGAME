@@ -4,5 +4,6 @@
   "effect_type": "attack_interval_multiplier",
   "category": "common",
   "value": 0.12,
-  "description": "攻撃間隔-12%"
+  "description": "攻撃間隔-12%",
+  "icon_path": "res://assets/ui/icons/battle_skills/upgrades/attack_speed_up.png"
 }

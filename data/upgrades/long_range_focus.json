@@ -6,5 +6,6 @@
   "effect_type": "attack_range_multiplier",
   "value": 0.20,
   "downside_type": "attack_interval_multiplier",
-  "downside_value": 0.08
+  "downside_value": 0.08,
+  "icon_path": "res://assets/ui/icons/battle_skills/upgrades/long_range_focus.png"
 }

@@ -1,1 +1,1 @@
-{"id":"class_archer_lv3","display_name":"弓術奥義 Lv3","category":"ranged","effect_type":"class_ability_level_up","value":1.0,"description":"職業専用強化: 拡散を絞り集中射撃(命中率向上)","class_character_id":"archer","class_ability_level":3}
+{"id":"class_archer_lv3","display_name":"弓術奥義 Lv3","category":"ranged","effect_type":"class_ability_level_up","value":1.0,"description":"職業専用強化: 拡散を絞り集中射撃(命中率向上)","class_character_id":"archer","class_ability_level":3,"icon_path":"res://assets/ui/icons/battle_skills/upgrades/class_archer_lv3.png"}

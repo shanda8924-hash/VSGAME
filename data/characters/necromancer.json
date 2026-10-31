@@ -1,1 +1,31 @@
-{"id":"necromancer","display_name":"死霊術師","sprite_folder":"player/Necromancer","max_hp":80.0,"move_speed":140.0,"unlock_cost":500,"preferred_element":"dark","attack_pattern_id":"summon_minion","base_damage":0.0,"attack_interval":6.0,"attack_range":0.0,"vfx_theme_id":"dark","attack_pattern_params":{"minion_max_count":3,"minion_hp":40.0,"minion_speed":110.0,"minion_damage":8.0,"minion_lifetime":25.0},"active_skill_id":"necromancer_raise_dead","active_skill_name":"RAISE THE DEAD / 死者蘇生","active_skill_icon":"RIP","active_skill_cooldown":18.0,"active_skill_params":{"summon_count":3,"duration":18.0},"minion_stat_multiplier":1.3,"self_damage_multiplier":0.9}
+{
+  "id": "necromancer",
+  "display_name": "死霊術師",
+  "sprite_folder": "player/Necromancer",
+  "max_hp": 80.0,
+  "move_speed": 140.0,
+  "unlock_cost": 500,
+  "preferred_element": "dark",
+  "attack_pattern_id": "summon_minion",
+  "base_damage": 0.0,
+  "attack_interval": 6.0,
+  "attack_range": 0.0,
+  "vfx_theme_id": "dark",
+  "attack_pattern_params": {
+    "minion_max_count": 3,
+    "minion_hp": 40.0,
+    "minion_speed": 110.0,
+    "minion_damage": 8.0,
+    "minion_lifetime": 25.0
+  },
+  "active_skill_id": "necromancer_raise_dead",
+  "active_skill_name": "RAISE THE DEAD / 死者蘇生",
+  "active_skill_icon": "RIP",
+  "active_skill_cooldown": 18.0,
+  "active_skill_params": {
+    "summon_count": 3,
+    "duration": 18.0
+  },
+  "minion_stat_multiplier": 1.3,
+  "self_damage_multiplier": 0.9
+}

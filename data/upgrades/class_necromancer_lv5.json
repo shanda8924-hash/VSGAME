@@ -1,1 +1,1 @@
-{"id":"class_necromancer_lv5","display_name":"死霊秘儀 Lv5","category":"ranged","effect_type":"class_ability_level_up","value":1.0,"description":"職業専用強化: 味方死亡時に爆発ダメージ","class_character_id":"necromancer","class_ability_level":5}
+{"id":"class_necromancer_lv5","display_name":"死霊秘儀 Lv5","category":"ranged","effect_type":"class_ability_level_up","value":1.0,"description":"職業専用強化: 味方死亡時に爆発ダメージ","class_character_id":"necromancer","class_ability_level":5,"icon_path":"res://assets/ui/icons/battle_skills/upgrades/class_necromancer_lv5.png"}

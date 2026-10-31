@@ -1,0 +1,1 @@
+{"id":"a1_lightning_overload","display_name":"過負荷","effect_type":"lightning_overload","category":"state_charged","value":0.20,"description":"帯電中の敵へのダメージ +20%（重複可）","icon_path":"res://assets/ui/icons/battle_skills/upgrades/a1_lightning_overload.png"}

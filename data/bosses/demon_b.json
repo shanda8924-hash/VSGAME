@@ -6,6 +6,6 @@
   "move_speed": 54.0,
   "contact_damage": 38.7,
   "exp_value": 25,
-  "visual_scale": 1.35,
+  "visual_scale": 3.10,
   "attack_pattern_id": "nova"
 }

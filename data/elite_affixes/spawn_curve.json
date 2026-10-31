@@ -1,11 +1,18 @@
 {
-  "initial_delay_range": [90.0, 120.0],
-  "phases": [
-    {"start_seconds": 0.0, "delay_range": [150.0, 180.0]},
-    {"start_seconds": 180.0, "delay_range": [120.0, 150.0]},
-    {"start_seconds": 420.0, "delay_range": [90.0, 120.0]}
+  "initial_delay_range": [
+    90,
+    105
   ],
-  "soft_pity_seconds": 180.0,
+  "phases": [
+    {
+      "start_seconds": 0,
+      "delay_range": [
+        60,
+        90
+      ]
+    }
+  ],
+  "soft_pity_seconds": 110,
   "retry_delay_seconds": 5.0,
   "spawn_radius": 380.0,
   "min_spawn_distance": 200.0

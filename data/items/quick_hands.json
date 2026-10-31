@@ -3,5 +3,6 @@
   "display_name": "早業の手袋",
   "effect_type": "attack_interval_multiplier",
   "value": 0.10,
+  "icon_path": "res://assets/ui/icons/shikashi/items/quick_hands.png",
   "description": "攻撃間隔が10%短縮する"
 }

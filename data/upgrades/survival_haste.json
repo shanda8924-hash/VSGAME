@@ -1,0 +1,15 @@
+{
+  "id": "survival_haste",
+  "display_name": "高速攻撃",
+  "category": "survival",
+  "effect_type": "survival_haste",
+  "value": 0.1,
+  "description": "攻撃間隔を10%短縮。通常攻撃と浮遊武器が速くなる。",
+  "icon_path": "res://assets/ui/icons/battle_skills/upgrades/attack_speed_up.png",
+  "effect_params": {
+    "max_rank": 3,
+    "preview": "haste",
+    "tagline": "攻撃の間隔が短くなる",
+    "requires_projectile": false
+  }
+}

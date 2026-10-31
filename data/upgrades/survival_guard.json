@@ -1,0 +1,15 @@
+{
+  "id": "survival_guard",
+  "display_name": "再生結界",
+  "category": "survival",
+  "effect_type": "survival_guard",
+  "value": 0,
+  "description": "8秒ごとに8のシールドを回復。1段階ごとに耐久が8増える。",
+  "icon_path": "res://assets/ui/icons/battle_skills/upgrades/vitality_boost.png",
+  "effect_params": {
+    "max_rank": 3,
+    "preview": "guard",
+    "tagline": "青い結界が身を守る",
+    "requires_projectile": false
+  }
+}

@@ -6,5 +6,6 @@
   "effect_type": "crit_rate_up",
   "value": 0.15,
   "downside_type": "damage_taken_multiplier",
-  "downside_value": 0.10
+  "downside_value": 0.10,
+  "icon_path": "res://assets/ui/icons/battle_skills/upgrades/glass_cannon.png"
 }

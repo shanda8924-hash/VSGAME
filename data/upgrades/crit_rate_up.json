@@ -4,5 +4,6 @@
   "effect_type": "crit_rate_up",
   "category": "common",
   "value": 0.08,
-  "description": "会心率+8%"
+  "description": "会心率+8%",
+  "icon_path": "res://assets/ui/icons/battle_skills/upgrades/crit_rate_up.png"
 }

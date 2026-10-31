@@ -1,0 +1,15 @@
+{
+  "id": "survival_power",
+  "display_name": "強撃",
+  "category": "survival",
+  "effect_type": "survival_power",
+  "value": 0.08,
+  "description": "攻撃力8%増加。命中時の火花が大きくなる。",
+  "icon_path": "res://assets/ui/icons/battle_skills/upgrades/damage_up.png",
+  "effect_params": {
+    "max_rank": 0,
+    "preview": "power",
+    "tagline": "強い打撃と大きな火花",
+    "requires_projectile": false
+  }
+}

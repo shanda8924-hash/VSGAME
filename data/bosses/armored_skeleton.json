@@ -1,0 +1,15 @@
+{
+  "id": "armored_skeleton",
+  "display_name": "重装スケルトン",
+  "sprite_folder": "enemy/Armored Skeleton",
+  "max_hp": 7800,
+  "move_speed": 85,
+  "contact_damage": 12,
+  "exp_value": 20,
+  "min_elapsed_seconds": 90.0,
+  "special_attack_id": "skeleton_thrust",
+  "visual_scale": 1.7,
+  "attack_pattern_id": "",
+  "attack_interval": 1.5,
+  "attack_windup": 0.6
+}

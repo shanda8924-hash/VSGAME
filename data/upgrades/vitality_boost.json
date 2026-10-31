@@ -4,5 +4,6 @@
   "effect_type": "max_hp_bonus",
   "category": "common",
   "value": 15.0,
-  "description": "最大HP+15(即座に回復)"
+  "description": "最大HP+15(即座に回復)",
+  "icon_path": "res://assets/ui/icons/battle_skills/upgrades/vitality_boost.png"
 }

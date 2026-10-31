@@ -1,1 +1,1 @@
-{"id":"class_soldier_lv4","display_name":"連撃の型 Lv4","category":"melee","effect_type":"class_ability_level_up","value":1.0,"description":"職業専用強化: 貫通+1(間合い+15%)","class_character_id":"soldier","class_ability_level":4}
+{"id":"class_soldier_lv4","display_name":"連撃の型 Lv4","category":"melee","effect_type":"class_ability_level_up","value":1.0,"description":"職業専用強化: 貫通+1(間合い+15%)","class_character_id":"soldier","class_ability_level":4,"icon_path":"res://assets/ui/icons/battle_skills/upgrades/class_soldier_lv4.png"}

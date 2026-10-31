@@ -1,0 +1,460 @@
+{
+  "products": [
+    {
+      "id": "weapon_holy_frost",
+      "category": "weapon",
+      "item_kind": "weapon",
+      "ref_id": "holy_frost_weapon",
+      "price": 165,
+      "visits": [
+        1
+      ]
+    },
+    {
+      "id": "weapon_steam_burst",
+      "category": "weapon",
+      "item_kind": "weapon",
+      "ref_id": "steam_burst_weapon",
+      "price": 170,
+      "visits": [
+        1
+      ]
+    },
+    {
+      "id": "weapon_holy_flame",
+      "category": "weapon",
+      "item_kind": "weapon",
+      "ref_id": "holy_flame_weapon",
+      "price": 170,
+      "visits": [
+        1
+      ]
+    },
+    {
+      "id": "weapon_frost_thunder",
+      "category": "weapon",
+      "item_kind": "weapon",
+      "ref_id": "frost_thunder_weapon",
+      "price": 175,
+      "visits": [
+        1
+      ]
+    },
+    {
+      "id": "weapon_shadow_frost",
+      "category": "weapon",
+      "item_kind": "weapon",
+      "ref_id": "shadow_frost_weapon",
+      "price": 180,
+      "visits": [
+        1
+      ]
+    },
+    {
+      "id": "weapon_hellfire",
+      "category": "weapon",
+      "item_kind": "weapon",
+      "ref_id": "hellfire_weapon",
+      "price": 185,
+      "visits": [
+        1
+      ]
+    },
+    {
+      "id": "weapon_holy_thunder",
+      "category": "weapon",
+      "item_kind": "weapon",
+      "ref_id": "holy_thunder_weapon",
+      "price": 190,
+      "visits": [
+        1
+      ]
+    },
+    {
+      "id": "weapon_thunder_flame",
+      "category": "weapon",
+      "item_kind": "weapon",
+      "ref_id": "thunder_flame_weapon",
+      "price": 190,
+      "visits": [
+        1
+      ]
+    },
+    {
+      "id": "weapon_purity_corruption",
+      "category": "weapon",
+      "item_kind": "weapon",
+      "ref_id": "purity_corruption_weapon",
+      "price": 195,
+      "visits": [
+        1
+      ]
+    },
+    {
+      "id": "weapon_shadow_thunder",
+      "category": "weapon",
+      "item_kind": "weapon",
+      "ref_id": "shadow_thunder_weapon",
+      "price": 195,
+      "visits": [
+        1
+      ]
+    },
+    {
+      "id": "weapon_elemental_triad",
+      "category": "weapon",
+      "item_kind": "weapon",
+      "ref_id": "elemental_triad_weapon",
+      "price": 220,
+      "visits": [
+        2
+      ]
+    },
+    {
+      "id": "weapon_trinity_flame",
+      "category": "weapon",
+      "item_kind": "weapon",
+      "ref_id": "trinity_flame_weapon",
+      "price": 235,
+      "visits": [
+        2
+      ]
+    },
+    {
+      "id": "weapon_lunar_frost",
+      "category": "weapon",
+      "item_kind": "weapon",
+      "ref_id": "lunar_frost_weapon",
+      "price": 245,
+      "visits": [
+        2
+      ]
+    },
+    {
+      "id": "weapon_tetra_elemental",
+      "category": "weapon",
+      "item_kind": "weapon",
+      "ref_id": "tetra_elemental_weapon",
+      "price": 270,
+      "visits": [
+        2
+      ]
+    },
+    {
+      "id": "weapon_pentaelemental",
+      "category": "weapon",
+      "item_kind": "weapon",
+      "ref_id": "pentaelemental_weapon",
+      "price": 290,
+      "visits": [
+        2
+      ]
+    },
+    {
+      "id": "generic_attack_speed",
+      "category": "generic",
+      "item_kind": "upgrade",
+      "ref_id": "attack_speed_up",
+      "price": 60,
+      "visits": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "generic_berserker",
+      "category": "generic",
+      "item_kind": "upgrade",
+      "ref_id": "berserker_instinct",
+      "price": 60,
+      "visits": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "generic_crit",
+      "category": "generic",
+      "item_kind": "upgrade",
+      "ref_id": "crit_rate_up",
+      "price": 60,
+      "visits": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "generic_damage",
+      "category": "generic",
+      "item_kind": "upgrade",
+      "ref_id": "damage_up",
+      "price": 60,
+      "visits": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "generic_glass_cannon",
+      "category": "generic",
+      "item_kind": "upgrade",
+      "ref_id": "glass_cannon",
+      "price": 60,
+      "visits": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "generic_reckless",
+      "category": "generic",
+      "item_kind": "upgrade",
+      "ref_id": "reckless_power",
+      "price": 60,
+      "visits": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "generic_swift",
+      "category": "generic",
+      "item_kind": "upgrade",
+      "ref_id": "swift_striker",
+      "price": 60,
+      "visits": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "generic_vitality",
+      "category": "generic",
+      "item_kind": "upgrade",
+      "ref_id": "vitality_boost",
+      "price": 60,
+      "visits": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "state_fire_heatwave",
+      "category": "state",
+      "item_kind": "upgrade",
+      "ref_id": "a1_fire_heatwave",
+      "required_state": "burning",
+      "price": 60,
+      "visits": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "state_fire_scorching",
+      "category": "state",
+      "item_kind": "upgrade",
+      "ref_id": "a1_fire_scorching",
+      "required_state": "burning",
+      "price": 60,
+      "visits": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "state_fire_ashes",
+      "category": "state",
+      "item_kind": "upgrade",
+      "ref_id": "a1_fire_ashes",
+      "required_state": "burning",
+      "price": 60,
+      "visits": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "state_ice_permafrost",
+      "category": "state",
+      "item_kind": "upgrade",
+      "ref_id": "a1_ice_permafrost",
+      "required_state": "frozen",
+      "price": 60,
+      "visits": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "state_ice_absolute_zero",
+      "category": "state",
+      "item_kind": "upgrade",
+      "ref_id": "a1_ice_absolute_zero",
+      "required_state": "frozen",
+      "price": 60,
+      "visits": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "state_ice_deep_freeze",
+      "category": "state",
+      "item_kind": "upgrade",
+      "ref_id": "a1_ice_deep_freeze",
+      "required_state": "frozen",
+      "price": 60,
+      "visits": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "state_lightning_speed",
+      "category": "state",
+      "item_kind": "upgrade",
+      "ref_id": "a1_lightning_speed",
+      "required_state": "charged",
+      "price": 60,
+      "visits": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "state_lightning_overload",
+      "category": "state",
+      "item_kind": "upgrade",
+      "ref_id": "a1_lightning_overload",
+      "required_state": "charged",
+      "price": 60,
+      "visits": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "state_lightning_field",
+      "category": "state",
+      "item_kind": "upgrade",
+      "ref_id": "a1_lightning_field",
+      "required_state": "charged",
+      "price": 60,
+      "visits": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "state_charged_chain",
+      "category": "state",
+      "item_kind": "upgrade",
+      "ref_id": "a1_charged_chain",
+      "required_state": "charged",
+      "price": 60,
+      "visits": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "state_light_rapid_holy",
+      "category": "state",
+      "item_kind": "upgrade",
+      "ref_id": "a1_light_rapid_holy",
+      "required_state": "marked",
+      "price": 60,
+      "visits": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "state_light_judgment",
+      "category": "state",
+      "item_kind": "upgrade",
+      "ref_id": "a1_light_judgment",
+      "required_state": "marked",
+      "price": 60,
+      "visits": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "state_light_blessing",
+      "category": "state",
+      "item_kind": "upgrade",
+      "ref_id": "a1_light_blessing",
+      "required_state": "marked",
+      "price": 60,
+      "visits": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "state_dark_abyss",
+      "category": "state",
+      "item_kind": "upgrade",
+      "ref_id": "a1_dark_abyss",
+      "required_state": "cursed",
+      "price": 60,
+      "visits": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "state_dark_bind",
+      "category": "state",
+      "item_kind": "upgrade",
+      "ref_id": "a1_dark_bind",
+      "required_state": "cursed",
+      "price": 60,
+      "visits": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "state_dark_corrosion",
+      "category": "state",
+      "item_kind": "upgrade",
+      "ref_id": "a1_dark_corrosion",
+      "required_state": "cursed",
+      "price": 60,
+      "visits": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "recovery_small",
+      "category": "recovery",
+      "item_kind": "recovery",
+      "display_name": "治療薬",
+      "description": "最大HPの35%を回復",
+      "value": 0.35,
+      "price": 40,
+      "visits": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "recovery_large",
+      "category": "recovery",
+      "item_kind": "recovery",
+      "display_name": "上級治療薬",
+      "description": "最大HPの60%を回復",
+      "value": 0.6,
+      "price": 55,
+      "visits": [
+        1,
+        2
+      ]
+    }
+  ]
+}

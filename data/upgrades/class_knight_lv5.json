@@ -1,1 +1,1 @@
-{"id":"class_knight_lv5","display_name":"突撃の型 Lv5","category":"melee","effect_type":"class_ability_level_up","value":1.0,"description":"職業専用強化: 短い間隔で2連続突進","class_character_id":"knight","class_ability_level":5}
+{"id":"class_knight_lv5","display_name":"突撃の型 Lv5","category":"melee","effect_type":"class_ability_level_up","value":1.0,"description":"職業専用強化: 短い間隔で2連続突進","class_character_id":"knight","class_ability_level":5,"icon_path":"res://assets/ui/icons/battle_skills/upgrades/class_knight_lv5.png"}

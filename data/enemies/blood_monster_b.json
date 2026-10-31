@@ -1,0 +1,11 @@
+{
+  "id": "blood_monster_b",
+  "display_name": "ブラッドモンスターB",
+  "sprite_folder": "enemy/Blood Monster_B/Blood Monster_B",
+  "max_hp": 100.0,
+  "move_speed": 50.0,
+  "contact_damage": 8.0,
+  "exp_value": 2,
+  "min_elapsed_seconds": 90.0,
+  "special_attack_id": "blood_spear"
+}

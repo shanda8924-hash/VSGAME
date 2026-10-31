@@ -1,0 +1,10 @@
+{
+  "id": "lava_slime",
+  "display_name": "溶岩スライム",
+  "sprite_folder": "enemy/Lava Slime/Lava Slime",
+  "max_hp": 34.0,
+  "move_speed": 55.0,
+  "contact_damage": 3.0,
+  "exp_value": 1,
+  "min_elapsed_seconds": 0.0
+}

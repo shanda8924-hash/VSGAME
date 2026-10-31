@@ -1,0 +1,15 @@
+{
+  "id": "armored_orc",
+  "display_name": "重装オーク",
+  "sprite_folder": "enemy/Armored Orc",
+  "max_hp": 10140,
+  "move_speed": 85,
+  "contact_damage": 12,
+  "exp_value": 20,
+  "min_elapsed_seconds": 90.0,
+  "special_attack_id": "orc_step_slash",
+  "visual_scale": 1.7,
+  "attack_pattern_id": "",
+  "attack_interval": 1.5,
+  "attack_windup": 0.6
+}

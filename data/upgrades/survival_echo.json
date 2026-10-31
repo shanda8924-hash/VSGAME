@@ -1,0 +1,15 @@
+{
+  "id": "survival_echo",
+  "display_name": "残影追撃",
+  "category": "survival",
+  "effect_type": "survival_echo",
+  "value": 0,
+  "description": "命中の0.18秒後、影の斬撃で追撃。最大3段階で威力が上がる。",
+  "icon_path": "res://assets/ui/icons/battle_skills/upgrades/melee_rapid_strike.png",
+  "effect_params": {
+    "max_rank": 3,
+    "preview": "echo",
+    "tagline": "影がもう一度斬る",
+    "requires_projectile": false
+  }
+}

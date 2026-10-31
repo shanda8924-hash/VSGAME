@@ -6,6 +6,6 @@
   "move_speed": 51.0,
   "contact_damage": 44.0,
   "exp_value": 28,
-  "visual_scale": 1.49,
+  "visual_scale": 2.60,
   "attack_pattern_id": "summon"
 }

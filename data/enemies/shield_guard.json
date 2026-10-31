@@ -1,0 +1,13 @@
+{
+  "id": "shield_guard",
+  "display_name": "盾兵",
+  "sprite_folder": "enemy/Shield Guard",
+  "max_hp": 86.0,
+  "move_speed": 48.0,
+  "contact_damage": 5.0,
+  "exp_value": 2,
+  "min_elapsed_seconds": 60.0,
+  "attack_interval": 1.65,
+  "attack_range": 48.0,
+  "attack_windup": 0.65
+}

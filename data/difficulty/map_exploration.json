@@ -1,7 +1,34 @@
 [
-  { "time_seconds": 0,   "spawn_interval": 1.35 },
-  { "time_seconds": 120, "spawn_interval": 1.10 },
-  { "time_seconds": 300, "spawn_interval": 0.86 },
-  { "time_seconds": 540, "spawn_interval": 0.68 },
-  { "time_seconds": 720, "spawn_interval": 0.62 }
+  {
+    "time_seconds": 0,
+    "spawn_interval": 1.15,
+    "spawn_batch": [
+      3,
+      5
+    ]
+  },
+  {
+    "time_seconds": 45,
+    "spawn_interval": 0.95,
+    "spawn_batch": [
+      4,
+      6
+    ]
+  },
+  {
+    "time_seconds": 90,
+    "spawn_interval": 0.8,
+    "spawn_batch": [
+      5,
+      8
+    ]
+  },
+  {
+    "time_seconds": 150,
+    "spawn_interval": 0.65,
+    "spawn_batch": [
+      7,
+      10
+    ]
+  }
 ]

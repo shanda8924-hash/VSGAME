@@ -1,1 +1,32 @@
-{"id":"armored_axeman","display_name":"重装斧兵","sprite_folder":"player/Armored Axeman","max_hp":150.0,"move_speed":105.0,"unlock_cost":220,"preferred_element":"lightning","attack_pattern_id":"wide_cleave","base_damage":24.0,"attack_interval":1.65,"attack_range":75.0,"vfx_theme_id":"lightning","attack_pattern_params":{"arc_half_angle_degrees":88.0,"step_distance":12.0,"impact_delay":0.28,"hitbox_active_seconds":0.1,"knockback_distance":10.0},"active_skill_id":"axeman_execution","active_skill_name":"EXECUTION / 処刑","active_skill_icon":"EXE","active_skill_cooldown":17.0,"active_skill_params":{"range":230.0,"windup":0.45,"damage_multiplier":7.0,"execute_threshold":0.25},"damage_reduction":0.2}
+{
+  "id": "armored_axeman",
+  "display_name": "重装斧兵",
+  "sprite_folder": "player/Armored Axeman",
+  "max_hp": 150.0,
+  "move_speed": 105.0,
+  "unlock_cost": 220,
+  "preferred_element": "lightning",
+  "attack_pattern_id": "wide_cleave",
+  "base_damage": 12.0,
+  "attack_interval": 1.65,
+  "attack_range": 75.0,
+  "vfx_theme_id": "lightning",
+  "attack_pattern_params": {
+    "arc_half_angle_degrees": 88.0,
+    "step_distance": 12.0,
+    "impact_delay": 0.28,
+    "hitbox_active_seconds": 0.1,
+    "knockback_distance": 10.0
+  },
+  "active_skill_id": "axeman_execution",
+  "active_skill_name": "EXECUTION / 処刑",
+  "active_skill_icon": "EXE",
+  "active_skill_cooldown": 17.0,
+  "active_skill_params": {
+    "range": 230.0,
+    "windup": 0.45,
+    "damage_multiplier": 7.0,
+    "execute_threshold": 0.25
+  },
+  "damage_reduction": 0.2
+}

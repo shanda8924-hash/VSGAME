@@ -1,12 +1,12 @@
 {
   "id": "pentaelemental_weapon",
   "display_name": "五行天魔剣",
-  "description": "全5属性の最終融合武器。あらゆる属性ぶんの着弾演出をまとめて発動する。",
+  "description": "五つの古代紋章を宿す最高位遺物。",
   "base_damage": 95.0,
   "attack_interval": 1.5,
   "attack_range": 340.0,
-  "required_fragment_ids": ["fire", "ice", "lightning", "light", "dark"],
-  "vfx_theme_id": "pentaelemental",
+  "is_relic": true,
+  "vfx_theme_id": "purity_corruption",
   "crit_chance": 0.3,
   "crit_multiplier": 2.6
 }

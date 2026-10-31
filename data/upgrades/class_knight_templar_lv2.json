@@ -1,1 +1,1 @@
-{"id":"class_knight_templar_lv2","display_name":"聖なる波動 Lv2","category":"melee","effect_type":"class_ability_level_up","value":1.0,"description":"職業専用強化: 波動範囲+30%","class_character_id":"knight_templar","class_ability_level":2}
+{"id":"class_knight_templar_lv2","display_name":"聖なる波動 Lv2","category":"melee","effect_type":"class_ability_level_up","value":1.0,"description":"職業専用強化: 波動範囲+30%","class_character_id":"knight_templar","class_ability_level":2,"icon_path":"res://assets/ui/icons/battle_skills/upgrades/class_knight_templar_lv2.png"}

@@ -3,5 +3,6 @@
   "display_name": "遠見の護符",
   "effect_type": "attack_range_multiplier",
   "value": 0.15,
+  "icon_path": "res://assets/ui/icons/shikashi/items/long_reach_charm.png",
   "description": "攻撃範囲が15%上昇する"
 }

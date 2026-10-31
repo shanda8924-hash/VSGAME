@@ -6,6 +6,6 @@
   "move_speed": 65.0,
   "contact_damage": 40.5,
   "exp_value": 25,
-  "visual_scale": 1.4,
-  "attack_pattern_id": "charge"
+  "visual_scale": 2.95,
+  "attack_pattern_id": "minotaur_combo"
 }

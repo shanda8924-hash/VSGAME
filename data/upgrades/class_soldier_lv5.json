@@ -1,1 +1,1 @@
-{"id":"class_soldier_lv5","display_name":"連撃の型 Lv5","category":"melee","effect_type":"class_ability_level_up","value":1.0,"description":"職業専用強化: 20%の確率で3連続ヒット","class_character_id":"soldier","class_ability_level":5}
+{"id":"class_soldier_lv5","display_name":"連撃の型 Lv5","category":"melee","effect_type":"class_ability_level_up","value":1.0,"description":"職業専用強化: 20%の確率で3連続ヒット","class_character_id":"soldier","class_ability_level":5,"icon_path":"res://assets/ui/icons/battle_skills/upgrades/class_soldier_lv5.png"}

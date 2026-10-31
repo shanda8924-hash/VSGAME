@@ -1,8 +1,9 @@
 {
   "id": "melee_power",
-  "display_name": "POWER / 剛力",
+  "display_name": "剛力",
   "category": "melee",
   "effect_type": "melee_damage_up",
   "value": 0.15,
-  "description": "近接通常攻撃ダメージ+15%"
+  "description": "近接通常攻撃ダメージ+15%",
+  "icon_path": "res://assets/ui/icons/battle_skills/upgrades/melee_power.png"
 }

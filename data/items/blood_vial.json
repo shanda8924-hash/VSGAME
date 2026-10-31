@@ -3,5 +3,6 @@
   "display_name": "吸血の小瓶",
   "effect_type": "lifesteal",
   "value": 0.02,
+  "icon_path": "res://assets/ui/icons/shikashi/items/blood_vial.png",
   "description": "与えたダメージの2%を回復する（1Hit最大3HP）"
 }

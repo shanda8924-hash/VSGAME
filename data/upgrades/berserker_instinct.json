@@ -6,5 +6,6 @@
   "effect_type": "damage_up",
   "value": 0.20,
   "downside_type": "damage_taken_multiplier",
-  "downside_value": 0.15
+  "downside_value": 0.15,
+  "icon_path": "res://assets/ui/icons/battle_skills/upgrades/berserker_instinct.png"
 }

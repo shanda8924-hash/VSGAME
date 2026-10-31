@@ -1,1 +1,1 @@
-{"id":"class_swordsman_rengeki_lv3","display_name":"乱撃派 Lv3","category":"melee","effect_type":"class_ability_level_up","value":1.0,"description":"連続斬り数3に増加","class_character_id":"swordsman","class_ability_level":3,"class_school":"rengeki"}
+{"id":"class_swordsman_rengeki_lv3","display_name":"乱撃派 Lv3","category":"melee","effect_type":"class_ability_level_up","value":1.0,"description":"連続斬り数3に増加","class_character_id":"swordsman","class_ability_level":3,"class_school":"rengeki","icon_path":"res://assets/ui/icons/battle_skills/upgrades/class_swordsman_rengeki_lv3.png"}

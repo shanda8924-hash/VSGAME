@@ -1,8 +1,9 @@
 {
   "id": "melee_rapid_strike",
-  "display_name": "RAPID STRIKE / 疾風",
+  "display_name": "疾風",
   "category": "melee",
   "effect_type": "melee_attack_speed_up",
   "value": 0.12,
-  "description": "近接通常攻撃速度+12%"
+  "description": "近接通常攻撃速度+12%",
+  "icon_path": "res://assets/ui/icons/battle_skills/upgrades/melee_rapid_strike.png"
 }

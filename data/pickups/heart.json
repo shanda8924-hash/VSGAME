@@ -1,6 +1,7 @@
 {
-  "heart_drop_chance": 0.05,
-  "elite_heart_drop_chance": 0.10,
-  "heal_ratio": 0.15,
-  "lifetime_seconds": 25.0
+  "heart_drop_chance": 0.008,
+  "elite_heart_drop_chance": 0.04,
+  "heal_ratio": 0.06,
+  "lifetime_seconds": 15,
+  "max_ground_hearts": 3
 }

@@ -1,1 +1,1 @@
-{"id":"class_wizard_lv2","display_name":"魔導奥義 Lv2","category":"ranged","effect_type":"class_ability_level_up","value":1.0,"description":"職業専用強化: 誘導性能+30%","class_character_id":"wizard","class_ability_level":2}
+{"id":"class_wizard_lv2","display_name":"魔導奥義 Lv2","category":"ranged","effect_type":"class_ability_level_up","value":1.0,"description":"職業専用強化: 誘導性能+30%","class_character_id":"wizard","class_ability_level":2,"icon_path":"res://assets/ui/icons/battle_skills/upgrades/class_wizard_lv2.png"}

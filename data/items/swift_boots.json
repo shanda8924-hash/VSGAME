@@ -3,5 +3,6 @@
   "display_name": "俊足のブーツ",
   "effect_type": "move_speed_multiplier",
   "value": 0.15,
+  "icon_path": "res://assets/ui/icons/shikashi/items/swift_boots.png",
   "description": "移動速度が15%上昇する"
 }

@@ -6,6 +6,6 @@
   "move_speed": 35.0,
   "contact_damage": 48.4,
   "exp_value": 30,
-  "visual_scale": 1.63,
+  "visual_scale": 2.10,
   "attack_pattern_id": "slam"
 }

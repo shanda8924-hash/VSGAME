@@ -1,12 +1,12 @@
 {
   "id": "elemental_triad_weapon",
   "display_name": "三大元素の剣",
-  "description": "炎+氷+雷の超融合武器。3属性ぶんの着弾演出をまとめて発動する。",
+  "description": "三相の力を封じた上位遺物。高威力の遺物弾を放つ。",
   "base_damage": 48.0,
   "attack_interval": 1.2,
   "attack_range": 260.0,
-  "required_fragment_ids": ["fire", "ice", "lightning"],
-  "vfx_theme_id": "elemental_triad",
+  "is_relic": true,
+  "vfx_theme_id": "thunder_flame",
   "crit_chance": 0.2,
   "crit_multiplier": 2.2
 }

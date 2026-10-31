@@ -1,0 +1,10 @@
+{
+  "id": "demoness_b",
+  "display_name": "デモネスB",
+  "sprite_folder": "enemy/Demoness_B/Demoness_B",
+  "max_hp": 92.0,
+  "move_speed": 90.0,
+  "contact_damage": 9.0,
+  "exp_value": 2,
+  "min_elapsed_seconds": 180.0
+}
