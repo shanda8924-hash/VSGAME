@@ -412,6 +412,13 @@
       "decision": "Phase 1 緊張と山場（波の有効化・敵の役割・圧力曲線・次の波の表示）、Phase 2 スキルの可読性、Phase 3 シナジーと進化、Phase 4 育成の順に実装する。数値はdata/へ寄せ、各Phaseで実経路の検査を1〜2個足す。",
       "reason": "退屈（敵が弱い・移動だけ）、単調（ボスまで山場がない）、分かりにくい（目標と得が見えない・スキルの発動条件が読めない）、育成がない（1ダンジョンで終わる）の4症状は、VFX・UI・ドロップの統一では解消しない。",
       "impact": "docs/fun_loop_redesign.md。Phase 1はexploration_run.json、difficulty/*.json、wave_spawner.gd、map_run_controller.gd、enemy_basic.gd、ranged_strategy.gd、hud.gd、detailed_map_surfaces.gd。"
+    },
+    {
+      "date": "2026-10-31",
+      "title": "装備・熟練・深度をラン外へ持ち越し、1ダンジョンでキャラを終わらせない",
+      "decision": "装備は勝利で全部、敗北でもロック品と1点を持ち帰る。職業の熟練は3段階の持ち込みに変える。ステージ攻略ごとに深度+1で敵倍率と報酬レア度を上げ、次のMAPへ鎖でつなぐ。拠点でも装備・鍛造を開ける。",
+      "reason": "ユーザー評価「育成がない」。1ダンジョンでキャラが終わると、ビルドと装備を育てる動機が続かない。",
+      "impact": "SaveManager（persistent_equipment/class_mastery/class_memory/survival_depth）、equipment_component、player、map_run_controller、result_screen、home。既存セーブは既定値で補完。"
     }
   ]
 }

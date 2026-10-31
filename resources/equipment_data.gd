@@ -19,6 +19,42 @@ class_name EquipmentData
 ## ドロップ時にスナップショットとして保持することで、後からJSONを調整しやすくする。
 @export var special_effect_values: Dictionary = {}
 
+## セーブ層との往復（Phase 4：装備の持ち越し）。Resource参照を持たない素のDictionaryにする。
+func to_dict() -> Dictionary:
+	return {
+		"instance_id": instance_id,
+		"template_id": template_id,
+		"display_name": display_name,
+		"slot": slot,
+		"attack_kind": attack_kind,
+		"rarity": rarity,
+		"icon_path": icon_path,
+		"stats": stats.duplicate(true),
+		"special_effects": Array(special_effects),
+		"special_effect_values": special_effect_values.duplicate(true),
+		"is_favorite": is_favorite,
+		"is_locked": is_locked,
+	}
+
+static func from_dict(entry: Dictionary) -> EquipmentData:
+	var item := EquipmentData.new()
+	item.instance_id = String(entry.get("instance_id", ""))
+	item.template_id = String(entry.get("template_id", ""))
+	item.display_name = String(entry.get("display_name", "装備"))
+	item.slot = String(entry.get("slot", "weapon"))
+	item.attack_kind = String(entry.get("attack_kind", "slash"))
+	item.rarity = String(entry.get("rarity", "uncommon"))
+	item.icon_path = String(entry.get("icon_path", ""))
+	item.stats = Dictionary(entry.get("stats", {})).duplicate(true)
+	var effects: Array[String] = []
+	for effect in entry.get("special_effects", []):
+		effects.append(String(effect))
+	item.special_effects = effects
+	item.special_effect_values = Dictionary(entry.get("special_effect_values", {})).duplicate(true)
+	item.is_favorite = bool(entry.get("is_favorite", false))
+	item.is_locked = bool(entry.get("is_locked", false))
+	return item
+
 func get_stat(stat_name: String) -> float:
 	return float(stats.get(stat_name, 0.0))
 

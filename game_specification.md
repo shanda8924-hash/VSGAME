@@ -4166,3 +4166,26 @@ PC/OpenGLとタッチ操作を含む横画面/Vulkanプレビューで6職を確
 - 新規`tests/synergy_evolution_check.tscn`：相性カードの保証（4回）、連撃の実発動（24振りで4回以上）、進化カードの保証と朱色の表示、
   リロールの金貨と引き直し、「もう出さない」の除外、雷帝の連撃（1命中で4体）、秘技→連鎖、大断の範囲、帯電結界の雷、影走りの自律斬り、
   弓兵の矢の雨（5本・貫通99）。実画面は`docs/screens/evolution_card.png`。
+
+## 2026-10-31 遊びの骨組み Phase 4：育成（現行）
+目標：「ステージを攻略 → 拠点で整える → より深いステージへ」の鎖。負けても何かが残る。`docs/fun_loop_redesign.md` Phase 4。
+
+### 装備の持ち越し（`components/equipment_component.gd`、`SaveManager.persistent_equipment`）
+- ラン開始（`EventBus.run_started`）に`restore_from_save()`で装備6枠と所持品を復元。ラン終了に`store_for_next_run(victory)`で保存：
+  勝利＝すべて（所持品はロック→お気に入り→レア度順に上限20）、敗北＝ロック品は必ず＋未ロック品1点を50%。`EquipmentData.to_dict/from_dict`。
+- リザルトは「持ち帰った装備 N点（ロック品は必ず残る）」「装備をすべて持ち越し　深度 a → b　次の出撃先 MAPk」を出す。敗北の欠片に到達時間（10秒=1）を足す。
+### 職業の熟練（`SaveManager.class_mastery`、`entities/player/player.gd`）
+- ラン終了に加算：職業技の段階-1 ＋ Lv/5 ＋（攻略なら+2）。ビルドの記憶（最初に取った戦闘強化・流派）も残す（`class_memory`）。
+- 段階（累計3/8/15）：1＝職業技Lv2で開始（剣士は前回の流派を持ち込む）、2＝前回最初に取った戦闘強化をLv1で持ち込む、3＝最大HP+10%。
+  ホームの職業カードに「熟練 N（技Lv2開始・持込 雷光連鎖）次の段階まで M」。
+### 深度の鎖（`SaveManager.survival_depth`、`systems/map_run_controller.gd` `_apply_depth_scaling`）
+- `GameManager.start_run`は深度を読み、`_start_survival`で敵HP×(1+0.12/深度)、攻撃×(1+0.08/深度)、ボスHP×(1+0.10/深度)、
+  波の報酬のレア度は3深度ごとに1段上。HUDの石板は「深度N　ステージ名」。攻略で深度+1、次の出撃先は次のMAP（解放済みなら）。
+- ホームの1行：「深度 N　・　次の目標：MAPk ○○ を攻略して深度N+1へ ／ 封印解除 MAPj（◆cost）」。
+### 拠点の装備・鍛造（`ui/home/home.gd` `_setup_loadout`）
+- ホームに隠しPlayer（`LoadoutPlayer`、処理停止・非表示・カメラ無効）を置いて持ち越し装備を載せ、ラン中と同じ`EquipmentScreen`を
+  「装備・鍛造　持ち越し N点（装備中 M）」ボタンで開く。閉じると`store_for_next_run(true)`で保存。鍛造（確定合成）はラン中からも使えるまま。
+### 検証
+- 新規`tests/meta_growth_check.tscn`：敗北の持ち帰り（ロック品必ず・1点以下・時間の欠片・リザルト文）、次ランの復元、勝利の全持ち越し・熟練の加算・記憶・
+  深度+1と次MAP、深度2のランの倍率/HUD/装備済み/流派の持ち込み、熟練2・3段階の持ち込みとHP、ホームの深度行・熟練表示・装備画面の開閉と保存。
+  `survival_home_check`／`five_minute_survival_check`／`survival_growth_check`は維持。実画面は`docs/screens/meta_*.png`。

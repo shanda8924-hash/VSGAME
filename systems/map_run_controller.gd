@@ -219,9 +219,23 @@ func _format_seconds(seconds: float) -> String:
 	var whole := maxi(ceili(seconds), 0)
 	return "%d:%02d" % [whole / 60, whole % 60]
 
+## 深度ごとの倍率（Phase 4）。敵HP+12%/深度、攻撃+8%/深度、ボスHP+10%/深度、波の報酬のレア度は3深度ごとに1段上。
+func _apply_depth_scaling(config: Dictionary, depth: int) -> void:
+	var steps := maxi(depth - 1, 0)
+	config["enemy_hp_multiplier"] = float(config.get("enemy_hp_multiplier", 1.0)) * (1.0 + 0.12 * steps)
+	config["enemy_damage_multiplier"] = float(config.get("enemy_damage_multiplier", 1.0)) * (1.0 + 0.08 * steps)
+	config["survival_boss_hp_multiplier"] = float(config.get("survival_boss_hp_multiplier", _config.get("survival_boss_hp_multiplier", 1.0))) * (1.0 + 0.10 * steps)
+	var rarity := String(config.get("surge_equipment_rarity", "uncommon"))
+	var order: Array = EquipmentMergeSystem.RARITY_ORDER
+	var index := order.find(rarity)
+	if index >= 0:
+		config["surge_equipment_rarity"] = String(order[mini(index + steps / 3, order.size() - 1)])
+	config["depth"] = depth
+
 func _start_survival() -> void:
 	GameManager.elapsed_seconds = 0.0
 	_current_config = _get_map_config(GameManager.current_map_index)
+	_apply_depth_scaling(_current_config, GameManager.current_depth)
 	_map_started_at = GameManager.elapsed_seconds
 	_map_kills = 0
 	_sector_mode = false
@@ -287,7 +301,7 @@ func _tick_survival() -> void:
 	if GameManager.survival_completed:
 		phase = "ボス撃破！　宝箱と装備を回収" if _boss_reward_pending else "装備を回収し、帰還の階段へ [E]"
 	GameManager.dungeon_map.set_meta("objective_text", phase)
-	hud.set_survival_status(String(_current_config.get("display_name", "")), elapsed, boss_at, _map_kills, phase, _survival_boss_phase, next_event)
+	hud.set_survival_status("深度%d　%s" % [GameManager.current_depth, String(_current_config.get("display_name", ""))], elapsed, boss_at, _map_kills, phase, _survival_boss_phase, next_event)
 
 func _finish_survival() -> void:
 	GameManager.survival_completed = true
@@ -956,6 +970,11 @@ func _advance_map() -> void:
 	if GameManager.survival_mode_active:
 		_active = false
 		combo_system.reset_combo()
+		# ステージの鎖（Phase 4）：攻略で深度+1、次の出撃先は次のMAP（解放済みなら）。
+		SaveManager.advance_survival_depth()
+		var next_map := GameManager.current_map_index % 3 + 1
+		if SaveManager.is_map_unlocked(next_map):
+			GameManager.selected_survival_map = next_map
 		GameManager.complete_map_run(1)
 		return
 	var total_floors := int(_config.get("total_floors", 60))

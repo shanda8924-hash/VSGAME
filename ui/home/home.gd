@@ -11,15 +11,15 @@ class_name HomeScreen
 @onready var character_grid: GridContainer = $MarginContainer/VBoxContainer/CenterContainer/CharacterGrid
 
 ## 1600x900基準: ステージ3枚＋職業6枚を1画面へ収める。
-const CELL_SIZE := Vector2(350, 250)
+const CELL_SIZE := Vector2(350, 225)
 const STAGE_CARD_SIZE := Vector2(470, 112)
 const STAGE_PORTRAIT_SIZE := Vector2(68, 68)
 ## カード内の配置枠(CenterContainer)のサイズ。
-const PORTRAIT_FRAME_SIZE := Vector2(230, 116)
+const PORTRAIT_FRAME_SIZE := Vector2(230, 92)
 ## ポートレート原寸(_Idle.pngの1コマ)は100x100だが、実際に描かれた絵はその一部
 ## (SpriteSheetBuilder.build_portrait_texture()が不透明ピクセルの外接矩形へ切り詰め済み)。
 ## 整数倍に近い拡大で粗さが目立ちすぎない大きさにする。
-const PORTRAIT_SIZE := Vector2(112, 112)
+const PORTRAIT_SIZE := Vector2(92, 92)
 const NAME_FONT_SIZE := 28
 const SUB_FONT_SIZE := 20
 ## 未解放セルのポートレートに掛けるmodulate(彩度を落としたグレースケール調)。
@@ -29,6 +29,12 @@ const SUBTEXT_COLOR := Color(0.75, 0.75, 0.8, 1.0)
 const STAGE_NAME_COLOR := Color(0.98, 0.87, 0.59, 1.0)
 
 var _maps: Array = []
+## Phase 4：拠点の装備・鍛造。持ち越し装備を載せた隠しPlayer（LoadoutPlayer）に
+## ラン中と同じEquipmentScreenを被せる。閉じたらSaveManagerへ書き戻す。
+var _loadout_player: Player
+var _equipment_screen: EquipmentScreen
+var _meta_label: Label
+var _forge_button: Button
 
 func _ready() -> void:
 	PixelUIStyle.apply_tree(self)
@@ -42,11 +48,86 @@ func _ready() -> void:
 	_maps = config.get("maps", [])
 	if not SaveManager.is_map_unlocked(GameManager.selected_survival_map):
 		GameManager.selected_survival_map = 1
+	_setup_loadout()
 	_refresh()
 	AudioManager.play_bgm("home_theme")
 
+func _setup_loadout() -> void:
+	# 1行に収める（ホームは1画面固定）：左に深度・次の目標、右に装備・鍛造ボタン。
+	var column := $MarginContainer/VBoxContainer as VBoxContainer
+	var row := HBoxContainer.new()
+	row.name = "LoadoutRow"
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 24)
+	column.add_child(row)
+	column.move_child(row, currency_label.get_index() + 1)
+	_meta_label = Label.new()
+	_meta_label.name = "MetaLabel"
+	_meta_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_meta_label.add_theme_font_size_override("font_size", 19)
+	_meta_label.add_theme_color_override("font_color", STAGE_NAME_COLOR)
+	row.add_child(_meta_label)
+	_forge_button = Button.new()
+	_forge_button.name = "ForgeButton"
+	_forge_button.custom_minimum_size = Vector2(380, 38)
+	_forge_button.add_theme_font_size_override("font_size", 18)
+	PixelUIStyle.apply_button(_forge_button, Color("d48742"))
+	_forge_button.pressed.connect(_on_forge_pressed)
+	row.add_child(_forge_button)
+	# 隠しPlayer：EquipmentScreenは"player"グループの最初のノードからEquipmentComponentを取る。
+	_loadout_player = preload("res://entities/player/player.tscn").instantiate() as Player
+	_loadout_player.name = "LoadoutPlayer"
+	_loadout_player.visible = false
+	_loadout_player.position = Vector2(-4000, -4000)
+	_loadout_player.process_mode = Node.PROCESS_MODE_DISABLED
+	var camera := _loadout_player.get_node_or_null("Camera2D") as Camera2D
+	if camera: camera.enabled = false
+	add_child(_loadout_player)
+	_loadout_player.equipment_component.restore_from_save()
+	_equipment_screen = preload("res://ui/equipment/equipment_screen.tscn").instantiate() as EquipmentScreen
+	_equipment_screen.name = "HomeEquipmentScreen"
+	add_child(_equipment_screen)
+	_equipment_screen.closed.connect(_on_forge_closed)
+
+func _carried_summary() -> Dictionary:
+	var payload := SaveManager.get_persistent_equipment()
+	return {"equipped": Dictionary(payload.get("equipped", {})).size(), "inventory": Array(payload.get("inventory", [])).size()}
+
+## 深度・次の目標・持ち越し装備の1行（何を目指すかの可視化）。
+func _refresh_meta() -> void:
+	if _meta_label == null:
+		return
+	var depth := SaveManager.get_survival_depth()
+	var target := GameManager.selected_survival_map
+	var entry: Dictionary = {}
+	for candidate in _maps:
+		if int(candidate.get("index", 0)) == target: entry = candidate
+	var objective := "MAP%d %s を攻略して深度%dへ" % [target, String(entry.get("display_name", "")), depth + 1]
+	var next_locked := -1
+	for candidate in _maps:
+		var index := int(candidate.get("index", 0))
+		if not SaveManager.is_map_unlocked(index) and next_locked < 0: next_locked = index
+	if next_locked > 0 and depth >= next_locked:
+		objective += "　／　封印解除 MAP%d（◆%d）" % [next_locked, int(_maps[next_locked - 1].get("unlock_cost", 0))]
+	var carried := _carried_summary()
+	_meta_label.text = "深度 %d　・　次の目標：%s" % [depth, objective]
+	if _forge_button:
+		_forge_button.text = "装備・鍛造　持ち越し %d点（装備中 %d）" % [int(carried.inventory) + int(carried.equipped), int(carried.equipped)]
+
+func _on_forge_pressed() -> void:
+	if _equipment_screen == null or _equipment_screen.is_open():
+		return
+	AudioManager.play_sfx("ui_click")
+	_equipment_screen._open()
+
+func _on_forge_closed() -> void:
+	if _loadout_player:
+		_loadout_player.equipment_component.store_for_next_run(true)
+	_refresh_meta()
+
 func _refresh() -> void:
 	currency_label.text = "継承の欠片　◆ %d" % int(SaveManager.data.get("meta_currency", 0))
+	_refresh_meta()
 
 	for child in stage_row.get_children():
 		child.queue_free()
@@ -201,7 +282,7 @@ func _build_character_cell(character_data: CharacterData) -> Button:
 	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
 	vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	vbox.add_theme_constant_override("separation", 6)
+	vbox.add_theme_constant_override("separation", 3)
 	button.add_child(vbox)
 
 	var portrait_wrap := CenterContainer.new()
@@ -251,6 +332,16 @@ func _build_character_cell(character_data: CharacterData) -> Button:
 	sub_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	sub_label.text = "固有技　%s" % PixelUIStyle.localized_name(character_data.active_skill_name) if unlocked else "封印解除　◆ %d" % character_data.unlock_cost
 	vbox.add_child(sub_label)
+	if unlocked:
+		# 熟練（Phase 4）：累計ポイントと段階、持ち込みの内容。
+		var mastery_label := Label.new()
+		mastery_label.name = "Mastery"
+		mastery_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		mastery_label.add_theme_font_size_override("font_size", 16)
+		mastery_label.add_theme_color_override("font_color", PixelUIStyle.JEWEL)
+		mastery_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		mastery_label.text = _mastery_text(character_data.id)
+		vbox.add_child(mastery_label)
 
 	var action_label := Label.new()
 	action_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -261,6 +352,20 @@ func _build_character_cell(character_data: CharacterData) -> Button:
 	vbox.add_child(action_label)
 
 	return button
+
+func _mastery_text(character_id: String) -> String:
+	var points := SaveManager.get_class_mastery(character_id)
+	var tier := SaveManager.get_mastery_tier(character_id)
+	var memory := SaveManager.get_class_memory(character_id)
+	var perks: Array[String] = []
+	if tier >= 1: perks.append("技Lv2開始")
+	if tier >= 2:
+		var upgrade: UpgradeData = DataLoader.upgrades.get(String(memory.get("first_upgrade", "")))
+		perks.append("持込 " + (upgrade.display_name if upgrade else "強化"))
+	if tier >= 3: perks.append("HP+10%")
+	var next_threshold := int(SaveManager.MASTERY_TIERS[tier]) if tier < SaveManager.MASTERY_TIERS.size() else -1
+	var progress := "次の段階まで %d" % (next_threshold - points) if next_threshold > 0 else "最大"
+	return "熟練 %d（%s）%s" % [points, "・".join(perks) if not perks.is_empty() else progress, "　" + progress if not perks.is_empty() and next_threshold > 0 else ""]
 
 ## 通常/ホバー/選択中(フォーカス)で枠線の色を変える(ホバー・選択中セルの
 ## ハイライト表示)。

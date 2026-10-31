@@ -29,7 +29,8 @@ func _ready() -> void:
 
 func _on_run_ended(survived_seconds: float, kill_count: int) -> void:
 	SaveManager.update_best_survival(survived_seconds)
-	var reward := _run_reward(kill_count)
+	# 負けても到達時間ぶんの欠片は残る（10秒=1）。
+	var reward := _run_reward(kill_count, survived_seconds)
 	SaveManager.add_meta_currency(reward)
 	get_tree().paused = true
 	visible = true
@@ -45,7 +46,10 @@ func _on_run_ended(survived_seconds: float, kill_count: int) -> void:
 	kill_label.text = "撃破数　%d体" % kill_count
 	reward_label.text = "継承の欠片　+%d" % reward
 	if GameManager.survival_mode_active:
-		reward_label.text += "（撃破＋残金＋回収装備%d点）" % GameManager.run_equipment_count
+		reward_label.text += "（撃破＋残金＋回収装備%d点＋到達時間）" % GameManager.run_equipment_count
+		var carried := SaveManager.get_persistent_equipment()
+		var carried_count: int = Dictionary(carried.get("equipped", {})).size() + Array(carried.get("inventory", [])).size()
+		reward_label.text += "\n持ち帰った装備 %d点（ロック品は必ず残る）　深度 %d のまま" % [carried_count, SaveManager.get_survival_depth()]
 	retry_button.grab_focus.call_deferred()
 
 
@@ -68,11 +72,15 @@ func _on_run_cleared(room_count: int, elapsed_seconds: float, kill_count: int) -
 	reward_label.text = "継承の欠片　+%d" % reward
 	if GameManager.survival_mode_active:
 		reward_label.text += "（撃破＋残金＋回収装備%d点）" % GameManager.run_equipment_count
+		var depth := SaveManager.get_survival_depth()
+		reward_label.text += "\n装備をすべて持ち越し　深度 %d → %d　次の出撃先 MAP%d" % [maxi(depth - 1, 1), depth, GameManager.selected_survival_map]
 	retry_button.grab_focus.call_deferred()
 
 
-func _run_reward(kills: int) -> int:
-	return kills + GameManager.run_gold + GameManager.run_equipment_count * 5 if GameManager.survival_mode_active else kills
+func _run_reward(kills: int, survived_seconds: float = 0.0) -> int:
+	if not GameManager.survival_mode_active:
+		return kills
+	return kills + GameManager.run_gold + GameManager.run_equipment_count * 5 + int(survived_seconds / 10.0)
 
 func _format_time(seconds: float) -> String:
 	var total := maxi(int(seconds), 0)

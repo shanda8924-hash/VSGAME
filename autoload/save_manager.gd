@@ -14,7 +14,17 @@ const DEFAULT_DATA := {
 	"deepest_cleared_floor": 0,
 	"music_volume": 0.8,
 	"sfx_volume": 0.9,
+	# Phase 4（育成）：装備の持ち越し、職業の熟練、深度の鎖。
+	"persistent_equipment": {"equipped": {}, "inventory": []},
+	"class_mastery": {},
+	"class_memory": {},
+	"survival_depth": 1,
+	"deepest_survival_depth": 0,
 }
+## ホームに持ち越せる所持品の上限（装備6枠は別）。
+const PERSISTENT_INVENTORY_CAP := 20
+## 熟練の段階（累計ポイント）。1：職業技Lv2（剣士は流派）で開始、2：前回の最初の強化を持ち込み、3：最大HP+10%。
+const MASTERY_TIERS := [3, 8, 15]
 
 var data: Dictionary = DEFAULT_DATA.duplicate(true)
 var _ephemeral_session_depth: int = 0
@@ -36,7 +46,8 @@ func load_data() -> void:
 		# 存在しない場合に備えて、無ければ既定値で補完しておく。
 		for key in DEFAULT_DATA.keys():
 			if not parsed.has(key):
-				parsed[key] = DEFAULT_DATA[key]
+				var fallback = DEFAULT_DATA[key]
+				parsed[key] = fallback.duplicate(true) if typeof(fallback) in [TYPE_DICTIONARY, TYPE_ARRAY] else fallback
 		data = parsed
 
 func save_data() -> void:
@@ -115,6 +126,72 @@ func unlock_map(map_index: int, cost: int) -> bool:
 	data["unlocked_survival_maps"] = unlocked
 	save_data()
 	return true
+
+# ============================================================
+# Phase 4：装備の持ち越し・職業の熟練・深度
+# ============================================================
+
+func get_persistent_equipment() -> Dictionary:
+	var payload: Dictionary = data.get("persistent_equipment", {})
+	return {"equipped": Dictionary(payload.get("equipped", {})).duplicate(true), "inventory": Array(payload.get("inventory", [])).duplicate(true)}
+
+## 装備6枠と所持品（上限PERSISTENT_INVENTORY_CAP）を保存する。所持品はロック→お気に入り→レア度の順に残す。
+func store_persistent_equipment(equipped: Dictionary, inventory: Array) -> void:
+	var kept: Array = inventory.duplicate()
+	kept.sort_custom(func(a: Dictionary, b: Dictionary):
+		if bool(a.get("is_locked", false)) != bool(b.get("is_locked", false)): return bool(a.get("is_locked", false))
+		if bool(a.get("is_favorite", false)) != bool(b.get("is_favorite", false)): return bool(a.get("is_favorite", false))
+		return EquipmentMergeSystem.RARITY_ORDER.find(String(a.get("rarity", ""))) > EquipmentMergeSystem.RARITY_ORDER.find(String(b.get("rarity", "")))
+	)
+	if kept.size() > PERSISTENT_INVENTORY_CAP:
+		kept.resize(PERSISTENT_INVENTORY_CAP)
+	data["persistent_equipment"] = {"equipped": equipped.duplicate(true), "inventory": kept}
+	save_data()
+
+func clear_persistent_equipment() -> void:
+	data["persistent_equipment"] = {"equipped": {}, "inventory": []}
+	save_data()
+
+func get_class_mastery(character_id: String) -> int:
+	return int(Dictionary(data.get("class_mastery", {})).get(character_id, 0))
+
+func add_class_mastery(character_id: String, points: int) -> int:
+	var mastery: Dictionary = Dictionary(data.get("class_mastery", {})).duplicate(true)
+	mastery[character_id] = int(mastery.get(character_id, 0)) + maxi(points, 0)
+	data["class_mastery"] = mastery
+	save_data()
+	return int(mastery[character_id])
+
+func get_mastery_tier(character_id: String) -> int:
+	var points := get_class_mastery(character_id)
+	var tier := 0
+	for threshold in MASTERY_TIERS:
+		if points >= int(threshold): tier += 1
+	return tier
+
+## 前回のビルドの記憶（最初に取った戦闘強化・流派）。熟練2段階以上で持ち込む。
+func remember_class_build(character_id: String, first_upgrade_id: String, school: String) -> void:
+	var memory: Dictionary = Dictionary(data.get("class_memory", {})).duplicate(true)
+	var entry: Dictionary = Dictionary(memory.get(character_id, {})).duplicate(true)
+	if first_upgrade_id != "": entry["first_upgrade"] = first_upgrade_id
+	if school != "" and school != "none": entry["school"] = school
+	memory[character_id] = entry
+	data["class_memory"] = memory
+	save_data()
+
+func get_class_memory(character_id: String) -> Dictionary:
+	return Dictionary(Dictionary(data.get("class_memory", {})).get(character_id, {})).duplicate(true)
+
+func get_survival_depth() -> int:
+	return maxi(int(data.get("survival_depth", 1)), 1)
+
+## ステージを攻略するたびに深度+1。敵の倍率と報酬のレア度が上がる（MapRunController参照）。
+func advance_survival_depth() -> int:
+	var next := get_survival_depth() + 1
+	data["survival_depth"] = next
+	data["deepest_survival_depth"] = maxi(int(data.get("deepest_survival_depth", 0)), next - 1)
+	save_data()
+	return next
 
 func set_audio_volume(bus_name: String, linear_volume: float) -> void:
 	var key := "music_volume" if bus_name == "Music" else "sfx_volume"

@@ -1,6 +1,7 @@
 extends Node
 class_name EquipmentComponent
-## ラン内インベントリと6スロットを管理する。セーブ層には接続しない。
+## ラン内インベントリと6スロットを管理する。Phase 4から、ラン開始時にSaveManagerの
+## 持ち越し装備を復元し、ラン終了時に保存する（勝利＝全部、敗北＝ロック品＋1点を確率で）。
 
 signal inventory_changed()
 signal equipment_changed(slot: String, item: EquipmentData)
@@ -11,19 +12,73 @@ const MAX_INVENTORY_SIZE := 50
 var inventory: Array[EquipmentData] = []
 var equipped: Dictionary = {}
 var _applied_max_hp_bonus: float = 0.0
+## 持ち越し装備の復元は1インスタンスにつき1回（検査の再出撃でも二重にしない）。
+var _restored := false
+## 敗北時にロックされていない品を1点だけ持ち帰れる確率。
+const LOSS_CARRY_CHANCE := 0.5
 
 func _ready() -> void:
 	for slot in SLOTS:
 		equipped[slot] = null
 	EventBus.enemy_died.connect(_on_enemy_died)
 	EventBus.run_ended.connect(_on_run_ended)
+	EventBus.run_cleared.connect(_on_run_cleared)
+	EventBus.run_started.connect(_on_run_started)
 
-func add_item(item: EquipmentData) -> bool:
+func _on_run_started() -> void:
+	if GameManager.survival_mode_active:
+		restore_from_save()
+
+## SaveManagerの持ち越し装備を所持品と6枠へ戻す。
+func restore_from_save() -> void:
+	if _restored:
+		return
+	_restored = true
+	var payload := SaveManager.get_persistent_equipment()
+	# 持ち越し品は「入手」ではないので、HUDの入手通知は出さない。
+	for entry in payload.get("inventory", []):
+		if typeof(entry) == TYPE_DICTIONARY:
+			add_item(EquipmentData.from_dict(entry), true)
+	var equipped_entries: Dictionary = payload.get("equipped", {})
+	for slot in equipped_entries.keys():
+		var entry = equipped_entries[slot]
+		if typeof(entry) != TYPE_DICTIONARY:
+			continue
+		var item := EquipmentData.from_dict(entry)
+		if add_item(item, true):
+			equip(item)
+
+## 持ち帰る装備をSaveManagerへ書く。victory=falseはロック品＋1点（確率）だけ。
+func store_for_next_run(victory: bool) -> Dictionary:
+	var equipped_payload: Dictionary = {}
+	var inventory_payload: Array = []
+	var carried: Array[EquipmentData] = []
+	if victory:
+		carried.append_array(inventory)
+	else:
+		var unlocked: Array[EquipmentData] = []
+		for item in inventory:
+			if item.is_locked:
+				carried.append(item)
+			else:
+				unlocked.append(item)
+		if not unlocked.is_empty() and randf() < LOSS_CARRY_CHANCE:
+			carried.append(unlocked.pick_random())
+	for item in carried:
+		if is_equipped(item):
+			equipped_payload[item.slot] = item.to_dict()
+		else:
+			inventory_payload.append(item.to_dict())
+	SaveManager.store_persistent_equipment(equipped_payload, inventory_payload)
+	return {"equipped": equipped_payload, "inventory": inventory_payload}
+
+func add_item(item: EquipmentData, silent: bool = false) -> bool:
 	if item == null or inventory.size() >= MAX_INVENTORY_SIZE:
 		return false
 	inventory.append(item)
 	inventory_changed.emit()
-	EventBus.equipment_picked_up.emit(item)
+	if not silent:
+		EventBus.equipment_picked_up.emit(item)
 	return true
 
 func is_inventory_full() -> bool:
@@ -155,4 +210,10 @@ func _on_enemy_died(_enemy_data: Resource, _position: Vector2) -> void:
 		health.heal(_get_strongest_special_value("kill_heal", "heal_flat"))
 
 func _on_run_ended(_survived_seconds: float, _kill_count: int) -> void:
+	if GameManager.survival_mode_active:
+		store_for_next_run(false)
 	clear_all()
+
+func _on_run_cleared(_room_count: int, _elapsed_seconds: float, _kill_count: int) -> void:
+	if GameManager.survival_mode_active:
+		store_for_next_run(true)

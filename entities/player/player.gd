@@ -56,6 +56,57 @@ func _ready() -> void:
 	add_child(survival_effects)
 	EventBus.player_leveled_up.connect(_on_leveled_up)
 	EventBus.enemy_physical_damage_dealt.connect(_on_enemy_physical_damage)
+	EventBus.run_started.connect(_on_run_started)
+	EventBus.run_ended.connect(func(_seconds, _kills): _record_class_mastery(false))
+	EventBus.run_cleared.connect(func(_rooms, _seconds, _kills): _record_class_mastery(true))
+
+var _mastery_applied := false
+var _mastery_recorded := false
+
+## 職業の熟練（Phase 4）。ラン外に累積したポイントの段階に応じて、開始時の持ち込みを与える。
+## 1段階：職業技Lv2で開始（剣士は前回の流派）。2段階：前回最初に取った戦闘強化をLv1で持ち込む。3段階：最大HP+10%。
+func _on_run_started() -> void:
+	if _mastery_applied or not GameManager.survival_mode_active:
+		return
+	_mastery_applied = true
+	apply_class_mastery()
+
+func apply_class_mastery() -> Dictionary:
+	var character_id := GameManager.selected_character_id
+	var tier := SaveManager.get_mastery_tier(character_id)
+	var memory := SaveManager.get_class_memory(character_id)
+	var applied := {"tier": tier, "school": "", "upgrade": "", "hp_bonus": 0.0}
+	if tier >= 1 and weapon_manager:
+		var school := String(memory.get("school", ""))
+		if weapon_manager.get_class_character_id() == "swordsman" or weapon_manager.get_class_school() != "none":
+			if school != "" and weapon_manager.get_class_school() == "none":
+				weapon_manager.select_class_school(school)
+				applied["school"] = school
+		elif weapon_manager.get_class_ability_level() <= 1:
+			weapon_manager.increase_class_ability_level()
+			applied["school"] = "ability"
+	if tier >= 2:
+		var upgrade: UpgradeData = DataLoader.upgrades.get(String(memory.get("first_upgrade", "")))
+		if upgrade and upgrade.category == "survival":
+			upgrades_component.apply_upgrade(upgrade)
+			applied["upgrade"] = upgrade.id
+	if tier >= 3:
+		var bonus := roundf(health_component.max_hp * 0.10)
+		upgrades_component._apply_effect("max_hp_bonus", bonus)
+		health_component.current_hp = health_component.max_hp
+		applied["hp_bonus"] = bonus
+	return applied
+
+## ラン終了時に熟練ポイントを加算し、ビルドの記憶（最初の戦闘強化・流派）を残す。
+## ポイント＝職業技の段階-1 ＋ Lv/5 ＋（攻略なら+2）。
+func _record_class_mastery(cleared: bool) -> void:
+	if _mastery_recorded or not GameManager.survival_mode_active:
+		return
+	_mastery_recorded = true
+	var character_id := GameManager.selected_character_id
+	var points := maxi(weapon_manager.get_class_ability_level() - 1, 0) + experience_component.level / 5 + (2 if cleared else 0)
+	SaveManager.add_class_mastery(character_id, points)
+	SaveManager.remember_class_build(character_id, upgrades_component.first_survival_upgrade_id, weapon_manager.get_class_school())
 
 ## ホーム画面で選んだ職業(GameManager.selected_character_id)に応じて、
 ## 見た目(AnimatedSprite2D)とステータス(HP/移動速度)を実行時に差し替える。

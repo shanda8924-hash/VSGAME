@@ -95,6 +95,8 @@ func get_survival_rank(id: String) -> int:
 var banned_upgrade_ids: Array[String] = []
 var ban_uses_remaining := 1
 var level_up_rerolls := 0
+## このランで最初に取った戦闘強化（熟練2段階で次のランへ持ち込む、Phase 4）。
+var first_survival_upgrade_id := ""
 
 func has_evolution(id: String) -> bool:
 	return get_survival_rank(id) > 0
@@ -216,6 +218,7 @@ func apply_upgrade(upgrade: UpgradeData) -> void:
 		var maximum := int(upgrade.effect_params.get("max_rank", 0))
 		if maximum > 0 and rank >= maximum: return
 		survival_upgrade_counts[upgrade.id] = rank + 1
+		if first_survival_upgrade_id == "": first_survival_upgrade_id = upgrade.id
 		var manager := _get_sibling("WeaponManagerComponent") as WeaponManagerComponent
 		match upgrade.effect_type:
 			"survival_area":

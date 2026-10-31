@@ -1,4 +1,12 @@
-# Codex Handoff — 2026-10-31（遊びの骨組み Phase 3まで）
+# Codex Handoff — 2026-10-31（遊びの骨組み Phase 1〜4 実装済み）
+
+## 今回（遊びの骨組み Phase 4：育成、2026-10-31）
+- 装備の持ち越し：`EquipmentComponent`が`run_started`で`SaveManager.persistent_equipment`を復元、`run_ended`（敗北＝ロック品＋1点50%）／`run_cleared`（勝利＝全部、所持品上限20）で保存。`EquipmentData.to_dict/from_dict`。
+- 熟練：`Player._record_class_mastery`（技段階-1＋Lv/5＋攻略2）→`SaveManager.class_mastery`、記憶`class_memory`（最初の戦闘強化・流派）。段階3/8/15で「技Lv2（剣士は流派）開始」「最初の強化を持ち込み」「HP+10%」（`Player.apply_class_mastery`）。
+- 深度：`SaveManager.survival_depth`。`start_run`が読み、`MapRunController._apply_depth_scaling`で敵HP+12%/攻撃+8%/ボスHP+10%・報酬レア度（3深度ごと）。攻略で+1、次の出撃先は次MAP。HUD「深度N」、リザルトに深度と持ち帰り、ホームに「深度・次の目標」と熟練。
+- 拠点の鍛造：ホームに隠しPlayer（LoadoutPlayer）＋`EquipmentScreen`。閉じると保存。
+- 検証：`script_load_check` 0件、新規`meta_growth_check` PASS。回帰（home/survival/growth/readability/synergy）は本文末尾の記録を参照。
+- 残り（ローカルで遊んで判断）：数値の手触り（波の密度、敗北の持ち帰り率、熟練の閾値）、進化レシピの追加、秘技の`trigger`化の深掘り。
 
 ## 今回（遊びの骨組み Phase 3：シナジーと進化、2026-10-31）
 - 連撃`survival_double_strike`（20%/段階、`multishot_chance`へ積む。上限0.5→0.75）。進化5本を`data/upgrades/evo_*.json`（category evolution、`requires`）：雷帝の連撃・影走り・大断・矢の雨・帯電結界。実体は`survival_upgrade_effects.gd`（chain_chance/chain_targets/echo_every_n/影の自律斬り/結界の雷/秘技→連鎖）、`melee_arc_attack.gd`（大断）、`weapon_manager_component.gd`（矢の雨）、`player_upgrades_component.gd`（取得・`get_available_evolutions`・`banned_upgrade_ids`・リロール回数）。

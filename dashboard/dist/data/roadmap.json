@@ -395,11 +395,11 @@
         {
           "id": "fun_loop_phase4_growth",
           "name": "遊びの骨組み Phase 4：育成（装備・熟練の持ち越し、深度の鎖）",
-          "status": "design",
-          "progress": 5,
+          "status": "completed",
+          "progress": 100,
           "priority": "high",
-          "lane": "next",
-          "notes": "装備の永続化、職業熟練、MAP1→2→3の深度チェーン、負けたときの持ち帰り。"
+          "lane": "now",
+          "notes": "装備の持ち越し（勝利＝全部／敗北＝ロック品＋1点50%）、職業の熟練（3段階の持ち込み）、深度の鎖（攻略で+1、敵倍率と報酬レア度、HUD/リザルト/ホームの表示）、拠点の装備・鍛造画面。meta_growth_check PASS。手触りはローカルで調整。"
         },
         {
           "id": "visual_survival_growth",

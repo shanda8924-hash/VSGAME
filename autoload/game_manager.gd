@@ -133,7 +133,8 @@ func start_run(enable_map_mode: bool = false) -> void:
 	selected_survival_map = clampi(selected_survival_map, 1, 3)
 	current_map_index = selected_survival_map if survival_mode_active else (1 if map_mode_active else 0)
 	current_floor_index = 1
-	current_depth = 1
+	# 深度（Phase 4）：ステージを攻略するたびに+1。サバイバルだけが使う。
+	current_depth = SaveManager.get_survival_depth() if survival_mode_active else 1
 	reset_run_gold()
 	generate_exploration_map(current_map_index)
 	EventBus.run_started.emit()
