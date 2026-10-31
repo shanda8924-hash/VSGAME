@@ -11,7 +11,7 @@ func _ready() -> void:
 	if magic:
 		$Visual.texture = load("res://assets/vfx/equipment_comfy/magic_6f.png")
 		$Visual.hframes = 6
-		$Visual.scale = Vector2.ONE * 0.55
+		$Visual.scale = Vector2.ONE * 35.0 / float($Visual.texture.get_height())
 
 func _physics_process(delta: float) -> void:
 	if not is_instance_valid(actor) or actor._is_dead:

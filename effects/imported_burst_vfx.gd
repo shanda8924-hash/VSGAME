@@ -10,12 +10,13 @@ static func spawn(parent: Node2D, position: Vector2, kind: String) -> void:
 		return
 	if not _frames.has(kind):
 		var texture: Texture2D = CHEST_TEXTURE if kind == "chest" else DODGE_TEXTURE
-		var frame_size := 48 if kind == "chest" else 32
+		# 6コマ。コマ寸法＝シート高さ（宝箱48、回避32）。
+		var frame_size := texture.get_height()
 		var frames := SpriteFrames.new()
 		frames.remove_animation("default")
 		frames.add_animation("burst")
 		frames.set_animation_loop("burst", false)
-		frames.set_animation_speed("burst", 24.0)
+		frames.set_animation_speed("burst", 9.0 if kind == "chest" else 20.0)
 		for index in int(texture.get_width() / frame_size):
 			var atlas := AtlasTexture.new()
 			atlas.atlas = texture

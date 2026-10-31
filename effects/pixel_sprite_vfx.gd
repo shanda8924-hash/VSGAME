@@ -2,13 +2,15 @@ extends AnimatedSprite2D
 class_name PixelSpriteVFX
 ## 生成済み6-frame PNGの共通再生器。形状変化は画像に持たせ、移動/Alpha Tweenはしない。
 ## SpriteFrames/TextureはID単位で共有し、実行時のImage読み戻しは行わない。
+## コマ寸法＝シート高さ×(シート幅/6)。各シートは表示サイズの約1/2で描いてあり
+## （1ドット≒ワールド2px、tools/vfx_unified）、表示サイズ/コマ寸法で伸縮する。
 
-const FRAME_SIZE := 64
 const FRAME_COUNT := 6
 const MAX_LIVE := 96
 const MAX_SPAWNS_PER_FRAME := 32
 const ASSET_DIRECTORY := "res://assets/vfx/pixel/"
 static var _frames_cache: Dictionary = {}
+static var _frame_size_cache: Dictionary = {}
 static var _missing_reported: Dictionary = {}
 static var _live_count := 0
 static var _spawn_frame := -1
@@ -49,7 +51,7 @@ func configure(effect_id: String, display_size: Vector2, duration: float = 0.3, 
 		return false
 	sprite_frames = frames
 	animation = "play"
-	scale = Vector2(maxf(display_size.x, 1.0), maxf(display_size.y, 1.0)) / float(FRAME_SIZE)
+	scale = Vector2(maxf(display_size.x, 1.0), maxf(display_size.y, 1.0)) / frame_size_for(effect_id)
 	_duration = maxf(duration, 0.01)
 	_looped = looped
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -69,9 +71,10 @@ static func frames_for(effect_id: String) -> SpriteFrames:
 		_report_missing(effect_id, path)
 		return null
 	var texture := load(path) as Texture2D
-	if texture == null or texture.get_width() != FRAME_SIZE * FRAME_COUNT or texture.get_height() != FRAME_SIZE:
-		_report_missing(effect_id, path + " (expected 384 x 64)")
+	if texture == null or texture.get_height() <= 0 or texture.get_width() % FRAME_COUNT != 0:
+		_report_missing(effect_id, path + " (expected %d equal frames in a row)" % FRAME_COUNT)
 		return null
+	var frame_size := Vector2(texture.get_width() / float(FRAME_COUNT), texture.get_height())
 	var frames := SpriteFrames.new()
 	frames.remove_animation("default")
 	frames.add_animation("play")
@@ -79,10 +82,14 @@ static func frames_for(effect_id: String) -> SpriteFrames:
 	for index in FRAME_COUNT:
 		var atlas := AtlasTexture.new()
 		atlas.atlas = texture
-		atlas.region = Rect2(index * FRAME_SIZE, 0, FRAME_SIZE, FRAME_SIZE)
+		atlas.region = Rect2(Vector2(index * frame_size.x, 0), frame_size)
 		frames.add_frame("play", atlas)
 	_frames_cache[effect_id] = frames
+	_frame_size_cache[effect_id] = frame_size
 	return frames
+
+static func frame_size_for(effect_id: String) -> Vector2:
+	return _frame_size_cache.get(effect_id, Vector2(64, 64)) as Vector2
 
 static func _report_missing(effect_id: String, path: String) -> void:
 	if not _missing_reported.has(effect_id):

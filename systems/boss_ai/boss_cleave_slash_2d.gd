@@ -60,15 +60,15 @@ func _draw() -> void:
 		var b := minf(float(index + 1) / float(SEGMENTS), front)
 		if b <= a:
 			continue
-		_draw_ribbon(a, b, rear, front, radius, width, 0.0, 0.22, Color("ffffff", remaining))
-		_draw_ribbon(a, b, rear, front, radius, width, 0.22, 0.70, Color("bde5ff", remaining))
-		_draw_ribbon(a, b, rear, front, radius, width, 0.70, 1.0, Color("4f96d9", remaining * 0.92))
+		_draw_ribbon(a, b, rear, front, radius, width, 0.0, 0.22, Color("f4fdff", remaining))
+		_draw_ribbon(a, b, rear, front, radius, width, 0.22, 0.70, Color("90ddff", remaining))
+		_draw_ribbon(a, b, rear, front, radius, width, 0.70, 1.0, Color("4f9ccc", remaining * 0.92))
 		var echo_rear := lerpf(rear, front, 0.14)
 		var echo_front := lerpf(rear, front, 0.88)
 		var echo_a := maxf(a, echo_rear)
 		var echo_b := minf(b, echo_front)
 		if echo_b > echo_a:
-			_draw_ribbon(echo_a, echo_b, echo_rear, echo_front, radius * 0.81, width * 0.14, 0.0, 1.0, Color("e8f6ff", remaining * 0.88))
+			_draw_ribbon(echo_a, echo_b, echo_rear, echo_front, radius * 0.81, width * 0.14, 0.0, 1.0, Color("f4fdff", remaining * 0.88))
 
 func _crescent_profile(fraction: float) -> float:
 	return pow(maxf(0.0, sin(clampf(fraction, 0.0, 1.0) * PI)), 1.4)

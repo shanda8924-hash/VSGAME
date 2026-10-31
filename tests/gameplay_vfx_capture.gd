@@ -33,7 +33,7 @@ func _check_vfx_registry() -> void:
 		_check(data != null, "%s resource resolves" % effect_id)
 		if data:
 			_check(data.frame_count == 6, "%s resource declares six frames" % effect_id)
-			_check(data.sprite_sheet != null and data.sprite_sheet.get_size() == Vector2(384, 64), "%s sprite sheet is 384x64" % effect_id)
+			_check(data.sprite_sheet != null and int(data.sprite_sheet.get_width()) == int(data.sprite_sheet.get_height()) * 6, "%s sprite sheet has 6 square frames" % effect_id)
 	var character_ids: Array = DataLoader.characters.keys()
 	character_ids.sort()
 	_check(character_ids.size() == 10, "VFX mapping covers ten playable characters")

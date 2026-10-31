@@ -32,22 +32,23 @@ func _ready() -> void:
 	# ROOM遷移・Boss死亡時に残弾を確実に回収できる共通識別子。
 	add_to_group("projectiles")
 
-## 新しい魔法素材の紫の渦だけを魔導士の追尾弾に使う。判定と属性命中演出は維持する。
+## 紫の渦（6コマのループ、tools/vfx_unified）を魔導士の追尾弾に使う。判定と属性命中演出は維持する。
 func use_wizard_magic() -> void:
 	if _wizard_magic_frames == null:
 		_wizard_magic_frames = SpriteFrames.new()
 		_wizard_magic_frames.set_animation_speed("default", 12.0)
-		for frame in 5:
+		var side := WIZARD_MAGIC_SHEET.get_height()
+		for frame in int(WIZARD_MAGIC_SHEET.get_width() / side):
 			var atlas := AtlasTexture.new()
 			atlas.atlas = WIZARD_MAGIC_SHEET
-			atlas.region = Rect2(256, frame * 64, 64, 64)
+			atlas.region = Rect2(frame * side, 0, side, side)
 			_wizard_magic_frames.add_frame("default", atlas)
 	$Visual.visible = false
 	var magic := AnimatedSprite2D.new()
 	magic.name = "WizardMagic"
 	magic.sprite_frames = _wizard_magic_frames
 	magic.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	magic.scale = Vector2.ONE * 0.64
+	magic.scale = Vector2.ONE * 41.0 / float(WIZARD_MAGIC_SHEET.get_height())
 	magic.modulate = Color(0.93, 0.86, 1.0)
 	add_child(magic)
 	magic.play("default")

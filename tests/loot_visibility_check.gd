@@ -64,7 +64,7 @@ func _run_checks() -> void:
 		ground.global_position = origin + Vector2((index - 2) * 54, 90)
 		matrix.append(ground)
 		var seal := ground.get_node_or_null("Visual/RoyalLootSeal") as Sprite2D
-		seal_widths.append(seal.scale.x * 64.0 if seal != null else 0.0)
+		seal_widths.append(seal.scale.x * seal.texture.get_width() if seal != null else 0.0)
 		seal_scales.append(seal.scale if seal != null else Vector2.ZERO)
 		_check(seal != null and seal.texture != null and seal.texture.resource_path == GroundEquipmentItem.LOOT_SEAL_TEXTURE_PATH, "%s uses its generated seal image" % rarities[index])
 		_check(seal != null and seal.modulate == item.get_rarity_color() and seal.modulate.a == 1.0, "%s remains solid and uses its rarity color" % rarities[index])

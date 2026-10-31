@@ -113,7 +113,7 @@ func _build_ground_effects(visual: Node2D) -> void:
 	seal.texture = load(LOOT_SEAL_TEXTURE_PATH) as Texture2D
 	seal.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	seal.modulate = color
-	seal.scale = Vector2(width / 64.0, width / 128.0)
+	seal.scale = Vector2(width, width * 0.5) / float(seal.texture.get_width())
 	seal.position = Vector2(0, 8)
 	seal.z_index = 1
 	visual.add_child(seal)

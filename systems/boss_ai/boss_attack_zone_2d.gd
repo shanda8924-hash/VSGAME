@@ -50,11 +50,11 @@ func redraw() -> void:
 	queue_redraw()
 
 func _draw() -> void:
-	var edge := Color("ffe4ad") if impact else Color("ff6740")
+	var edge := Color("ffe0c8") if impact else Color("ff7a4a")
 	var fill := Color(edge, 0.42 if impact else 0.14 + 0.12 * progress)
 	if kind == "cone" and impact:
-		edge = Color("ff6740", 0.55)
-		fill = Color("ff6740", 0.08)
+		edge = Color("ff7a4a", 0.55)
+		fill = Color("ff7a4a", 0.08)
 	if kind == "line":
 		var polygon := PackedVector2Array([
 			Vector2(0.0, -half_width), Vector2(length, -half_width),

@@ -10,6 +10,13 @@ var _echo_position := Vector2.ZERO
 var _echo_damage := 0.0
 var _pending_chain: Dictionary = {}
 var _marks: Array[Dictionary] = []
+# tools/vfx_unified/style.py のランプと同じ色（暗縁・明・芯）。
+const STEEL_DARK := Color("2f5d8a")
+const STEEL_LIGHT := Color("90ddff")
+const STEEL_CORE := Color("f4fdff")
+const LIGHTNING_DARK := Color("3f4fd0")
+const LIGHTNING_LIGHT := Color("ffdf64")
+const LIGHTNING_CORE := Color("fffbe8")
 var _slash: Texture2D = preload("res://assets/vfx/equipment_comfy/slash_6f.png")
 var debug_echo_hits := 0
 var debug_chain_hits := 0
@@ -111,19 +118,26 @@ func _draw() -> void:
 	if actor == null: return
 	if actor.upgrades_component.get_survival_rank("survival_guard") > 0 and actor.health_component.shield_amount > 0:
 		var fraction := actor.health_component.shield_amount / maxf(actor.health_component.shield_max, 1)
-		draw_arc(Vector2(0,-12),27.0,-PI * 0.5,-PI * 0.5+TAU*fraction,24,Color(0.35,0.85,1,0.7),2,false)
+		# 色は tools/vfx_unified/style.py の steel ランプ（暗縁→本体→明）。
+		draw_arc(Vector2(0,-12),27.0,-PI * 0.5,-PI * 0.5+TAU*fraction,24,Color(STEEL_DARK,0.8),4,false)
+		draw_arc(Vector2(0,-12),27.0,-PI * 0.5,-PI * 0.5+TAU*fraction,24,Color(STEEL_LIGHT,0.85),2,false)
 		var guard_rank := actor.upgrades_component.get_survival_rank("survival_guard")
 		for index in 2+guard_rank:
 			var p := Vector2.from_angle(index * TAU / (2+guard_rank) + Time.get_ticks_msec() * 0.001) * 27 + Vector2(0,-12)
-			draw_rect(Rect2(p-Vector2(2,2),Vector2(4,4)),Color("80e4ff"))
+			draw_rect(Rect2(p-Vector2(3,3),Vector2(6,6)),STEEL_DARK)
+			draw_rect(Rect2(p-Vector2(2,2),Vector2(4,4)),STEEL_LIGHT)
+			draw_rect(Rect2(p-Vector2(1,1),Vector2(2,2)),STEEL_CORE)
 	for mark in _marks:
 		var point := to_local(mark.to)
-		var color := Color("90ddff") if mark.kind == "echo" else Color("ffdf64")
+		var color := STEEL_LIGHT if mark.kind == "echo" else LIGHTNING_LIGHT
 		color.a = clampf(float(mark.life) / 0.12,0,1)
 		if mark.kind == "chain":
 			var start := to_local(mark.from)
 			var mid := start.lerp(point,0.5) + Vector2(3,-7)
-			draw_polyline(PackedVector2Array([start,mid,mid+Vector2(-6,5),point]),color,3,false)
+			var bolt := PackedVector2Array([start,mid,mid+Vector2(-6,5),point])
+			draw_polyline(bolt,Color(LIGHTNING_DARK,color.a),5,false)
+			draw_polyline(bolt,color,3,false)
+			draw_polyline(bolt,Color(LIGHTNING_CORE,color.a),1,false)
 		elif mark.kind == "echo":
 			var frame := clampi(int((0.24-float(mark.life))/0.24*6),0,5)
 			for index in int(mark.rank):
@@ -132,4 +146,5 @@ func _draw() -> void:
 			var radius := minf(10 + float(mark.rank) * 2.5,26)
 			for index in 6:
 				var direction := Vector2.from_angle(index*TAU/6)
+				draw_line(point+direction*4,point+direction*radius,Color(LIGHTNING_DARK,color.a),4,false)
 				draw_line(point+direction*4,point+direction*radius,color,2,false)

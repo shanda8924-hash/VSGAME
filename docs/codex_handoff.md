@@ -1,5 +1,11 @@
 # Codex Handoff — 2026-10-31（Phase 4まで）
 
+## 今回（VFX統一スタイル：全シート描き直し、2026-10-31）
+- `tools/vfx_unified/`（style.py=ランプ5段・縁取り・6コマの時間配分、effects.py=全55シート、build.py=生成と旧新比較ボード）で実行時の全VFXシートを同名上書き。`python3 tools/vfx_unified/build.py [--board DIR]`。
+- ドット密度：コマ寸法＝表示サイズの約1/2。`PixelSpriteVFX`はコマ寸法＝シート高さ×(幅/6)で読む。浮遊武器・装備弾・魔導士弾・回避/宝箱・宝箱封印・警告円（128px、RING_PIXEL_RADIUS=51）・弾のGlow（12px×2）も寸法から換算。
+- 秘技の雷帝落雷・氷槍豪雨・虚無断界を強化。コード描画の線色（雷光連鎖・残影・結界、ボス予兆・斬撃帯、属性テーマ色）をランプへ統一。比較は`docs/screens/vfx_unified_*.png`。
+- 検証：`script_load_check` 0件、`five_minute_survival_check` PASS。`pixel_hazard_check`の毒沼5件・予兆1件は変更前から失敗（予兆フェーズ追加前のテスト前提）。
+
 ## 今回（秘技：レベルアップで増える大技、2026-10-31）
 - 旧完成大技のうち自動発動の5種（雷帝落雷・煉火天柱・氷槍豪雨・光刃陣・虚無断界）を、属性と無関係の「秘技」としてレベルアップに出す。§43の「通常Runに出さない」をユーザー判断で撤回。
 - `data/upgrades/arcana_*.json`（category `arcana`、max_rank 5、`level_lines`・`strike_counts`・`vfx_sheet`）。`data/skills/completed_skills.json`の5種を5段階化し`strike_count_by_level`を追加。

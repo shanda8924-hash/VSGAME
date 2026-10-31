@@ -65,7 +65,7 @@ func _run() -> void:
 	add_child(projectile)
 	var glow := projectile.get_node("Glow") as Sprite2D
 	_check(glow.texture.resource_path == "res://assets/vfx/pixel/projectile_core.png", "projectile uses PNG rather than GradientTexture")
-	_check(glow.texture.get_size() == Vector2(24, 24), "projectile core keeps 24px footprint")
+	_check(glow.texture.get_size() * glow.scale == Vector2(24, 24), "projectile core keeps 24px footprint")
 	_check(is_equal_approx((projectile.get_node("CollisionShape2D").shape as CircleShape2D).radius, 6.0), "projectile attack collision is unchanged")
 	_check((projectile.get_node("Visual") as Sprite2D).texture.resource_path.ends_with("Arrow01(32x32).png"), "actual arrow weapon remains unchanged")
 	projectile.queue_free()
@@ -83,12 +83,12 @@ func _check(ok: bool, message: String) -> void:
 func _check_warning_image_radius() -> void:
 	# Readback is test-only. Ignore the four cardinal ticks, not the actual circle.
 	var image := WarningCircle.RING_TEXTURE.get_image()
-	_check(image.get_size() == Vector2i(64, 64), "warning PNG dimensions")
-	var minimum := Vector2i(64, 64)
+	_check(image.get_size() == Vector2i(128, 128), "warning PNG dimensions")
+	var minimum := Vector2i(128, 128)
 	var maximum := Vector2i.ZERO
-	for y in 64:
-		for x in 64:
-			if absf(float(x) - 31.5) <= 2.0 or absf(float(y) - 31.5) <= 2.0:
+	for y in 128:
+		for x in 128:
+			if absf(float(x) - 63.5) <= 4.0 or absf(float(y) - 63.5) <= 4.0:
 				continue
 			if image.get_pixel(x, y).a > 0.0:
 				minimum = minimum.min(Vector2i(x, y))

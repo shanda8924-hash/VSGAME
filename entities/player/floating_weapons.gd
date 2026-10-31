@@ -141,7 +141,9 @@ func start_equipment_motion(kind: String, direction: Vector2, radius: float, tar
 	_effect.rotation = direction.angle()
 	_effect.position = direction * 35.0 if kind in ["bow", "magic"] else Vector2.ZERO
 	var profile: Dictionary = actor.weapon_manager.equipment_attack.PROFILES[kind]
-	_effect.scale = Vector2.ONE * (0.65 if kind in ["bow", "magic"] else float(profile.cut) / 26.0 * actor.weapon_manager.get_melee_range_multiplier())
+	# 表示サイズ：射撃は約42px、近接は64*cut/26px。シートはその約1/2の寸法で描いてある。
+	var display_side := 41.6 if kind in ["bow", "magic"] else 64.0 * float(profile.cut) / 26.0 * actor.weapon_manager.get_melee_range_multiplier()
+	_effect.scale = Vector2.ONE * display_side / float(_effect.texture.get_height())
 	_effect.modulate = Color.WHITE.lerp(_rarity_color, 0.48 + _rarity_rank * 0.09)
 	_update_equipment_pose(_sprites["equipment"])
 
@@ -205,7 +207,7 @@ func _draw() -> void:
 		for index in _rarity_rank:
 			var offset := Vector2.from_angle(index * 2.4 + 0.6) * (15.0 + _rarity_rank * 2.0)
 			var point := to_local(_strike_world) + offset
-			draw_texture_rect_region(SHOT, Rect2(point - Vector2(12,12), Vector2(24,24)), Rect2(_effect.frame * 64,0,64,64), Color(_rarity_color, 0.65))
+			draw_texture_rect_region(SHOT, Rect2(point - Vector2(12,12), Vector2(24,24)), Rect2(_effect.frame * SHOT.get_height(), 0, SHOT.get_height(), SHOT.get_height()), Color(_rarity_color, 0.65))
 
 func get_muzzle(weapon_id: String) -> Vector2:
 	if _sprites.has(weapon_id):

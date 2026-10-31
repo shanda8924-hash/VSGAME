@@ -84,7 +84,8 @@ func _spawn_line(from: Vector2, to: Vector2, color: Color, width: float, fade_du
 		return
 	var segment := to - from
 	# 先端から後端まで固定した描画領域内で、画像の形状だけが展開・分解する。
-	PixelSpriteVFX.spawn(self, (from + to) * 0.5, effect_id, Vector2(segment.length(), maxf(width * 4.0, 12.0)), minf(fade_duration, 0.16), segment.angle(), color)
+	# 線のシート（beam=光、chain=雷）は統一ランプで着色済みなので、テーマ色は掛けない。
+	PixelSpriteVFX.spawn(self, (from + to) * 0.5, effect_id, Vector2(segment.length(), maxf(width * 4.0, 12.0)), minf(fade_duration, 0.16), segment.angle(), Color.WHITE)
 
 func _spawn_chain(origin: Vector2, color: Color, count: int) -> void:
 	var enemies := get_tree().get_nodes_in_group("enemies")
