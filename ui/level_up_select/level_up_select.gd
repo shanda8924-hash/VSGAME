@@ -11,6 +11,10 @@ const UpgradePreview := preload("res://ui/level_up_select/upgrade_preview.gd")
 ## 青緑の枠と光で示し、選んでいないカードが目立たないようにする(仕様書40.1)。
 const COMBAT_COLOR := Color("79d7e8")
 const CLASS_COLOR := Color("f2c14e")
+## 秘技（新しく増える自動発動の大技）は橙。戦闘強化・職業技と一目で分ける。
+const ARCANA_COLOR := Color("ff9a5c")
+## 秘技の所持枠。
+const ARCANA_SLOTS := 2
 const SELECTED_COLOR := Color("8fe0d6")
 const CARD_SIZE := Vector2(362, 450)
 @onready var eyebrow: Label = $CenterContainer/Panel/Margin/VBox/Eyebrow
@@ -46,6 +50,15 @@ func _open(new_level: int = 0) -> void:
 		if upgrade.effect_type == "class_school_select" and chosen.size() < SLOT_COUNT:
 			chosen.append(upgrade)
 		else: rest.append(upgrade)
+	# 秘技を1つも持っていない間は、毎回1枚は秘技を混ぜる（最初の数回で必ず手に入る）。
+	if actor and actor.upgrades_component.get_arcana_count() == 0 and chosen.size() < SLOT_COUNT:
+		var arcana_pool: Array[UpgradeData] = []
+		for upgrade in rest:
+			if upgrade.category == "arcana": arcana_pool.append(upgrade)
+		if not arcana_pool.is_empty():
+			var first_arcana: UpgradeData = arcana_pool.pick_random()
+			chosen.append(first_arcana)
+			rest.erase(first_arcana)
 	while chosen.size() < SLOT_COUNT and not rest.is_empty():
 		var picked := _take_weighted_upgrade(rest)
 		if picked == null: break
@@ -68,6 +81,15 @@ func _show_choices(chosen: Array[UpgradeData]) -> void:
 	if grid_container.get_child_count()>0:
 		(grid_container.get_child(0) as Button).grab_focus.call_deferred()
 
+## 持っている秘技は最大段階まで、新しい秘技は枠（2つ）が空いている時だけ出す。
+func _can_offer_arcana(upgrade: UpgradeData) -> bool:
+	var actor := get_tree().get_first_node_in_group("player") as Player
+	if actor == null: return false
+	var rank := actor.upgrades_component.get_survival_rank(upgrade.id)
+	if rank > 0:
+		return rank < int(upgrade.effect_params.get("max_rank", 5))
+	return actor.upgrades_component.get_arcana_count() < ARCANA_SLOTS
+
 func _can_offer_survival(upgrade: UpgradeData) -> bool:
 	var actor := get_tree().get_first_node_in_group("player") as Player
 	if actor == null: return false
@@ -89,6 +111,7 @@ func _get_compatible_upgrades() -> Array[UpgradeData]:
 	for upgrade in DataLoader.get_all_upgrades():
 		if GameManager.survival_mode_active and upgrade.class_character_id == "":
 			if upgrade.category == "survival" and _can_offer_survival(upgrade): result.append(upgrade)
+			elif upgrade.category == "arcana" and _can_offer_arcana(upgrade): result.append(upgrade)
 			continue
 		if upgrade.class_character_id != "":
 			if upgrade.class_character_id != character_id:
@@ -130,6 +153,10 @@ func _take_weighted_upgrade(candidates: Array[UpgradeData]) -> UpgradeData:
 	return candidates.back()
 
 func _upgrade_weight(upgrade: UpgradeData) -> float:
+	if upgrade.category == "arcana":
+		# 秘技は戦闘強化より出やすくする。育てている秘技はさらに出やすい。
+		var arcana_actor := get_tree().get_first_node_in_group("player") as Player
+		return 2.6 if arcana_actor and arcana_actor.upgrades_component.get_survival_rank(upgrade.id) > 0 else 2.0
 	if upgrade.category == "survival":
 		var actor := get_tree().get_first_node_in_group("player") as Player
 		return 1.5 / (1.0 + 0.25 * actor.upgrades_component.get_survival_rank(upgrade.id)) if actor else 1.0
@@ -179,14 +206,15 @@ func _get_current_school() -> String:
 ## 職業技は段階ごとの効果が職業で異なるため、架空の動きを描かず"class"(静止)にする。
 ## 以前は説明文の単語から推測していたため、内容と無関係な動きが出ていた。
 func _preview_kind(upgrade: UpgradeData) -> String:
-	if upgrade.category == "survival":
+	if upgrade.category in ["survival", "arcana"]:
 		return String(upgrade.effect_params.get("preview", "power"))
 	return "class" if upgrade.class_character_id != "" else "static"
 
 func _build_choice_button(upgrade: UpgradeData) -> Button:
 	var actor := get_tree().get_first_node_in_group("player") as Player
 	var is_class := upgrade.class_character_id != ""
-	var accent := CLASS_COLOR if is_class else COMBAT_COLOR
+	var is_arcana := upgrade.category == "arcana"
+	var accent := ARCANA_COLOR if is_arcana else (CLASS_COLOR if is_class else COMBAT_COLOR)
 	var rank := _current_rank(upgrade, actor)
 	var button := Button.new()
 	button.custom_minimum_size = CARD_SIZE
@@ -223,7 +251,7 @@ func _build_choice_button(upgrade: UpgradeData) -> Button:
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_theme_font_size_override("normal_font_size", 20)
-	body.text = _highlight_numbers(upgrade.description, accent.lightened(0.25))
+	body.text = _highlight_numbers(_card_description(upgrade, rank), accent.lightened(0.25))
 	column.add_child(body)
 	var selected := Label.new()
 	selected.name = "SelectionLabel"
@@ -318,10 +346,23 @@ func _build_rank_row(rank: int, max_rank: int, accent: Color, is_class: bool) ->
 	row.add_child(text)
 	return row
 
+## 秘技は段階ごとに何が増えるかが違うので、次の段階の説明文を出す。
+func _card_description(upgrade: UpgradeData, rank: int) -> String:
+	if upgrade.category == "arcana":
+		var lines: Array = upgrade.effect_params.get("level_lines", [])
+		if not lines.is_empty():
+			return String(lines[clampi(rank, 0, lines.size() - 1)])
+	return upgrade.description
+
 func _configure_preview(preview: Control, upgrade: UpgradeData, rank: int, accent: Color, actor: Player) -> void:
 	preview.set("kind", _preview_kind(upgrade))
 	preview.set("rank", rank)
 	preview.set("accent", accent)
+	if upgrade.category == "arcana":
+		var sheet_path := String(upgrade.effect_params.get("vfx_sheet", ""))
+		preview.set("arcana_sheet", load(sheet_path) as Texture2D if ResourceLoader.exists(sheet_path) else null)
+		preview.set("arcana_counts", upgrade.effect_params.get("strike_counts", [1]))
+		preview.set("arcana_unit", String(upgrade.effect_params.get("unit", "")))
 	var character: CharacterData = actor.weapon_manager._character_data if actor else null
 	if character == null:
 		return
@@ -345,14 +386,14 @@ func _attack_shape(pattern: String) -> String:
 func _current_rank(upgrade: UpgradeData, actor: Player) -> int:
 	if upgrade.class_character_id != "":
 		return _get_current_ability_level()
-	if actor and upgrade.category == "survival":
+	if actor and upgrade.category in ["survival", "arcana"]:
 		return actor.upgrades_component.get_survival_rank(upgrade.id)
 	return 0
 
 func _max_rank(upgrade: UpgradeData) -> int:
 	if upgrade.class_character_id != "":
 		return AttackPatternBase.MAX_ABILITY_LEVEL
-	if upgrade.category == "survival":
+	if upgrade.category in ["survival", "arcana"]:
 		return int(upgrade.effect_params.get("max_rank", 0))
 	return 0
 
@@ -361,6 +402,10 @@ func _category_text(upgrade: UpgradeData) -> String:
 		return "流派の選択"
 	if upgrade.class_character_id != "":
 		return "職業技"
+	if upgrade.category == "arcana":
+		var arcana_actor := get_tree().get_first_node_in_group("player") as Player
+		var owned := arcana_actor != null and arcana_actor.upgrades_component.get_survival_rank(upgrade.id) > 0
+		return "秘技" if owned else "秘技　NEW!"
 	return "戦闘強化" if upgrade.category == "survival" else "強化"
 
 ## 説明文の数値(18%・0.18秒・1体など)だけを種類の色で強調する。

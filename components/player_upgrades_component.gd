@@ -91,6 +91,14 @@ var survival_upgrade_counts: Dictionary = {}
 func get_survival_rank(id: String) -> int:
 	return int(survival_upgrade_counts.get(id, 0))
 
+## 所持している秘技の数（レベルアップの枠判定に使う）。
+func get_arcana_count() -> int:
+	var count := 0
+	for id in survival_upgrade_counts.keys():
+		if String(id).begins_with("arcana_") and int(survival_upgrade_counts[id]) > 0:
+			count += 1
+	return count
+
 func _ready() -> void:
 	EventBus.enemy_damage_confirmed.connect(_on_enemy_damage_confirmed)
 
@@ -153,6 +161,17 @@ func apply_character_passives(character_data: CharacterData) -> void:
 ## class_school(文字列)を渡す必要があるため、通常のeffect_type/valueディスパッチャ
 ## (_apply_effect())を経由せずここで直接処理する(代償も持たないため早期returnでよい)。
 func apply_upgrade(upgrade: UpgradeData) -> void:
+	if upgrade.category == "arcana":
+		# 秘技（自動発動の大技）。段階はsurvival_upgrade_countsで数え、実体はConceptSystemが持つ。
+		var arcana_rank := get_survival_rank(upgrade.id)
+		if arcana_rank >= int(upgrade.effect_params.get("max_rank", 5)): return
+		survival_upgrade_counts[upgrade.id] = arcana_rank + 1
+		var world := GameManager.get_runtime_world(self)
+		var concept := world.get_node_or_null("ConceptSystem") as ConceptSystem if world else null
+		if concept: concept.acquire_completed_skill(String(upgrade.effect_params.get("skill_id", "")))
+		var arcana_manager := _get_sibling("WeaponManagerComponent") as WeaponManagerComponent
+		if arcana_manager: arcana_manager.sector_style_changed.emit()
+		return
 	if upgrade.category == "survival":
 		var rank := get_survival_rank(upgrade.id)
 		var maximum := int(upgrade.effect_params.get("max_rank", 0))

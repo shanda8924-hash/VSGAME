@@ -93,7 +93,7 @@ func _run() -> void:
 		var ui := game.get_node("LevelUpSelect") as LevelUpSelect
 		var pool := ui._get_compatible_upgrades()
 		for upgrade in pool:
-			check(upgrade.category=="survival" or upgrade.class_character_id==character,"Legacy numeric/status-only card in new pool")
+			check(upgrade.category in ["survival","arcana"] or upgrade.class_character_id==character,"Legacy numeric/status-only card in new pool")
 		check(pool.size()>=7,"Not enough meaningful choices: "+character)
 		actor.experience_component.add_exp(9)
 		await frames(3)

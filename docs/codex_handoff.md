@@ -1,6 +1,14 @@
 # Codex Handoff — 2026-10-31（Phase 4まで）
 
-## 今回（D5〜D8、2026-10-31）
+## 今回（秘技：レベルアップで増える大技、2026-10-31）
+- 旧完成大技のうち自動発動の5種（雷帝落雷・煉火天柱・氷槍豪雨・光刃陣・虚無断界）を、属性と無関係の「秘技」としてレベルアップに出す。§43の「通常Runに出さない」をユーザー判断で撤回。
+- `data/upgrades/arcana_*.json`（category `arcana`、max_rank 5、`level_lines`・`strike_counts`・`vfx_sheet`）。`data/skills/completed_skills.json`の5種を5段階化し`strike_count_by_level`を追加。
+- 所持枠2。未所持の間は毎回1枚は秘技が出る。重みは新規2.0・育成中2.6。カードは橙で「秘技 NEW!」、プレビューは実VFXシートを段階の数だけ落として見せる。
+- `ConceptSystem._activate_signature_skill`は段階の数だけ離れた別の敵へ0.12秒ずつずらして落とす。`PlayerUpgradesComponent`は`arcana`で`acquire_completed_skill`、`get_arcana_count()`。HUDは左上の強化石板の先頭に秘技（橙ピップ）、トレイ見出しは「秘技」。
+- 次の段階（未着手）：戦技8種の見た目強化、覚醒（150秒補給箱）、全取得後の金貨／回復カード。
+- 検証：`script_load_check`、`five_minute_survival_check` PC、`survival_growth_check`（秘技をプールに許可する1行を修正）。実画面は`docs/screens/arcana_*.png`。
+
+## 直前（D5〜D8、2026-10-31）
 - D5 所持品：サバイバル中に[C]で開くと「入手順（新しい順）」で並び、最新の装備を選択して装備中との比較を先に見せる。鍛造は従来どおり画面内のタブから使える（Run間への移動は装備の永続化が必要なので見送り）。
 - D6 旧テスト：廃止モード向け22件を`tests/legacy/`へ移動（`tests/legacy/README.md`）。`script_load_check`は`legacy`を走査しない。`scenes/game.gd`が参照する`map_*`/`shop_runtime`/`run_economy_balance`/`imported_assets`は`tests/`直下に残した。
 - D7 ダッシュボード：リポジトリ内`dashboard/dist`を正本に（`dashboard/README.md`冒頭）。公開はGitHub Pagesのworkflow。リモート作成はユーザー作業。

@@ -229,7 +229,7 @@ func _layout_exploration_hud() -> void:
 	var tray_column := tray.get_node("VBoxContainer") as VBoxContainer
 	_add_tray_header(tray_column, weapon_row, "武装", PixelUIStyle.BORDER_HOVER)
 	_add_tray_header(tray_column, item_row, "戦利品", Color("e8bd58"))
-	_add_tray_header(tray_column, completed_skill_row, "完成大技", PixelUIStyle.JEWEL)
+	_add_tray_header(tray_column, completed_skill_row, "秘技", Color("ff9a5c"))
 	_tray_header = Button.new()
 	_tray_header.name = "TrayHeader"
 	_tray_header.tooltip_text = "取得した武器・戦利品・完成大技を表示／折りたたみ"
@@ -437,7 +437,7 @@ func _refresh_upgrade_strip(player: Player) -> void:
 		_upgrade_strip.hide()
 		return
 	var any := false
-	for id in SURVIVAL_UPGRADE_IDS:
+	for id in survival_ids_with_arcana(player):
 		var rank: int = player.upgrades_component.get_survival_rank(id)
 		if rank <= 0:
 			continue
@@ -448,10 +448,20 @@ func _refresh_upgrade_strip(player: Player) -> void:
 		any = true
 	_upgrade_strip.visible = any
 
+## 秘技（所持中のもの）を先頭に、戦闘強化をその後ろに並べる。
+func survival_ids_with_arcana(player: Player) -> Array[String]:
+	var ids: Array[String] = []
+	for key in player.upgrades_component.survival_upgrade_counts.keys():
+		if String(key).begins_with("arcana_"):
+			ids.append(String(key))
+	ids.append_array(SURVIVAL_UPGRADE_IDS)
+	return ids
+
 ## 取得済み強化1つぶんの小さな石板：アイコンと段階ピップ（上限なしの強撃は回数）。
 func _build_upgrade_chip(upgrade: UpgradeData, rank: int) -> Control:
 	var chip := PanelContainer.new()
-	var style := PixelUIStyle.badge_style(PixelUIStyle.JEWEL_DARK, Color("111c29"))
+	var is_arcana := upgrade.category == "arcana"
+	var style := PixelUIStyle.badge_style(Color("ff9a5c") if is_arcana else PixelUIStyle.JEWEL_DARK, Color("2a1a14") if is_arcana else Color("111c29"))
 	style.set_content_margin_all(5)
 	chip.add_theme_stylebox_override("panel", style)
 	chip.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -464,7 +474,7 @@ func _build_upgrade_chip(upgrade: UpgradeData, rank: int) -> Control:
 	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	chip.add_child(column)
 	var icon := TextureRect.new()
-	icon.custom_minimum_size = Vector2(32, 32)
+	icon.custom_minimum_size = Vector2(44, 44) if is_arcana else Vector2(32, 32)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -473,7 +483,7 @@ func _build_upgrade_chip(upgrade: UpgradeData, rank: int) -> Control:
 	icon.texture = load(upgrade.icon_path) as Texture2D if upgrade.icon_path != "" and ResourceLoader.exists(upgrade.icon_path) else preload("res://assets/ui/shop/weapon_icon.png")
 	column.add_child(icon)
 	if maximum > 0:
-		var pips := RetroPipRow.build(maximum, rank, RetroHUDStyle.IAI_TEAL_LIGHT)
+		var pips := RetroPipRow.build(maximum, rank, Color("ff9a5c") if is_arcana else RetroHUDStyle.IAI_TEAL_LIGHT)
 		pips.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		column.add_child(pips)
 	else:

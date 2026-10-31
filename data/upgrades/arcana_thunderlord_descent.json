@@ -1,0 +1,30 @@
+{
+  "id": "arcana_thunderlord_descent",
+  "display_name": "雷帝落雷",
+  "category": "arcana",
+  "effect_type": "arcana",
+  "value": 0,
+  "description": "6.5秒ごとに落雷を1か所へ。落ちた雷は近くの敵へ連鎖する。",
+  "icon_path": "res://assets/ui/icons/battle_skills/completed/thunderlord_descent.png",
+  "effect_params": {
+    "skill_id": "thunderlord_descent",
+    "max_rank": 5,
+    "preview": "arcana",
+    "unit": "落雷",
+    "vfx_sheet": "res://assets/vfx/pixel/signature_thunderlord_descent.png",
+    "strike_counts": [
+      1,
+      2,
+      2,
+      3,
+      4
+    ],
+    "level_lines": [
+      "6.5秒ごとに落雷を1か所へ。落ちた雷は近くの敵へ連鎖する。",
+      "落雷が2か所に増える、間隔6.0秒。",
+      "範囲が大きく広がる、間隔5.5秒。",
+      "落雷が3か所に増える、間隔5.0秒。",
+      "落雷が4か所に増える、間隔4.5秒。"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "id": "arcana_glacial_spear_rain",
+  "display_name": "氷槍豪雨",
+  "category": "arcana",
+  "effect_type": "arcana",
+  "value": 0,
+  "description": "9.0秒ごとに氷槍の雨を1か所へ。降った氷槍は時間差でもう一度砕け、敵を鈍らせる。",
+  "icon_path": "res://assets/ui/icons/battle_skills/completed/glacial_spear_rain.png",
+  "effect_params": {
+    "skill_id": "glacial_spear_rain",
+    "max_rank": 5,
+    "preview": "arcana",
+    "unit": "氷槍の雨",
+    "vfx_sheet": "res://assets/vfx/pixel/signature_glacial_spear_rain.png",
+    "strike_counts": [
+      1,
+      2,
+      2,
+      3,
+      3
+    ],
+    "level_lines": [
+      "9.0秒ごとに氷槍の雨を1か所へ。降った氷槍は時間差でもう一度砕け、敵を鈍らせる。",
+      "氷槍の雨が2か所に増える、間隔8.5秒。",
+      "範囲が大きく広がる、間隔8.0秒。",
+      "氷槍の雨が3か所に増える、間隔7.5秒。",
+      "範囲が大きく広がる、間隔7.0秒。"
+    ]
+  }
+}

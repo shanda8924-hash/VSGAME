@@ -1,0 +1,30 @@
+{
+  "id": "arcana_inferno_pillar",
+  "display_name": "煉火天柱",
+  "category": "arcana",
+  "effect_type": "arcana",
+  "value": 0,
+  "description": "8.0秒ごとに炎柱を1か所へ。敵の群れの真ん中から火柱が噴き上がる。",
+  "icon_path": "res://assets/ui/icons/battle_skills/completed/inferno_pillar.png",
+  "effect_params": {
+    "skill_id": "inferno_pillar",
+    "max_rank": 5,
+    "preview": "arcana",
+    "unit": "炎柱",
+    "vfx_sheet": "res://assets/vfx/pixel/signature_inferno_pillar.png",
+    "strike_counts": [
+      1,
+      1,
+      2,
+      3,
+      4
+    ],
+    "level_lines": [
+      "8.0秒ごとに炎柱を1か所へ。敵の群れの真ん中から火柱が噴き上がる。",
+      "範囲が大きく広がる、間隔7.5秒。",
+      "炎柱が2か所に増える、間隔7.0秒。",
+      "炎柱が3か所に増える、間隔6.5秒。",
+      "炎柱が4か所に増える、間隔6.0秒。"
+    ]
+  }
+}

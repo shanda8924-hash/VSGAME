@@ -1,0 +1,30 @@
+{
+  "id": "arcana_void_severance",
+  "display_name": "虚無断界",
+  "category": "arcana",
+  "effect_type": "arcana",
+  "value": 0,
+  "description": "10.0秒ごとに裂界を1か所へ。空間を断つ巨大な裂け目で広く切り裂く。",
+  "icon_path": "res://assets/ui/icons/battle_skills/completed/void_severance.png",
+  "effect_params": {
+    "skill_id": "void_severance",
+    "max_rank": 5,
+    "preview": "arcana",
+    "unit": "裂界",
+    "vfx_sheet": "res://assets/vfx/pixel/signature_void_severance.png",
+    "strike_counts": [
+      1,
+      1,
+      2,
+      2,
+      3
+    ],
+    "level_lines": [
+      "10.0秒ごとに裂界を1か所へ。空間を断つ巨大な裂け目で広く切り裂く。",
+      "範囲が大きく広がる、間隔9.0秒。",
+      "裂界が2か所に増える、間隔8.5秒。",
+      "範囲が大きく広がる、間隔7.5秒。",
+      "裂界が3か所に増える、間隔7.0秒。"
+    ]
+  }
+}

@@ -530,9 +530,35 @@ func _activate_signature_skill(skill_id: String, definition: Dictionary, level: 
 	_completed_skill_cooldowns[skill_id] = _signature_cooldown_total(definition, level)
 	var skill := DataLoader.get_concept(String(definition.get("skill_id", "")))
 	var tags: Array = skill.element_tags if skill else []
-	var metadata := CombatEventMeta.create_secondary("completed_skill_auto:%s" % skill_id, tags, false)
-	metadata["impact_position"] = target.global_position
-	_trigger_completed_skill(skill_id, definition, level, target, metadata)
+	# 秘技は段階ごとに「同時に何か所へ落とすか」が増える（2026-10-31）。1か所目は従来の
+	# 最寄りの敵、残りは離れた別の敵へ0.12秒ずつずらして落とし、増えたことを画面で見せる。
+	var strikes := maxi(int(_definition_level_value(definition, "strike_count_by_level", level, 1.0)), 1)
+	var targets: Array[Node2D] = [target]
+	if strikes > 1:
+		var player := get_tree().get_first_node_in_group("player") as Node2D
+		if player:
+			for extra in _nearest_enemies(player.global_position, float(definition.get("auto_target_range", 740.0)), strikes * 3, {target.get_instance_id(): true}):
+				if targets.size() >= strikes:
+					break
+				var spaced := true
+				for chosen in targets:
+					if chosen.global_position.distance_to(extra.global_position) < 90.0:
+						spaced = false
+						break
+				if spaced:
+					targets.append(extra)
+	var epoch := _runtime_epoch
+	for index in targets.size():
+		if index > 0:
+			await get_tree().create_timer(0.12, false).timeout
+			if epoch != _runtime_epoch or not _active:
+				return
+		var strike_target := targets[index]
+		if not is_instance_valid(strike_target):
+			continue
+		var metadata := CombatEventMeta.create_secondary("completed_skill_auto:%s" % skill_id, tags, false)
+		metadata["impact_position"] = strike_target.global_position
+		_trigger_completed_skill(skill_id, definition, level, strike_target, metadata)
 
 
 func _signature_auto_target(definition: Dictionary) -> Node2D:

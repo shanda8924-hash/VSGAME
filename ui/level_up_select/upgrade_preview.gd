@@ -32,6 +32,10 @@ var base_projectiles := 1
 var base_interval := 1.0
 ## 職業技カードだけが使う。架空の動きは描かず、職業と技の図柄を段階付きで見せる。
 var class_icon: Texture2D
+## 秘技プレビュー用：実際の大技VFXシート（64px×6コマ）と段階ごとの同時発動数。
+var arcana_sheet: Texture2D
+var arcana_counts: Array = [1]
+var arcana_unit := ""
 var elapsed := 0.0
 var _hero: Texture2D
 var _enemy: Texture2D
@@ -73,12 +77,20 @@ func _draw() -> void:
 			"multishot": _draw_multishot(scene, level, color)
 			"pierce": _draw_pierce(scene, level, color)
 			"power": _draw_power(scene, level)
+			"arcana": _draw_arcana(scene, level)
 			_: _draw_class(scene, level, after)
 
 # ---------------------------------------------------------------------------
 # 数値の見出し。強化の実数値をそのまま出す(段階ごとの加算はゲーム側と同じ式)。
 
+func _arcana_count(level: int) -> int:
+	if level <= 0 or arcana_counts.is_empty():
+		return 0
+	return int(arcana_counts[clampi(level - 1, 0, arcana_counts.size() - 1)])
+
 func _caption(level: int) -> String:
+	if kind == "arcana":
+		return "なし" if level <= 0 else "%s ×%d　Lv.%d" % [arcana_unit, _arcana_count(level), level]
 	match kind:
 		"area": return ("射程 %d%%" if attack_shape == "shot" else "範囲 %d%%") % (100 + 18 * level)
 		"haste": return "間隔 %d%%" % (100 - 10 * level)
@@ -303,6 +315,28 @@ func _draw_power(scene: Rect2, level: int) -> void:
 
 ## 職業技: 段階ごとの効果は職業ごとに異なるため動く場面は作らず、職業と技の図柄を
 ## 段階付きで並べる(実際と異なる動きを見せないため)。強化後側だけ図柄を明るく出す。
+## 秘技：敵の群れに実際のVFXを段階ごとの数だけ落として見せる。0段階は敵だけ。
+func _draw_arcana(scene: Rect2, level: int) -> void:
+	var spots := [Vector2(0.30, 0.42), Vector2(0.70, 0.40), Vector2(0.50, 0.72), Vector2(0.22, 0.78)]
+	var count := _arcana_count(level)
+	var cycle := fmod(elapsed, 1.6)
+	for index in spots.size():
+		var at: Vector2 = scene.position + scene.size * spots[index]
+		var hit := index < count
+		var strike_t := cycle - index * 0.12
+		_draw_enemy(at + Vector2(0, 10), 0.35 if hit and strike_t > 0.25 else 1.0, _flash(strike_t, 0.25) if hit else 0.0)
+	if arcana_sheet == null:
+		return
+	var frame_w := arcana_sheet.get_width() / 6.0
+	for index in count:
+		var at: Vector2 = scene.position + scene.size * spots[index]
+		var strike_t := cycle - index * 0.12
+		if strike_t < 0.0 or strike_t > 0.9:
+			continue
+		var frame := clampi(int(strike_t / 0.15), 0, 5)
+		var draw_size := 72.0
+		draw_texture_rect_region(arcana_sheet, Rect2(at - Vector2(draw_size * 0.5, draw_size * 0.75), Vector2(draw_size, draw_size)), Rect2(frame * frame_w, 0, frame_w, arcana_sheet.get_height()))
+
 func _draw_class(scene: Rect2, _level: int, after: bool) -> void:
 	var center := scene.get_center() + Vector2(0.0, 4.0)
 	_draw_hero(center + Vector2(-22.0, 10.0), 0.0)

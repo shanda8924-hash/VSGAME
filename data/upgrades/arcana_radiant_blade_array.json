@@ -1,0 +1,30 @@
+{
+  "id": "arcana_radiant_blade_array",
+  "display_name": "光刃陣",
+  "category": "arcana",
+  "effect_type": "arcana",
+  "value": 0,
+  "description": "7.5秒ごとに光刃陣を1か所へ。範囲内の敵を同時に切り払う。",
+  "icon_path": "res://assets/ui/icons/battle_skills/completed/radiant_blade_array.png",
+  "effect_params": {
+    "skill_id": "radiant_blade_array",
+    "max_rank": 5,
+    "preview": "arcana",
+    "unit": "光刃陣",
+    "vfx_sheet": "res://assets/vfx/pixel/signature_radiant_blade_array.png",
+    "strike_counts": [
+      1,
+      2,
+      2,
+      3,
+      4
+    ],
+    "level_lines": [
+      "7.5秒ごとに光刃陣を1か所へ。範囲内の敵を同時に切り払う。",
+      "光刃陣が2か所に増える、間隔7.0秒。",
+      "範囲が大きく広がる、間隔6.5秒。",
+      "光刃陣が3か所に増える、間隔6.0秒。",
+      "光刃陣が4か所に増える、間隔5.5秒。"
+    ]
+  }
+}
