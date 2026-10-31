@@ -1,0 +1,41 @@
+{
+  "id": "evo_shadow_run",
+  "display_name": "影走り",
+  "category": "evolution",
+  "effect_type": "evolution",
+  "value": 0,
+  "description": "影が命中ごとに追撃し、さらに自分で敵を追って0.5秒ごとに斬る。",
+  "icon_path": "res://assets/ui/icons/battle_skills/completed/void_slash.png",
+  "effect_params": {
+    "max_rank": 1,
+    "preview": "echo"
+  },
+  "requires": {
+    "survival_echo": 3,
+    "survival_haste": 3
+  },
+  "trigger": "periodic",
+  "trigger_text": "命中ごと＋0.5秒ごと",
+  "effect_text": "影が追撃し、自分で近くの敵を斬る（直前の一撃の40%）",
+  "tags": [
+    "影",
+    "追撃",
+    "進化"
+  ],
+  "scales_with": [
+    "攻速",
+    "連撃",
+    "弾数",
+    "貫通",
+    "命中回数",
+    "survival_haste",
+    "survival_double_strike",
+    "survival_multishot",
+    "survival_pierce"
+  ],
+  "numbers": {
+    "every_n": 1,
+    "interval": 0.5,
+    "damage_pct": 0.4
+  }
+}

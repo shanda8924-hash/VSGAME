@@ -1,0 +1,31 @@
+{
+  "id": "evo_charged_ward",
+  "display_name": "帯電結界",
+  "category": "evolution",
+  "effect_type": "evolution",
+  "value": 0,
+  "description": "シールドが割れると周囲の敵へ雷が落ちる。",
+  "icon_path": "res://assets/ui/icons/battle_skills/completed/lightning_charge.png",
+  "effect_params": {
+    "max_rank": 1,
+    "preview": "guard"
+  },
+  "requires": {
+    "survival_guard": 3,
+    "survival_chain": 2
+  },
+  "trigger": "on_damaged",
+  "trigger_text": "シールドが割れたとき",
+  "effect_text": "半径150の敵へ雷（結界Lv×12＋直前の一撃の50%）",
+  "tags": [
+    "結界",
+    "雷",
+    "進化"
+  ],
+  "scales_with": [],
+  "numbers": {
+    "radius": 150,
+    "damage_per_guard_rank": 12,
+    "hit_pct": 0.5
+  }
+}

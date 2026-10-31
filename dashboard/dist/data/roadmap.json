@@ -386,11 +386,11 @@
         {
           "id": "fun_loop_phase3_synergy",
           "name": "遊びの骨組み Phase 3：シナジーと進化",
-          "status": "design",
-          "progress": 5,
+          "status": "completed",
+          "progress": 100,
           "priority": "high",
-          "lane": "next",
-          "notes": "連撃、進化レシピ（evolutions.json）、相性カードの保証、リロール。"
+          "lane": "now",
+          "notes": "連撃（確率でもう一撃）、進化5本（雷帝の連撃・影走り・大断・矢の雨・帯電結界、条件達成で次のレベルアップに必ず1枚）、相性カードの保証、リロール（金貨）と「もう出さない」（1回）、秘技の落雷→連鎖。synergy_evolution_check PASS。"
         },
         {
           "id": "fun_loop_phase4_growth",

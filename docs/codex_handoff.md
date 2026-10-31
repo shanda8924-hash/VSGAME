@@ -1,4 +1,10 @@
-# Codex Handoff — 2026-10-31（遊びの骨組み Phase 2まで）
+# Codex Handoff — 2026-10-31（遊びの骨組み Phase 3まで）
+
+## 今回（遊びの骨組み Phase 3：シナジーと進化、2026-10-31）
+- 連撃`survival_double_strike`（20%/段階、`multishot_chance`へ積む。上限0.5→0.75）。進化5本を`data/upgrades/evo_*.json`（category evolution、`requires`）：雷帝の連撃・影走り・大断・矢の雨・帯電結界。実体は`survival_upgrade_effects.gd`（chain_chance/chain_targets/echo_every_n/影の自律斬り/結界の雷/秘技→連鎖）、`melee_arc_attack.gd`（大断）、`weapon_manager_component.gd`（矢の雨）、`player_upgrades_component.gd`（取得・`get_available_evolutions`・`banned_upgrade_ids`・リロール回数）。
+- `LevelUpSelect._draw_choices`：流派→進化（必ず1枚）→秘技→相性カード保証→重み抽選。下段にリロール（10G+5G/回）と「もう出さない」（1回）。進化カードは朱色「進化　条件達成！」。HUDの石板にも進化（朱）。
+- 検証：`script_load_check` 0件、新規`synergy_evolution_check` PASS、`skill_readability_check`／`survival_growth_check`／`five_minute_survival_check` PASS。実画面`docs/screens/evolution_card.png`、`evolved_build.png`。
+- 次：Phase 4（装備と熟練の持ち越し、深度の鎖、負けの持ち帰り、拠点の鍛造）。
 
 ## 今回（遊びの骨組み Phase 2：スキルの可読性、2026-10-31）
 - `UpgradeData`に`trigger/trigger_text/effect_text/tags/scales_with/numbers`を追加し、戦闘強化8種・秘技5種のJSONへ記入。`is_boosted_by(other)`で相性判定。

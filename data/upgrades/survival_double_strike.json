@@ -1,0 +1,26 @@
+{
+  "id": "survival_double_strike",
+  "display_name": "連撃",
+  "category": "survival",
+  "effect_type": "survival_double_strike",
+  "value": 0.2,
+  "description": "通常攻撃が20%で2回になる。段階ごとに+20%（最大60%）。",
+  "icon_path": "res://assets/ui/icons/battle_skills/upgrades/melee_rapid_strike.png",
+  "effect_params": {
+    "max_rank": 3,
+    "preview": "haste",
+    "tagline": "一撃がもう一撃を呼ぶ",
+    "requires_projectile": false
+  },
+  "trigger": "passive",
+  "trigger_text": "通常攻撃ごとに20%（段階で+20%）",
+  "effect_text": "もう一度攻撃する＝命中回数が増える",
+  "tags": [
+    "連撃",
+    "命中回数"
+  ],
+  "scales_with": [],
+  "numbers": {
+    "chance_per_rank": 0.2
+  }
+}

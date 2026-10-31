@@ -1,0 +1,42 @@
+{
+  "id": "evo_thunder_strike",
+  "display_name": "雷帝の連撃",
+  "category": "evolution",
+  "effect_type": "evolution",
+  "value": 0,
+  "description": "すべての命中で雷が渡り、連鎖先が1体増え、威力50%。",
+  "icon_path": "res://assets/ui/icons/battle_skills/completed/thunder_chain.png",
+  "effect_params": {
+    "max_rank": 1,
+    "preview": "chain"
+  },
+  "requires": {
+    "survival_chain": 3,
+    "survival_double_strike": 2
+  },
+  "trigger": "on_hit",
+  "trigger_text": "命中ごとに必ず",
+  "effect_text": "雷が渡る。連鎖先+1体、威力35%→50%",
+  "tags": [
+    "雷",
+    "連鎖",
+    "連撃",
+    "進化"
+  ],
+  "scales_with": [
+    "攻速",
+    "連撃",
+    "弾数",
+    "貫通",
+    "命中回数",
+    "survival_haste",
+    "survival_double_strike",
+    "survival_multishot",
+    "survival_pierce"
+  ],
+  "numbers": {
+    "chance": 1.0,
+    "extra_targets": 1,
+    "damage_pct": 0.5
+  }
+}

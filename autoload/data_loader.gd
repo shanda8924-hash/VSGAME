@@ -237,6 +237,7 @@ func _load_upgrades() -> void:
 			scales.append(String(key))
 		data.scales_with = scales
 		data.numbers = entry.get("numbers", {})
+		data.requires = entry.get("requires", {})
 		upgrades[data.id] = data
 
 func get_all_upgrades() -> Array[UpgradeData]:

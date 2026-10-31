@@ -1,0 +1,31 @@
+{
+  "id": "evo_great_cleave",
+  "display_name": "大断",
+  "category": "evolution",
+  "effect_type": "evolution",
+  "value": 0,
+  "description": "横薙ぎが大きく広がり、命中した敵を強く吹き飛ばす。",
+  "icon_path": "res://assets/ui/icons/battle_skills/upgrades/melee_wide_swing.png",
+  "effect_params": {
+    "max_rank": 1,
+    "preview": "area"
+  },
+  "requires": {
+    "survival_area": 3,
+    "survival_power": 3
+  },
+  "trigger": "passive",
+  "trigger_text": "常時",
+  "effect_text": "範囲+50%・角度+25°、命中時のノックバック3倍",
+  "tags": [
+    "範囲",
+    "威力",
+    "進化"
+  ],
+  "scales_with": [],
+  "numbers": {
+    "range_pct": 0.5,
+    "knockback_mult": 3.0,
+    "extra_half_angle": 25
+  }
+}

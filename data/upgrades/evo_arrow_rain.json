@@ -1,0 +1,32 @@
+{
+  "id": "evo_arrow_rain",
+  "display_name": "矢の雨",
+  "category": "evolution",
+  "effect_type": "evolution",
+  "value": 0,
+  "description": "扇状に5本撃ち、すべて貫通無制限。",
+  "icon_path": "res://assets/ui/icons/battle_skills/upgrades/multishot_chance_up.png",
+  "effect_params": {
+    "max_rank": 1,
+    "preview": "multishot",
+    "requires_projectile": true
+  },
+  "requires": {
+    "survival_pierce": 2,
+    "survival_multishot": 2
+  },
+  "trigger": "passive",
+  "trigger_text": "常時（矢・魔法弾）",
+  "effect_text": "一度の発射が扇状5本、貫通無制限",
+  "tags": [
+    "弾数",
+    "貫通",
+    "射撃",
+    "進化"
+  ],
+  "scales_with": [],
+  "numbers": {
+    "projectiles": 5,
+    "pierce": 99
+  }
+}

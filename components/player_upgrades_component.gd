@@ -12,7 +12,7 @@ class_name PlayerUpgradesComponent
 ## アイテム(常にプラスのみ)と強化オプション(プラス+任意のマイナス)は同じ
 ## _apply_effect()ディスパッチャを共有できる。
 
-const MULTISHOT_CHANCE_CAP := 0.5
+const MULTISHOT_CHANCE_CAP := 0.75
 const HOMING_STRENGTH_CAP := 1.0
 const ATTACK_INTERVAL_BONUS_CAP := 0.8      # 攻撃間隔短縮の上限(0秒に近づきすぎないように)
 const ATTACK_INTERVAL_PENALTY_FLOOR := -0.5 # トレードオフで遅くなる場合の下限(最大+50%長くなる程度に留める)
@@ -90,6 +90,34 @@ var survival_upgrade_counts: Dictionary = {}
 
 func get_survival_rank(id: String) -> int:
 	return int(survival_upgrade_counts.get(id, 0))
+
+## レベルアップ画面の「もう出さない」（ラン中1回）とリロール回数（Phase 3）。
+var banned_upgrade_ids: Array[String] = []
+var ban_uses_remaining := 1
+var level_up_rerolls := 0
+
+func has_evolution(id: String) -> bool:
+	return get_survival_rank(id) > 0
+
+func requirements_met(requires: Dictionary) -> bool:
+	if requires.is_empty():
+		return false
+	for key in requires.keys():
+		if get_survival_rank(String(key)) < int(requires[key]):
+			return false
+	return true
+
+## 条件を満たし、まだ持っていない進化。次のレベルアップで必ず1枚出る。
+func get_available_evolutions() -> Array[UpgradeData]:
+	var result: Array[UpgradeData] = []
+	for upgrade in DataLoader.get_all_upgrades():
+		if upgrade.category != "evolution" or has_evolution(upgrade.id):
+			continue
+		if upgrade.id in banned_upgrade_ids:
+			continue
+		if requirements_met(upgrade.requires):
+			result.append(upgrade)
+	return result
 
 ## 所持している秘技の数（レベルアップの枠判定に使う）。
 func get_arcana_count() -> int:
@@ -172,6 +200,17 @@ func apply_upgrade(upgrade: UpgradeData) -> void:
 		var arcana_manager := _get_sibling("WeaponManagerComponent") as WeaponManagerComponent
 		if arcana_manager: arcana_manager.sector_style_changed.emit()
 		return
+	if upgrade.category == "evolution":
+		# 進化（Phase 3）。条件を満たした組み合わせを1枚で置き換える。実体は
+		# survival_upgrade_effects / melee_arc / weapon_managerがhas_evolution()で読む。
+		if has_evolution(upgrade.id) or not requirements_met(upgrade.requires): return
+		survival_upgrade_counts[upgrade.id] = 1
+		match upgrade.id:
+			"evo_great_cleave":
+				_apply_effect("attack_range_multiplier", float(upgrade.numbers.get("range_pct", 0.5)))
+		var evolution_manager := _get_sibling("WeaponManagerComponent") as WeaponManagerComponent
+		if evolution_manager: evolution_manager.sector_style_changed.emit()
+		return
 	if upgrade.category == "survival":
 		var rank := get_survival_rank(upgrade.id)
 		var maximum := int(upgrade.effect_params.get("max_rank", 0))
@@ -186,6 +225,9 @@ func apply_upgrade(upgrade: UpgradeData) -> void:
 			"survival_power": _apply_effect("damage_up", upgrade.value)
 			"survival_pierce":
 				if manager: manager.sector_pierce_level = mini(manager.sector_pierce_level + 1, 2)
+			"survival_double_strike":
+				# 連撃：既存の「確率でもう一撃」(multishot_chance)へ積む。近接・射撃・浮遊武器の経路を共用。
+				_apply_effect("multishot_chance_up", upgrade.value)
 		if manager: manager.sector_style_changed.emit()
 		return
 	if upgrade.effect_type == "class_school_select":

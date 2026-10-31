@@ -218,7 +218,13 @@ func find_nearest_enemy(from_position: Vector2, max_distance: float = INF, clear
 
 func get_survival_extra_projectiles() -> int:
 	var upgrades := get_owner_upgrades()
-	return upgrades.get_survival_rank("survival_multishot") if upgrades else 0
+	if upgrades == null:
+		return 0
+	if upgrades.has_evolution("evo_arrow_rain"):
+		# 矢の雨（進化）：扇状5本（追加4本）。
+		var rain: UpgradeData = DataLoader.upgrades.get("evo_arrow_rain")
+		return maxi(int((rain.numbers if rain else {}).get("projectiles", 5)) - 1, upgrades.get_survival_rank("survival_multishot"))
+	return upgrades.get_survival_rank("survival_multishot")
 
 func spawn_projectile(weapon_data: WeaponData, from_position: Vector2, target_position: Vector2, play_feedback: bool = true) -> void:
 	if weapon_data.projectile_scene == null:
@@ -236,6 +242,8 @@ func spawn_projectile(weapon_data: WeaponData, from_position: Vector2, target_po
 	if upgrades and randf() < upgrades.multishot_chance:
 		var offset_target := _offset_target(from_position, target_position, 18.0)
 		_fire_single_projectile(weapon_data, from_position, offset_target, upgrades)
+		if upgrades.get_survival_rank("survival_double_strike") > 0:
+			EventBus.upgrade_triggered.emit("survival_double_strike", from_position)
 	if sector_follow_up_level > 0 and randf() < 0.23 * sector_follow_up_level:
 		_fire_sector_follow_up(weapon_data, from_position)
 	if play_feedback:
@@ -249,6 +257,9 @@ func _fire_single_projectile(weapon_data: WeaponData, from_position: Vector2, ta
 	projectile.applied_status_id = get_applied_status_id()
 	if projectile is Projectile:
 		projectile.pierce_remaining = sector_pierce_level + 1
+		if upgrades and upgrades.has_evolution("evo_arrow_rain"):
+			var rain: UpgradeData = DataLoader.upgrades.get("evo_arrow_rain")
+			projectile.pierce_remaining = int((rain.numbers if rain else {}).get("pierce", 99))
 		projectile.chain_remaining = sector_chain_level
 	GameManager.get_runtime_world(self).add_child(projectile)
 	projectile.global_position = from_position

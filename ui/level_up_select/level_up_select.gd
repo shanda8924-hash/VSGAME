@@ -13,6 +13,8 @@ const COMBAT_COLOR := Color("79d7e8")
 const CLASS_COLOR := Color("f2c14e")
 ## 秘技（新しく増える自動発動の大技）は橙。戦闘強化・職業技と一目で分ける。
 const ARCANA_COLOR := Color("ff9a5c")
+## 進化（条件を満たした組み合わせの合体技）は朱色。
+const EVOLUTION_COLOR := Color("ff6a3d")
 ## 秘技の所持枠。
 const ARCANA_SLOTS := 2
 const SELECTED_COLOR := Color("8fe0d6")
@@ -24,6 +26,11 @@ const CARD_SIZE := Vector2(362, 450)
 var _last_choice_ids: Array[String] = []
 var _chosen: Array[UpgradeData] = []
 var _selected := -1
+var _extra_row: HBoxContainer
+var reroll_button: Button
+var ban_button: Button
+const REROLL_BASE_COST := 10
+const REROLL_COST_STEP := 5
 
 func _ready() -> void:
 	visible = false
@@ -33,7 +40,65 @@ func _ready() -> void:
 	PixelUIStyle.add_ornament($CenterContainer/Panel/Margin/VBox/Seal, "emblem")
 	PixelUIStyle.apply_button(confirm_button, PixelUIStyle.JEWEL)
 	confirm_button.pressed.connect(confirm_selection)
+	_build_extra_row()
 	EventBus.player_leveled_up.connect(_on_leveled_up)
+
+## 下段：リロール（金貨）と「もう出さない」（ラン中1回）。Phase 3。
+func _build_extra_row() -> void:
+	_extra_row = HBoxContainer.new()
+	_extra_row.name = "ExtraRow"
+	_extra_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	_extra_row.add_theme_constant_override("separation", 16)
+	$CenterContainer/Panel/Margin/VBox.add_child(_extra_row)
+	reroll_button = Button.new()
+	reroll_button.name = "Reroll"
+	reroll_button.custom_minimum_size = Vector2(300, 40)
+	reroll_button.add_theme_font_size_override("font_size", 18)
+	PixelUIStyle.apply_button(reroll_button, COMBAT_COLOR)
+	reroll_button.pressed.connect(_on_reroll_pressed)
+	_extra_row.add_child(reroll_button)
+	ban_button = Button.new()
+	ban_button.name = "Ban"
+	ban_button.custom_minimum_size = Vector2(300, 40)
+	ban_button.add_theme_font_size_override("font_size", 18)
+	PixelUIStyle.apply_button(ban_button, PixelUIStyle.TEXT_MUTED)
+	ban_button.pressed.connect(_on_ban_pressed)
+	_extra_row.add_child(ban_button)
+
+func reroll_cost() -> int:
+	var actor := get_tree().get_first_node_in_group("player") as Player
+	var used := actor.upgrades_component.level_up_rerolls if actor else 0
+	return REROLL_BASE_COST + REROLL_COST_STEP * used
+
+func _refresh_extra_row() -> void:
+	if _extra_row == null:
+		return
+	var actor := get_tree().get_first_node_in_group("player") as Player
+	var cost := reroll_cost()
+	reroll_button.text = "リロール　%d G（所持 %d G）" % [cost, GameManager.run_gold]
+	reroll_button.disabled = actor == null or not GameManager.can_afford_run_gold(cost)
+	var remaining := actor.upgrades_component.ban_uses_remaining if actor else 0
+	ban_button.text = "選んだ強化をもう出さない（残り %d）" % remaining
+	ban_button.disabled = actor == null or remaining <= 0 or _selected < 0
+
+func _on_reroll_pressed() -> void:
+	var actor := get_tree().get_first_node_in_group("player") as Player
+	if actor == null or not GameManager.try_spend_run_gold(reroll_cost(), "level_up_reroll"):
+		return
+	actor.upgrades_component.level_up_rerolls += 1
+	AudioManager.play_sfx("ui_click")
+	_draw_choices(actor)
+
+func _on_ban_pressed() -> void:
+	var actor := get_tree().get_first_node_in_group("player") as Player
+	if actor == null or _selected < 0 or _selected >= _chosen.size() or actor.upgrades_component.ban_uses_remaining <= 0:
+		return
+	var banned := _chosen[_selected]
+	actor.upgrades_component.ban_uses_remaining -= 1
+	if banned.id not in actor.upgrades_component.banned_upgrade_ids:
+		actor.upgrades_component.banned_upgrade_ids.append(banned.id)
+	AudioManager.play_sfx("ui_click")
+	_draw_choices(actor)
 
 func _on_leveled_up(new_level: int) -> void:
 	GameManager.request_modal(_open.bind(new_level))
@@ -43,6 +108,11 @@ func _open(new_level: int = 0) -> void:
 	visible = true
 	var actor := get_tree().get_first_node_in_group("player") as Player
 	eyebrow.text = "Lv.%d に到達　・　戦闘時間は停止中" % (new_level if new_level > 0 else (actor.experience_component.level if actor else 1))
+	_draw_choices(actor)
+
+## 候補3枚を引く。順に、流派の選択 → 進化（条件を満たしていれば必ず1枚）→ 秘技（未所持なら1枚）
+## → 相性カード（所持スキルと噛み合う候補があれば1枚）→ 重み抽選。リロールと「もう出さない」でも引き直す。
+func _draw_choices(actor: Player) -> void:
 	var upgrades := _get_compatible_upgrades()
 	var chosen: Array[UpgradeData] = []
 	var rest: Array[UpgradeData] = []
@@ -50,6 +120,10 @@ func _open(new_level: int = 0) -> void:
 		if upgrade.effect_type == "class_school_select" and chosen.size() < SLOT_COUNT:
 			chosen.append(upgrade)
 		else: rest.append(upgrade)
+	if actor and chosen.size() < SLOT_COUNT:
+		var evolutions := actor.upgrades_component.get_available_evolutions()
+		if not evolutions.is_empty():
+			chosen.append(evolutions.pick_random())
 	# 秘技を1つも持っていない間は、毎回1枚は秘技を混ぜる（最初の数回で必ず手に入る）。
 	if actor and actor.upgrades_component.get_arcana_count() == 0 and chosen.size() < SLOT_COUNT:
 		var arcana_pool: Array[UpgradeData] = []
@@ -59,6 +133,17 @@ func _open(new_level: int = 0) -> void:
 			var first_arcana: UpgradeData = arcana_pool.pick_random()
 			chosen.append(first_arcana)
 			rest.erase(first_arcana)
+	# 所持スキルに空いている相性がある間は、1枚は相性カードを保証する。
+	if actor and chosen.size() < SLOT_COUNT:
+		var owned := _owned_upgrades(actor)
+		var synergy_pool: Array[UpgradeData] = []
+		for upgrade in rest:
+			if bool(synergy_line(upgrade, owned).boosted):
+				synergy_pool.append(upgrade)
+		if not synergy_pool.is_empty():
+			var synergy_pick: UpgradeData = synergy_pool.pick_random()
+			chosen.append(synergy_pick)
+			rest.erase(synergy_pick)
 	while chosen.size() < SLOT_COUNT and not rest.is_empty():
 		var picked := _take_weighted_upgrade(rest)
 		if picked == null: break
@@ -78,6 +163,7 @@ func _show_choices(chosen: Array[UpgradeData]) -> void:
 	for upgrade in chosen:
 		_last_choice_ids.append(upgrade.id)
 		grid_container.add_child(_build_choice_button(upgrade))
+	_refresh_extra_row()
 	if grid_container.get_child_count()>0:
 		(grid_container.get_child(0) as Button).grab_focus.call_deferred()
 
@@ -108,7 +194,13 @@ func _get_compatible_upgrades() -> Array[UpgradeData]:
 	var current_ability_level := _get_current_ability_level()
 	var current_school := _get_current_school()
 	var usable_state_effects := _get_usable_state_effects()
+	var banned: Array[String] = []
+	var banned_actor := get_tree().get_first_node_in_group("player") as Player
+	if banned_actor and banned_actor.upgrades_component:
+		banned = banned_actor.upgrades_component.banned_upgrade_ids
 	for upgrade in DataLoader.get_all_upgrades():
+		if upgrade.id in banned:
+			continue
 		if GameManager.survival_mode_active and upgrade.class_character_id == "":
 			if upgrade.category == "survival" and _can_offer_survival(upgrade): result.append(upgrade)
 			elif upgrade.category == "arcana" and _can_offer_arcana(upgrade): result.append(upgrade)
@@ -206,7 +298,7 @@ func _get_current_school() -> String:
 ## 職業技は段階ごとの効果が職業で異なるため、架空の動きを描かず"class"(静止)にする。
 ## 以前は説明文の単語から推測していたため、内容と無関係な動きが出ていた。
 func _preview_kind(upgrade: UpgradeData) -> String:
-	if upgrade.category in ["survival", "arcana"]:
+	if upgrade.category in ["survival", "arcana", "evolution"]:
 		return String(upgrade.effect_params.get("preview", "power"))
 	return "class" if upgrade.class_character_id != "" else "static"
 
@@ -215,6 +307,7 @@ func _build_choice_button(upgrade: UpgradeData) -> Button:
 	var is_class := upgrade.class_character_id != ""
 	var is_arcana := upgrade.category == "arcana"
 	var accent := ARCANA_COLOR if is_arcana else (CLASS_COLOR if is_class else COMBAT_COLOR)
+	if upgrade.category == "evolution": accent = EVOLUTION_COLOR
 	var rank := _current_rank(upgrade, actor)
 	var button := Button.new()
 	button.custom_minimum_size = CARD_SIZE
@@ -361,6 +454,12 @@ func _card_body_text(upgrade: UpgradeData, rank: int, accent: Color, actor: Play
 		if rank > 0 and rank < lines.size():
 			effect_text = String(lines[rank])
 	var synergy := synergy_line(upgrade, _owned_upgrades(actor))
+	if upgrade.category == "evolution":
+		var parts: Array[String] = []
+		for key in upgrade.requires.keys():
+			var base: UpgradeData = DataLoader.upgrades.get(String(key))
+			parts.append("%sLv%d" % [base.display_name if base else String(key), int(upgrade.requires[key])])
+		synergy = {"text": "✦ %s の進化" % "＋".join(parts), "boosted": true}
 	var synergy_text: String = synergy.text
 	if bool(synergy.boosted):
 		synergy_text = "[color=#%s]%s[/color]" % [SYNERGY_COLOR.to_html(false), synergy_text]
@@ -457,7 +556,7 @@ func _attack_shape(pattern: String) -> String:
 func _current_rank(upgrade: UpgradeData, actor: Player) -> int:
 	if upgrade.class_character_id != "":
 		return _get_current_ability_level()
-	if actor and upgrade.category in ["survival", "arcana"]:
+	if actor and upgrade.category in ["survival", "arcana", "evolution"]:
 		return actor.upgrades_component.get_survival_rank(upgrade.id)
 	return 0
 
@@ -466,6 +565,8 @@ func _max_rank(upgrade: UpgradeData) -> int:
 		return AttackPatternBase.MAX_ABILITY_LEVEL
 	if upgrade.category in ["survival", "arcana"]:
 		return int(upgrade.effect_params.get("max_rank", 0))
+	if upgrade.category == "evolution":
+		return 1
 	return 0
 
 func _category_text(upgrade: UpgradeData) -> String:
@@ -477,6 +578,8 @@ func _category_text(upgrade: UpgradeData) -> String:
 		var arcana_actor := get_tree().get_first_node_in_group("player") as Player
 		var owned := arcana_actor != null and arcana_actor.upgrades_component.get_survival_rank(upgrade.id) > 0
 		return "秘技" if owned else "秘技　NEW!"
+	if upgrade.category == "evolution":
+		return "進化　条件達成！"
 	return "戦闘強化" if upgrade.category == "survival" else "強化"
 
 ## 説明文の数値(18%・0.18秒・1体など)だけを種類の色で強調する。
@@ -517,6 +620,7 @@ func _select_choice(upgrade: UpgradeData) -> void:
 		label.text = "✓ 選択中" if index==_selected else " "
 	confirm_button.disabled = false
 	confirm_button.text = "「%s」を取得" % upgrade.display_name
+	_refresh_extra_row()
 	confirm_button.grab_focus()
 
 func confirm_selection() -> void:

@@ -62,6 +62,9 @@ class_name UpgradeData
 ## 発動の数値（例: {"every_n_by_rank": [3,3,2], "chance": 0.35, "chance_per_rank": 0.15}）。
 ## 発動の仕組みはコード、数値はここに寄せる。
 @export var numbers: Dictionary = {}
+## 進化（category "evolution"、Phase 3）の条件：{"survival_chain": 3, "survival_double_strike": 2}。
+## すべて満たすと次のレベルアップに進化カードが必ず1枚出る。
+@export var requires: Dictionary = {}
 
 func has_tag(tag: String) -> bool:
 	return tag in tags

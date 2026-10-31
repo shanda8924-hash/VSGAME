@@ -59,6 +59,7 @@ func execute(attacker: Player, character_data: CharacterData, weapon_manager: We
 	var upgrades := weapon_manager.get_owner_upgrades()
 	if upgrades and randf() < upgrades.multishot_chance:
 		_swing(attacker, character_data, weapon_manager)
+		_notify_double_strike(attacker, upgrades)
 	if weapon_manager.sector_follow_up_level > 0 and randf() < 0.16 * weapon_manager.sector_follow_up_level:
 		_sector_follow_up(attacker, character_data, weapon_manager)
 
@@ -85,8 +86,14 @@ func _execute_swordsman(attacker: Player, character_data: CharacterData, weapon_
 	var upgrades := weapon_manager.get_owner_upgrades()
 	if upgrades and randf() < upgrades.multishot_chance:
 		_swing(attacker, character_data, weapon_manager)
+		_notify_double_strike(attacker, upgrades)
 	if weapon_manager.sector_follow_up_level > 0 and randf() < 0.16 * weapon_manager.sector_follow_up_level:
 		_sector_follow_up(attacker, character_data, weapon_manager)
+
+## 連撃（survival_double_strike）の追加の一撃をHUDへ知らせる（Phase 3）。
+func _notify_double_strike(attacker: Player, upgrades: PlayerUpgradesComponent) -> void:
+	if upgrades.get_survival_rank("survival_double_strike") > 0:
+		EventBus.upgrade_triggered.emit("survival_double_strike", attacker.global_position)
 
 func _sector_follow_up(attacker: Player, character_data: CharacterData, weapon_manager: WeaponManagerComponent) -> void:
 	await attacker.get_tree().create_timer(0.16, false).timeout
@@ -114,6 +121,12 @@ func _swing(attacker: Player, character_data: CharacterData, weapon_manager: Wea
 	half_angle += weapon_manager.sector_arc_width_level * 12.0
 	var active_seconds: float = character_data.attack_pattern_params.get("hitbox_active_seconds", 0.08)
 	var knockback: float = character_data.attack_pattern_params.get("knockback_distance", 8.0)
+	if upgrades and upgrades.has_evolution("evo_great_cleave"):
+		# 大断（進化）：横薙ぎが広がり、命中した敵を強く吹き飛ばす。範囲倍率は取得時に加算済み。
+		var cleave: UpgradeData = DataLoader.upgrades.get("evo_great_cleave")
+		var numbers: Dictionary = cleave.numbers if cleave else {}
+		knockback *= float(numbers.get("knockback_mult", 3.0))
+		half_angle += float(numbers.get("extra_half_angle", 25.0))
 	var facing := facing_override if facing_override != Vector2.ZERO else attacker.get_facing_direction()
 	var damage_multiplier := 1.0
 	var bonus_crit_chance := 0.0

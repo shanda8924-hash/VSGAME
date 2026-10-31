@@ -4142,3 +4142,27 @@ PC/OpenGLとタッチ操作を含む横画面/Vulkanプレビューで6職を確
 - 新規`tests/skill_readability_check.tscn`：データの揃い、3行、緑の相性行（両方向）、貯金式の3回目発動、HUDのタグと光る石板、枠内収まり。
   `survival_growth_check`は命中3回で残影1回・連鎖3体（職業の自動攻撃が重なる分は3の倍数で許容）、XP初回13、突撃型の速度92%に更新。
   実画面は`docs/screens/skill_cards_3lines.png`、`skill_cards_synergy.png`、`hud_build_tags.png`。
+
+## 2026-10-31 遊びの骨組み Phase 3：シナジーと進化（現行）
+目標：「雷が落ちるを取ったら、次は攻撃速度か連撃で雷を増やそう」と考えてビルドを組める。`docs/fun_loop_redesign.md` Phase 3。
+
+### 連撃（`data/upgrades/survival_double_strike.json`）
+- 戦闘強化。通常攻撃ごとに20%でもう一撃（段階ごとに+20%、最大60%）。既存の「確率でもう一撃」（`PlayerUpgradesComponent.multishot_chance`、
+  上限0.5→0.75）へ積むので、近接の横薙ぎ・射撃・浮遊武器の経路を共用する。追加の一撃は`EventBus.upgrade_triggered("survival_double_strike")`。
+  タグ「連撃・命中回数」。残影・連鎖の`scales_with`に入っているので、所持していればカードに「✦ 雷光連鎖が増える」が出る。
+### 進化（`data/upgrades/evo_*.json`、category "evolution"、`requires`）
+- 条件を満たし未所持の進化は、次のレベルアップに必ず1枚出る（朱色「進化　条件達成！」、相性行は「✦ 雷光連鎖Lv3＋連撃Lv2 の進化」）。
+  取得は`survival_upgrade_counts[id]=1`。HUDの石板は朱色。レシピ：
+  - 雷帝の連撃（雷光連鎖Lv3＋連撃Lv2）：命中ごとに必ず連鎖、連鎖先+1体、威力35%→50%（`chain_chance`/`chain_targets`）。
+  - 影走り（残影追撃Lv3＋高速攻撃Lv3）：残影が命中ごと、さらに0.5秒ごとに影が自分で近くの敵を斬る（直前の一撃の40%）。
+  - 大断（広域攻撃Lv3＋強撃Lv3）：範囲+50%（取得時に倍率加算）、角度+25°、ノックバック3倍（`melee_arc_attack._swing`）。
+  - 矢の雨（貫通射撃Lv2＋多重射撃Lv2）：追加4本（扇状5本）、貫通99（`get_survival_extra_projectiles`/`_fire_single_projectile`）。
+  - 帯電結界（再生結界Lv3＋雷光連鎖Lv2）：シールドが割れた瞬間、半径150の敵へ雷（結界Lv×12＋直前の一撃の50%）。
+- 秘技×雷：雷帝落雷が落ちた所から、雷光連鎖を持っていれば必ず連鎖（`upgrade_triggered("arcana_thunderlord_descent")`を購読）。
+### 候補の質（`ui/level_up_select/level_up_select.gd` `_draw_choices`）
+- 引く順：流派の選択 → 進化（必ず1枚） → 秘技（未所持なら1枚） → 相性カード（所持スキルと噛み合う候補があれば1枚） → 重み抽選。
+- 下段に「リロール 10G（使うごとに+5G、`GameManager.try_spend_run_gold`）」と「選んだ強化をもう出さない（ラン中1回、`banned_upgrade_ids`）」。
+### 検証
+- 新規`tests/synergy_evolution_check.tscn`：相性カードの保証（4回）、連撃の実発動（24振りで4回以上）、進化カードの保証と朱色の表示、
+  リロールの金貨と引き直し、「もう出さない」の除外、雷帝の連撃（1命中で4体）、秘技→連鎖、大断の範囲、帯電結界の雷、影走りの自律斬り、
+  弓兵の矢の雨（5本・貫通99）。実画面は`docs/screens/evolution_card.png`。

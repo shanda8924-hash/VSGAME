@@ -479,6 +479,15 @@ func _refresh_upgrade_strip(player: Player) -> void:
 	if _build_tags_label:
 		_build_tags_label.visible = any and not tags.is_empty()
 		_build_tags_label.text = "ビルド：" + "・".join(tags)
+		_place_tags_label.call_deferred()
+
+## 石板が2段に折り返しても、タグの行はその下に置く。
+func _place_tags_label() -> void:
+	if _build_tags_label == null or _upgrade_strip == null:
+		return
+	var strip_height := maxf(_upgrade_strip.get_combined_minimum_size().y, 60.0)
+	_build_tags_label.offset_top = _upgrade_strip.offset_top + strip_height + 4.0
+	_build_tags_label.offset_bottom = _build_tags_label.offset_top + 18.0
 
 ## 発動した強化の石板を一瞬光らせる（何が働いているかを見せる）。
 func _on_upgrade_triggered(upgrade_id: String, _position: Vector2) -> void:
@@ -496,16 +505,23 @@ func debug_get_upgrade_chip(upgrade_id: String) -> Control:
 func survival_ids_with_arcana(player: Player) -> Array[String]:
 	var ids: Array[String] = []
 	for key in player.upgrades_component.survival_upgrade_counts.keys():
+		if String(key).begins_with("evo_"):
+			ids.append(String(key))
+	for key in player.upgrades_component.survival_upgrade_counts.keys():
 		if String(key).begins_with("arcana_"):
 			ids.append(String(key))
 	ids.append_array(SURVIVAL_UPGRADE_IDS)
+	for key in player.upgrades_component.survival_upgrade_counts.keys():
+		if String(key).begins_with("survival_") and String(key) not in ids:
+			ids.append(String(key))
 	return ids
 
 ## 取得済み強化1つぶんの小さな石板：アイコンと段階ピップ（上限なしの強撃は回数）。
 func _build_upgrade_chip(upgrade: UpgradeData, rank: int) -> Control:
 	var chip := PanelContainer.new()
-	var is_arcana := upgrade.category == "arcana"
-	var style := PixelUIStyle.badge_style(Color("ff9a5c") if is_arcana else PixelUIStyle.JEWEL_DARK, Color("2a1a14") if is_arcana else Color("111c29"))
+	var is_evolution := upgrade.category == "evolution"
+	var is_arcana := upgrade.category == "arcana" or is_evolution
+	var style := PixelUIStyle.badge_style(Color("ff6a3d") if is_evolution else (Color("ff9a5c") if is_arcana else PixelUIStyle.JEWEL_DARK), Color("2a1a14") if is_arcana else Color("111c29"))
 	style.set_content_margin_all(5)
 	chip.add_theme_stylebox_override("panel", style)
 	chip.mouse_filter = Control.MOUSE_FILTER_STOP
