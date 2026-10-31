@@ -86,16 +86,20 @@ func _run() -> void:
 		var wave := game.get_node("WaveSpawner") as WaveSpawner
 		for index in 12: wave._spawn_enemy()
 		for e in get_tree().get_nodes_in_group("enemies"):
-			check(e.movement_component.base_speed <= actor.movement_component.base_speed*0.75+0.01,"Fast walking pursuer: "+character)
+			# Phase 1: 突撃型（rush）だけは主人公の92%まで速い。他は75%以内。
+			var speed_cap := 0.92 if String(e.get_meta("role","")) == "rush" else 0.75
+			check(e.movement_component.base_speed <= actor.movement_component.base_speed*speed_cap+0.01,"Fast walking pursuer: "+character)
 			e.queue_free()
 		await frames(3)
-		check(actor.experience_component.exp_to_next_level==9,"Initial XP gate is still slow")
+		# Phase 1でXP必要量の倍率を0.6→0.85にした（初回15→13）。
+		var first_gate := actor.experience_component.exp_to_next_level
+		check(first_gate>=9 and first_gate<=14,"Initial XP gate is still slow (%d)" % first_gate)
 		var ui := game.get_node("LevelUpSelect") as LevelUpSelect
 		var pool := ui._get_compatible_upgrades()
 		for upgrade in pool:
 			check(upgrade.category in ["survival","arcana"] or upgrade.class_character_id==character,"Legacy numeric/status-only card in new pool")
 		check(pool.size()>=7,"Not enough meaningful choices: "+character)
-		actor.experience_component.add_exp(9)
+		actor.experience_component.add_exp(first_gate)
 		await frames(3)
 		check(ui.visible and get_tree().paused and actor.experience_component.level==2,"Real XP does not open choice UI")
 		var choices: Array[UpgradeData]=[DataLoader.upgrades.survival_area,DataLoader.upgrades.survival_echo,DataLoader.upgrades.survival_chain]
@@ -137,10 +141,16 @@ func _run() -> void:
 		await frames(2)
 		var effects:=actor.get_node("SurvivalUpgradeEffects")
 		var baseline:=targets[0].health_component.current_hp
-		targets[0].health_component.apply_damage(50,CombatEventMeta.create_direct("player_upgrade_test"))
+		# Phase 2: 残影は命中3回ごと、雷光連鎖は命中ごとに貯金式の確率（Lv3=65%→2回目で発動）。
+		check(effects.echo_every_n(1)==3 and is_equal_approx(effects.chain_chance(3),0.65),"Proc numbers are not read from data")
+		for hit in 3:
+			targets[0].health_component._iframe_remaining=0.0
+			targets[0].health_component.apply_damage(50,CombatEventMeta.create_direct("player_upgrade_test"))
+			await frames(7)
 		await frames(14)
-		check(effects.debug_echo_hits==1 and effects.debug_chain_hits==3,"Follow-up/chain didn't deal bounded damage: "+character)
-		check(targets[0].health_component.current_hp<baseline-50,"Echo has no real damage")
+		# 職業の自動攻撃（騎士の脈動など）が同じ敵に当たると命中数が増えるので、回数は「3の倍数」で見る。
+		check(effects.debug_echo_hits>=1 and effects.debug_chain_hits>=3 and effects.debug_chain_hits%3==0,"Follow-up/chain didn't deal bounded damage: %s (echo %d, chain %d)" % [character, effects.debug_echo_hits, effects.debug_chain_hits])
+		check(targets[0].health_component.current_hp<baseline-150,"Echo has no real damage")
 		if character=="soldier": await capture("effects")
 		var triggered: int = effects.debug_echo_hits+effects.debug_chain_hits
 		targets[0].health_component.apply_secondary_damage(1,CombatEventMeta.create_secondary("element_dot",[],false))

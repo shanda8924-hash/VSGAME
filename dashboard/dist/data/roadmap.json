@@ -377,11 +377,11 @@
         {
           "id": "fun_loop_phase2_readable_skills",
           "name": "遊びの骨組み Phase 2：スキルの可読性（発動条件・タグ・相性）",
-          "status": "design",
-          "progress": 10,
+          "status": "completed",
+          "progress": 100,
           "priority": "high",
-          "lane": "next",
-          "notes": "docs/fun_loop_redesign.md Phase 2。trigger/tags/scales_withのデータ化、クールダウン→命中回数ごと、カード3行定型、HUDのビルド表示。"
+          "lane": "now",
+          "notes": "UpgradeDataにtrigger/効果/タグ/相性/数値を追加。残影は命中3回ごと、連鎖は命中ごとに貯金式の確率（クールダウン廃止＝攻速・連撃・弾数が発動回数に直結）。カードは発動／効果／相性の3行、相性は緑の✦行。HUDにビルドのタグと発動で光る石板。skill_readability_check／survival_growth_check／five_minute_survival_check PASS。"
         },
         {
           "id": "fun_loop_phase3_synergy",

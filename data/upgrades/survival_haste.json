@@ -11,5 +11,16 @@
     "preview": "haste",
     "tagline": "攻撃の間隔が短くなる",
     "requires_projectile": false
+  },
+  "trigger": "passive",
+  "trigger_text": "常時",
+  "effect_text": "攻撃間隔が10%短くなる＝命中回数が増える",
+  "tags": [
+    "攻速",
+    "命中回数"
+  ],
+  "scales_with": [],
+  "numbers": {
+    "interval_pct": 0.1
   }
 }

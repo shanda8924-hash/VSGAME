@@ -23,6 +23,8 @@ signal enemy_physical_damage_dealt(amount: float, position: Vector2, is_critical
 ## EnemyのHealthへ実際に通ったDamageだけを、対象とTrigger文脈付きで通知する。
 ## Concept/COMBOはこのSignalを正とし、Presentation用damage_dealtとは分離する。
 signal enemy_damage_confirmed(target: Node, amount: float, is_critical: bool, metadata: Dictionary)
+## 戦闘強化・秘技が実際に発動した通知（HUDのビルド表示のピップを光らせる、Phase 2）。
+signal upgrade_triggered(upgrade_id: String, position: Vector2)
 signal run_started()
 signal run_ended(survived_seconds: float, kill_count: int)
 signal run_cleared(room_count: int, elapsed_seconds: float, kill_count: int)

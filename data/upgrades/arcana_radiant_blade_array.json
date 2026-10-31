@@ -26,5 +26,16 @@
       "光刃陣が3か所に増える、間隔6.0秒。",
       "光刃陣が4か所に増える、間隔5.5秒。"
     ]
+  },
+  "trigger": "periodic",
+  "trigger_text": "7.5秒ごと（自動）",
+  "effect_text": "光刃陣が範囲内の敵を同時に切り払う",
+  "tags": [
+    "光",
+    "自動"
+  ],
+  "scales_with": [],
+  "numbers": {
+    "every_seconds": 7.5
   }
 }

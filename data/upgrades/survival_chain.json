@@ -4,12 +4,36 @@
   "category": "survival",
   "effect_type": "survival_chain",
   "value": 0,
-  "description": "命中から近くの敵へ雷が渡る。1段階ごとに対象が1体増える。",
+  "description": "命中ごとに35%で近くの敵へ雷が渡る。段階ごとに確率+15%、対象+1体。",
   "icon_path": "res://assets/ui/icons/battle_skills/upgrades/a1_charged_chain.png",
   "effect_params": {
     "max_rank": 3,
     "preview": "chain",
     "tagline": "隣の敵へ雷が渡る",
     "requires_projectile": false
+  },
+  "trigger": "on_hit",
+  "trigger_text": "命中ごとに35%（段階で+15%）",
+  "effect_text": "近くの敵へ雷が渡る（段階ごとに1体）",
+  "tags": [
+    "雷",
+    "連鎖",
+    "命中"
+  ],
+  "scales_with": [
+    "攻速",
+    "連撃",
+    "弾数",
+    "貫通",
+    "命中回数",
+    "survival_haste",
+    "survival_double_strike",
+    "survival_multishot",
+    "survival_pierce"
+  ],
+  "numbers": {
+    "chance": 0.35,
+    "chance_per_rank": 0.15,
+    "damage_pct": 0.35
   }
 }

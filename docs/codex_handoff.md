@@ -1,4 +1,11 @@
-# Codex Handoff — 2026-10-31（遊びの骨組み Phase 1まで）
+# Codex Handoff — 2026-10-31（遊びの骨組み Phase 2まで）
+
+## 今回（遊びの骨組み Phase 2：スキルの可読性、2026-10-31）
+- `UpgradeData`に`trigger/trigger_text/effect_text/tags/scales_with/numbers`を追加し、戦闘強化8種・秘技5種のJSONへ記入。`is_boosted_by(other)`で相性判定。
+- `survival_upgrade_effects.gd`：残影＝命中N回ごと（[3,3,2]）、連鎖＝命中ごとに貯金式の確率（35%＋段階15%）。クールダウン廃止。発動で`EventBus.upgrade_triggered`。秘技も`ConceptSystem`から同信号。
+- カード本文は「発動／効果／相性」の3行固定、相性は所持スキルと突き合わせて緑の「✦」行（`LevelUpSelect.synergy_line`）。HUDは石板の下に「ビルド：タグ…」、発動で石板が光る。
+- 検証：`script_load_check` 0件、新規`skill_readability_check` PASS、`survival_growth_check` PASS（命中3回・XP初回13・突撃型92%に更新）、`five_minute_survival_check` PASS。実画面`docs/screens/skill_cards_*.png`、`hud_build_tags.png`。
+- 次：Phase 3（連撃`survival_double_strike`、`data/upgrades/evolutions.json`、進化カードの保証枠、リロール、相性カード保証）。
 
 ## 今回（遊びの骨組み Phase 1：緊張と山場、2026-10-31）
 - 設計は`docs/fun_loop_redesign.md`。Phase 1を実装：`exploration_run.json`の`surge.enabled: true`＋MAP別`survival_surge_seconds`/`survival_surge_roles`、`MapRunController._tick_survival_surge`（予告10秒→開始30秒→終了報酬、中盤に強敵1体、ボス段階で報酬なし終了）、`WaveSpawner`の`ENEMY_ROLES`（rush/wall/ranged/swarm）・`spawn_ring`・`spawn_strong_enemy`・`set_surge_role`（通常湧きの6割を主役に）、`EnemyData.ranged_range`＋`components/ai/ranged_strategy.gd`＋`EnemyBasic._fire_ranged_shot`（敵弾＝共通Projectile layer 16、`enemy_shots`）、壁型のノックバック×0.35、`hud.set_survival_status(..., next_event)`の2行目、`DetailedMapSurfaces.set_alarm`（縁の朱赤の脈動、`set_surge_visual`経由）。

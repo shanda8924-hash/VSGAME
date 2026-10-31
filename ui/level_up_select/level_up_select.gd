@@ -239,7 +239,7 @@ func _build_choice_button(upgrade: UpgradeData) -> Button:
 	column.add_child(_build_rank_row(rank, _max_rank(upgrade), accent, is_class))
 	var preview := UpgradePreview.new()
 	preview.name = "UpgradePreview"
-	preview.custom_minimum_size.y = 190
+	preview.custom_minimum_size.y = 170
 	_configure_preview(preview, upgrade, rank, accent, actor)
 	preview.class_icon = icon.texture
 	column.add_child(preview)
@@ -250,8 +250,8 @@ func _build_choice_button(upgrade: UpgradeData) -> Button:
 	body.scroll_active = false
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	body.add_theme_font_size_override("normal_font_size", 20)
-	body.text = _highlight_numbers(_card_description(upgrade, rank), accent.lightened(0.25))
+	body.add_theme_font_size_override("normal_font_size", 18)
+	body.text = _card_body_text(upgrade, rank, accent, actor)
 	column.add_child(body)
 	var selected := Label.new()
 	selected.name = "SelectionLabel"
@@ -345,6 +345,77 @@ func _build_rank_row(rank: int, max_rank: int, accent: Color, is_class: bool) ->
 		text.text = "  Lv.%d → Lv.%d%s" % [rank, rank + 1, limit]
 	row.add_child(text)
 	return row
+
+const SYNERGY_COLOR := Color("8ff0a0")
+const LINE_LABEL_COLOR := Color("b9a98a")
+
+## カードの本文は「発動／効果／相性」の3行固定（Phase 2）。発動条件と相性のデータが無い
+## 職業技・旧カードは、従来の説明文をそのまま出す。
+func _card_body_text(upgrade: UpgradeData, rank: int, accent: Color, actor: Player) -> String:
+	if upgrade.trigger_text.is_empty() and upgrade.effect_text.is_empty():
+		return _highlight_numbers(_card_description(upgrade, rank), accent.lightened(0.25))
+	var label_color := LINE_LABEL_COLOR.to_html(false)
+	var effect_text := upgrade.effect_text
+	if upgrade.category == "arcana":
+		var lines: Array = upgrade.effect_params.get("level_lines", [])
+		if rank > 0 and rank < lines.size():
+			effect_text = String(lines[rank])
+	var synergy := synergy_line(upgrade, _owned_upgrades(actor))
+	var synergy_text: String = synergy.text
+	if bool(synergy.boosted):
+		synergy_text = "[color=#%s]%s[/color]" % [SYNERGY_COLOR.to_html(false), synergy_text]
+	else:
+		synergy_text = "[color=#%s]%s[/color]" % [PixelUIStyle.TEXT_MUTED.to_html(false), synergy_text]
+	return "[color=#%s]発動[/color]　%s\n[color=#%s]効果[/color]　%s\n[color=#%s]相性[/color]　%s" % [
+		label_color, _highlight_numbers(upgrade.trigger_text, accent.lightened(0.25)),
+		label_color, _highlight_numbers(effect_text, accent.lightened(0.25)),
+		label_color, synergy_text,
+	]
+
+func _owned_upgrades(actor: Player) -> Array[UpgradeData]:
+	var owned: Array[UpgradeData] = []
+	if actor == null or actor.upgrades_component == null:
+		return owned
+	for id in actor.upgrades_component.survival_upgrade_counts.keys():
+		if int(actor.upgrades_component.survival_upgrade_counts[id]) <= 0:
+			continue
+		var data: UpgradeData = DataLoader.upgrades.get(String(id))
+		if data:
+			owned.append(data)
+	return owned
+
+## 相性の行。所持スキルのtags/idと候補のscales_withを突き合わせ、噛み合う候補には
+## 「✦ 相性：雷光連鎖が増える」を返す（boosted=true、緑で出す）。噛み合わなければ、
+## 何で増えるか（候補のscales_withの語）を薄く出す。
+static func synergy_line(upgrade: UpgradeData, owned: Array[UpgradeData]) -> Dictionary:
+	var boosts: Array[String] = []     # 候補が所持スキルを増やす
+	var boosted_by: Array[String] = [] # 所持スキルが候補を増やす
+	for other in owned:
+		if other.id == upgrade.id:
+			continue
+		if other.is_boosted_by(upgrade) and other.display_name not in boosts:
+			boosts.append(other.display_name)
+		if upgrade.is_boosted_by(other) and other.display_name not in boosted_by:
+			boosted_by.append(other.display_name)
+	if not boosts.is_empty() or not boosted_by.is_empty():
+		var parts: Array[String] = []
+		if not boosts.is_empty():
+			parts.append("%sが増える" % "・".join(boosts))
+		if not boosted_by.is_empty():
+			parts.append("%sで増える" % "・".join(boosted_by))
+		return {"text": "✦ " + "　".join(parts), "boosted": true}
+	var words: Array[String] = []
+	var id_pattern := RegEx.create_from_string("^[a-z0-9_]+$")
+	for key in upgrade.scales_with:
+		if id_pattern.search(key) != null:
+			continue # 強化IDは語で言い換え済み（攻速・連撃など）
+		if key not in words and words.size() < 3:
+			words.append(key)
+	if not words.is_empty():
+		return {"text": "%sで発動が増える" % "・".join(words), "boosted": false}
+	if upgrade.tags.is_empty():
+		return {"text": "単体で完結", "boosted": false}
+	return {"text": "%s（土台になる）" % "・".join(upgrade.tags), "boosted": false}
 
 ## 秘技は段階ごとに何が増えるかが違うので、次の段階の説明文を出す。
 func _card_description(upgrade: UpgradeData, rank: int) -> String:

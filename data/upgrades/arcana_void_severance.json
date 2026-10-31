@@ -26,5 +26,16 @@
       "範囲が大きく広がる、間隔7.5秒。",
       "裂界が3か所に増える、間隔7.0秒。"
     ]
+  },
+  "trigger": "periodic",
+  "trigger_text": "10秒ごと（自動）",
+  "effect_text": "巨大な裂け目で広く切り裂く",
+  "tags": [
+    "虚無",
+    "自動"
+  ],
+  "scales_with": [],
+  "numbers": {
+    "every_seconds": 10.0
   }
 }

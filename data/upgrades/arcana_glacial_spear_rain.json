@@ -26,5 +26,16 @@
       "氷槍の雨が3か所に増える、間隔7.5秒。",
       "範囲が大きく広がる、間隔7.0秒。"
     ]
+  },
+  "trigger": "periodic",
+  "trigger_text": "9秒ごと（自動）",
+  "effect_text": "氷槍の雨を1か所へ。時間差で砕けて敵を鈍らせる",
+  "tags": [
+    "氷",
+    "自動"
+  ],
+  "scales_with": [],
+  "numbers": {
+    "every_seconds": 9.0
   }
 }

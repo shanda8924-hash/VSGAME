@@ -11,5 +11,17 @@
     "preview": "guard",
     "tagline": "青い結界が身を守る",
     "requires_projectile": false
+  },
+  "trigger": "periodic",
+  "trigger_text": "8秒ごと",
+  "effect_text": "シールドを8回復（段階ごとに+8）",
+  "tags": [
+    "結界",
+    "防御"
+  ],
+  "scales_with": [],
+  "numbers": {
+    "every_seconds": 8,
+    "shield_per_rank": 8
   }
 }

@@ -4,12 +4,40 @@
   "category": "survival",
   "effect_type": "survival_echo",
   "value": 0,
-  "description": "命中の0.18秒後、影の斬撃で追撃。最大3段階で威力が上がる。",
+  "description": "命中3回ごとに影の斬撃で追撃。Lv3で2回ごと、威力も上がる。",
   "icon_path": "res://assets/ui/icons/battle_skills/upgrades/melee_rapid_strike.png",
   "effect_params": {
     "max_rank": 3,
     "preview": "echo",
     "tagline": "影がもう一度斬る",
     "requires_projectile": false
+  },
+  "trigger": "every_n_hits",
+  "trigger_text": "命中3回ごと（Lv3で2回ごと）",
+  "effect_text": "影の斬撃が同じ敵へ追撃（威力25%＋段階5%）",
+  "tags": [
+    "影",
+    "追撃",
+    "命中"
+  ],
+  "scales_with": [
+    "攻速",
+    "連撃",
+    "弾数",
+    "貫通",
+    "命中回数",
+    "survival_haste",
+    "survival_double_strike",
+    "survival_multishot",
+    "survival_pierce"
+  ],
+  "numbers": {
+    "every_n_by_rank": [
+      3,
+      3,
+      2
+    ],
+    "damage_pct": 0.25,
+    "damage_pct_per_rank": 0.05
   }
 }

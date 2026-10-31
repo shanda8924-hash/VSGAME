@@ -11,5 +11,15 @@
     "preview": "power",
     "tagline": "強い打撃と大きな火花",
     "requires_projectile": false
+  },
+  "trigger": "passive",
+  "trigger_text": "常時",
+  "effect_text": "攻撃力が8%上がる。命中の火花も大きく",
+  "tags": [
+    "威力"
+  ],
+  "scales_with": [],
+  "numbers": {
+    "damage_pct": 0.08
   }
 }

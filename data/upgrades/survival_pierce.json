@@ -11,5 +11,17 @@
     "preview": "pierce",
     "tagline": "敵の列を撃ち抜く",
     "requires_projectile": true
+  },
+  "trigger": "passive",
+  "trigger_text": "常時（矢・魔法弾）",
+  "effect_text": "弾が敵を1体貫通する＝命中回数が増える",
+  "tags": [
+    "貫通",
+    "命中回数",
+    "射撃"
+  ],
+  "scales_with": [],
+  "numbers": {
+    "extra_per_rank": 1
   }
 }

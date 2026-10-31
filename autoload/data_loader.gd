@@ -225,6 +225,18 @@ func _load_upgrades() -> void:
 		data.class_character_id = entry.get("class_character_id", "")
 		data.class_ability_level = int(entry.get("class_ability_level", 0))
 		data.class_school = entry.get("class_school", "")
+		data.trigger = String(entry.get("trigger", "passive"))
+		data.trigger_text = String(entry.get("trigger_text", ""))
+		data.effect_text = String(entry.get("effect_text", ""))
+		var tags: Array[String] = []
+		for tag in entry.get("tags", []):
+			tags.append(String(tag))
+		data.tags = tags
+		var scales: Array[String] = []
+		for key in entry.get("scales_with", []):
+			scales.append(String(key))
+		data.scales_with = scales
+		data.numbers = entry.get("numbers", {})
 		upgrades[data.id] = data
 
 func get_all_upgrades() -> Array[UpgradeData]:

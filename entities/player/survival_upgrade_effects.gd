@@ -1,8 +1,10 @@
 extends Node2D
 ## Direct hits alone seed bounded follow-ups; secondary damage cannot seed another.
 var actor: Player
-var _echo_cooldown := 0.0
-var _chain_cooldown := 0.0
+## 発動はクールダウンではなく命中回数で数える（Phase 2）。攻撃速度・連撃・弾数が
+## そのまま発動回数に直結し、シナジーの土台になる。数値はdata/upgrades/*.jsonのnumbers。
+var _echo_hits := 0
+var _chain_accumulator := 0.0
 var _guard_timer := 0.0
 var _echo_delay := -1.0
 var _echo_target: WeakRef
@@ -32,15 +34,23 @@ func _on_hit(target: Node, amount: float, _critical: bool, metadata: Dictionary)
 		return
 	var upgrades := actor.upgrades_component
 	var pos: Vector2 = metadata.get("impact_position", (target as Node2D).global_position)
-	if upgrades.get_survival_rank("survival_echo") > 0 and _echo_cooldown <= 0:
-		_echo_cooldown = 0.6
-		_echo_delay = 0.18
-		_echo_target = weakref(target)
-		_echo_position = pos
-		_echo_damage = amount * (0.25 + 0.05 * upgrades.get_survival_rank("survival_echo"))
-	if upgrades.get_survival_rank("survival_chain") > 0 and _chain_cooldown <= 0:
-		_chain_cooldown = 0.7
-		_pending_chain = {"origin":pos,"exclude":target.get_instance_id(),"damage":amount * 0.35}
+	var echo_rank := upgrades.get_survival_rank("survival_echo")
+	if echo_rank > 0:
+		_echo_hits += 1
+		if _echo_hits >= echo_every_n(echo_rank):
+			_echo_hits = 0
+			var numbers := _numbers("survival_echo")
+			_echo_delay = 0.18
+			_echo_target = weakref(target)
+			_echo_position = pos
+			_echo_damage = amount * (float(numbers.get("damage_pct", 0.25)) + float(numbers.get("damage_pct_per_rank", 0.05)) * echo_rank)
+	var chain_rank := upgrades.get_survival_rank("survival_chain")
+	if chain_rank > 0 and _pending_chain.is_empty():
+		# 確率は貯金式（擬似乱数）。35%なら3回に1回は必ず渡り、運だけで空振りが続かない。
+		_chain_accumulator += chain_chance(chain_rank)
+		if _chain_accumulator >= 1.0:
+			_chain_accumulator -= 1.0
+			_pending_chain = {"origin":pos,"exclude":target.get_instance_id(),"damage":amount * float(_numbers("survival_chain").get("damage_pct", 0.35))}
 	var power := upgrades.get_survival_rank("survival_power")
 	if power > 0 and _marks.size() < 32:
 		_marks.append({"kind":"power","from":pos,"to":pos,"life":0.20,"rank":power})
@@ -48,13 +58,13 @@ func _on_hit(target: Node, amount: float, _critical: bool, metadata: Dictionary)
 func _process(delta: float) -> void:
 	if actor == null or actor._is_dead or GameManager.run_state != GameManager.RunState.PLAYING:
 		return
-	_echo_cooldown = maxf(_echo_cooldown - delta, 0)
-	_chain_cooldown = maxf(_chain_cooldown - delta, 0)
 	_guard_timer -= delta
 	var guard := actor.upgrades_component.get_survival_rank("survival_guard")
 	if guard > 0 and _guard_timer <= 0:
-		_guard_timer = 8.0
-		actor.health_component.grant_temporary_shield(maxf(actor.health_component.shield_amount, guard * 8.0))
+		var numbers := _numbers("survival_guard")
+		_guard_timer = float(numbers.get("every_seconds", 8.0))
+		actor.health_component.grant_temporary_shield(maxf(actor.health_component.shield_amount, guard * float(numbers.get("shield_per_rank", 8.0))))
+		EventBus.upgrade_triggered.emit("survival_guard", actor.global_position)
 	if _echo_delay >= 0:
 		_echo_delay -= delta
 		if _echo_delay < 0: _echo()
@@ -66,6 +76,22 @@ func _process(delta: float) -> void:
 		_marks[index].life -= delta
 		if _marks[index].life <= 0: _marks.remove_at(index)
 	queue_redraw()
+
+func _numbers(id: String) -> Dictionary:
+	var upgrade: UpgradeData = DataLoader.upgrades.get(id)
+	return upgrade.numbers if upgrade else {}
+
+## 残影追撃が発動する命中回数（段階で短くなる）。カード・HUDの文もこれを使う。
+func echo_every_n(rank: int) -> int:
+	var by_rank: Array = _numbers("survival_echo").get("every_n_by_rank", [3, 3, 2])
+	if by_rank.is_empty():
+		return 3
+	return maxi(int(by_rank[clampi(rank - 1, 0, by_rank.size() - 1)]), 1)
+
+## 雷光連鎖が命中1回で渡る確率（段階で上がる）。
+func chain_chance(rank: int) -> float:
+	var numbers := _numbers("survival_chain")
+	return clampf(float(numbers.get("chance", 0.35)) + float(numbers.get("chance_per_rank", 0.15)) * (rank - 1), 0.0, 1.0)
 
 func _limit() -> float:
 	var manager := actor.weapon_manager
@@ -88,6 +114,7 @@ func _echo() -> void:
 	if dealt > 0:
 		debug_echo_hits += 1
 		_marks.append({"kind":"echo","from":point,"to":point,"life":0.24,"rank":actor.upgrades_component.get_survival_rank("survival_echo")})
+		EventBus.upgrade_triggered.emit("survival_echo", point)
 
 func _chain(pending: Dictionary) -> void:
 	var from: Vector2 = pending.origin
@@ -112,6 +139,8 @@ func _chain(pending: Dictionary) -> void:
 		if dealt > 0:
 			debug_chain_hits += 1
 			_marks.append({"kind":"chain","from":from,"to":point,"life":0.24,"rank":1})
+			if index == 0:
+				EventBus.upgrade_triggered.emit("survival_chain", point)
 		from = point
 
 func _draw() -> void:

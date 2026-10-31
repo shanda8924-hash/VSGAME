@@ -73,6 +73,9 @@ var _weapon_name_label: Label
 
 # --- 取得済み強化（左上の下） ---
 var _upgrade_strip: HFlowContainer
+var _build_tags_label: Label
+## 取得済み強化の石板（id → chip）。発動の通知で光らせる。
+var _upgrade_chips: Dictionary = {}
 
 # --- 職業技パネル(右下) ---
 var _skill_panel: RetroPanel
@@ -171,6 +174,22 @@ func _layout_exploration_hud() -> void:
 	_upgrade_strip.offset_right = 24 + 560
 	_upgrade_strip.offset_top = 150
 	_upgrade_strip.offset_bottom = 210
+	# その下: 今のビルドのタグ（雷・連鎖・命中…）。発動したスキルの石板は一瞬光る（Phase 2）。
+	_build_tags_label = Label.new()
+	_build_tags_label.name = "BuildTags"
+	_build_tags_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_build_tags_label.add_theme_font_size_override("font_size", 14)
+	_build_tags_label.add_theme_color_override("font_color", RetroHUDStyle.PARCHMENT_DIM)
+	_build_tags_label.add_theme_color_override("font_outline_color", Color("050912"))
+	_build_tags_label.add_theme_constant_override("outline_size", 4)
+	_build_tags_label.visible = false
+	add_child(_build_tags_label)
+	_build_tags_label.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+	_build_tags_label.offset_left = 26
+	_build_tags_label.offset_right = 26 + 560
+	_build_tags_label.offset_top = 214
+	_build_tags_label.offset_bottom = 232
+	EventBus.upgrade_triggered.connect(_on_upgrade_triggered)
 
 	# 右上: 金貨
 	gold_label.reparent(self)
@@ -436,10 +455,13 @@ func _refresh_upgrade_strip(player: Player) -> void:
 		return
 	for child in _upgrade_strip.get_children():
 		child.queue_free()
+	_upgrade_chips.clear()
 	if player == null or player.upgrades_component == null:
 		_upgrade_strip.hide()
+		if _build_tags_label: _build_tags_label.hide()
 		return
 	var any := false
+	var tags: Array[String] = []
 	for id in survival_ids_with_arcana(player):
 		var rank: int = player.upgrades_component.get_survival_rank(id)
 		if rank <= 0:
@@ -447,9 +469,28 @@ func _refresh_upgrade_strip(player: Player) -> void:
 		var upgrade: UpgradeData = DataLoader.upgrades.get(id)
 		if upgrade == null:
 			continue
-		_upgrade_strip.add_child(_build_upgrade_chip(upgrade, rank))
+		var chip := _build_upgrade_chip(upgrade, rank)
+		_upgrade_strip.add_child(chip)
+		_upgrade_chips[id] = chip
+		for tag in upgrade.tags:
+			if tag not in tags: tags.append(tag)
 		any = true
 	_upgrade_strip.visible = any
+	if _build_tags_label:
+		_build_tags_label.visible = any and not tags.is_empty()
+		_build_tags_label.text = "ビルド：" + "・".join(tags)
+
+## 発動した強化の石板を一瞬光らせる（何が働いているかを見せる）。
+func _on_upgrade_triggered(upgrade_id: String, _position: Vector2) -> void:
+	var chip: Control = _upgrade_chips.get(upgrade_id)
+	if chip == null or not is_instance_valid(chip):
+		return
+	chip.modulate = Color(1.7, 1.6, 1.2, 1.0)
+	var tween := chip.create_tween()
+	tween.tween_property(chip, "modulate", Color.WHITE, 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+
+func debug_get_upgrade_chip(upgrade_id: String) -> Control:
+	return _upgrade_chips.get(upgrade_id)
 
 ## 秘技（所持中のもの）を先頭に、戦闘強化をその後ろに並べる。
 func survival_ids_with_arcana(player: Player) -> Array[String]:
@@ -470,7 +511,10 @@ func _build_upgrade_chip(upgrade: UpgradeData, rank: int) -> Control:
 	chip.mouse_filter = Control.MOUSE_FILTER_STOP
 	var maximum := int(upgrade.effect_params.get("max_rank", 0))
 	var stage_text := "Lv.%d / %d" % [rank, maximum] if maximum > 0 else "×%d" % rank
-	chip.tooltip_text = "%s　%s\n%s" % [upgrade.display_name, stage_text, upgrade.description]
+	if upgrade.trigger_text.is_empty():
+		chip.tooltip_text = "%s　%s\n%s" % [upgrade.display_name, stage_text, upgrade.description]
+	else:
+		chip.tooltip_text = "%s　%s\n発動：%s\n効果：%s" % [upgrade.display_name, stage_text, upgrade.trigger_text, upgrade.effect_text]
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 3)
 	column.alignment = BoxContainer.ALIGNMENT_CENTER

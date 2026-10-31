@@ -11,5 +11,17 @@
     "preview": "multishot",
     "tagline": "弾の本数が増える",
     "requires_projectile": true
+  },
+  "trigger": "passive",
+  "trigger_text": "常時（矢・魔法弾）",
+  "effect_text": "一度の発射が1本増える＝命中回数が増える",
+  "tags": [
+    "弾数",
+    "命中回数",
+    "射撃"
+  ],
+  "scales_with": [],
+  "numbers": {
+    "extra_per_rank": 1
   }
 }

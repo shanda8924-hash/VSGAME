@@ -498,6 +498,7 @@ func _trigger_completed_skill(skill_id: String, definition: Dictionary, level: i
 			cold_status.remove_effect("stun")
 	_execute_skill(completed_index, skill, modifier, target, position, skill_meta, false, level)
 	completed_skill_triggered.emit(skill_id, level)
+	EventBus.upgrade_triggered.emit("arcana_" + skill_id, position)
 	skill_triggered.emit(completed_index, skill.id, int(skill_meta.get("generation_depth", 0)))
 
 

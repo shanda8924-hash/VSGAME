@@ -4119,3 +4119,26 @@ PC/OpenGLとタッチ操作を含む横画面/Vulkanプレビューで6職を確
 - `five_minute_survival_check`に追加：波の予告（HUD文＋朱赤の縁）→開始（役割つきの包囲湧き8体以上）→中盤の強敵→終了（報酬の床装備、警報と役割の解除）、
   弓兵が立ち止まった主人公へ弾を撃つ、壁型のノックバック耐性。`--full-run`では無敵なしで180秒まで自動操作しHP50%以下へ落ちる圧力があること
   （25%未満で救済回復）、60秒時点の生存12体以上、波の開始/終了イベント4回を確認する。実画面は`tools/capture_surge.tscn`→`docs/screens/surge_*.png`。
+
+## 2026-10-31 遊びの骨組み Phase 2：スキルの可読性（現行）
+目標：カードを3秒見れば「いつ・何が・どれくらい・何と相性がいいか」が分かる。`docs/fun_loop_redesign.md` Phase 2。
+
+### データ（`resources/upgrade_data.gd`、`data/upgrades/*.json`）
+- 追加：`trigger`（passive / on_hit / every_n_hits / periodic …）、`trigger_text`（「命中3回ごと」）、`effect_text`、`tags`（雷・連鎖・命中…）、
+  `scales_with`（発動や効果を増やす側の語・ID：攻速・連撃・弾数・貫通・命中回数、survival_haste…）、`numbers`（発動の数値）。
+  戦闘強化8種と秘技5種に記入。`UpgradeData.is_boosted_by(other)`は`scales_with`と相手の`tags`/`id`の突き合わせ。
+### 発動（`entities/player/survival_upgrade_effects.gd`）
+- 残影追撃：0.6秒CD → 命中N回ごと（`numbers.every_n_by_rank` [3,3,2]）。雷光連鎖：0.7秒CD → 命中ごとに確率（`chance` 0.35＋段階0.15）。
+  確率は貯金式（擬似乱数）で、35%なら3回目に必ず渡る。再生結界の周期・量も`numbers`。
+  これで攻撃速度・連撃・多重射撃・貫通が発動回数に直結する（シナジーの土台）。
+- 発動時に`EventBus.upgrade_triggered(upgrade_id, position)`（残影・連鎖・結界・秘技＝`arcana_<skill_id>`）。
+### カード（`ui/level_up_select/level_up_select.gd`）
+- 本文は3行固定「発動／効果／相性」（18px、比較プレビューは170px）。相性は所持スキルと突き合わせ、噛み合えば緑で
+  「✦ 雷光連鎖が増える」「✦ 高速攻撃で増える」、噛み合わなければ薄く「攻速・連撃・弾数で発動が増える」（最大3語）または
+  「タグ（土台になる）」。発動データの無い職業技は従来の説明文。
+### HUD（`ui/hud/hud.gd`）
+- 左上の強化石板の下に「ビルド：雷・連鎖・命中・攻速」。発動した強化の石板は0.35秒光る。石板のツールチップに発動／効果。
+### 検証
+- 新規`tests/skill_readability_check.tscn`：データの揃い、3行、緑の相性行（両方向）、貯金式の3回目発動、HUDのタグと光る石板、枠内収まり。
+  `survival_growth_check`は命中3回で残影1回・連鎖3体（職業の自動攻撃が重なる分は3の倍数で許容）、XP初回13、突撃型の速度92%に更新。
+  実画面は`docs/screens/skill_cards_3lines.png`、`skill_cards_synergy.png`、`hud_build_tags.png`。

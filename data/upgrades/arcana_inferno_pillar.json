@@ -26,5 +26,16 @@
       "炎柱が3か所に増える、間隔6.5秒。",
       "炎柱が4か所に増える、間隔6.0秒。"
     ]
+  },
+  "trigger": "periodic",
+  "trigger_text": "8秒ごと（自動）",
+  "effect_text": "敵の群れの真ん中から火柱が噴き上がる",
+  "tags": [
+    "炎",
+    "自動"
+  ],
+  "scales_with": [],
+  "numbers": {
+    "every_seconds": 8.0
   }
 }

@@ -46,3 +46,31 @@ class_name UpgradeData
 ## 出現するために必要な「既に確定しているschool」を表す(空文字なら
 ## school分岐を持たない職業専用強化)。
 @export var class_school: String = ""
+
+## 可読性（Phase 2、2026-10-31）。カードは「発動／効果／相性」の3行固定で読む。
+## trigger: passive / on_hit / every_n_hits / periodic / on_kill / on_dodge / on_damaged / low_hp
+@export var trigger: String = "passive"
+## 「攻撃を当てたとき」「命中3回ごと」など、発動条件の短い文。
+@export var trigger_text: String = ""
+## 「近くの敵へ雷が渡る（最大2体）」など、起きることの短い文。
+@export var effect_text: String = ""
+## 相性の突き合わせに使う語（例: 雷・連鎖・命中）。HUDのビルド表示にも並べる。
+@export var tags: Array[String] = []
+## この強化の発動回数や効果を増やす側の語・ID（例: 攻速・連撃・survival_haste）。
+## 所持スキルのtagsまたはidと一致すると、カードに「✦ 相性」を緑で出す。
+@export var scales_with: Array[String] = []
+## 発動の数値（例: {"every_n_by_rank": [3,3,2], "chance": 0.35, "chance_per_rank": 0.15}）。
+## 発動の仕組みはコード、数値はここに寄せる。
+@export var numbers: Dictionary = {}
+
+func has_tag(tag: String) -> bool:
+	return tag in tags
+
+## 自分の発動や効果を、other（所持スキル）が増やすか。
+func is_boosted_by(other: UpgradeData) -> bool:
+	if other == null or other.id == id:
+		return false
+	for key in scales_with:
+		if key == other.id or other.has_tag(key):
+			return true
+	return false

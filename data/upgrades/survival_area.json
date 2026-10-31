@@ -11,5 +11,16 @@
     "preview": "area",
     "tagline": "範囲が広がる",
     "requires_projectile": false
+  },
+  "trigger": "passive",
+  "trigger_text": "常時",
+  "effect_text": "斬撃と索敵の範囲が18%広がる。横の敵も巻き込む",
+  "tags": [
+    "範囲",
+    "近接"
+  ],
+  "scales_with": [],
+  "numbers": {
+    "range_pct": 0.18
   }
 }
