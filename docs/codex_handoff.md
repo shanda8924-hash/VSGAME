@@ -1,4 +1,15 @@
-# Codex Handoff — 2026-10-13
+# Codex Handoff — 2026-10-31
+
+## 今回（整理計画 Phase 0：保全）
+- 2026-08-25以降の未コミット変更1390件を9コミットに分けて保存し、`main`ブランチを作成。保全前の状態は`backup/pre-cleanup-20261031`タグ。
+- `.gitignore`に`artifacts/`、`tmp/`、`tools/source_art/`、`.codex-runtime-test/`、`.godot-test-user-visual/`を追加。`artifacts/`は追跡から外しただけで、ファイルはそのまま。
+- `tools/source_art/{open_field_survival,five_minute_survival,survival_growth}`のコード退避コピーはリポジトリ外（`../_backup_20261031/source_art_snapshots/`）へ移動。各`change.diff`は`docs/history/`へ。
+- `README.md`を現行の5分サバイバル向け1ページに書き直し。`dashboard/dist/data/decisions.json`と`project.json`（1.6.20、2026-10-31）を更新。
+- ゲーム本体のコード・データ・素材は未変更。
+- 検証：`script_load_check` 209件・失敗0。`five_minute_survival_check`（PC/OpenGL、`res://scenes/game.tscn`を直接起動して`-- --survival-check --mute-audio`）はOPEN_FIELD PASS、failures=[]。終了時の`!is_inside_tree()`エラー1件は既存の退出処理由来で検査結果に影響しない。
+- 次は`docs/cleanup_and_brushup_plan.md`のPhase 1（仕様書v4.0の現行／履歴分離、ダッシュボード一本化）。Phase 4（HUD）は並行可。判断事項D1〜D8はユーザー待ち。
+
+## 直前の状態（2026-10-25まで、参考）
 
 ## 現行
 - 3テーマ共通で床だけの連続戦場。RoomLayoutのsurvival生成がfloor_only=trueの96×96参照地図。床描画はDetailedMapSurfacesの反復1枚、カメラへ256px周期で追従。壁/柱/地形小物なし。旧世界の床素材を保持。
