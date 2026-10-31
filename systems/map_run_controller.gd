@@ -137,6 +137,9 @@ func _start_survival() -> void:
 	elite_room_manager.clear_map_runtime()
 	elite_room_manager.process_mode = Node.PROCESS_MODE_DISABLED
 	stage_environment.set_boss_seal_visible(false)
+	# コンボは効果を持たないため、サバイバルでは数えず表示もしない（D3）。
+	combo_system.set_active(false)
+	hud.reset_combo_display()
 	_setup_survival_map_overlay()
 	_tick_survival()
 	hud.set_room_message("群れを倒し、終盤のボスを撃破！　移動で自動攻撃")
@@ -160,6 +163,7 @@ func _tick_survival() -> void:
 					"is_final": true,
 				}, point)
 				if boss:
+					boss.add_to_group("survival_boss") # ジャスト回避→J反撃はこのボス戦だけ有効（D3）
 					_boss_active = true
 					_survival_boss_index = 1
 		if not _survival_boss_phase:
@@ -1144,6 +1148,10 @@ func _update_exploration_progress() -> void:
 
 func _setup_survival_map_overlay() -> void:
 	if is_instance_valid(_exploration_map_ui): _exploration_map_ui.queue_free()
+	# 壁のない5分サバイバルでは探索地図を使わない（D3、2026-10-31）。
+	if GameManager.survival_mode_active:
+		_exploration_map_ui = null
+		return
 	_exploration_map_ui = ExplorationMapOverlay.new()
 	_exploration_map_ui.map = GameManager.dungeon_map
 	_exploration_map_ui.actor = player

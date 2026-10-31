@@ -65,8 +65,16 @@ func _ready() -> void:
 	music_volume.value_changed.connect(func(value): SaveManager.set_audio_volume("Music", value))
 	sfx_volume.value_changed.connect(func(value): SaveManager.set_audio_volume("SFX", value))
 
+## 天賦図に内容がある職業だけ[T]とタブを出す（他職は「準備中」の空図になるため、D3）。
+const TALENT_CHARACTER_IDS := ["swordsman"]
+
+func _has_talent_book() -> bool:
+	return GameManager.selected_character_id in TALENT_CHARACTER_IDS
+
 func _process(_delta: float) -> void:
-	if Input.is_action_just_pressed("talent_menu"):
+	if talent_tab_button.visible != _has_talent_book():
+		talent_tab_button.visible = _has_talent_book()
+	if Input.is_action_just_pressed("talent_menu") and _has_talent_book():
 		if _is_open:
 			if _active_tab == "talent":
 				_close()

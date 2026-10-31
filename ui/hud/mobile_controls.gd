@@ -9,6 +9,8 @@ var _finger := -1
 var _pressed: Dictionary = {}
 var _button_pressed: Dictionary = {}
 var _enabled := false
+var _map_button: Button
+var _counter_button: Button
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -42,11 +44,11 @@ func _build() -> void:
 	_stick.gui_input.connect(_on_stick_input)
 	_add_button("回避", "dodge", -280, -205)
 	_add_button("技", "active_skill", -175, -290)
-	_add_button("反撃", "primary_attack", -385, -120)
+	_counter_button = _add_button("反撃", "primary_attack", -385, -120)
 	_add_button("調べる", "interact", -175, -115, 116)
 	_add_button("装備", "character_screen", -120, -405, 104)
 	_add_top_button("停止", "ui_cancel", true)
-	_add_top_button("地図", "", false)
+	_map_button = _add_top_button("地図", "", false)
 
 func _round_style(fill: Color, border: Color, radius: int) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -65,8 +67,10 @@ func _process(_delta: float) -> void:
 				Input.action_release(action)
 			_button_pressed.clear()
 		visible = can_control
+		if _map_button: _map_button.visible = not GameManager.survival_mode_active
+		if _counter_button: _counter_button.visible = not GameManager.survival_mode_active or get_tree().get_first_node_in_group("survival_boss") != null
 
-func _add_top_button(title: String, action: String, on_right: bool) -> void:
+func _add_top_button(title: String, action: String, on_right: bool) -> Button:
 	var button := Button.new()
 	button.text = title
 	button.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT if on_right else Control.PRESET_TOP_LEFT)
@@ -86,8 +90,9 @@ func _add_top_button(title: String, action: String, on_right: bool) -> void:
 		)
 	else:
 		_bind_action_button(button, action)
+	return button
 
-func _add_button(title: String, action: String, x: float, y: float, width: float = 92) -> void:
+func _add_button(title: String, action: String, x: float, y: float, width: float = 92) -> Button:
 	var button := Button.new()
 	button.text = title
 	button.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
@@ -101,6 +106,7 @@ func _add_button(title: String, action: String, x: float, y: float, width: float
 	PixelUIStyle.apply_button(button)
 	button.modulate.a = 0.90
 	_bind_action_button(button, action)
+	return button
 
 func _bind_action_button(button: Button, action: String) -> void:
 	button.button_down.connect(func():

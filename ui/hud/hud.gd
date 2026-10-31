@@ -860,6 +860,12 @@ func _build_controls_guide() -> void:
 		_guide_chip.hide()
 
 func _update_controls_guide(elapsed: float) -> void:
+	if _guide_full and not _guide_full.has_meta("survival_text"):
+		# 5分サバイバルは地図なし。天賦図は内容がある職業だけ（D3）。
+		var line2 := "C 所持品　T 天賦図　Esc 停止" if GameManager.selected_character_id == "swordsman" else "C 所持品　Esc 停止"
+		_guide_full.text = "K 回避　L 技　E 調べる
+%s" % line2
+		_guide_full.set_meta("survival_text", true)
 	if _is_touch or _guide_full == null or _guide_collapsed:
 		return
 	if elapsed < GUIDE_COLLAPSE_SECONDS:

@@ -251,7 +251,9 @@ func try_dodge() -> bool:
 	dodge_cooldown = 0.85
 	health_component.dodge_iframe_remaining = 0.12
 	movement_component.direction = Vector2.ZERO
-	if precise_target: _start_perfect_dodge(precise_target)
+	# 5分サバイバルではジャスト回避→反撃を終盤ボス戦だけに限定する（D3、2026-10-31）。
+	if precise_target and (not GameManager.survival_mode_active or get_tree().get_first_node_in_group("survival_boss") != null):
+		_start_perfect_dodge(precise_target)
 	return true
 
 func _has_precise_attack_window() -> bool:

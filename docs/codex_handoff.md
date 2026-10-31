@@ -1,6 +1,13 @@
 # Codex Handoff — 2026-10-31（Phase 4まで）
 
-## 今回（D1・D2：ステージ解放と3ステージの差別化、2026-10-31）
+## 今回（D3：5分アリーナに合わない機能の整理、2026-10-31）
+- 地図（M）：サバイバルでは`ExplorationMapOverlay`を生成しない。スマホの「地図」ボタンもサバイバル中は非表示。Test Labの旧モードでは従来どおり。
+- 天賦図（T）：内容がある職業（剣士）だけ`[T]`とポーズのタブを出す（`pause_menu.gd`の`TALENT_CHARACTER_IDS`）。
+- ジャスト回避→J反撃：サバイバルでは終盤ボス（`survival_boss`グループ）が居る間だけ発生。スマホの「反撃」ボタンもその間だけ表示。
+- コンボ：効果が無いのでサバイバルでは`ComboSystem`を止め、HUDに出さない。
+- HUDの操作案内から「M 地図」を外し、「T 天賦図」は剣士のみ。検証は`script_load_check`と`five_minute_survival_check`（PC）。
+
+## 直前（D1・D2：ステージ解放と3ステージの差別化、2026-10-31）
 - 判断D1＝「継承の欠片はキャラ解放＋ステージ解放。恒常強化は保留」、D2＝「出現曲線・補給箱の時刻・ボス肖像付きカードで差別化」をユーザーが決定し、実装した。
 - `data/maps/exploration_run.json`：MAPごとに`unlock_cost`（0/150/400）、`difficulty_curve_id`（map2/map3は新規`data/difficulty/five_minute_survival_map2.json`、`_map3.json`）、`survival_supply_seconds`（[75,150]/[60,140]/[60,120,195]）、`tagline`、`stage_note`を追加。MAP3は補給箱（ショップ）が2回。
 - `SaveManager`：`unlocked_survival_maps`（既定[1]）、`is_map_unlocked`、`unlock_map`。`GameManager.start_run`は未解放MAPならMAP1へ戻す。`MapRunController`はMAP別の補給時刻を読む。
