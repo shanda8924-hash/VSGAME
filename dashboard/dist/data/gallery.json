@@ -9,6 +9,110 @@
   },
   "items": [
     {
+      "id": "survival-field-after",
+      "title": "サバイバル戦場の床の飾り・光・縁の暗がり",
+      "category": "exploration",
+      "image": "assets/images/survival_field_after.png",
+      "caption": "3テーマの実画面。床の飾り（ひび・骨・紫晶・熔岩）、光だまり、テーマ色の縁の暗がり。当たり判定は不変。",
+      "decision": "keep",
+      "related": [
+        "床の飾り",
+        "floor_only"
+      ],
+      "capturedAt": "2026-10-31"
+    },
+    {
+      "id": "loot-drop-diablo",
+      "title": "床ドロップの光の柱と名札",
+      "category": "growth",
+      "image": "assets/images/loot_drop_diablo_style.png",
+      "caption": "5レア度の床ドロップ。レア度で高さと太さが変わる光の柱、レア以上は常時の名札、着地後の演出。",
+      "decision": "keep",
+      "related": [
+        "Drop",
+        "光の柱"
+      ],
+      "capturedAt": "2026-10-31"
+    },
+    {
+      "id": "item-box-detail-2026-10-31",
+      "title": "アイテムボックスの詳細：装備スコアと得る／失う",
+      "category": "build",
+      "image": "assets/images/item_box_detail.png",
+      "caption": "マスのレア度の下地と▲▼、詳細の装備スコア差、装備ボタン、0でない能力だけ、得る／失う。",
+      "decision": "keep",
+      "related": [
+        "アイテムボックス",
+        "装備スコア"
+      ],
+      "capturedAt": "2026-10-31"
+    },
+    {
+      "id": "item-box-forge-2026-10-31",
+      "title": "確定鍛造のプレビュー",
+      "category": "build",
+      "image": "assets/images/item_box_forge.png",
+      "caption": "主素材（枠1）の部位を継ぐ完成品を合成前に表示。失敗廃止。",
+      "decision": "keep",
+      "related": [
+        "鍛造",
+        "主素材"
+      ],
+      "capturedAt": "2026-10-31"
+    },
+    {
+      "id": "ui-stoneworks",
+      "title": "石板と古金のUIスキン",
+      "category": "entry",
+      "image": "assets/images/ui_stoneworks_overview.png",
+      "caption": "ホーム・HUD・レベルアップ・アイテムボックス・ショップ・ポーズ。9-slice部品一式を全メニューへ。",
+      "decision": "keep",
+      "related": [
+        "UIスキン",
+        "9-slice"
+      ],
+      "capturedAt": "2026-10-31"
+    },
+    {
+      "id": "iai-brushup",
+      "title": "居合の構え・刀筋・納刀",
+      "category": "combat",
+      "image": "assets/images/iai_brushup.png",
+      "caption": "構えの点線と柄の閃き、斬り抜け、刀筋、納刀後。威力・判定は不変。",
+      "decision": "keep",
+      "related": [
+        "居合",
+        "剣士"
+      ],
+      "capturedAt": "2026-10-31"
+    },
+    {
+      "id": "icons-unified",
+      "title": "装備アイコン200点の統一",
+      "category": "build",
+      "image": "assets/images/icons_unified_compare.png",
+      "caption": "上段＝旧、下段＝新。原画を同じ手順でドット化し、全点のテイストを揃えた。",
+      "decision": "keep",
+      "related": [
+        "装備アイコン",
+        "原画"
+      ],
+      "capturedAt": "2026-10-31"
+    },
+    {
+      "id": "vfx-unified-signature",
+      "title": "秘技VFXの描き直し",
+      "category": "combat",
+      "image": "assets/images/vfx_unified_signature.png",
+      "caption": "上段＝旧、下段＝新。雷帝落雷・煉火天柱・氷槍豪雨・光刃陣・虚無断界。表示サイズでの比較。",
+      "decision": "keep",
+      "related": [
+        "VFX",
+        "秘技"
+      ],
+      "capturedAt": "2026-10-31"
+    },
+    {
       "id": "survival-growth-choices",
       "title": "動く比較で選ぶ強化",
       "category": "growth",

@@ -1313,10 +1313,12 @@ Mythicは黒赤の異形装備というように、シルエット・装飾密�
 - 装備と所持一覧はPlayer scene内だけに存在し、SaveManagerへ保存しない。
   `run_ended`で一覧・全スロット・装備補正を明示的にリセットする
 - 既存メタ通貨、解放済み職業、ベスト生存時間等のセーブキーは変更しない
-- `EquipmentMergeSystem`は名称・部位・`template_id`を問わず、同一rarityの未装備・未ロック品を3個消費する。
-  完成品は既存Rarity順の次段階に属する`templates.json`候補から1個生成し、素材に含まれる部位を優先、
-  候補がなければそのRarityの全候補へフォールバックする。順序は
-  Uncommon→Rare→Epic→Legendary→Mythicで、Mythicは上限。Element `FusionSystem`とは別責務である
+- `EquipmentMergeSystem`は名称・`template_id`を問わず、同一rarityの未装備・未ロック品を3個消費する。
+  完成品は既存Rarity順の次段階に属する`templates.json`候補から1個生成し、**枠1（主素材）の部位**を受け継ぐ。
+  武器なら主素材と同じ`attack_kind`の候補を優先し、無ければ同部位、それも無ければ全候補へフォールバックする。
+  候補の選択は素材IDのハッシュで決まるため、`preview_result()`で合成前に完成品（名前・部位・能力）を表示できる。
+  順序はUncommon→Rare→Epic→Legendary→Mythicで、Mythicは上限。`merge_rules.success_rate`は2026-10-31に全段1.0
+  （失敗消費を廃止。`failure_loss`は未使用のまま保持）。Element `FusionSystem`とは別責務である
 - 合成前に3実体参照の重複、Inventory所属、装備中、Lock、Rarity、次Rarity候補を再検証する。
   完成品を構築できた場合だけ`EquipmentComponent.replace_merge_materials()`で3個削除・1個追加を一括実行し、
   失敗時は素材を消費しない。合成Statsは3素材の良いロール品質を次Rarityの既存`stat_ranges`へ正規化し、
@@ -4026,3 +4028,61 @@ PC/OpenGLとタッチ操作を含む横画面/Vulkanプレビューで6職を確
 検証：`script_load_check` 209件・失敗0、`pixel_visual_check`、`survival_growth_check`、
 `five_minute_survival_check`（PC/OpenGL、タッチ横画面）。実画面は`docs/screens/hud_after_*.png`、
 変更前は`docs/screens/hud_before_*.png`。
+
+## 2026-10-31 統一ビジュアル：VFX・装備アイコン・UIスキン・ドロップ・アイテムボックス・居合・戦場（現行）
+
+画像生成環境を使わず、生成器で描いた素材へ全面的に置き換えた。共通規則は「1ドット＝画面2px（キャラクターと同じ密度）、
+5段の色ランプ、暗い縁取り、光は左上」。各生成器は再実行で同名上書きする。
+
+### VFX（`tools/vfx_unified/`）
+- 実行時に参照する55シート（attack 5、equipment_comfy 9、dodge 2、concepts 1、imported 1、pixel 37）を同じ規則で描き直し。
+  コマ寸法は表示サイズの約1/2。`PixelSpriteVFX`はコマ寸法＝シート高さ×(幅/6)で読む（旧384×64固定を廃止）。
+  浮遊武器・装備弾・魔導士弾・回避/宝箱・宝箱封印・警告円（128px、`RING_PIXEL_RADIUS=51`）・弾のGlowも寸法から換算する。
+- 秘技：雷帝落雷は雷の大剣と着地の放射、氷槍豪雨は太い氷槍と結晶の砕け、虚無断界は斜めの裂け目と破片。
+- コード描画の線色（雷光連鎖・残影・結界、ボス予兆・斬撃帯、属性テーマ`hit_color`/`enhanced_color`）を`style.py`のランプへ統一。
+
+### 装備アイコン（`tools/icon_unified/`）
+- 実行時は`assets/visuals/ember_v5/equipment/`（64px、本体56px）、所持品画面は`assets/ui/equipment_readable_v4/`（48px）、
+  部位タブは`assets/items/*_001.png`（64px、本体54px）。いずれも`painted_200`の原画を同じ手順
+  （`art_region`で切り出し→面積平均で縮小→明るさ/コントラスト/彩度→14色→二値アルファ→飛び除去→明るい縁1px）で生成する。
+  `equipment_icon_metrics.gd`に全点の不透明範囲を持つ。
+
+### UIスキン（`tools/ui_unified/`→`assets/ui/stoneworks/`）
+- 9-slice部品：panel_major（石のレール＋金の角金具、中央タイル）、panel_inset（石の縁＋飾り鋲）、button_normal/hover/pressed/disabled、
+  plaque（槍頭の見出し板）、slot（所持品マス）、well（金具なしの窪み）、bar_track/bar_fill、backdrop_tile。
+- `ui/common/relic_frame_art.gd`が`box(inset)`/`button_box(state)`/`well_box`/`bar_box`/`styled(kind)`/`plaque()`を提供し、
+  `pixel_ui_style.gd`のボタン・区画・ゲージ・カードがこれを使う。使い分けは「モーダルと列パネル＝major、カード・区画＝inset、
+  カード内の小区画＝well、所持品マス＝slot」。旧`assets/visuals/ember_v5/ui_panel.png`/`ui_inset.png`は未参照。
+
+### 床ドロップ（`entities/pickups/ground_equipment_item.gd`、Diablo系を参考）
+- レア度色の光の柱`LootBeam`（高さ56/84/112/144/168px、幅7〜20px、加算合成、明滅）。名札（暗い板＋レア度色の左帯）は
+  レア以上で常時表示、アンコモンは接近時のみ。生成時は上から落ちて弾み（0.5秒）、着地後に柱が立つ。
+  レジェンダリー以上は着地の閃光`hit_light`と`legendary_drop.wav`。落下音`equipment_drop.wav`。
+  `drop_animation`で落下を切れる（テスト・静止配置）。
+
+### アイテムボックス・詳細・鍛造（`ui/equipment/equipment_screen.gd`）
+- 装備スコア`item_score()`：攻撃力×2＋防御×1.5＋HP×0.25＋移動×120＋攻速×120＋会心率×160＋会心倍率×60＋特殊効果×8＋レア度×2。
+- マス：レア度の下地（薄い色＋下辺の帯）、装備中より強ければ▲緑／弱ければ▼。鍛造タブでは所持品の1クリックで素材の出し入れ、
+  素材にできない品は沈める（「素材に追加」ボタンはキーボード用に残す）。
+- 詳細ポップアップ：名前（レア度色）／「レア度・部位・武器種別」／「装備スコア N　±差 ▲強くなる」／直下に「装備する／外す」（常時）／
+  武器は間隔・一撃・射程／能力は0でない行だけ／装備中カードは「得る／失う」だけ。能力表はスクロールのまま（最小高さ170）。
+- 鍛造：上記23.5の確定合成。枠1は「主」。プレビューに完成品の名前・部位・装備スコア・能力・装備中との差。
+  「同部位でセット」は主素材（または選択中）と同じ部位を優先し、弱い順に埋める。
+
+### 居合（19.6参照）
+- 構えの点線と柄の閃き、鋼色の加算残像、進路全体の刀筋`iai_trail`、命中時0.03秒停止、納刀`sheathe_hold`、
+  抜刀/納刀の音、HUDの残りチャージ（乱撃派）。威力・判定・時間は不変。
+
+### サバイバルの戦場（`entities/stage_environment/detailed_map_surfaces.gd` floor_only）
+- 床素材の繰り返しの上に、`assets/visuals/floor_decals/map{1,2,3}.png`（1テーマ16種、64px）を世界座標のハッシュで64px格子の
+  約1割へ配置し、192px格子の約1/3に大きな染みを薄く敷く。位置の256px吸着時だけ再描画。
+- 光る飾り（MAP1紋、MAP2紫晶・鉱脈、MAP3熔岩）の上に加算合成の`FloorGlow`。画面の縁の暗がり（`vignette.png`、テーマ色、
+  HUDより下のCanvasLayer）と浮遊粒（MAP1塵／MAP2煌めき／MAP3火の粉、CPUParticles2D、世界座標）。床の色味もテーマ別。
+- 当たり判定・湧き・経路は不変。検証は`five_minute_survival_check`と`map_theme_check`。
+
+### 検証と記録
+- `script_load_check` 0件、`five_minute_survival_check` PASS、`equipment_merge_check`／`loot_visibility_check`／
+  `equipment_auto_attack_check`／`iai_and_mode_check`／`map_theme_check` 0件。実画面はXvfb上の実レンダラで
+  `tools/capture_crafted_ui`／`capture_item_flow`／`capture_iai`／`capture_survival_field`が撮影し、`docs/screens/`へ保存。
+- 既知：`equipment_integration_check`の220件と`forge_balance_check`の長時間化は変更前から。合成音4点は差し替え前提。
+

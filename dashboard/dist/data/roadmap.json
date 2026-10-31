@@ -11,6 +11,15 @@
       "weight": 1.4,
       "tasks": [
         {
+          "id": "survival_field_dressing",
+          "name": "サバイバル戦場の床の飾り・光・空気感",
+          "status": "completed",
+          "progress": 100,
+          "priority": "medium",
+          "lane": "now",
+          "notes": "floor_onlyの描画だけに、テーマ別16種の飾り（ハッシュ配置）、大きな染み、光だまり、縁の暗がり、浮遊粒を追加。当たり判定・湧き・経路は不変。five_minute_survival_check / map_theme_check PASS。"
+        },
+        {
           "id": "wall_gate_entry",
           "name": "壁内の門と中央からの入場動作",
           "status": "completed",
@@ -568,6 +577,15 @@
       "weight": 1.1,
       "tasks": [
         {
+          "id": "iai_brushup",
+          "name": "居合のブラッシュアップ（演出のみ）",
+          "status": "completed",
+          "progress": 100,
+          "priority": "medium",
+          "lane": "now",
+          "notes": "構え：柄の閃き＋進路の点線＋抜刀音。残像は鋼色の加算。刀筋iai_trailを0.3秒、命中時0.03秒停止。納刀0.12秒と音。HUDに乱撃派の残りチャージ。威力・判定不変。"
+        },
+        {
           "id": "completed_skills",
           "name": "旧完成大技23種・通常宝箱から非接続",
           "status": "hold",
@@ -610,6 +628,33 @@
       "name": "Equipment",
       "weight": 1.1,
       "tasks": [
+        {
+          "id": "item_box_detail_forge",
+          "name": "アイテムボックス：装備スコア・▲▼・詳細・確定鍛造",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "マスにレア度の下地と装備中との▲▼。詳細は名前・レア度/部位/種別・装備スコア差・装備ボタン常時表示・0でない能力だけ・得る/失う。鍛造は主素材の部位（武器は種別）を継ぎ、完成品を合成前に表示、成功率100%。equipment_merge_check 0件。"
+        },
+        {
+          "id": "loot_drop_diablo",
+          "name": "床ドロップ演出（Diablo参考）",
+          "status": "completed",
+          "progress": 100,
+          "priority": "medium",
+          "lane": "now",
+          "notes": "レア度色の光の柱（高さ56〜168px・明滅）、名札（レア以上は常時）、落下して弾む着地、伝説以上は閃光と鐘。合成音2点。loot_visibility_check更新。"
+        },
+        {
+          "id": "equipment_icon_unified",
+          "name": "装備アイコン200点の統一（原画をドット化）",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "実行時はember_v5（64px）、所持品画面はreadable_v4（48px）、タブ6点。原画painted_200を切り出し→縮小→色調整→14色→二値アルファ→明るい縁の同一手順。metricsの範囲も更新。"
+        },
         {
           "id": "weapon_attack_traits",
           "name": "武器種別の攻撃・威力・間隔",
@@ -708,6 +753,15 @@
       "name": "UI",
       "weight": 0.9,
       "tasks": [
+        {
+          "id": "ui_stoneworks_skin",
+          "name": "石板と古金のUIスキン（9-slice一式）",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "tools/ui_unifiedでpanel_major/inset/button4状態/plaque/slot/well/bar/backdropを生成。relic_frame_art.gdとpixel_ui_style.gd経由で全メニュー・HUDゲージへ。モーダル=major、カード=inset、小区画=well。8画面を実レンダラで確認。"
+        },
         {
           "id": "hud_survival_brushup",
           "name": "戦闘HUDの再構成（時計・ボスHP・強化ピップ）",
@@ -824,13 +878,22 @@
       "weight": 0.8,
       "tasks": [
         {
+          "id": "vfx_unified_style",
+          "name": "統一VFXスタイル（55シート描き直し）",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "攻撃・装備武器・回避/宝箱・属性命中・概念・秘技・戦技・線・その他を1生成器で描画。雷帝落雷は雷の大剣、氷槍豪雨は太い氷槍と結晶、虚無断界は裂け目と破片。コード描画の線色もランプへ統一。"
+        },
+        {
           "id": "pixel_vfx",
           "name": "Pixel VFX統一",
-          "status": "testing",
-          "progress": 90,
+          "status": "completed",
+          "progress": 100,
           "priority": "medium",
           "lane": "now",
-          "notes": "通常Hit、状態、完成大技、Boss攻撃をPixel文法へ整理。魔導士の追尾弾は新しい紫渦5コマへ差替え、実ゲーム描画を確認。"
+          "notes": "実行時の55シートをtools/vfx_unifiedで同名上書き。5段ランプ・縁取り・6コマの時間配分・コマ寸法＝表示の1/2で統一。読み込み側はシート高さからコマ寸法を取る。five_minute_survival_check PASS。"
         },
         {
           "id": "minotaur_vfx",
