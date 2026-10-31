@@ -1,6 +1,13 @@
 # Codex Handoff — 2026-10-31（Phase 4まで）
 
-## 今回（整理計画 Phase 4：戦闘HUD）
+## 今回（D1・D2：ステージ解放と3ステージの差別化、2026-10-31）
+- 判断D1＝「継承の欠片はキャラ解放＋ステージ解放。恒常強化は保留」、D2＝「出現曲線・補給箱の時刻・ボス肖像付きカードで差別化」をユーザーが決定し、実装した。
+- `data/maps/exploration_run.json`：MAPごとに`unlock_cost`（0/150/400）、`difficulty_curve_id`（map2/map3は新規`data/difficulty/five_minute_survival_map2.json`、`_map3.json`）、`survival_supply_seconds`（[75,150]/[60,140]/[60,120,195]）、`tagline`、`stage_note`を追加。MAP3は補給箱（ショップ）が2回。
+- `SaveManager`：`unlocked_survival_maps`（既定[1]）、`is_map_unlocked`、`unlock_map`。`GameManager.start_run`は未解放MAPならMAP1へ戻す。`MapRunController`はMAP別の補給時刻を読む。
+- `ui/home`：OptionButtonを廃止し、ボス候補2体の肖像・名前・特徴・解放状態／補給時刻のカード3枚を職業グリッドの上に置く。未解放カードは決定で欠片を消費して解放し、解放したステージが出撃先になる。職業カードは350×250へ縮めて1画面に収めた。
+- 検証は`script_load_check`と`survival_home_check`（カード3枚、画面内、欠片0での封印維持、150→400の解放、出撃先切替、3テーマの実出撃）のみ。ユーザー指示により仕様書・ダッシュボードは更新していない。
+
+## 直前（整理計画 Phase 4：戦闘HUD）
 - `ui/hud/hud.gd`の描画層を組み直した。呼び出し元（MapRunController／BossSpawner／ComboSystem／Player／game.gd）の関数名と引数、Signal購読、`hud.tscn`のノード名は変更していない。戦闘ロジック・数値・入力・保存は未変更。
 - 上中央の石板：「ボスまで m:ss」34px＋240秒までの20分割ゲージ。ボス戦は同じ石板が「最終ボス 名前　ボス戦 m:ss　撃破 N」と朱赤の20分割HPゲージに切り替わる（`room_status_label`の本文に「ボス戦」を含める既存検査は維持）。
 - 左上：LV・職業・主武器名・HP16px・XP10px（370×120）。その下に取得済み強化のアイコン＋段階ピップ。旧「範囲0 貫通0 連鎖0 追撃0」は廃止。

@@ -163,7 +163,7 @@ func _tick_survival() -> void:
 					_boss_active = true
 					_survival_boss_index = 1
 		if not _survival_boss_phase:
-			var supply_times: Array = _config.get("survival_supply_seconds", [75, 150])
+			var supply_times: Array = _current_config.get("survival_supply_seconds", _config.get("survival_supply_seconds", [75, 150]))
 			if _survival_supply_index < supply_times.size() and elapsed >= float(supply_times[_survival_supply_index]):
 				var point := wave_spawner._pick_spawn_position(player.global_position)
 				if point.is_finite():

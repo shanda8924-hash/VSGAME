@@ -58,7 +58,7 @@ layout_mode = 2
 horizontal_alignment = 1
 theme_override_font_sizes/font_size = 34
 theme_override_colors/font_color = Color(0.98, 0.87, 0.59, 1)
-text = "継承者を選ぶ"
+text = "出撃先と継承者を選ぶ"
 
 [node name="CurrencyLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
@@ -66,11 +66,11 @@ horizontal_alignment = 1
 theme_override_font_sizes/font_size = 22
 text = "継承の欠片　0"
 
-[node name="MapChoice" type="OptionButton" parent="MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(600, 48)
+[node name="StageRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 22
+theme_override_constants/separation = 16
+alignment = 1
 
 [node name="CenterContainer" type="CenterContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2

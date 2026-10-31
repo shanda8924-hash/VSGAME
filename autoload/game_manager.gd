@@ -128,6 +128,8 @@ func start_run(enable_map_mode: bool = false) -> void:
 	survival_duration_seconds = maxf(float(config.get("survival_duration_seconds", 300)), 1.0)
 	survival_completed = false
 	run_equipment_count = 0
+	if not SaveManager.is_map_unlocked(selected_survival_map):
+		selected_survival_map = 1
 	selected_survival_map = clampi(selected_survival_map, 1, 3)
 	current_map_index = selected_survival_map if survival_mode_active else (1 if map_mode_active else 0)
 	current_floor_index = 1

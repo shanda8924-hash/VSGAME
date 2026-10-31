@@ -76,7 +76,14 @@
       ],
       "progression": "five_minute_survival",
       "isolated_rooms": true,
-      "enemy_move_speed_multiplier": 0.65
+      "enemy_move_speed_multiplier": 0.65,
+      "unlock_cost": 0,
+      "survival_supply_seconds": [
+        75,
+        150
+      ],
+      "tagline": "不死の群れ・基準の5分",
+      "stage_note": "標準の出現曲線。装備箱 1:15、補給箱 2:30"
     },
     {
       "index": 2,
@@ -108,7 +115,7 @@
         3,
         10
       ],
-      "difficulty_curve_id": "five_minute_survival",
+      "difficulty_curve_id": "five_minute_survival_map2",
       "treasure_rewards": [
         "equipment",
         "equipment",
@@ -122,7 +129,14 @@
       ],
       "progression": "five_minute_survival",
       "isolated_rooms": true,
-      "enemy_move_speed_multiplier": 0.65
+      "enemy_move_speed_multiplier": 0.65,
+      "unlock_cost": 150,
+      "survival_supply_seconds": [
+        60,
+        140
+      ],
+      "tagline": "血晶と魔性・序盤から濃い",
+      "stage_note": "群れが早く厚くなる。装備箱 1:00、補給箱 2:20"
     },
     {
       "index": 3,
@@ -154,7 +168,7 @@
         3,
         10
       ],
-      "difficulty_curve_id": "five_minute_survival",
+      "difficulty_curve_id": "five_minute_survival_map3",
       "treasure_rewards": [
         "equipment",
         "equipment",
@@ -168,7 +182,15 @@
       ],
       "progression": "five_minute_survival",
       "isolated_rooms": true,
-      "enemy_move_speed_multiplier": 0.65
+      "enemy_move_speed_multiplier": 0.65,
+      "unlock_cost": 400,
+      "survival_supply_seconds": [
+        60,
+        120,
+        195
+      ],
+      "tagline": "炉心のオーク・最大密度",
+      "stage_note": "最初から濃く最後まで加速。補給箱が2回（2:00、3:15）"
     }
   ],
   "_comment_treasure_rewards": "属性システム停止中は 'attribute' と属性系完成大技につながる 'skill' を使用せず、装備/回復だけを配置する。",

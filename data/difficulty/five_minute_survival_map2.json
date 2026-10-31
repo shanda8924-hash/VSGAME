@@ -1,0 +1,42 @@
+[
+  {
+    "time_seconds": 0,
+    "spawn_interval": 1.0,
+    "spawn_batch": [
+      3,
+      4
+    ]
+  },
+  {
+    "time_seconds": 40,
+    "spawn_interval": 0.75,
+    "spawn_batch": [
+      4,
+      6
+    ]
+  },
+  {
+    "time_seconds": 80,
+    "spawn_interval": 0.6,
+    "spawn_batch": [
+      6,
+      8
+    ]
+  },
+  {
+    "time_seconds": 140,
+    "spawn_interval": 0.48,
+    "spawn_batch": [
+      7,
+      9
+    ]
+  },
+  {
+    "time_seconds": 200,
+    "spawn_interval": 0.42,
+    "spawn_batch": [
+      9,
+      11
+    ]
+  }
+]

@@ -24,15 +24,36 @@ func _run() -> void:
 	home.tree_entered.connect(func(): get_tree().current_scene = home)
 	get_tree().root.add_child(home)
 	for i in 4: await get_tree().process_frame
-	var choice := home.get_node("MarginContainer/VBoxContainer/MapChoice") as OptionButton
-	check(choice.item_count == 3, "Home lost a theme")
+	var row := home.stage_row as HBoxContainer
+	check(row.get_child_count() == 3, "Home lost a theme")
 	var size := get_viewport().get_visible_rect().size
+	for card in row.get_children():
+		check(get_viewport().get_visible_rect().encloses(card.get_global_rect()), "Stage card exceeds screen")
 	for button in home.character_grid.get_children():
-		check(button.get_global_rect().end.y <= size.y and button.get_global_rect().position.y >= choice.get_global_rect().end.y, "Home controls overlap or exceed screen")
+		check(button.get_global_rect().end.y <= size.y and button.get_global_rect().position.y >= row.get_global_rect().end.y, "Home controls overlap or exceed screen")
+	# 欠片0: MAP3は封印されたまま、出撃先はMAP1。
+	check(not SaveManager.is_map_unlocked(3) and SaveManager.is_map_unlocked(1), "Stage lock default wrong")
+	(row.get_child(2) as Button).pressed.emit()
+	await get_tree().process_frame
+	check(GameManager.selected_survival_map == 1 and not SaveManager.is_map_unlocked(3), "Locked stage was selected without cost")
 	await capture("home")
-	choice.select(2)
-	choice.item_selected.emit(2)
+	# 欠片550: MAP2(150)→MAP3(400)を解放し、解放したステージが出撃先になる。
+	SaveManager.data["meta_currency"] = 550
+	home._refresh()
+	await get_tree().process_frame
+	(home.stage_row.get_child(1) as Button).pressed.emit()
+	await get_tree().process_frame
+	check(SaveManager.is_map_unlocked(2) and GameManager.selected_survival_map == 2 and int(SaveManager.data["meta_currency"]) == 400, "Stage 2 unlock failed")
+	(home.stage_row.get_child(2) as Button).pressed.emit()
+	await get_tree().process_frame
+	check(SaveManager.is_map_unlocked(3) and GameManager.selected_survival_map == 3 and int(SaveManager.data["meta_currency"]) == 0, "Stage 3 unlock failed")
+	(home.stage_row.get_child(0) as Button).pressed.emit()
+	await get_tree().process_frame
+	check(GameManager.selected_survival_map == 1, "Unlocked stage selection failed")
+	(home.stage_row.get_child(2) as Button).pressed.emit()
+	await get_tree().process_frame
 	check(GameManager.selected_survival_map == 3, "Stage selector disconnected")
+	await capture("home_unlocked")
 	for button in home.character_grid.get_children():
 		if not button.disabled:
 			button.pressed.emit()

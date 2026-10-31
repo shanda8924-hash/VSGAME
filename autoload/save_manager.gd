@@ -9,6 +9,7 @@ const DEFAULT_DATA := {
 	"meta_currency": 0,
 	"unlocked_weapon_ids": [],
 	"unlocked_character_ids": ["soldier"],
+	"unlocked_survival_maps": [1],
 	"best_survival_seconds": 0.0,
 	"deepest_cleared_floor": 0,
 	"music_volume": 0.8,
@@ -92,6 +93,26 @@ func unlock_character(character_id: String, cost: int) -> bool:
 	var unlocked: Array = data.get("unlocked_character_ids", ["soldier"]).duplicate()
 	unlocked.append(character_id)
 	data["unlocked_character_ids"] = unlocked
+	save_data()
+	return true
+
+## 5分サバイバルのステージ解放。MAP1は常に解放済み。
+func is_map_unlocked(map_index: int) -> bool:
+	if map_index <= 1:
+		return true
+	var unlocked: Array = data.get("unlocked_survival_maps", [1])
+	return map_index in unlocked
+
+## メタ通貨costを消費してステージを解放する。解放済みならtrue、不足ならfalse。
+func unlock_map(map_index: int, cost: int) -> bool:
+	if is_map_unlocked(map_index):
+		return true
+	if int(data.get("meta_currency", 0)) < cost:
+		return false
+	data["meta_currency"] = int(data.get("meta_currency", 0)) - cost
+	var unlocked: Array = data.get("unlocked_survival_maps", [1]).duplicate()
+	unlocked.append(map_index)
+	data["unlocked_survival_maps"] = unlocked
 	save_data()
 	return true
 
