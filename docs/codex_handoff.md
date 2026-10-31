@@ -1,5 +1,11 @@
 # Codex Handoff — 2026-10-31（Phase 4まで）
 
+## 今回（UIスキン：石板と古金の9-sliceを全メニューへ、2026-10-31）
+- 画像生成環境は無いため、`tools/ui_unified/build.py`で1ドット＝2pxのドット絵として部品を描き、`assets/ui/stoneworks/`へ出力（panel_major=石のレール＋金の角金具、panel_inset=石の縁＋飾り鋲、button_normal/hover/pressed/disabled、plaque=槍頭の見出し板、slot=所持品のマス、well=金具なしの窪み、bar_track/bar_fill、backdrop_tile）。中央はタイル繰り返し。`python3 tools/ui_unified/build.py [--board DIR]`。
+- `ui/common/relic_frame_art.gd`を書き直し（旧`assets/visuals/ember_v5/ui_panel.png`等は未参照に）。`box(inset)`＝大パネル/内側パネル、`button_box(state)`、`well_box`、`bar_box`、`styled(kind)`、`plaque()`。`pixel_ui_style.gd`のボタン・区画・ゲージ・カードをこれに接続。使い分け：モーダルと3列パネル＝major、カード・区画＝inset、カード内の小区画＝well、所持品マス＝slot。
+- HUDのHP/XPゲージと技アイコン枠、所持品画面の背景（石畳タイル）と各マス、ホームの出撃先カード（inset）/職業カード（major）も切替。`tools/capture_crafted_ui.gd`にポーズ・ショップの撮影を追加。
+- 検証：`script_load_check` 0件、`five_minute_survival_check` PASS、`xvfb-run`で`tools/capture_crafted_ui.tscn`を撮影し8画面を目視（`docs/screens/ui_stoneworks_*.png`）。
+
 ## 今回（装備アイコン：原画200点を同じ手順でドット化、2026-10-31）
 - 実行時の装備アイコンは`assets/ui/equipment_readable_v4/*.png`（48px）。約170点が単色シルエットで、残り30点の細密なドット絵と画風が揃っていなかった。細密な30点は`assets/items/painted_200/sheet_*.png`の原画（200点すべて同じ画風）をドット化したものなので、`tools/icon_unified/build.py`で200点すべてを同じ手順（art_regionで切り出し→長辺44pxへ面積平均縮小→明るさ/コントラスト/彩度を持ち上げ→14色へ減色→二値アルファ→飛び除去→明るい縁1px）で描き直し、同名上書き。`python3 tools/icon_unified/build.py [--board DIR] [--dry]`。
 - 最初に試した図形生成（平坦なドット絵）はユーザー判断で不採用。

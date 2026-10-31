@@ -385,8 +385,8 @@ func _build_player_panel() -> void:
 	_hp_gauge.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_hp_gauge.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_hp_gauge.show_percentage = false
-	_hp_gauge.add_theme_stylebox_override("background", RetroHUDStyle.track_style())
-	_hp_gauge.add_theme_stylebox_override("fill", RetroHUDStyle.segment_style(RetroHUDStyle.HP_RED_LIGHT))
+	_hp_gauge.add_theme_stylebox_override("background", PixelUIStyle.FrameArt.bar_box(false))
+	_hp_gauge.add_theme_stylebox_override("fill", PixelUIStyle.FrameArt.bar_box(true, RetroHUDStyle.HP_RED_LIGHT))
 	hp_row.add_child(_hp_gauge)
 	_hp_value_label = Label.new()
 	_hp_value_label.custom_minimum_size = Vector2(92, 0)
@@ -411,8 +411,8 @@ func _build_player_panel() -> void:
 	exp_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	exp_bar.tooltip_text = "経験値。満たすとレベルアップ"
 	exp_bar.mouse_filter = Control.MOUSE_FILTER_STOP
-	exp_bar.add_theme_stylebox_override("background", RetroHUDStyle.track_style())
-	exp_bar.add_theme_stylebox_override("fill", RetroHUDStyle.segment_style(RetroHUDStyle.IAI_TEAL_LIGHT))
+	exp_bar.add_theme_stylebox_override("background", PixelUIStyle.FrameArt.bar_box(false))
+	exp_bar.add_theme_stylebox_override("fill", PixelUIStyle.FrameArt.bar_box(true, RetroHUDStyle.IAI_TEAL_LIGHT))
 
 	RetroHUDStyle.apply_font(root)
 
@@ -522,7 +522,7 @@ func _build_skill_panel() -> void:
 	row.add_child(slot)
 	var slot_frame := Panel.new()
 	slot_frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	slot_frame.add_theme_stylebox_override("panel", RetroHUDStyle.track_style(RetroHUDStyle.BRONZE, RetroHUDStyle.VOID_DEEP))
+	slot_frame.add_theme_stylebox_override("panel", PixelUIStyle.FrameArt.styled("slot", 0))
 	slot_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	slot.add_child(slot_frame)
 	_skill_icon_rect = TextureRect.new()

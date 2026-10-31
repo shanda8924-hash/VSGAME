@@ -181,10 +181,7 @@ func _ready() -> void:
 	touch_close.pressed.connect(_close)
 	merge_animation_layer.visible = false
 	PixelUIStyle.apply_tree(self)
-	var backdrop_style := StyleBoxFlat.new()
-	backdrop_style.bg_color = Color(0.012, 0.023, 0.038, 0.76)
-	backdrop_style.set_content_margin_all(0.0)
-	$Background.add_theme_stylebox_override("panel", backdrop_style)
+	$Background.add_theme_stylebox_override("panel", FrameArt.backdrop_style(Color(0.55, 0.58, 0.66, 0.88)))
 	var background_ornament := $Background.get_node_or_null("RelicOrnamentLayer")
 	if background_ornament:
 		background_ornament.visible = false
@@ -783,11 +780,7 @@ func _build_slot_button(slot: String) -> Button:
 	button.set_drag_forwarding(_start_equipment_drag.bind(item, slot, button), _can_drop_equipment.bind(slot), _drop_equipment.bind(slot))
 	PixelUIStyle.apply_button(button, item.get_rarity_color() if item else Color(0.3, 0.3, 0.37))
 	for state in ["normal", "hover", "pressed", "disabled"]:
-		var rail := StyleBoxFlat.new()
-		rail.bg_color = Color("161923")
-		rail.border_color = Color("3d3b49")
-		rail.set_border_width_all(1)
-		button.add_theme_stylebox_override(state, rail)
+		button.add_theme_stylebox_override(state, FrameArt.styled("slot", 5, Color(1.12, 1.1, 1.0) if state == "hover" else Color.WHITE))
 	_tighten_icon_button(button)
 	# Neutral cells; rarity belongs to the equipment silhouette.
 	if item:
@@ -833,21 +826,12 @@ func _build_inventory_button(item: EquipmentData) -> Button:
 		button.expand_icon = true
 	PixelUIStyle.apply_button(button, item.get_rarity_color().lightened(0.35) if item == _selected else item.get_rarity_color())
 	for state in ["normal", "hover", "pressed", "disabled"]:
-		var rail := StyleBoxFlat.new()
-		rail.bg_color = Color("161923")
-		rail.border_color = Color("3d3b49")
-		rail.set_border_width_all(1)
-		button.add_theme_stylebox_override(state, rail)
+		button.add_theme_stylebox_override(state, FrameArt.styled("slot", 5, Color(1.12, 1.1, 1.0) if state == "hover" else Color.WHITE))
 	_tighten_icon_button(button)
 	# Neutral cells; rarity belongs to the equipment silhouette.
 	button.add_theme_stylebox_override("focus", PixelUIStyle._focus_box(PixelUIStyle.JEWEL))
 	if item == _selected:
-		var selected_style := button.get_theme_stylebox("normal").duplicate() as StyleBoxFlat
-		if selected_style:
-			selected_style.bg_color = Color("263a49")
-			selected_style.border_color = Color("86bab7")
-			selected_style.set_border_width_all(3)
-			button.add_theme_stylebox_override("normal", selected_style)
+		button.add_theme_stylebox_override("normal", FrameArt.styled("slot", 5, Color(0.9, 1.25, 1.2)))
 	var corner_frame := CornerSelectionFrame.new()
 	corner_frame.visible = item == _selected
 	button.add_child(corner_frame)

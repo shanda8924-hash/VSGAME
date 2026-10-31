@@ -40,7 +40,7 @@ var elapsed := 0.0
 var _hero: Texture2D
 var _enemy: Texture2D
 ## 毎フレームStyleBoxを作り直さないよう1度だけ作る。
-var _inset_box: StyleBox = FrameArt.box(true, 0.0)
+var _inset_box: StyleBox = FrameArt.well_box(0.0)
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE

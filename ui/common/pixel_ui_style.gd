@@ -87,7 +87,7 @@ class RelicOrnament extends Control:
 		draw_rect(Rect2(center + Vector2(-3, 28), Vector2(6, 8)), accent.darkened(0.25))
 
 	func _draw_backdrop(w: float, h: float) -> void:
-		draw_rect(Rect2(0,0,w,h),Color(.035,.045,.065,.38))
+		draw_rect(Rect2(0,0,w,h),Color(.03,.035,.05,.72))
 
 	func _draw_card(w: float, h: float) -> void:
 		var button := host as Button
@@ -234,15 +234,15 @@ static func shared_theme() -> Theme:
 	theme.set_color("font_pressed_color", "Button", Color("bcecf2"))
 	theme.set_color("font_focus_color", "Button", Color.WHITE)
 	theme.set_color("font_disabled_color", "Button", DISABLED)
-	theme.set_stylebox("normal", "Button", _button_box(BORDER, PANEL_BG, false))
-	theme.set_stylebox("hover", "Button", _button_box(BORDER_HOVER, PANEL_RAISED, false))
-	theme.set_stylebox("pressed", "Button", _button_box(BORDER_HOVER, PANEL_INSET, true))
+	theme.set_stylebox("normal", "Button", FrameArt.button_box("normal", 12))
+	theme.set_stylebox("hover", "Button", FrameArt.button_box("hover", 12))
+	theme.set_stylebox("pressed", "Button", FrameArt.button_box("pressed", 12, Color(0.8, 1.0, 1.0)))
 	theme.set_stylebox("focus", "Button", _focus_box(BORDER_HOVER))
-	theme.set_stylebox("disabled", "Button", _button_box(Color("303944"), Color("0b1119"), false))
-	theme.set_stylebox("panel", "Panel", _section_box(BORDER, PANEL_BG))
-	theme.set_stylebox("panel", "PanelContainer", _section_box(BORDER, PANEL_BG))
-	theme.set_stylebox("background", "ProgressBar", _bar_box(Color("283441"), Color("080b0f")))
-	theme.set_stylebox("fill", "ProgressBar", _bar_box(Color("7fd8e8"), Color("173c47")))
+	theme.set_stylebox("disabled", "Button", FrameArt.button_box("disabled", 12))
+	theme.set_stylebox("panel", "Panel", FrameArt.well_box(12))
+	theme.set_stylebox("panel", "PanelContainer", FrameArt.well_box(12))
+	theme.set_stylebox("background", "ProgressBar", FrameArt.bar_box(false))
+	theme.set_stylebox("fill", "ProgressBar", FrameArt.bar_box(true, Color("7fd8e8")))
 	theme.set_color("font_color", "ProgressBar", TEXT)
 	theme.set_color("font_outline_color", "ProgressBar", Color.BLACK)
 	theme.set_constant("outline_size", "ProgressBar", 2)
@@ -266,10 +266,10 @@ static func apply_button(button: Button, accent: Color = BORDER) -> void:
 	button.add_theme_color_override("font_disabled_color", DISABLED)
 	button.add_theme_constant_override("outline_size", 0)
 	button.add_theme_font_size_override("font_size", maxi(button.get_theme_font_size("font_size"), 18))
-	button.add_theme_stylebox_override("normal", FrameArt.box(true, 12, Color(0.85, 0.9, 1.0)))
-	button.add_theme_stylebox_override("hover", FrameArt.box(true, 12, Color(1.15, 1.12, 1.0)))
-	button.add_theme_stylebox_override("pressed", FrameArt.box(true, 12, Color(0.65, 0.95, 0.95)))
-	button.add_theme_stylebox_override("disabled", FrameArt.box(true, 12, Color(0.42, 0.46, 0.5)))
+	button.add_theme_stylebox_override("normal", FrameArt.button_box("normal", 12))
+	button.add_theme_stylebox_override("hover", FrameArt.button_box("hover", 12))
+	button.add_theme_stylebox_override("pressed", FrameArt.button_box("pressed", 12, Color(0.8, 1.0, 1.0)))
+	button.add_theme_stylebox_override("disabled", FrameArt.button_box("disabled", 12))
 	button.set_meta("pixel_ui", true)
 	button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
@@ -279,16 +279,15 @@ static func apply_tab(button: Button, selected: bool) -> void:
 	apply_button(button, accent)
 	button.add_theme_color_override("font_color", TEXT if selected else TEXT_MUTED)
 	if selected:
-		button.add_theme_stylebox_override("normal", FrameArt.box(true, 12, Color(1.15, 1.1, 0.9)))
+		button.add_theme_stylebox_override("normal", FrameArt.button_box("hover", 12, Color(1.08, 1.04, 0.92)))
 
 
 static func apply_panel(panel: Control, accent: Color = BORDER, inset: bool = false) -> void:
 	if panel == null:
 		return
-	panel.add_theme_stylebox_override("panel", FrameArt.box(inset, 12))
+	# 一般の区画は金具なしの窪み。inset 指定は石の縁＋飾り鋲の内側パネル。大パネルは apply_major_panel。
+	panel.add_theme_stylebox_override("panel", FrameArt.box(true, 12) if inset else FrameArt.well_box(12))
 	panel.set_meta("pixel_ui", true)
-	if not inset:
-		add_ornament(panel, "section", accent)
 
 
 static func apply_major_panel(panel: Control, accent: Color = BORDER_HOVER) -> void:
@@ -302,8 +301,8 @@ static func apply_major_panel(panel: Control, accent: Color = BORDER_HOVER) -> v
 static func apply_progress_bar(bar: ProgressBar, fill_color: Color = Color("72d7e8")) -> void:
 	if bar == null:
 		return
-	bar.add_theme_stylebox_override("background", _bar_box(STONE_DARK, Color("070b10")))
-	bar.add_theme_stylebox_override("fill", _bar_box(fill_color.darkened(0.38), fill_color))
+	bar.add_theme_stylebox_override("background", FrameArt.bar_box(false))
+	bar.add_theme_stylebox_override("fill", FrameArt.bar_box(true, fill_color))
 	bar.set_meta("pixel_ui", true)
 
 
@@ -336,9 +335,13 @@ static func _button_box(accent: Color, fill: Color, pressed: bool, border_width:
 
 
 static func _focus_box(accent: Color) -> StyleBoxFlat:
-	var focus := _button_box(accent, Color(0, 0, 0, 0), false, 1)
+	var focus := _button_box(accent, Color(0, 0, 0, 0), false, 2)
 	focus.draw_center = false
 	focus.shadow_size = 0
+	focus.expand_margin_left = 2
+	focus.expand_margin_right = 2
+	focus.expand_margin_top = 2
+	focus.expand_margin_bottom = 2
 	return focus
 
 
@@ -392,9 +395,10 @@ static func choice_card(category: String, title: String, description: String, ic
 	button.tooltip_text = "%s\n%s\n%s" % [display_title, description, footer]
 	apply_button(button, accent.darkened(0.16))
 	add_ornament(button, "card", accent)
-	button.add_theme_stylebox_override("normal", FrameArt.box(false, 20))
-	button.add_theme_stylebox_override("hover", FrameArt.box(false, 20, Color(1.1, 1.12, 1.0)))
-	button.add_theme_stylebox_override("pressed", FrameArt.box(false, 20, Color(0.75, 1.0, 1.0)))
+	# カードは内側パネル（大パネルの中に置くので角金具は重ねない）
+	button.add_theme_stylebox_override("normal", FrameArt.box(true, 16))
+	button.add_theme_stylebox_override("hover", FrameArt.box(true, 16, Color(1.1, 1.12, 1.0)))
+	button.add_theme_stylebox_override("pressed", FrameArt.box(true, 16, Color(0.75, 1.0, 1.0)))
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	margin.add_theme_constant_override("margin_left", 28)

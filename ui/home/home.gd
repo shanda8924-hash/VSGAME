@@ -82,7 +82,7 @@ func _build_stage_card(entry: Dictionary) -> Button:
 	var accent: Color = PixelUIStyle.JEWEL if selected else (PixelUIStyle.BORDER_HOVER if unlocked else PixelUIStyle.STONE)
 	_apply_cell_style(button, accent)
 	if selected:
-		button.add_theme_stylebox_override("normal", PixelUIStyle.FrameArt.box(false, 20, Color(0.85, 1.15, 1.1)))
+		button.add_theme_stylebox_override("normal", PixelUIStyle.FrameArt.box(true, 14, Color(0.85, 1.15, 1.1)))
 	button.tooltip_text = String(entry.get("stage_note", ""))
 	button.pressed.connect(_on_stage_pressed.bind(entry))
 
@@ -194,7 +194,7 @@ func _build_character_cell(character_data: CharacterData) -> Button:
 	button.text = ""
 	button.focus_mode = Control.FOCUS_ALL
 	var accent: Color = PixelUIStyle.JEWEL if unlocked else PixelUIStyle.STONE
-	_apply_cell_style(button, accent)
+	_apply_cell_style(button, accent, true)
 	button.pressed.connect(_on_character_pressed.bind(character_data))
 
 	var vbox := VBoxContainer.new()
@@ -264,10 +264,10 @@ func _build_character_cell(character_data: CharacterData) -> Button:
 
 ## 通常/ホバー/選択中(フォーカス)で枠線の色を変える(ホバー・選択中セルの
 ## ハイライト表示)。
-func _apply_cell_style(button: Button, accent: Color) -> void:
+func _apply_cell_style(button: Button, accent: Color, major: bool = false) -> void:
 	PixelUIStyle.apply_button(button, accent)
-	button.add_theme_stylebox_override("normal", PixelUIStyle.FrameArt.box(false, 20))
-	button.add_theme_stylebox_override("hover", PixelUIStyle.FrameArt.box(false, 20, Color(0.85, 1.15, 1.1)))
+	button.add_theme_stylebox_override("normal", PixelUIStyle.FrameArt.box(not major, 20 if major else 14))
+	button.add_theme_stylebox_override("hover", PixelUIStyle.FrameArt.box(not major, 20 if major else 14, Color(0.85, 1.15, 1.1)))
 
 func _on_character_pressed(character_data: CharacterData) -> void:
 	if character_data.id not in GameManager.PLAYABLE_CHARACTER_IDS:

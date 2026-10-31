@@ -54,6 +54,18 @@ func _ready() -> void:
 	var reward := game.get_node("ItemSelect") as ItemSelect
 	reward.show_choices(rewards)
 	await capture("boss_rewards")
+	reward.hide()
+	GameManager.close_modal()
+	var pause := game.get_node_or_null("PauseMenu")
+	if pause and pause.has_method("_open"):
+		pause._open()
+		await capture("pause")
+		pause._close()
+	var shop := game.get_node_or_null("ShopScreen")
+	if shop and shop.has_method("show_shop"):
+		shop.show_shop(1)
+		await capture("shop")
+		shop._close()
 	AudioManager.stop_all(false)
 	get_tree().quit()
 

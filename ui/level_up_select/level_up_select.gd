@@ -417,8 +417,8 @@ static func _highlight_numbers(text: String, color: Color) -> String:
 func _apply_card_style(button: Button) -> void:
 	# フォーカス枠は共通スタイル、地の枠はショップ/宝物選択と同じ石枠。
 	PixelUIStyle.apply_button(button, PixelUIStyle.BORDER_HOVER)
-	button.add_theme_stylebox_override("normal", FrameArt.box(false, 0.0))
-	button.add_theme_stylebox_override("hover", FrameArt.box(false, 0.0, Color(1.1, 1.12, 1.0)))
+	button.add_theme_stylebox_override("normal", FrameArt.box(true, 0.0))
+	button.add_theme_stylebox_override("hover", FrameArt.box(true, 0.0, Color(1.1, 1.12, 1.0)))
 	var selected := StyleBoxFlat.new()
 	selected.bg_color = Color("15282a")
 	selected.border_color = SELECTED_COLOR
