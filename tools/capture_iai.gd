@@ -15,6 +15,7 @@ func _ready() -> void:
 		if background:
 			background.process_mode = Node.PROCESS_MODE_DISABLED
 	var player := game.get_node("Player") as Player
+	_player_ref = player
 	player.weapon_manager.process_mode = Node.PROCESS_MODE_DISABLED
 	var world := GameManager.get_runtime_world(player)
 	var enemy_data: EnemyData = DataLoader.enemies.values()[0]
@@ -35,11 +36,21 @@ func _ready() -> void:
 	await capture("iai_2_dash")
 	await get_tree().create_timer(0.12).timeout
 	await capture("iai_3_late")
-	await get_tree().create_timer(0.35).timeout
-	await capture("iai_4_after")
+	# 実レンダラの低fpsでは斬り抜けが実時間より長くかかるので、刀筋は少し待ってから撮る。
+	await get_tree().create_timer(0.6).timeout
+	await capture("iai_4_trail")
+	await get_tree().create_timer(0.5).timeout
+	await capture("iai_5_after")
 	AudioManager.stop_all(false)
 	get_tree().quit()
+
+var _positions := {}
+var _player_ref: Player
 
 func capture(filename: String) -> void:
 	await RenderingServer.frame_post_draw
 	get_viewport().get_texture().get_image().save_png("res://artifacts/iai/%s.png" % filename)
+	if _player_ref:
+		var screen_pos := get_viewport().get_canvas_transform() * _player_ref.global_position
+		_positions[filename] = [screen_pos.x, screen_pos.y]
+	FileAccess.open("res://artifacts/iai/positions.json", FileAccess.WRITE).store_string(JSON.stringify(_positions))

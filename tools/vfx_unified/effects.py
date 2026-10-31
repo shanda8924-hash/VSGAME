@@ -1137,6 +1137,38 @@ def active_time(f, t, rng):
 
 
 # ------------------------------------------------------------------ 線・その他
+def iai_trail(f, t, rng):
+    """居合の刀筋。進路全体に一本の光の線。中央が最も太く、両端が細い。後半は途切れて消える。"""
+    w, h = f.w, f.h
+    cy = h / 2
+    th = [1.2, 3.2, 2.6, 1.8, 1.2, 0.8][t]
+    reveal = [0.6, 1.0, 1.0, 1.0, 1.0, 1.0][t]
+    x0, x1 = w * 0.02, w * (0.02 + 0.96 * reveal)
+    pts_top, pts_bot = [], []
+    n = 16
+    for i in range(n + 1):
+        u = i / n
+        x = x0 + (x1 - x0) * u
+        tw = th * (0.25 + 0.75 * math.sin(math.pi * u) ** 0.6)
+        pts_top.append((x, cy - tw))
+        pts_bot.append((x, cy + tw))
+    if t < 4:
+        f.poly(pts_top + pts_bot[::-1], 3)
+        f.poly([(x, cy + (y - cy) * 0.5) for x, y in pts_top] + [(x, cy + (y - cy) * 0.5) for x, y in pts_bot[::-1]], 4)
+    f.line([(x0 + 1, cy), (x1 - 1, cy)], 5 if t < 4 else 4, 1)
+    if t >= 3:
+        # 途切れ：一定間隔で消す
+        cut = np.mod(f.X - 3 * t, 11 + t * 2) < (2 + t)
+        f.cut(cut)
+    if t in (1, 2, 3):
+        for k in range(4):
+            x = x0 + (x1 - x0) * (0.18 + 0.21 * k)
+            f.spark(x, cy + (-1) ** k * (3 + t), 1, 5)
+    if t == 5:
+        for k in range(3):
+            f.spark(x0 + (x1 - x0) * (0.3 + 0.2 * k), cy + (-1) ** k * 4, 1, 4)
+
+
 def chain_line(f, t, rng):
     w, h = f.w, f.h
     cy = h / 2
@@ -1357,6 +1389,7 @@ ANIMATED = [
     # 線（幅は長さへ伸縮、高さ12表示）
     ("pixel/chain.png", 48, 12, "lightning", chain_line, (120, 12)),
     ("pixel/beam.png", 48, 12, "gold", beam_line, (120, 12)),
+    ("pixel/iai_trail.png", 96, 16, "steel", iai_trail, (190, 16)),
     # その他
     ("pixel/mass_kill.png", 72, 72, "gold", mass_kill, 144),
     ("pixel/forge_awaken.png", 64, 64, "forge", forge_awaken, 128),

@@ -1,5 +1,11 @@
 # Codex Handoff — 2026-10-31（Phase 4まで）
 
+## 今回（居合のブラッシュアップ、2026-10-31）
+- 威力・判定・時間は変えず、見た目と手触りだけ。`components/active_skill_component.gd`：構え中に柄の閃き（`hit_light` 22px）と進路の点線（`IaiTelegraph`、青緑、構えの0.16秒で消える）＋抜刀音`iai_draw.wav`。残像を鋼色`#90ddff`の加算合成に。斬り抜け後に進路全体へ刀筋`assets/vfx/pixel/iai_trail.png`（新規6コマ、`tools/vfx_unified/effects.py`の`iai_trail`）を0.3秒、敵に当たっていれば0.03秒のヒットストップ。最後に`sheathe_hold`（既定0.12秒、`active_skill_params`で調整可）の納刀の静止と`iai_sheathe.wav`で移動ロック解除（乱撃派のコンボキャンセル時は静止しない）。
+- `charges_changed(remaining, max)`信号を追加し、HUDは乱撃派のとき残りチャージを「◆◆／◆◇」で状態の横に表示。準備完了時はアイコンも一瞬白く光る。
+- 仕様書19.6を`swordsman.json`の実数値（190px・2.0倍）と今回の演出に合わせて更新。
+- 検証：`script_load_check` 0件、`iai_and_mode_check` 0件、`five_minute_survival_check` PASS。実画面は`tools/capture_iai.tscn`（xvfb。低fpsなので斬り抜けが実時間より長く見える）→`docs/screens/iai_brushup.png`。
+
 ## 今回（装備の流れ：ドロップ演出・アイテムボックス・詳細・鍛造、2026-10-31）
 - 発見：実行時の装備アイコンは`assets/visuals/ember_v5/equipment/`（64px）が最優先で、ここが旧素材の混在だった。`tools/icon_unified/build.py`でこの200点も同じ原画・同じ手順で生成するようにし（本体56px）、`equipment_icon_metrics.gd`に範囲を追加。`equipment_catalog_200`の期待パスもember_v5へ。
 - ドロップ演出（Diablo参考）：`GroundEquipmentItem`にレア度色の光の柱`LootBeam`（高さ56〜168px・幅7〜20px・明滅・加算合成）、名札（暗い板＋レア度色の左帯。レア以上は常時、アンコモンは接近時）、落下して弾む着地（0.5秒、柱は着地後に立つ）、伝説以上は着地の閃光`hit_light`と鐘の音`legendary_drop.wav`。`equipment_drop.wav`も新規（どちらもnumpyで合成した短い音）。`loot_visibility_check`は柱ありを期待するよう更新。

@@ -32,6 +32,8 @@ signal skill_configured(display_name: String, icon_text: String, cooldown: float
 signal cooldown_changed(remaining: float, total: float)
 signal skill_became_ready
 signal skill_activated
+## 残りチャージ数（乱撃派だけ 2）。HUD が菱形で出す。
+signal charges_changed(remaining: int, max_charges: int)
 
 const ALLY_SCENE := preload("res://entities/allies/ally_skeleton.tscn")
 const PROJECTILE_SCENE := preload("res://entities/projectiles/projectile.tscn")
@@ -87,12 +89,22 @@ func _process(delta: float) -> void:
 	if cooldown_remaining <= 0.0 and not _was_ready:
 		_was_ready = true
 		skill_became_ready.emit()
+		_emit_charges()
+
+func _max_charges() -> int:
+	return RENGEKI_MAX_CHARGES if _get_school() == "rengeki" else DEFAULT_MAX_CHARGES
+
+func _emit_charges() -> void:
+	var max_charges := _max_charges()
+	var remaining := 0 if cooldown_remaining > 0.0 else maxi(max_charges - _swordsman_charges_used, 0)
+	charges_changed.emit(remaining, max_charges)
 
 func _emit_configuration() -> void:
 	if character_data == null:
 		return
 	skill_configured.emit(character_data.active_skill_name, character_data.active_skill_icon, _cooldown(), _skill_color())
 	cooldown_changed.emit(0.0, _cooldown())
+	_emit_charges()
 
 func try_activate() -> bool:
 	if character_data == null or character_data.active_skill_id == "":
@@ -144,6 +156,7 @@ func _try_activate_swordsman() -> bool:
 		skill_activated.emit()
 		if player.animation_component:
 			player.animation_component.play_attack(randi_range(1, 3))
+	_emit_charges()
 	if school == "issen":
 		_swordsman_issen_strike()
 	else:
@@ -242,9 +255,13 @@ func _swordsman_iai() -> void:
 	var damage := _melee_skill_base_damage() * _param("damage_multiplier", 4.8)
 	player.set_movement_locked(true)
 	player.health_component.invincible = true
+	# 構え：柄の閃きと、斬り抜ける進路の細い線。抜刀の風切り音。
+	_spawn_iai_telegraph(direction, distance, _param("windup", 0.16))
+	AudioManager.play_sfx("iai_draw")
 	await player.get_tree().create_timer(_param("windup", 0.16)).timeout
 	if not is_instance_valid(player) or epoch != _dodge_cancel_epoch:
 		return
+	var dash_start := player.global_position
 	# 扇状Polygonは使わず、実移動区間の細いTrail・残像・Hitだけで居合を見せる。
 	var hit_enemies: Dictionary = {}
 	var collision_exceptions: Array[CollisionObject2D] = []
@@ -267,18 +284,94 @@ func _swordsman_iai() -> void:
 	for enemy_body in collision_exceptions:
 		if is_instance_valid(enemy_body):
 			player.remove_collision_exception_with(enemy_body)
-	if was_combo_cancelled or epoch != _dodge_cancel_epoch:
+	if not is_instance_valid(player) or epoch != _dodge_cancel_epoch:
 		return
+	# 刀筋：通った進路全体に一本の光。敵を斬っていれば一瞬だけ止める。
+	_spawn_iai_trail(dash_start, player.global_position)
+	if not hit_enemies.is_empty():
+		var screen_effects := player.get_tree().get_first_node_in_group("screen_effects") as ScreenEffects
+		if screen_effects:
+			screen_effects.hit_stop(0.03)
+	if was_combo_cancelled:
+		return
+	# 納刀：短い静止のあと鞘の音で解放する。
+	_spawn_iai_afterimage()
+	await player.get_tree().create_timer(_param("sheathe_hold", 0.12)).timeout
+	if not is_instance_valid(player) or epoch != _dodge_cancel_epoch:
+		return
+	AudioManager.play_sfx("iai_sheathe")
 	player.health_component.invincible = false
 	player.set_movement_locked(false)
-	_spawn_iai_afterimage()
+
+## 構えの予告：柄の閃き＋進路の点線。構えの時間だけ見せて消す。
+class IaiTelegraph extends Node2D:
+	var direction := Vector2.RIGHT
+	var length := 190.0
+	var lifetime := 0.16
+	var _age := 0.0
+	func _process(delta: float) -> void:
+		_age += delta
+		if _age >= lifetime:
+			queue_free()
+			return
+		queue_redraw()
+	func _draw() -> void:
+		var fade := 1.0 - _age / maxf(lifetime, 0.01)
+		var reveal := minf(_age / (lifetime * 0.6), 1.0)
+		var perp := direction.orthogonal()
+		var teal := Color("4fb3b8")
+		var dash := 10.0
+		var gap := 6.0
+		var x := 18.0
+		while x < length * reveal:
+			var a := direction * x
+			var b := direction * minf(x + dash, length * reveal)
+			draw_line(a, b, Color(teal, 0.9 * fade), 3.0, false)
+			draw_line(a, b, Color(0.9, 1.0, 1.0, 0.6 * fade), 1.0, false)
+			x += dash + gap
+		# 終点の小さな菱形
+		if reveal >= 1.0:
+			var tip := direction * length
+			draw_colored_polygon(PackedVector2Array([tip + direction * 5.0, tip + perp * 4.0, tip - direction * 5.0, tip - perp * 4.0]), Color(teal, 0.8 * fade))
+
+func _spawn_iai_telegraph(direction: Vector2, distance: float, windup: float) -> void:
+	var world := GameManager.get_runtime_world(player)
+	if world == null:
+		return
+	var telegraph := IaiTelegraph.new()
+	telegraph.name = "IaiTelegraph"
+	telegraph.direction = direction
+	telegraph.length = distance
+	telegraph.lifetime = windup
+	telegraph.z_index = 1
+	telegraph.add_to_group("transient_vfx")
+	world.add_child(telegraph)
+	telegraph.global_position = player.global_position + Vector2(0, 6)
+	# 柄の閃き（小さな白い光）
+	var glint := PixelSpriteVFX.spawn(world, player.global_position + direction * 10.0 + Vector2(0, -4), "hit_light", Vector2.ONE * 22.0, 0.14, 0.0, Color(0.95, 1.0, 1.0))
+	if glint:
+		glint.z_index = 46
+
+## 刀筋：始点から終点まで一本の光の線。向きは進行方向。
+func _spawn_iai_trail(from: Vector2, to: Vector2) -> void:
+	var world := GameManager.get_runtime_world(player)
+	var segment := to - from
+	if world == null or segment.length() < 12.0:
+		return
+	var trail := PixelSpriteVFX.spawn(world, (from + to) * 0.5 + Vector2(0, 2), "iai_trail", Vector2(segment.length() + 24.0, 18.0), 0.3, segment.angle())
+	if trail:
+		trail.z_index = 44
 
 func _spawn_iai_afterimage() -> void:
 	var afterimage := AFTERIMAGE_SCRIPT.new() as CharacterAfterimage
 	GameManager.get_runtime_world(player).add_child(afterimage)
 	var alpha := clampf(_param("afterimage_alpha", 0.48), 0.0, 1.0)
-	var base_color := Color(0.18, 0.32, 0.58, 1.0)
+	# 残像は鋼の明るい色（VFXの steel ランプ）を加算で重ね、暗い床でも尾として読めるようにする。
+	var base_color := Color("90ddff")
 	var tint := Color(base_color.r, base_color.g, base_color.b, alpha)
+	var material := CanvasItemMaterial.new()
+	material.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	afterimage.material = material
 	afterimage.setup(player.animated_sprite, tint, _param("afterimage_lifetime", 0.28))
 
 

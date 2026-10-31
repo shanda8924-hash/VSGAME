@@ -81,6 +81,7 @@ var _skill_shade: ColorRect
 var _skill_key_label: Label
 var _skill_name_label: Label
 var _skill_state_label: Label
+var _skill_charges_label: Label
 var _iai_pips_wrap: Control
 var _skill_display_name := ""
 var _skill_cooldown_remaining := 0.0
@@ -124,6 +125,8 @@ func _ready() -> void:
 		_active_skill.cooldown_changed.connect(_on_skill_cooldown_changed)
 		_active_skill.skill_became_ready.connect(_on_skill_became_ready)
 		_active_skill.skill_activated.connect(_on_skill_activated)
+		if _active_skill.has_signal("charges_changed"):
+			_active_skill.charges_changed.connect(_on_skill_charges_changed)
 		var data: CharacterData = DataLoader.characters.get(GameManager.selected_character_id)
 		if data:
 			var theme: EffectThemeData = DataLoader.effect_themes.get(data.vfx_theme_id)
@@ -576,10 +579,19 @@ func _build_skill_panel() -> void:
 	_skill_name_label.clip_text = true
 	_skill_name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	column.add_child(_skill_name_label)
+	var state_row := HBoxContainer.new()
+	state_row.add_theme_constant_override("separation", 8)
+	column.add_child(state_row)
 	_skill_state_label = Label.new()
 	_skill_state_label.add_theme_font_size_override("font_size", 18)
 	_skill_state_label.add_theme_color_override("font_color", RetroHUDStyle.IAI_TEAL_LIGHT)
-	column.add_child(_skill_state_label)
+	state_row.add_child(_skill_state_label)
+	# 乱撃派の残りチャージ（◆◆ / ◆◇）。1 チャージの職業では出さない。
+	_skill_charges_label = Label.new()
+	_skill_charges_label.add_theme_font_size_override("font_size", 16)
+	_skill_charges_label.add_theme_color_override("font_color", RetroHUDStyle.BRONZE_LIGHT)
+	_skill_charges_label.visible = false
+	state_row.add_child(_skill_charges_label)
 	_iai_pips_wrap = Control.new()
 	_iai_pips_wrap.custom_minimum_size = Vector2(0, 16)
 	_iai_pips_wrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -649,6 +661,22 @@ func _on_skill_became_ready() -> void:
 	var tween := create_tween()
 	tween.tween_property(_skill_state_label, "modulate", Color(1.8, 1.8, 1.8, 1.0), 0.12)
 	tween.tween_property(_skill_state_label, "modulate", Color.WHITE, 0.35)
+	# アイコンも一瞬だけ白く光らせる（準備完了が視界の端で分かる）。
+	if _skill_icon_rect:
+		var icon_tween := create_tween()
+		icon_tween.tween_property(_skill_icon_rect, "modulate", Color(2.0, 2.0, 2.0, 1.0), 0.08)
+		icon_tween.tween_property(_skill_icon_rect, "modulate", Color.WHITE, 0.4)
+
+func _on_skill_charges_changed(remaining: int, max_charges: int) -> void:
+	if _skill_charges_label == null:
+		return
+	_skill_charges_label.visible = max_charges > 1
+	if max_charges > 1:
+		var marks: Array[String] = []
+		for index in max_charges:
+			marks.append("◆" if index < remaining else "◇")
+		_skill_charges_label.text = "".join(marks)
+		_skill_charges_label.tooltip_text = "残りチャージ %d / %d" % [remaining, max_charges]
 
 # ============================================================
 # 上中央のステージ石板: 時計・終盤ボスまでの予告ゲージ → ボス戦ではボス名とHP

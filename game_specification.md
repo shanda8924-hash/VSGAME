@@ -625,17 +625,17 @@ apply_character_passives()`が起動時(`Player._apply_character_data()`の直�
 
 ### 19.6 Swordsman Spaceスキル「居合」
 
-- Space入力後0.16秒の構えを行い、その時点の向きへ最大280px斬り抜ける
+- Space入力後0.16秒の構えを行い、その時点の向きへ最大190px斬り抜ける（`swordsman.json`の`dash_distance`。威力倍率は`damage_multiplier` 2.0）
+- 構え中は柄の閃きと進路の点線（青緑）を出し、抜刀の風切り音を鳴らす。斬り抜けた後は進路全体に一本の刀筋（`assets/vfx/pixel/iai_trail.png`、0.3秒）を残し、敵に当たっていれば0.03秒だけ止める。最後に`sheathe_hold`（既定0.12秒）の納刀の静止と鞘の音で移動ロックを解く（乱撃派のコンボキャンセル時は静止しない）
 - 移動経路上の敵を1体につき1回だけ攻撃し、敵Bodyとの衝突では停止しない
 - 壁・障害物との物理衝突は維持し、壁をすり抜けない
 - 発動中は移動入力を一時ロックし、終了時に復帰する。敵を自動追尾しない
 - 距離・横幅・威力倍率・構え時間・分割数はSwordsmanの`active_skill_params`から調整する
-- 移動経路には現在のキャラクターフレームを使った青黒い残像を生成し、約0.28秒で消去する。
+- 移動経路には現在のキャラクターフレームを使った鋼色（#90ddff、加算合成）の残像を生成し、約0.28秒で消去する。
   残像の透明度と寿命は`afterimage_alpha`/`afterimage_lifetime`から調整する
 - 居合は1体につき1回ヒットし、会心判定は行わない。最終ダメージは次の式とする:
   `base_damage × レベル成長倍率 × 共通damage_multiplier × melee_damage_multiplier × 居合damage_multiplier`
-- Swordsmanの初期値では`14 × 4.8 = 67.2`。POWER / 剛力を1回取得すると
-  `melee_damage_multiplier`が1.15になり、同条件の居合ダメージは77.28になる
+- Swordsmanの初期値では`base_damage 7 × 2.0`を基準に、レベル成長と強化倍率を掛ける（2026-10-31時点の`swordsman.json`。かつての280px・4.8倍は調整済み）
 - 共通の攻撃力強化・レベル成長・近接攻撃ダメージ強化は居合にも反映する。
   攻撃速度・近接範囲・吸血強化は居合の威力には影響しない
 
