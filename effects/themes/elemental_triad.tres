@@ -1,9 +1,0 @@
-[gd_resource type="Resource" script_class="EffectThemeData" load_steps=2 format=3]
-
-[ext_resource type="Script" path="res://resources/effect_theme_data.gd" id="1"]
-
-[resource]
-script = ExtResource("1")
-id = "elemental_triad"
-display_name = "三大元素"
-combo_ids = "fire,ice,lightning"
