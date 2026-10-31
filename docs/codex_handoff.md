@@ -1,5 +1,10 @@
 # Codex Handoff — 2026-10-31（Phase 4まで）
 
+## 次の主題（未着手）：遊びの骨組み — `docs/fun_loop_redesign.md`
+- ユーザー評価「楽しくない」：退屈（敵が弱い・移動だけ）、単調（山場がない）、分かりにくい（目標と得が見えない・スキルの発動条件が読めない）、育成がない（1ダンジョンでキャラが終わる）。
+- 打ち手はPhase 1 緊張と山場（サージ有効化・敵の役割・圧力曲線・次の波までの表示）→ Phase 2 スキルの可読性（trigger/tags/scales_withのデータ化、クールダウン→命中回数ごと、カード3行定型）→ Phase 3 シナジーと進化（連撃、進化レシピ、相性保証）→ Phase 4 育成（装備と熟練の持ち越し、深度付きステージの鎖、負けの持ち帰り）。
+- 所在：`survival_upgrade_effects.gd`のecho 0.6秒／chain 0.7秒のクールダウン、`exploration_run.json`の`surge.enabled: false`、`equipment_component._on_run_ended`の全消去、`SaveManager`のキー。
+
 ## 今回（サバイバルの戦場の見た目：床の飾り・光だまり・空気感、2026-10-31）
 - 床だけの連続戦場（floor_only）は同じ床素材の繰り返しだけだった。`entities/stage_environment/detailed_map_surfaces.gd`のfloor_only経路に、描画だけの3層を追加（当たり判定・湧き・経路は不変）：
   1. 床の飾り：`tools/map_unified/build.py`→`assets/visuals/floor_decals/map{1,2,3}.png`（1テーマ16種、64px、1ドット＝2px。ひび・瓦礫・欠け・水たまり・骨・苔・格子・染み＋MAP1 骸と鎖・古い紋、MAP2 紫晶と鉱脈、MAP3 熔岩のひび・鉱滓・歯車）。世界座標のハッシュで64px格子の約1割へ配置（同じ場所は常に同じ）。192px格子の約1/3に大きな染みを薄く敷いて調子を変える。位置の256px吸着時だけ再描画。
