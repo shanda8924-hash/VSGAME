@@ -7,6 +7,7 @@ signal equipment_changed(slot: String, item: EquipmentData)
 signal equipment_merged(result: EquipmentData)
 
 const SLOTS := ["weapon", "head", "body", "arms", "legs", "accessory"]
+const MAX_INVENTORY_SIZE := 50
 var inventory: Array[EquipmentData] = []
 var equipped: Dictionary = {}
 var _applied_max_hp_bonus: float = 0.0
@@ -17,12 +18,16 @@ func _ready() -> void:
 	EventBus.enemy_died.connect(_on_enemy_died)
 	EventBus.run_ended.connect(_on_run_ended)
 
-func add_item(item: EquipmentData) -> void:
-	if item == null:
-		return
+func add_item(item: EquipmentData) -> bool:
+	if item == null or inventory.size() >= MAX_INVENTORY_SIZE:
+		return false
 	inventory.append(item)
 	inventory_changed.emit()
 	EventBus.equipment_picked_up.emit(item)
+	return true
+
+func is_inventory_full() -> bool:
+	return inventory.size() >= MAX_INVENTORY_SIZE
 
 func equip(item: EquipmentData) -> bool:
 	if item == null or item not in inventory or item.slot not in SLOTS:
@@ -75,7 +80,7 @@ func is_equipped(item: EquipmentData) -> bool:
 ## Replaces exactly three safe inventory materials with one promoted result.
 ## Validation and mutation live in one method so UI refreshes cannot partially consume items.
 func replace_merge_materials(materials: Array[EquipmentData], result: EquipmentData) -> bool:
-	if result == null or materials.size() != 3:
+	if materials.is_empty():
 		return false
 	var seen_instance_ids := {}
 	for item in materials:
@@ -87,9 +92,11 @@ func replace_merge_materials(materials: Array[EquipmentData], result: EquipmentD
 		seen_instance_ids[identity] = true
 	for item in materials:
 		inventory.erase(item)
-	inventory.append(result)
+	if result:
+		inventory.append(result)
 	inventory_changed.emit()
-	equipment_merged.emit(result)
+	if result:
+		equipment_merged.emit(result)
 	return true
 
 func get_total_stat(stat_name: String) -> float:

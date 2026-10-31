@@ -3,50 +3,7 @@ extends Node
 ## Viewやサブシステムはここを直接いじらず、EventBus経由でのみ状態変化を知る。
 
 enum RunState { NONE, PLAYING, PAUSED, RESULT }
-
-const ELEMENT_NONE := "element_none"
-const ACTIVE_ELEMENT_BY_FRAGMENT := {
-	"fire": "element_fire",
-	"ice": "element_ice",
-	"lightning": "element_lightning",
-	"light": "element_light",
-	"dark": "element_dark",
-}
-const THEME_ID_BY_ACTIVE_ELEMENT := {
-	"element_fire": "fire",
-	"element_ice": "ice",
-	"element_lightning": "lightning",
-	"element_light": "light",
-	"element_dark": "dark",
-}
-const ELEMENT_IDS: Array[String] = [
-	"element_fire", "element_ice", "element_lightning", "element_light", "element_dark",
-]
-const FUSION_BY_PAIR := {
-	"element_fire+element_ice": "frostfire",
-	"element_fire+element_lightning": "plasma",
-	"element_fire+element_light": "solar",
-	"element_fire+element_dark": "inferno",
-	"element_ice+element_lightning": "superconductor",
-	"element_ice+element_light": "aurora",
-	"element_ice+element_dark": "void_frost",
-	"element_lightning+element_light": "judgment",
-	"element_lightning+element_dark": "voidstorm",
-	"element_light+element_dark": "eclipse",
-}
-const FUSION_DISPLAY_NAMES := {
-	"frostfire": "THERMAL SHOCK / 熱衝撃",
-	"plasma": "PLASMA / プラズマ",
-	"solar": "SOLAR FLARE / 太陽炎",
-	"inferno": "INFERNO / 煉獄",
-	"superconductor": "SUPERCONDUCTOR / 超伝導",
-	"aurora": "AURORA / 極光",
-	"void_frost": "BLACK ICE / 黒氷",
-	"judgment": "RADIANT ARC / 聖雷",
-	"voidstorm": "VOIDSTORM / 虚雷",
-	"eclipse": "ECLIPSE / 日蝕",
-}
-const MASTERY_RANK_CAP := 3
+const PLAYABLE_CHARACTER_IDS := ["soldier", "swordsman", "archer", "knight", "armored_axeman", "wizard"]
 
 ## ダンジョン生成パラメータ(@exportではなくconstだが、この値を変えるだけで調整できる)。
 const DUNGEON_WIDTH := 100
@@ -61,35 +18,18 @@ const DUNGEON_ROOM_COUNT := 12
 var run_state: RunState = RunState.NONE
 var elapsed_seconds: float = 0.0
 var kill_count: int = 0
-var held_fragment_ids: Array[String] = []
-## 欠片所持・Fusion消費とは別に保持する、ラン中だけ有効な属性Loadout。
-## active_element_idsは古い取得順、末尾が主属性。最大2属性、各Lv3まで。
-var active_element_ids: Array[String] = []
-var element_stacks: Dictionary = {
-	"element_fire": 0,
-	"element_ice": 0,
-	"element_lightning": 0,
-	"element_light": 0,
-	"element_dark": 0,
-}
-## 既存呼び出し互換用。2属性保持中はactive_element_ids末尾（主属性）を示す。
-var active_element_id: String = ELEMENT_NONE
-## 両属性Lv3で成立する、元属性とは別Presentationを持つFusion属性。
-var active_fusion_id: String = ""
-var general_mastery_ranks: Dictionary = {
-	"power": 0, "echo": 0, "haste": 0, "reach": 0,
-}
-var element_mastery_ranks: Dictionary = {}
-var fusion_mastery_ranks: Dictionary = {
-	"power": 0, "echo": 0, "haste": 0, "signature": 0,
-}
-## 通常Game Sceneを直接開始した時だけtrue。Test Labや既存単体Testがgame.tscnを
-## 埋め込んだ場合はfalseのままにし、ROOM自動進行を混入させない。
-var room_mode_active: bool = false
-## 通常の製品Runで使う3MAP探索進行。ROOM/Test Labと同時には有効にしない。
+## ラン中だけ有効なショップ通貨。SaveManagerのmeta_currencyとは完全に分離する。
+var run_gold: int = 0
+## 通常の製品Runは3MAP探索進行。埋め込みTest Labでは自動進行しない。
 var map_mode_active: bool = false
+var survival_mode_active := false
+var survival_duration_seconds := 300.0
+var survival_completed := false
+var selected_survival_map := 1
+var run_equipment_count := 0
 var current_map_index: int = 0
-var _debug_room_mode_next_game: bool = false
+var current_floor_index: int = 1
+var current_depth: int = 1
 var selected_character_id: String = "soldier" # ホーム画面で選んだ職業。Playerが起動時に参照する
 var dungeon_map: DungeonMap # ラン開始時に1回だけ生成される、床/壁のグリッドデータ
 
@@ -108,7 +48,10 @@ func _ready() -> void:
 	_extend_ui_actions_with_wasd()
 	_register_active_skill_action()
 	_register_interact_action()
+	EventBus.equipment_picked_up.connect(func(_equipment):
+		if survival_mode_active and run_state == RunState.PLAYING: run_equipment_count += 1)
 	_register_equipment_actions()
+	_register_key_and_button("talent_menu", KEY_T, JOY_BUTTON_BACK)
 
 ## 宝箱・装備・将来のNPC/扉などで共有するInteraction Action。
 ## 南ボタン(A)はactive_skillへ割り当て済みのため、ゲームパッドは競合しないXを使う。
@@ -141,7 +84,7 @@ func _register_active_skill_action() -> void:
 	if not InputMap.has_action(ACTION):
 		InputMap.add_action(ACTION)
 	var key_event := InputEventKey.new()
-	key_event.physical_keycode = KEY_SPACE
+	key_event.physical_keycode = KEY_L
 	if not InputMap.action_has_event(ACTION, key_event):
 		InputMap.action_add_event(ACTION, key_event)
 	var joy_event := InputEventJoypadButton.new()
@@ -167,7 +110,9 @@ func _extend_ui_actions_with_wasd() -> void:
 		if not InputMap.action_has_event(action, event):
 			InputMap.action_add_event(action, event)
 
-func start_run(enable_room_mode: bool = false, enable_map_mode: bool = false) -> void:
+func start_run(enable_map_mode: bool = false) -> void:
+	if selected_character_id not in PLAYABLE_CHARACTER_IDS:
+		selected_character_id = "soldier"
 	# Result/Hit Stop/選択UIの途中で前Sceneが破棄された場合も、新しいRunへ
 	# グローバルな停止状態や解放済みUI Callableを持ち越さない。
 	get_tree().paused = false
@@ -177,15 +122,18 @@ func start_run(enable_room_mode: bool = false, enable_map_mode: bool = false) ->
 	run_state = RunState.PLAYING
 	elapsed_seconds = 0.0
 	kill_count = 0
-	held_fragment_ids.clear()
-	_reset_element_loadout(true)
-	room_mode_active = enable_room_mode
-	map_mode_active = enable_map_mode and not enable_room_mode
-	current_map_index = 1 if map_mode_active else 0
-	if room_mode_active:
-		dungeon_map = RoomTemplateFactory.build_map("standard")
-	else:
-		generate_exploration_map(1 if map_mode_active else 0)
+	map_mode_active = enable_map_mode
+	var config: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/maps/exploration_run.json"))
+	survival_mode_active = map_mode_active and float(config.get("survival_duration_seconds", 0)) > 0
+	survival_duration_seconds = maxf(float(config.get("survival_duration_seconds", 300)), 1.0)
+	survival_completed = false
+	run_equipment_count = 0
+	selected_survival_map = clampi(selected_survival_map, 1, 3)
+	current_map_index = selected_survival_map if survival_mode_active else (1 if map_mode_active else 0)
+	current_floor_index = 1
+	current_depth = 1
+	reset_run_gold()
+	generate_exploration_map(current_map_index)
 	EventBus.run_started.emit()
 
 ## MAP Controllerからのみ呼ぶ生成入口。進行度は敵DataやPlayer Buildを参照せず、
@@ -193,140 +141,71 @@ func start_run(enable_room_mode: bool = false, enable_map_mode: bool = false) ->
 func generate_exploration_map(map_index: int, width: int = DUNGEON_WIDTH, height: int = DUNGEON_HEIGHT, room_count: int = DUNGEON_ROOM_COUNT, elite_count: int = -1) -> DungeonMap:
 	current_map_index = maxi(map_index, 0)
 	var resolved_elites := elite_count
+	var isolated_rooms := false
 	if resolved_elites < 0:
 		resolved_elites = randi_range(dungeon_elite_room_count_min, dungeon_elite_room_count_max)
-	dungeon_map = DungeonGenerator.generate(width, height, room_count, resolved_elites)
+	if map_index > 0:
+		var config: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/maps/exploration_run.json"))
+		var theme: Dictionary = config.maps[clampi(map_index-1, 0, 2)]
+		width = int(theme.width)
+		height = int(theme.height)
+		room_count = int(theme.room_count)
+		resolved_elites = 0 # Elite enemies join the horde; no room event pauses the wave.
+		isolated_rooms = bool(theme.get("isolated_rooms", false))
+	if survival_mode_active and map_index > 0:
+		dungeon_map = preload("res://systems/room_layout.gd").generate(1, randi_range(1, 3), randi(), true)
+	elif isolated_rooms:
+		dungeon_map = preload("res://systems/room_layout.gd").generate(current_depth, 0, randi())
+	else:
+		dungeon_map = DungeonGenerator.generate(width, height, room_count, resolved_elites, null, map_index > 0)
+	dungeon_map.set_meta("global_depth", current_depth)
 	return dungeon_map
-
-func debug_request_room_mode_for_next_game() -> void:
-	if OS.is_debug_build():
-		_debug_room_mode_next_game = true
-
-func consume_debug_room_mode_request() -> bool:
-	if not OS.is_debug_build() or not _debug_room_mode_next_game:
-		return false
-	_debug_room_mode_next_game = false
-	return true
 
 func end_run() -> void:
 	if run_state == RunState.RESULT:
 		return
 	run_state = RunState.RESULT
-	_reset_element_loadout(true)
 	EventBus.run_ended.emit(elapsed_seconds, kill_count)
-
-func complete_room_run(room_count: int) -> void:
-	if run_state == RunState.RESULT:
-		return
-	run_state = RunState.RESULT
-	EventBus.run_cleared.emit(room_count, elapsed_seconds, kill_count)
+	reset_run_gold()
 
 func complete_map_run(map_count: int) -> void:
 	if run_state == RunState.RESULT:
 		return
 	run_state = RunState.RESULT
 	EventBus.run_cleared.emit(map_count, elapsed_seconds, kill_count)
+	reset_run_gold()
 
 func register_kill() -> void:
 	kill_count += 1
 
+## 加算・消費はこのAPIだけを通し、UIや各報酬Systemが値を直接変更しない。
+func add_run_gold(amount: int, source: String = "") -> int:
+	if amount <= 0 or run_state != RunState.PLAYING:
+		return run_gold
+	run_gold += amount
+	EventBus.run_gold_changed.emit(run_gold, amount, source)
+	return run_gold
+
+func can_afford_run_gold(amount: int) -> bool:
+	return amount >= 0 and run_gold >= amount
+
+func try_spend_run_gold(amount: int, source: String = "shop") -> bool:
+	if amount <= 0 or run_state != RunState.PLAYING or not can_afford_run_gold(amount):
+		return false
+	run_gold -= amount
+	EventBus.run_gold_changed.emit(run_gold, -amount, source)
+	return true
+
+func reset_run_gold() -> void:
+	var delta := -run_gold
+	run_gold = 0
+	EventBus.run_gold_changed.emit(run_gold, delta, "run_reset")
+
 func _process(delta: float) -> void:
-	if run_state == RunState.PLAYING:
+	if run_state == RunState.PLAYING and not survival_completed:
 		elapsed_seconds += delta
 
-func add_fragment(fragment_id: String) -> void:
-	var fragment: WeaponFragmentData = DataLoader.fragments.get(fragment_id)
-	if fragment and ACTIVE_ELEMENT_BY_FRAGMENT.has(fragment.element):
-		if not _acquire_element(String(ACTIVE_ELEMENT_BY_FRAGMENT[fragment.element])):
-			return
-	held_fragment_ids.append(fragment_id)
-	EventBus.fragment_collected.emit(fragment_id)
 
-func get_active_element_theme_id() -> String:
-	return String(THEME_ID_BY_ACTIVE_ELEMENT.get(active_element_id, ""))
-
-func get_active_element_ids() -> Array[String]:
-	return active_element_ids.duplicate()
-
-func get_element_stack(element_id: String) -> int:
-	return int(element_stacks.get(element_id, 0))
-
-func get_primary_element_id() -> String:
-	return active_element_id
-
-func get_fusion_display_name(fusion_id: String = active_fusion_id) -> String:
-	return String(FUSION_DISPLAY_NAMES.get(fusion_id, fusion_id.to_upper()))
-
-func get_fusion_for_elements(first: String, second: String) -> String:
-	return String(FUSION_BY_PAIR.get(_fusion_pair_key(first, second), ""))
-
-func get_general_mastery_rank(mastery_id: String) -> int:
-	return int(general_mastery_ranks.get(mastery_id, 0))
-
-func get_element_mastery_rank(element_id: String, mastery_id: String) -> int:
-	var ranks: Dictionary = element_mastery_ranks.get(element_id, {})
-	return int(ranks.get(mastery_id, 0))
-
-func get_fusion_mastery_rank(mastery_id: String) -> int:
-	return int(fusion_mastery_ranks.get(mastery_id, 0))
-
-func add_general_mastery(mastery_id: String) -> bool:
-	if not general_mastery_ranks.has(mastery_id):
-		return false
-	var rank := get_general_mastery_rank(mastery_id)
-	if rank >= MASTERY_RANK_CAP:
-		return false
-	general_mastery_ranks[mastery_id] = rank + 1
-	EventBus.element_mastery_changed.emit("general", mastery_id, rank + 1)
-	return true
-
-func add_element_mastery(element_id: String, mastery_id: String) -> bool:
-	if element_id not in active_element_ids or get_element_stack(element_id) < 3:
-		return false
-	if not element_mastery_ranks.has(element_id):
-		element_mastery_ranks[element_id] = {"power": 0, "echo": 0, "reach": 0, "signature": 0}
-	var ranks: Dictionary = element_mastery_ranks[element_id]
-	var rank := int(ranks.get(mastery_id, 0))
-	if not ranks.has(mastery_id) or rank >= MASTERY_RANK_CAP:
-		return false
-	ranks[mastery_id] = rank + 1
-	element_mastery_ranks[element_id] = ranks
-	EventBus.element_mastery_changed.emit(element_id, mastery_id, rank + 1)
-	return true
-
-func add_fusion_mastery(mastery_id: String) -> bool:
-	if active_fusion_id == "" or not fusion_mastery_ranks.has(mastery_id):
-		return false
-	var rank := get_fusion_mastery_rank(mastery_id)
-	if rank >= MASTERY_RANK_CAP:
-		return false
-	fusion_mastery_ranks[mastery_id] = rank + 1
-	EventBus.element_mastery_changed.emit(active_fusion_id, mastery_id, rank + 1)
-	return true
-
-func get_element_damage_multiplier(element_id: String) -> float:
-	return 1.0 + get_general_mastery_rank("power") * 0.15 + get_element_mastery_rank(element_id, "power") * 0.25
-
-func get_element_echo_chance(element_id: String) -> float:
-	return minf(0.45, get_general_mastery_rank("echo") * 0.15 + get_element_mastery_rank(element_id, "echo") * 0.15)
-
-func get_element_reach_multiplier(element_id: String) -> float:
-	return 1.0 + get_general_mastery_rank("reach") * 0.12 + get_element_mastery_rank(element_id, "reach") * 0.20
-
-func get_element_haste_multiplier() -> float:
-	return maxf(0.70, 1.0 - get_general_mastery_rank("haste") * 0.10)
-
-func get_fusion_damage_multiplier() -> float:
-	return 1.0 + get_fusion_mastery_rank("power") * 0.25
-
-func get_fusion_echo_chance() -> float:
-	return minf(0.45, get_fusion_mastery_rank("echo") * 0.15)
-
-func get_fusion_haste_multiplier() -> float:
-	return maxf(0.64, 1.0 - get_fusion_mastery_rank("haste") * 0.12)
-
-## Spawn先をSceneTree.current_sceneへ固定せず、呼び出し元が属する実Game Worldを返す。
-## 通常Gameでは従来と同じGame root、Developer Test LabのSubViewport内でも同じ
 ## game.tscn rootを返す。祖先が見つからない既存Testだけcurrent_sceneへfallbackする。
 func get_runtime_world(context: Node = null) -> Node:
 	var cursor := context
@@ -339,108 +218,6 @@ func get_runtime_world(context: Node = null) -> Node:
 		return worlds[0]
 	return get_tree().current_scene
 
-## Developer Test Lab専用のForce State入口。通常Gameplayは必ずadd_fragment()を使う。
-## Release Exportから呼ばれても状態を書き換えないようDebug Buildでのみ許可する。
-func debug_force_element_state(forced_stacks: Dictionary, forced_fusion_id: String = "") -> bool:
-	if not OS.is_debug_build():
-		return false
-	var forced_ids: Array[String] = []
-	var sanitized := {}
-	for element_id in ELEMENT_IDS:
-		var level := clampi(int(forced_stacks.get(element_id, 0)), 0, 3)
-		sanitized[element_id] = level
-		if level > 0:
-			forced_ids.append(element_id)
-	if forced_ids.size() > 2:
-		return false
-	if forced_fusion_id != "":
-		if forced_ids.size() != 2 or sanitized[forced_ids[0]] < 3 or sanitized[forced_ids[1]] < 3:
-			return false
-		if get_fusion_for_elements(forced_ids[0], forced_ids[1]) != forced_fusion_id:
-			return false
-	active_element_ids = forced_ids
-	for element_id in ELEMENT_IDS:
-		element_stacks[element_id] = int(sanitized[element_id])
-	active_element_id = active_element_ids.back() if not active_element_ids.is_empty() else ELEMENT_NONE
-	active_fusion_id = forced_fusion_id
-	element_mastery_ranks.clear()
-	fusion_mastery_ranks = {"power": 0, "echo": 0, "haste": 0, "signature": 0}
-	_emit_element_loadout()
-	return true
-
-func set_active_element(element_id: String) -> bool:
-	if element_id != ELEMENT_NONE and not DataLoader.element_vfx_effects.has(element_id):
-		push_warning("GameManager: 未登録の現在属性です -> %s" % element_id)
-		return false
-	if element_id == ELEMENT_NONE:
-		_reset_element_loadout()
-	else:
-		active_fusion_id = ""
-		active_element_ids = [element_id]
-		for id in element_stacks.keys():
-			element_stacks[id] = 1 if id == element_id else 0
-		active_element_id = element_id
-		_emit_element_loadout()
-	return true
-
-func _acquire_element(element_id: String) -> bool:
-	var max_stack := maxi(int(DataLoader.element_combat_config.get("max_stack", 3)), 1)
-	var max_active := maxi(int(DataLoader.element_combat_config.get("max_active_elements", 2)), 1)
-	if element_id in active_element_ids:
-		if get_element_stack(element_id) >= max_stack:
-			return false
-		element_stacks[element_id] = get_element_stack(element_id) + 1
-		# 同属性を再取得した場合も主属性へ移し、2属性時の居合Trailを明示的に切り替える。
-		active_element_ids.erase(element_id)
-		active_element_ids.append(element_id)
-	else:
-		if active_element_ids.size() >= max_active:
-			# 2属性確定後はRun中のBuildをLockし、未取得属性で置換しない。
-			return false
-		else:
-			active_element_ids.append(element_id)
-			element_stacks[element_id] = 1
-	active_element_id = active_element_ids.back() if not active_element_ids.is_empty() else ELEMENT_NONE
-	_check_fusion_ready()
-	_emit_element_loadout()
-	return true
-
-func _reset_element_loadout(force_emit: bool = false) -> void:
-	var had_element := not active_element_ids.is_empty() or active_element_id != ELEMENT_NONE or active_fusion_id != ""
-	active_element_ids.clear()
-	for id in element_stacks.keys():
-		element_stacks[id] = 0
-	active_element_id = ELEMENT_NONE
-	active_fusion_id = ""
-	general_mastery_ranks = {"power": 0, "echo": 0, "haste": 0, "reach": 0}
-	element_mastery_ranks.clear()
-	fusion_mastery_ranks = {"power": 0, "echo": 0, "haste": 0, "signature": 0}
-	if force_emit or had_element:
-		_emit_element_loadout()
-
-func _emit_element_loadout() -> void:
-	EventBus.active_element_changed.emit(active_element_id)
-	EventBus.element_loadout_changed.emit(active_element_ids.duplicate(), element_stacks.duplicate(true))
-
-func _check_fusion_ready() -> void:
-	if active_fusion_id != "" or active_element_ids.size() != 2:
-		return
-	if get_element_stack(active_element_ids[0]) < 3 or get_element_stack(active_element_ids[1]) < 3:
-		return
-	active_fusion_id = get_fusion_for_elements(active_element_ids[0], active_element_ids[1])
-	if active_fusion_id == "":
-		return
-	EventBus.element_fusion_formed.emit(active_fusion_id, get_fusion_display_name(), active_element_ids.duplicate())
-
-func _fusion_pair_key(first: String, second: String) -> String:
-	var order := {"element_fire": 0, "element_ice": 1, "element_lightning": 2, "element_light": 3, "element_dark": 4}
-	return "%s+%s" % [first, second] if int(order.get(first, 99)) <= int(order.get(second, 99)) else "%s+%s" % [second, first]
-
-## LevelUpSelect/ItemSelect等の選択待ちUIが、今すぐ表示してよいか(他に何も
-## 開いていないか)を問い合わせるための入り口。既に何か開いている場合は
-## show_callableをキューへ積むだけにし、即座には呼ばない(＝2つのモーダルが
-## 同時に表示されることは無い)。呼び出し側は「表示してよい」と判断された
-## 瞬間(この関数内、またはキュー経由で後から)にshow_callableの中でopen_modal()
 ## を呼び、実際に画面を表示すること。
 func request_modal(show_callable: Callable) -> void:
 	if active_modal_count > 0:

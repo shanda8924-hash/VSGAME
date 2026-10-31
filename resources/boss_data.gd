@@ -9,7 +9,8 @@ class_name BossData
 ## 見た目と判定はズレない)。
 @export var visual_scale: float = 1.35
 
-## ボス固有攻撃の種類("charge"/"summon"/"nova"/"slam"のいずれか。空文字なら固有攻撃なし)。
+## ボス固有攻撃の種類("charge"/"summon"/"nova"/"slam"/"minotaur_combo"。
+## 空文字なら固有攻撃なし)。
 ## EnemyBasicがこの値を見てsystems/boss_ai/以下の対応するBossAttackStrategyを
 ## 動的に生成・アタッチする。
 @export var attack_pattern_id: String = ""

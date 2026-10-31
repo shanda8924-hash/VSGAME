@@ -15,6 +15,8 @@ const LV2_DASH_DURATION_MULTIPLIER := 1.5   # Lv2: 突進距離+50%(速度その
 const LV4_EXPLOSION_RADIUS := 70.0          # Lv4: 着地地点に小爆発
 const LV5_REDASH_DELAY := 0.12              # Lv5: 短間隔で2連続突進
 
+var running := false
+
 func get_interval(character_data: CharacterData, weapon_manager: WeaponManagerComponent) -> float:
 	var interval := super.get_interval(character_data, weapon_manager)
 	if ability_level >= 3:
@@ -24,13 +26,14 @@ func get_interval(character_data: CharacterData, weapon_manager: WeaponManagerCo
 func execute(attacker: Player, character_data: CharacterData, weapon_manager: WeaponManagerComponent) -> void:
 	if not is_instance_valid(attacker):
 		return
-	await _do_dash(attacker, character_data, weapon_manager)
-	if ability_level >= 5 and is_instance_valid(attacker):
+	var attack_epoch := weapon_manager.get_attack_epoch()
+	await _do_dash(attacker, character_data, weapon_manager, attack_epoch)
+	if ability_level >= 5 and is_instance_valid(attacker) and attack_epoch == weapon_manager.get_attack_epoch():
 		await attacker.get_tree().create_timer(LV5_REDASH_DELAY, false).timeout
-		if is_instance_valid(attacker):
-			await _do_dash(attacker, character_data, weapon_manager)
+		if is_instance_valid(attacker) and attack_epoch == weapon_manager.get_attack_epoch() and attacker.dodge_remaining <= 0.0:
+			await _do_dash(attacker, character_data, weapon_manager, attack_epoch)
 
-func _do_dash(attacker: Player, character_data: CharacterData, weapon_manager: WeaponManagerComponent) -> void:
+func _do_dash(attacker: Player, character_data: CharacterData, weapon_manager: WeaponManagerComponent, attack_epoch: int) -> void:
 	var target := weapon_manager.find_nearest_enemy(attacker.global_position)
 	var direction: Vector2 = (target.global_position - attacker.global_position).normalized() if target else Vector2.RIGHT
 	if direction == Vector2.ZERO:
@@ -42,9 +45,12 @@ func _do_dash(attacker: Player, character_data: CharacterData, weapon_manager: W
 	if ability_level >= 2:
 		dash_duration *= LV2_DASH_DURATION_MULTIPLIER
 	var hit_radius: float = params.get("hit_radius", DEFAULT_HIT_RADIUS)
+	hit_radius += weapon_manager.sector_arc_width_level * 8.0
 	var knockback_distance: float = params.get("knockback_distance", DEFAULT_KNOCKBACK_DISTANCE)
 
 	var original_speed: float = attacker.movement_component.base_speed
+	var original_invincible := attacker.health_component.invincible
+	running = true
 	attacker.set_movement_locked(true)
 	attacker.movement_component.direction = direction
 	attacker.movement_component.base_speed = dash_speed
@@ -57,23 +63,26 @@ func _do_dash(attacker: Player, character_data: CharacterData, weapon_manager: W
 	while (Time.get_ticks_msec() - start_time) < dash_duration * 1000.0:
 		if not is_instance_valid(attacker):
 			return
+		if attack_epoch != weapon_manager.get_attack_epoch() or attacker.dodge_remaining > 0.0 or attacker._is_dead:
+			break
 		_hit_enemies_along_dash(attacker, direction, hit_radius, knockback_distance, character_data, weapon_manager, character_level, hit_entity_ids)
-		# 円範囲の物理クエリ(query_enemy_hurtboxes)は、直前の物理ステップで
-		# 敵の位置が同期されている必要があるため、process_frameではなく
-		# physics_frameを待つ(process_frameは物理ステップの完了を保証しないため、
-		# 通過した敵を取りこぼすことがある)。
+		# Physics positions must be synchronized before the next hit query.
 		await attacker.get_tree().physics_frame
 
 	if not is_instance_valid(attacker):
 		return
+	var canceled := attack_epoch != weapon_manager.get_attack_epoch() or attacker.dodge_remaining > 0.0 or attacker._is_dead
 	var landing_position := attacker.global_position
 	attacker.movement_component.direction = Vector2.ZERO
 	attacker.movement_component.base_speed = original_speed
 	attacker.set_movement_locked(false)
+	running = false
 	if character_data.dash_invincible:
-		attacker.health_component.invincible = false
-	if ability_level >= 4:
+		attacker.health_component.invincible = original_invincible
+	if not canceled and ability_level >= 4:
 		apply_area_damage(attacker.get_world_2d(), landing_position, LV4_EXPLOSION_RADIUS, character_data, weapon_manager, landing_position)
+	if not canceled and weapon_manager.sector_follow_up_level > 0 and randf() < 0.18 * weapon_manager.sector_follow_up_level:
+		weapon_manager._class_attack_cooldown = minf(weapon_manager._class_attack_cooldown, 0.35)
 
 ## 攻撃者自身がダッシュで高速移動し続けている最中の判定のため、spawn_point_hit()の
 ## 「Area2Dを生成して次の物理ステップの検出を待つ」2段階判定だと、その1ステップの
@@ -94,3 +103,7 @@ func _hit_enemies_along_dash(attacker: Player, direction: Vector2, hit_radius: f
 		if target_entity.global_position != attacker.global_position:
 			knockback_direction = (target_entity.global_position - attacker.global_position).normalized()
 		target_entity.global_position += knockback_direction * knockback_distance
+
+## この攻撃パターンが命中時に付与する状態異常。突進の踏み込みで相手の体勢を崩す。
+func applied_status_id() -> String:
+	return "frozen"

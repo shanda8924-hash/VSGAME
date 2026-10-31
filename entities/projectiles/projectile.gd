@@ -3,6 +3,9 @@ class_name Projectile
 ## 飛翔武器の弾。HitboxComponentを継承し、移動ロジックのみを追加する。
 ## (弾は「移動する攻撃判定」そのものなので、コンポジションではなく継承が適切)
 
+const WIZARD_MAGIC_SHEET := preload("res://assets/vfx/imported/pixel_magic_effects_animations.png")
+static var _wizard_magic_frames: SpriteFrames
+
 @export var speed: float = 320.0
 ## 矢の絵柄の背後に、武器Theme色のごく控えめな加算(ADD)グローを重ねる
 ## (「よく見ると色が付いている」程度に留め、矢の視認性を邪魔しないようにする)。
@@ -18,12 +21,36 @@ var _empowerment_level: int = 1
 var _origin_position: Vector2 = Vector2.ZERO
 ## homing_upgradeで蓄積したホーミング強度(0=直進のみ、大きいほど旋回が速い)。
 var _homing_strength: float = 0.0
+var pierce_remaining := 1
+var chain_remaining := 0
+var _hit_targets: Dictionary = {}
+var chain_visited: Dictionary = {}
 
 @onready var _glow: Sprite2D = $Glow
 
 func _ready() -> void:
 	# ROOM遷移・Boss死亡時に残弾を確実に回収できる共通識別子。
 	add_to_group("projectiles")
+
+## 新しい魔法素材の紫の渦だけを魔導士の追尾弾に使う。判定と属性命中演出は維持する。
+func use_wizard_magic() -> void:
+	if _wizard_magic_frames == null:
+		_wizard_magic_frames = SpriteFrames.new()
+		_wizard_magic_frames.set_animation_speed("default", 12.0)
+		for frame in 5:
+			var atlas := AtlasTexture.new()
+			atlas.atlas = WIZARD_MAGIC_SHEET
+			atlas.region = Rect2(256, frame * 64, 64, 64)
+			_wizard_magic_frames.add_frame("default", atlas)
+	$Visual.visible = false
+	var magic := AnimatedSprite2D.new()
+	magic.name = "WizardMagic"
+	magic.sprite_frames = _wizard_magic_frames
+	magic.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	magic.scale = Vector2.ONE * 0.64
+	magic.modulate = Color(0.93, 0.86, 1.0)
+	add_child(magic)
+	magic.play("default")
 
 func launch(target_position: Vector2, weapon_data: WeaponData, empowerment_level: int = 1, stat_modifier: StatModifierComponent = null, player_upgrades: PlayerUpgradesComponent = null) -> void:
 	# クリティカル判定は「発射時」に一度だけ行う(弾は基本1回しか当たらないため命中時と実質同じだが、
@@ -52,11 +79,12 @@ func launch(target_position: Vector2, weapon_data: WeaponData, empowerment_level
 		rotation = _velocity.angle()
 	# 職業Projectileは武器本来のThemeを維持し、現在ElementやLv変更では置換・再着色しない。
 	_apply_glow_color(weapon_data.vfx_theme_id)
-	if not weapon_data.required_fragment_ids.is_empty():
-		# Fusion武器は共通Projectileの挙動だけを再利用する。全FusionへArrow画像まで
-		# 混ぜると、蒸気・聖炎・闇炎なども矢に見えるため、弾体は属性色Glowにする。
-		# Archer等の職業Projectile(required_fragment_idsが空)は従来のArrowを維持する。
+	if weapon_data.is_relic:
+		# 遺物武器は共通Projectileの移動・Hit処理だけを再利用し、Arrow画像は出さない。
+		# 欠片条件の有無を見た旧判定から明示フラグへ移し、属性システム廃止後も
+		# 職業Projectileと遺物VFXの責務を混同しない。
 		$Visual.visible = false
+		_glow.scale = Vector2(1.45, 1.45)
 
 ## 矢の背後に重ねたグローの色を、武器のvfx_theme_id(EffectThemeData.hit_color)に
 ## 合わせる(炎=オレンジ、氷=水色、雷=黄色〜紫)。対応するテーマが無い武器
@@ -113,8 +141,37 @@ func _find_nearest_enemy() -> Node2D:
 ## 命中時、武器のvfx_theme_idに応じた属性VFX(EffectThemeManager)を発火させてから
 ## 通常のヒット処理(HitboxComponent.on_hit、弾の消滅)を行う。
 func on_hit(hurtbox: HurtboxComponent) -> void:
+	var target := hurtbox.get_owner_entity()
+	if target == null or _hit_targets.has(target.get_instance_id()):
+		return
+	_hit_targets[target.get_instance_id()] = true
+	chain_visited[target.get_instance_id()] = true
 	if _weapon_data:
 		var manager: Node = get_tree().get_first_node_in_group("effect_theme_manager")
 		if manager:
 			manager.play_weapon_hit(_weapon_data.vfx_theme_id, global_position, _empowerment_level, hurtbox, _origin_position, is_critical)
+	if chain_remaining > 0 and _weapon_data:
+		var player := get_tree().get_first_node_in_group("player") as Player
+		if player:
+			var next_target: Node2D = null
+			var distance := 200.0
+			for enemy in get_tree().get_nodes_in_group("enemies"):
+				if enemy == target or not is_instance_valid(enemy) or not enemy is Node2D or chain_visited.has(enemy.get_instance_id()):
+					continue
+				var health := enemy.get_node_or_null("HealthComponent") as HealthComponent
+				if health == null or health.current_hp <= 0.0:
+					continue
+				var candidate_distance := global_position.distance_to(enemy.global_position)
+				if candidate_distance < distance:
+					distance = candidate_distance
+					next_target = enemy
+			if next_target:
+				player.weapon_manager.spawn_chain_projectile(_weapon_data, global_position, next_target.global_position, chain_remaining - 1, chain_visited)
+		chain_remaining = 0
+	pierce_remaining -= 1
+	destroy_on_hit = pierce_remaining <= 0
 	super.on_hit(hurtbox)
+
+func can_hit(hurtbox: HurtboxComponent) -> bool:
+	var target := hurtbox.get_owner_entity()
+	return super.can_hit(hurtbox) and target != null and not _hit_targets.has(target.get_instance_id())

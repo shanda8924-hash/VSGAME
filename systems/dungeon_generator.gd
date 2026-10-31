@@ -9,6 +9,7 @@ class_name DungeonGenerator
 
 const MIN_ROOM_SIZE := 8
 const MAX_ROOM_SIZE := 14
+const BOSS_ROOM_SIZE := Vector2i(14, 14)
 const CORRIDOR_WIDTH := 4
 const BORDER_THICKNESS := 2
 const ROOM_PLACEMENT_MARGIN := 2 # 部屋同士が隣接しすぎて壁が消えないための余白
@@ -17,21 +18,28 @@ const ROOM_PLACEMENT_MARGIN := 2 # 部屋同士が隣接しすぎて壁が消え
 const ELITE_ROOM_MIN_DISTANCE_FROM_START := 25
 
 ## ラン開始時に1回だけ呼ばれる想定。GameManager.start_run()から呼び出す。
-static func generate(width: int, height: int, room_count: int, elite_room_count: int = 1, rng: RandomNumberGenerator = null) -> DungeonMap:
+static func generate(width: int, height: int, room_count: int, elite_room_count: int = 1, rng: RandomNumberGenerator = null, survival: bool = false) -> DungeonMap:
 	if rng == null:
 		rng = RandomNumberGenerator.new()
 		rng.randomize()
 
 	var map := DungeonMap.new(width, height)
+	map.set_meta("survival_layout", survival)
+	var room_min := 16 if survival else MIN_ROOM_SIZE
+	var room_max := 23 if survival else MAX_ROOM_SIZE
+	var boss_size := Vector2i(26, 26) if survival else BOSS_ROOM_SIZE
+	var passage_width := 6 if survival else CORRIDOR_WIDTH
 	var min_c := map.get_min_coords()
 	var max_c := map.get_max_coords()
 
 	var rooms: Array[Rect2i] = []
+	var farthest_distance_squared := -1.0
+	var interior := Rect2i(min_c + Vector2i.ONE * BORDER_THICKNESS, Vector2i(width, height) - Vector2i.ONE * BORDER_THICKNESS * 2)
 	var attempts := 0
 	while rooms.size() < room_count and attempts < room_count * 30:
 		attempts += 1
-		var w := rng.randi_range(MIN_ROOM_SIZE, MAX_ROOM_SIZE)
-		var h := rng.randi_range(MIN_ROOM_SIZE, MAX_ROOM_SIZE)
+		var w := rng.randi_range(room_min, room_max)
+		var h := rng.randi_range(room_min, room_max)
 		var x_max := max_c.x - w - BORDER_THICKNESS
 		var y_max := max_c.y - h - BORDER_THICKNESS
 		var x_min := min_c.x + BORDER_THICKNESS
@@ -41,6 +49,17 @@ static func generate(width: int, height: int, room_count: int, elite_room_count:
 		var x := rng.randi_range(x_min, x_max)
 		var y := rng.randi_range(y_min, y_max)
 		var rect := Rect2i(x, y, w, h)
+		var candidate_distance_squared := -1.0
+		if not rooms.is_empty():
+			var center := _room_center(rect)
+			candidate_distance_squared = Vector2(center - _room_center(rooms[0])).length_squared()
+			# 最遠候補の段階で広さを予約する。配置後に拡幅して隣室/外周へ
+			# 食い込ませず、同距離で後から選ばれる候補にも同じ広さを保証する。
+			# 40セル未満の小型テストMapは従来の部屋寸法/fallbackを維持する。
+			if candidate_distance_squared >= farthest_distance_squared and width >= 40 and height >= 40:
+				rect = Rect2i(center - boss_size / 2, boss_size)
+				if not interior.encloses(rect):
+					continue
 
 		var overlaps := false
 		for other in rooms:
@@ -51,6 +70,7 @@ static func generate(width: int, height: int, room_count: int, elite_room_count:
 			continue
 
 		rooms.append(rect)
+		farthest_distance_squared = maxf(farthest_distance_squared, candidate_distance_squared)
 		_carve_room(map, rect)
 
 	if rooms.is_empty():
@@ -61,7 +81,7 @@ static func generate(width: int, height: int, room_count: int, elite_room_count:
 
 	# 部屋を配置順にチェーン状に繋ぎ、全部屋が確実に到達可能になるようにする。
 	for i in range(1, rooms.size()):
-		_carve_corridor(map, i - 1, i, rooms[i - 1], rooms[i], CORRIDOR_WIDTH)
+		_carve_corridor(map, i - 1, i, rooms[i - 1], rooms[i], passage_width)
 
 	# 一本道だけだと単調なので、ループになるよう追加でランダムな接続を数本足す。
 	var extra_links := mini(3, maxi(0, rooms.size() - 2))
@@ -69,14 +89,137 @@ static func generate(width: int, height: int, room_count: int, elite_room_count:
 		var a := rng.randi_range(0, rooms.size() - 1)
 		var b := rng.randi_range(0, rooms.size() - 1)
 		if a != b:
-			_carve_corridor(map, a, b, rooms[a], rooms[b], CORRIDOR_WIDTH)
+			_carve_corridor(map, a, b, rooms[a], rooms[b], passage_width)
 
 	_force_border_walls(map)
 
 	map.rooms = rooms
 	map.spawn_point = _room_center(rooms[0])
+	_assign_boss_room(map)
+	if not survival:
+		_assign_combat_regions(map)
+	else:
+		# Keep the wide escape lanes clear of solid decoration, including at junctions.
+		var reserved: Dictionary = {}
+		for cell in map.get_floor_cells():
+			var in_room := false
+			for room in rooms:
+				if room.grow(-3).has_point(cell):
+					in_room = true
+					break
+			if not in_room: reserved[cell] = true
+		for room in rooms:
+			var centre := _room_center(room)
+			for y in range(room.position.y, room.end.y):
+				for x in range(room.position.x, room.end.x):
+					if absi(x-centre.x) <= 2 or absi(y-centre.y) <= 2:
+						reserved[Vector2i(x,y)] = true
+		map.set_meta("exploration_reserved", reserved)
 	_assign_elite_rooms(map, elite_room_count, rng)
 	return map
+
+## 進行側と描画側はこのindexを使い、独自にBoss部屋を選び直さない。
+## 距離二乗が同じ場合は後のindexを採用して生成seedに対して決定的にする。
+static func _assign_boss_room(map: DungeonMap) -> void:
+	var farthest_distance_squared := -1.0
+	for room_index in range(1, map.rooms.size()):
+		var distance_squared := Vector2(_room_center(map.rooms[room_index]) - map.spawn_point).length_squared()
+		if distance_squared >= farthest_distance_squared:
+			farthest_distance_squared = distance_squared
+			map.boss_room_index = room_index
+	if map.boss_room_index >= 0:
+		map.set_combat_region(map.boss_room_index, DungeonMap.REGION_ARENA, map.rooms[map.boss_room_index])
+
+## Boss部屋は開けた専用Arenaとして予約し、他の部屋だけに戦闘地形を割り当てる。
+## 通常MAPからHazardを廃止。中央3マスの開口を残す縦の短壁だけ維持する。
+static func _assign_combat_regions(map: DungeonMap) -> void:
+	if map.rooms.is_empty():
+		return
+	var candidates: Array[int] = []
+	for room_index in range(1, map.rooms.size()):
+		if room_index != map.boss_room_index:
+			candidates.append(room_index)
+	if candidates.size() < DungeonMap.COMBAT_REGION_TYPES.size():
+		candidates.append(0)
+	candidates.sort_custom(func(first: int, second: int):
+		var first_room := map.rooms[first]
+		var second_room := map.rooms[second]
+		var first_area := first_room.size.x * first_room.size.y
+		var second_area := second_room.size.x * second_room.size.y
+		if first_area == second_area:
+			return first < second
+		return first_area > second_area
+	)
+	var assignments := [
+		DungeonMap.REGION_ARENA,
+		DungeonMap.REGION_PILLAR_FIELD,
+		DungeonMap.REGION_CHOKEPOINT,
+	]
+	for assignment_index in mini(assignments.size(), candidates.size()):
+		var room_index := candidates[assignment_index]
+		var room := map.rooms[room_index]
+		var region_type := String(assignments[assignment_index])
+		map.set_combat_region(room_index, region_type, room)
+		match region_type:
+			DungeonMap.REGION_PILLAR_FIELD:
+				_apply_pillar_field(map, room)
+			DungeonMap.REGION_CHOKEPOINT:
+				_apply_chokepoint(map, room)
+
+static func _apply_pillar_field(map: DungeonMap, room: Rect2i) -> void:
+	var center := _room_center(room)
+	# 柱本体2セル + 通行間隔3セル = 5セルpitch。外周に1セル、中央に3セルの
+	# 十字レーンを残し、最小8セル部屋でも柱が最低1本は成立するようにする。
+	for y in range(room.position.y + 1, room.end.y - 2, 5):
+		for x in range(room.position.x + 1, room.end.x - 2, 5):
+			var anchor := Vector2i(x, y)
+			if _pillar_footprint_overlaps_center_lane(anchor, center):
+				continue
+			for offset in [Vector2i.ZERO, Vector2i.RIGHT, Vector2i.DOWN, Vector2i.ONE]:
+				map.mark_terrain_obstacle(anchor + offset)
+
+static func _pillar_footprint_overlaps_center_lane(anchor: Vector2i, center: Vector2i) -> bool:
+	for offset in [Vector2i.ZERO, Vector2i.RIGHT, Vector2i.DOWN, Vector2i.ONE]:
+		var cell: Vector2i = anchor + offset
+		if absi(cell.x - center.x) <= 1 or absi(cell.y - center.y) <= 1:
+			return true
+	return false
+
+static func _apply_chokepoint(map: DungeonMap, room: Rect2i) -> void:
+	var center := _room_center(room)
+	if room.size.x >= room.size.y:
+		for y in range(room.position.y + 1, room.end.y - 1):
+			if absi(y - center.y) <= 1:
+				continue
+			map.mark_terrain_obstacle(Vector2i(center.x, y))
+
+## Spawn地点から全床セルへ到達できるかを4近傍BFSで検証する。
+## 自動Testから同じ実装を呼び、地形追加後の袋小路・孤立床を検出する。
+static func validate_reachability(map: DungeonMap) -> Dictionary:
+	if map == null or not map.is_floor(map.spawn_point):
+		return {"reachable": false, "reachable_cells": 0, "floor_cells": 0, "unreachable_cells": []}
+	var visited := {map.spawn_point: true}
+	var queue: Array[Vector2i] = [map.spawn_point]
+	var head := 0
+	while head < queue.size():
+		var current: Vector2i = queue[head]
+		head += 1
+		for offset: Vector2i in [Vector2i.RIGHT, Vector2i.LEFT, Vector2i.DOWN, Vector2i.UP]:
+			var neighbor: Vector2i = current + offset
+			if map.is_in_bounds(neighbor) and map.is_floor(neighbor) and not visited.has(neighbor):
+				visited[neighbor] = true
+				queue.append(neighbor)
+	var floors := map.get_floor_cells()
+	var unreachable: Array[Vector2i] = []
+	for cell in floors:
+		if not visited.has(cell):
+			unreachable.append(cell)
+	return {
+		"reachable": unreachable.is_empty() and visited.size() == floors.size(),
+		"reachable_cells": visited.size(),
+		"floor_cells": floors.size(),
+		"unreachable_cells": unreachable,
+	}
 
 ## 部屋のうちelite_room_count個を「精鋭部屋(Elite Room)」としてランダムに指定する。
 ## スタート地点(rooms[0]の中心)からELITE_ROOM_MIN_DISTANCE_FROM_STARTマス未満しか
@@ -88,6 +231,8 @@ static func _assign_elite_rooms(map: DungeonMap, elite_room_count: int, rng: Ran
 		return
 	var eligible: Array[int] = []
 	for i in range(1, map.rooms.size()):
+		if i == map.boss_room_index:
+			continue
 		var dist := Vector2(_room_center(map.rooms[i]) - map.spawn_point).length()
 		if dist >= ELITE_ROOM_MIN_DISTANCE_FROM_START:
 			eligible.append(i)

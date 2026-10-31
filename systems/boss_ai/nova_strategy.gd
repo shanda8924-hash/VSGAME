@@ -10,7 +10,7 @@ const PLAYER_HIT_LAYER := 16 # HurtboxComponent(Player).collision_mask=16と一�
 
 @export var bullet_count: int = 12
 @export var bullet_speed: float = 260.0
-@export var telegraph_duration: float = 0.5
+@export var telegraph_duration: float = 0.85
 ## ボスの接触ダメージに対する各弾1発あたりの倍率。等倍(1.0)だと、全弾が
 ## 同じ発射点(ボス自身)から出るためプレイヤーが近くにいると複数発が
 ## ほぼ同時に命中し、合算で接触ダメージの何倍もの被害になり得た
@@ -23,20 +23,15 @@ func _init() -> void:
 	recovery_duration = 1.35
 
 func execute(boss: EnemyBasic, _player: Node2D) -> void:
-	if not is_instance_valid(boss):
+	if not alive(boss):
 		return
-	boss.set_movement_locked(true)
-	boss.movement_component.direction = Vector2.ZERO
-	var warning := WarningCircle.new()
-	warning.radius = 90.0
-	warning.fill_color = Color(0.55, 0.15, 0.85, 0.25)
-	warning.border_color = Color(0.8, 0.4, 1.0, 0.95)
-	GameManager.get_runtime_world(boss).add_child(warning)
-	warning.global_position = boss.global_position
-	await boss.get_tree().create_timer(telegraph_duration).timeout
+	begin_attack(boss)
+	var warning := warning_circle(boss, boss.global_position, 90.0, telegraph_duration)
+	warning.radial_rays = bullet_count
+	await boss.get_tree().create_timer(telegraph_duration, false).timeout
 	if is_instance_valid(warning):
 		warning.queue_free()
-	if not is_instance_valid(boss):
+	if not alive(boss):
 		return
 
 	var projectile_scene: PackedScene = load("res://entities/projectiles/projectile.tscn")
@@ -49,7 +44,7 @@ func execute(boss: EnemyBasic, _player: Node2D) -> void:
 		bullet.name = "BossNovaProjectile_%02d" % i
 		bullet.add_to_group("boss_projectiles")
 		bullet.collision_layer = PLAYER_HIT_LAYER
-		bullet.applies_player_elements = false
+		bullet.is_player_attack = false
 		bullet.uses_player_element_vfx = false
 		bullet.speed = bullet_speed
 		GameManager.get_runtime_world(boss).add_child(bullet)

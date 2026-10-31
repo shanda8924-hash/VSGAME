@@ -12,23 +12,50 @@ class_name Player
 @onready var active_skill_component: ActiveSkillComponent = $ActiveSkillComponent
 @onready var equipment_component: EquipmentComponent = $EquipmentComponent
 
+## 逃走だけで安全を確保できる速度差を縮める。職業間の相対差はCharacterDataのまま維持する。
+const MOVE_SPEED_MULTIPLIER := 0.90
+
+var dodge_remaining := 0.0
+var dodge_cooldown := 0.0
+var dodge_direction := Vector2.RIGHT
+var _perfect_dodge_epoch := 0
+var _counter_target: WeakRef
+var _counter_return_enemy: WeakRef
+var _counter_ready_until := 0
+var _counter_return_target := Vector2.ZERO
+var _counter_returning := false
+var _counter_return_time := 0.0
+var _counter_afterimage_time := 0.0
 var _is_dead: bool = false
 ## charge_dash等、攻撃パターンが突進中に一時的にプレイヤーの移動入力を
 ## 無効化するためのロック(EnemyBasicのBossAttackStrategy用ロックと同じ考え方)。
 var _movement_locked_by_attack: bool = false
 var _facing_direction: Vector2 = Vector2.RIGHT
 var _next_attack_animation_speed: float = 1.0
+var next_attack_animation_variant := 0
 var _nearby_ground_equipment: Array[GroundEquipmentItem] = []
 var _nearby_interactables: Array[Node] = []
+var floating_weapons: FloatingWeapons
 
 func _ready() -> void:
+	for action in {"primary_attack": KEY_J, "dodge": KEY_K}:
+		if not InputMap.has_action(action): InputMap.add_action(action)
+		var key := InputEventKey.new()
+		key.physical_keycode = {"primary_attack": KEY_J, "dodge": KEY_K}[action]
+		if not InputMap.action_has_event(action, key): InputMap.action_add_event(action, key)
 	_apply_character_data()
 	health_component.died.connect(_on_died)
 	health_component.damaged.connect(_on_damaged)
 	weapon_manager.weapon_fired.connect(_on_weapon_fired)
+	floating_weapons = preload("res://entities/player/floating_weapons.gd").new()
+	floating_weapons.name = "FloatingWeapons"
+	add_child(floating_weapons)
+	floating_weapons.bind_player(self)
+	var survival_effects := preload("res://entities/player/survival_upgrade_effects.gd").new()
+	survival_effects.name = "SurvivalUpgradeEffects"
+	add_child(survival_effects)
 	EventBus.player_leveled_up.connect(_on_leveled_up)
 	EventBus.enemy_physical_damage_dealt.connect(_on_enemy_physical_damage)
-	EventBus.element_damage_dealt.connect(_on_enemy_element_damage)
 
 ## ホーム画面で選んだ職業(GameManager.selected_character_id)に応じて、
 ## 見た目(AnimatedSprite2D)とステータス(HP/移動速度)を実行時に差し替える。
@@ -38,7 +65,7 @@ func _apply_character_data() -> void:
 		return
 	health_component.max_hp = character_data.max_hp
 	health_component.current_hp = character_data.max_hp
-	movement_component.base_speed = character_data.move_speed
+	movement_component.base_speed = character_data.move_speed * MOVE_SPEED_MULTIPLIER
 	if character_data.sprite_folder != "":
 		var frames := SpriteSheetBuilder.build_sprite_frames(character_data.sprite_folder)
 		if frames:
@@ -53,12 +80,26 @@ func _apply_character_data() -> void:
 func setup_camera_limits(map: DungeonMap) -> void:
 	if map == null:
 		return
+	if map.get_meta("floor_only", false):
+		camera.limit_left = -10000000
+		camera.limit_top = -10000000
+		camera.limit_right = 10000000
+		camera.limit_bottom = 10000000
+		camera.zoom = Vector2.ONE
+		camera.offset = Vector2.ZERO
+		camera.reset_smoothing()
+		return
 	var min_world := map.grid_to_world(map.get_min_coords())
 	var max_world := map.grid_to_world(map.get_max_coords() + Vector2i.ONE)
 	camera.limit_left = int(min_world.x)
-	camera.limit_top = int(min_world.y)
+	camera.limit_top = int(min_world.y) - (64 if map.get_meta("isolated_room", false) else 0)
 	camera.limit_right = int(max_world.x)
 	camera.limit_bottom = int(max_world.y)
+	# A compact room has generous framing instead of a scrolling empty maze.
+	camera.zoom = Vector2.ONE * (1.15 if map.get_meta("isolated_room", false) else 1.5)
+	# Leave the wall-mounted entrance clear of the top-centre objective HUD.
+	camera.offset = Vector2(0, -64) if map.get_meta("isolated_room", false) else Vector2.ZERO
+	camera.reset_smoothing()
 
 func _process(_delta: float) -> void:
 	if _is_dead:
@@ -66,6 +107,15 @@ func _process(_delta: float) -> void:
 	if Input.is_action_just_pressed("interact"):
 		if not _try_interact_nearest():
 			_pick_up_nearest_equipment()
+	if Input.is_action_just_pressed("dodge") and try_dodge():
+		return
+	if dodge_remaining > 0.0:
+		return
+	if _counter_ready_until > Time.get_ticks_msec() and Input.is_action_just_pressed("primary_attack"):
+		_begin_counter_return()
+	if _counter_returning:
+		return
+
 	if _movement_locked_by_attack:
 		return
 	# ui_left/right/up/downは矢印キー・WASD・ゲームパッドの十字キー/左スティックに
@@ -153,13 +203,21 @@ func _on_leveled_up(_new_level: int) -> void:
 
 func _on_weapon_fired() -> void:
 	if animation_component:
-		animation_component.play_attack(randi_range(1, 3), _next_attack_animation_speed)
+		animation_component.play_attack(next_attack_animation_variant if next_attack_animation_variant > 0 else randi_range(1, 3), _next_attack_animation_speed)
+	next_attack_animation_variant = 0
 	_next_attack_animation_speed = 1.0
 
 ## 死亡演出(死亡アニメーション)を最後まで見せてからリザルト画面へ遷移させたいので、
 ## GameManager.end_run()はアニメーション再生完了(死亡)を待ってから呼ぶ。
 func _on_died() -> void:
 	_is_dead = true
+	_counter_ready_until = 0
+	_counter_returning = false
+	_counter_target = null
+	_counter_return_enemy = null
+	var effects := get_tree().get_first_node_in_group("screen_effects") as ScreenEffects
+	if effects: effects.restore_runtime_state()
+	Engine.time_scale = 1.0
 	movement_component.direction = Vector2.ZERO
 	if animation_component:
 		animation_component.death_finished.connect(GameManager.end_run, CONNECT_ONE_SHOT)
@@ -169,10 +227,118 @@ func _on_died() -> void:
 func _on_enemy_physical_damage(amount: float, _position: Vector2, _critical: bool) -> void:
 	_apply_treasure_lifesteal(amount)
 
-func _on_enemy_element_damage(amount: float, _position: Vector2, _element_id: String, _stack: int, _chain: int) -> void:
-	_apply_treasure_lifesteal(amount)
 
 func _apply_treasure_lifesteal(amount: float) -> void:
 	if _is_dead or upgrades_component.lifesteal_percent <= 0.0 or amount <= 0.0:
 		return
 	health_component.heal(minf(amount * upgrades_component.lifesteal_percent, 3.0))
+
+func try_dodge() -> bool:
+	if _is_dead or dodge_cooldown > 0.0 or get_tree().paused or GameManager.run_state != GameManager.RunState.PLAYING:
+		return false
+	var class_dash := weapon_manager._class_attack as ChargeDashAttack
+	if _movement_locked_by_attack and not active_skill_component._swordsman_iai_running and not (class_dash and class_dash.running):
+		return false
+	var precise_target := _get_precise_attack_target()
+	_counter_ready_until = 0
+	_counter_target = null
+	_counter_returning = false
+	weapon_manager.cancel_current_attack()
+	active_skill_component.cancel_for_dodge()
+	dodge_direction = Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
+	if dodge_direction.is_zero_approx(): dodge_direction = get_facing_direction()
+	dodge_remaining = 0.20
+	dodge_cooldown = 0.85
+	health_component.dodge_iframe_remaining = 0.12
+	movement_component.direction = Vector2.ZERO
+	if precise_target: _start_perfect_dodge(precise_target)
+	return true
+
+func _has_precise_attack_window() -> bool:
+	return _get_precise_attack_target() != null
+
+func _get_precise_attack_target() -> EnemyBasic:
+	for candidate in get_tree().get_nodes_in_group("enemies"):
+		var enemy := candidate as EnemyBasic
+		if enemy == null or enemy._is_dead or enemy.ai_component.target != self:
+			continue
+		if enemy._normal_attack_state == EnemyBasic.NormalAttackState.WINDUP:
+			if enemy._normal_attack_timer <= 0.12 and enemy.global_position.distance_to(global_position) <= enemy._normal_reach() + 18.0:
+				return enemy
+		var special := enemy.strong_attack
+		if special and bool(special.get("active")) and special.has_method("time_until_next_hit"):
+			var to_hit := float(special.call("time_until_next_hit"))
+			if to_hit >= 0.0 and to_hit <= 0.12 and enemy.global_position.distance_to(global_position) <= 90.0 and bool(special.call("_clear_path", self)):
+				return enemy
+	return null
+
+func _start_perfect_dodge(target: EnemyBasic) -> void:
+	_perfect_dodge_epoch += 1
+	var epoch := _perfect_dodge_epoch
+	_counter_target = weakref(target)
+	_counter_ready_until = Time.get_ticks_msec() + 1500
+	weapon_manager.counter_strikes_remaining = 0
+	ImportedBurstVFX.spawn(get_parent() as Node2D, global_position + Vector2(0, -12), "dodge")
+	AudioManager.play_sfx("fusion_success")
+	var hud := get_parent().get_node_or_null("HUD") as HUD
+	if hud: hud.set_room_message("ジャスト回避！　[J] で反撃")
+	await get_tree().create_timer(1.5, true, false, true).timeout
+	if is_instance_valid(self) and epoch == _perfect_dodge_epoch:
+		_counter_ready_until = 0
+		_counter_target = null
+
+func _begin_counter_return() -> void:
+	_counter_ready_until = 0
+	var target := _counter_target.get_ref() as EnemyBasic if _counter_target else null
+	_counter_target = null
+	if target == null or target._is_dead or global_position.distance_to(target.global_position) > 180.0:
+		weapon_manager.begin_counter_haste()
+		weapon_manager.trigger_counter_attack()
+		return
+	_counter_return_enemy = weakref(target)
+	var side := (global_position - target.global_position).normalized().rotated(PI * 0.5)
+	if side.is_zero_approx():
+		side = dodge_direction.rotated(PI * 0.5).normalized()
+	var left := target.global_position + side * 54.0
+	var right := target.global_position - side * 54.0
+	_counter_return_target = left if global_position.distance_squared_to(left) < global_position.distance_squared_to(right) else right
+	_counter_returning = true
+	_counter_return_time = 0.14
+	_counter_afterimage_time = 0.0
+	movement_component.direction = Vector2.ZERO
+	health_component.dodge_iframe_remaining = maxf(health_component.dodge_iframe_remaining, 0.14)
+	_spawn_counter_afterimage()
+
+func _spawn_counter_afterimage() -> void:
+	var afterimage := CharacterAfterimage.new()
+	GameManager.get_runtime_world(self).add_child(afterimage)
+	afterimage.setup(animated_sprite, Color(0.17, 0.3, 0.48, 0.42), 0.2)
+
+func _finish_counter_return() -> void:
+	_counter_returning = false
+	var target := _counter_return_enemy.get_ref() as EnemyBasic if _counter_return_enemy else null
+	_counter_return_enemy = null
+	if target and global_position.distance_to(target.global_position) < 90.0:
+		face_direction(target.global_position - global_position)
+	weapon_manager.begin_counter_haste()
+	weapon_manager.trigger_counter_attack()
+
+func _physics_process(delta: float) -> void:
+	dodge_cooldown = maxf(0.0, dodge_cooldown - delta)
+	if _counter_returning:
+		_counter_return_time -= delta
+		_counter_afterimage_time -= delta
+		if _counter_afterimage_time <= 0.0:
+			_spawn_counter_afterimage()
+			_counter_afterimage_time = 0.045
+		var motion := _counter_return_target - global_position
+		if motion.length() > 2.0 and _counter_return_time > 0.0:
+			move_and_collide(motion.limit_length(650.0 * delta))
+		else:
+			_finish_counter_return()
+		return
+	if dodge_remaining > 0.0:
+		move_and_collide(dodge_direction * 400.0 * minf(delta, dodge_remaining))
+		dodge_remaining = maxf(0.0, dodge_remaining - delta)
+		return
+	super._physics_process(delta)

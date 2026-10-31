@@ -1,10 +1,14 @@
 extends HitboxComponent
 class_name MeleeHit
+const CONTACT_MARK = preload("res://effects/melee_contact_mark.gd")
 ## 近接/AoE系の職業攻撃パターン(melee_arc/wide_cleave/self_pulse/holy_pulse_heal/
 ## piercing_thrust/charge_dash)が使う、移動しない瞬間ヒット判定。
 ## Projectileと違って飛ばないだけで、命中時の属性VFX発火・HitboxComponent経由の
 ## ダメージ適用(会心・damage_dealt通知・hit_impact SE)は既存パイプラインをそのまま使う。
 
+var animation_strike := false
+var target_range_limit := INF
+var target_range_origin := Vector2.INF
 var vfx_theme_id: String = ""
 var character_level: int = 1
 var _origin_position: Vector2 = Vector2.ZERO
@@ -54,6 +58,16 @@ func can_hit(hurtbox: HurtboxComponent) -> bool:
 	var target := hurtbox.get_owner_entity() as Node2D
 	if target == null or not is_instance_valid(target):
 		return false
+	var range_origin := target_range_origin if target_range_origin.is_finite() else _origin_position
+	if range_origin.distance_to(target.global_position) > target_range_limit:
+		return false
+	if _half_angle_degrees < 179.0 or _line_length > 0.0:
+		var ray := PhysicsRayQueryParameters2D.create(_origin_position, target.global_position, 1)
+		var player := get_tree().get_first_node_in_group("player") as CollisionObject2D
+		if player:
+			ray.exclude = [player.get_rid()]
+		if not get_world_2d().direct_space_state.intersect_ray(ray).is_empty():
+			return false
 	var target_id := target.get_instance_id()
 	if _hit_ids.has(target_id):
 		return false
@@ -69,6 +83,13 @@ func can_hit(hurtbox: HurtboxComponent) -> bool:
 	return true
 
 func on_hit(hurtbox: HurtboxComponent) -> void:
+	var contact_target := hurtbox.get_owner_entity() as Node2D
+	if is_instance_valid(contact_target) and (_half_angle_degrees < 179.0 or _line_length > 0.0) and _hit_ids.size() < 3:
+		var mark := CONTACT_MARK.new()
+		GameManager.get_runtime_world(self).add_child(mark)
+		mark.global_position = contact_target.global_position - (contact_target.global_position - _origin_position).normalized() * 5.0
+		mark.rotation = (contact_target.global_position - _origin_position).angle()
+		mark.heavy = is_critical
 	var target := hurtbox.get_owner_entity() as Node2D
 	if target:
 		_hit_ids[target.get_instance_id()] = true

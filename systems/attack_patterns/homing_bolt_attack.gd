@@ -23,6 +23,9 @@ func execute(attacker: Player, character_data: CharacterData, weapon_manager: We
 	if target == null:
 		return
 	_fire_bolt(attacker, target.global_position, character_data, weapon_manager)
+	for index in weapon_manager.get_survival_extra_projectiles():
+		var offset := (target.global_position - attacker.global_position).rotated(deg_to_rad(16.0 if index % 2 == 0 else -16.0))
+		_fire_bolt(attacker, attacker.global_position + offset, character_data, weapon_manager)
 	if ability_level >= 5:
 		var second_target := _find_second_nearest_enemy(attacker, target)
 		var second_target_position: Vector2 = second_target.global_position if second_target else target.global_position
@@ -30,7 +33,9 @@ func execute(attacker: Player, character_data: CharacterData, weapon_manager: We
 	var upgrades := weapon_manager.get_owner_upgrades()
 	if upgrades and randf() < upgrades.multishot_chance:
 		_fire_bolt(attacker, target.global_position, character_data, weapon_manager)
-	AudioManager.play_sfx("attack_shoot")
+	if weapon_manager.sector_follow_up_level > 0 and randf() < 0.23 * weapon_manager.sector_follow_up_level:
+		_sector_follow_up(attacker, character_data, weapon_manager)
+	AudioManager.play_sfx("wizard_cast")
 	weapon_manager.weapon_fired.emit()
 
 func _find_second_nearest_enemy(attacker: Player, exclude: Node2D) -> Node2D:
@@ -56,10 +61,14 @@ func _fire_bolt(attacker: Player, target_position: Vector2, character_data: Char
 
 	var bolt_scene: PackedScene = load(PROJECTILE_SCENE_PATH)
 	var bolt := bolt_scene.instantiate()
+	bolt.use_wizard_magic()
 	if ability_level >= 3:
 		bolt.speed *= LV3_SPEED_MULTIPLIER
 	if ability_level >= 4:
 		bolt.landed.connect(_on_bolt_landed.bind(character_data, weapon_manager))
+	bolt.applied_status_id = applied_status_id()
+	bolt.pierce_remaining = weapon_manager.sector_pierce_level + 1
+	bolt.chain_remaining = weapon_manager.sector_chain_level
 	GameManager.get_runtime_world(attacker).add_child(bolt)
 	bolt.global_position = attacker.global_position
 	bolt.launch(target_position, weapon_data, character_level, stat_modifier, upgrades)
@@ -68,6 +77,14 @@ func _fire_bolt(attacker: Player, target_position: Vector2, character_data: Char
 	if ability_level >= 2:
 		baseline_homing += LV2_HOMING_BONUS
 	bolt.set_minimum_homing(baseline_homing)
+
+func _sector_follow_up(attacker: Player, character_data: CharacterData, weapon_manager: WeaponManagerComponent) -> void:
+	await attacker.get_tree().create_timer(0.18, false).timeout
+	if not is_instance_valid(attacker) or attacker._is_dead:
+		return
+	var target := weapon_manager.find_nearest_enemy(attacker.global_position, character_data.attack_range, true)
+	if target:
+		_fire_bolt(attacker, target.global_position, character_data, weapon_manager)
 
 ## Lv4: 着弾時、着弾位置の周囲へ追加ダメージ(本体ダメージの50%相当)を与える
 ## 小爆発。命中したhurtbox自身は既存のHitboxComponentパイプラインで既にダメージ
@@ -93,3 +110,7 @@ func _build_weapon_data(character_data: CharacterData) -> WeaponData:
 	data.vfx_theme_id = character_data.vfx_theme_id
 	data.projectile_scene = load(PROJECTILE_SCENE_PATH)
 	return data
+
+## この攻撃パターンが命中時に付与する状態異常。追尾魔法弾の帯電。
+func applied_status_id() -> String:
+	return "charged"

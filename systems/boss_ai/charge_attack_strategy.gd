@@ -16,18 +16,27 @@ func _init() -> void:
 	recovery_duration = 1.4
 
 func execute(boss: EnemyBasic, player: Node2D) -> void:
-	if not is_instance_valid(boss) or not is_instance_valid(player):
+	if not alive(boss) or not is_instance_valid(player):
 		return
 
 	# 溜め: 移動を止めてスプライトを赤く明滅させ、突進方向を予告する。
-	boss.set_movement_locked(true)
-	boss.movement_component.direction = Vector2.ZERO
+	begin_attack(boss)
 	# 予備動作開始時の位置へ方向を固定する。溜め中に横へ移動すれば回避できる。
 	var dash_direction: Vector2 = (player.global_position - boss.global_position).normalized()
+	var lane := preload("res://systems/boss_ai/boss_attack_zone_2d.gd").new()
+	lane.kind = "line"
+	lane.origin = boss.global_position
+	lane.direction = dash_direction
+	lane.length = dash_speed * dash_duration + 55.0
+	lane.half_width = 55.0
+	lane.duration = telegraph_duration
+	lane.source = boss
+	GameManager.get_runtime_world(boss).add_child(lane)
 	_play_telegraph_flash(boss)
-	await boss.get_tree().create_timer(telegraph_duration).timeout
+	await boss.get_tree().create_timer(telegraph_duration, false).timeout
+	if is_instance_valid(lane): lane.queue_free()
 
-	if not is_instance_valid(boss):
+	if not alive(boss):
 		return
 	if not is_instance_valid(player):
 		boss.set_movement_locked(false)
@@ -42,8 +51,10 @@ func execute(boss: EnemyBasic, player: Node2D) -> void:
 	boss.contact_hitbox.damage = original_damage * damage_multiplier
 	var hit_player := false
 	var elapsed := 0.0
-	while elapsed < dash_duration and is_instance_valid(boss):
+	while elapsed < dash_duration and alive(boss):
 		await boss.get_tree().physics_frame
+		if not alive(boss): break
+		if boss.get_tree().paused: continue
 		elapsed += boss.get_physics_process_delta_time()
 		if not hit_player and is_instance_valid(player) and boss.global_position.distance_to(player.global_position) <= 55.0:
 			var hurtbox: HurtboxComponent = player.get_node_or_null("HurtboxComponent")

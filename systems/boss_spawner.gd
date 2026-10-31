@@ -22,20 +22,17 @@ class_name BossSpawner
 ## 撃破時の確定欠片ドロップ数の範囲(仕様書7章: 「欠片1〜2個確定ドロップ」)。
 @export var boss_meta_currency_reward: int = 150
 
-## 通常Item報酬は既存3択を維持する。属性Build報酬はFragmentSelect側で常に4択。
 @export var item_choice_count: int = 3
 
 @export var screen_effects_path: NodePath
 @export var vfx_pool_path: NodePath
 @export var hud_path: NodePath
 @export var item_select_path: NodePath
-@export var fragment_select_path: NodePath
 
 @onready var _screen_effects: ScreenEffects = get_node_or_null(screen_effects_path)
 @onready var _vfx_pool: VFXPoolManager = get_node_or_null(vfx_pool_path)
 @onready var _hud: HUD = get_node_or_null(hud_path)
 @onready var _item_select: ItemSelect = get_node_or_null(item_select_path)
-@onready var _fragment_select: FragmentSelect = get_node_or_null(fragment_select_path)
 
 signal room_boss_started(room_number: int, boss_id: String, display_name: String)
 signal room_boss_defeated(room_number: int, boss_id: String, death_position: Vector2)
@@ -87,6 +84,13 @@ func _spawn_boss_by_id(boss_id: String, position_override: Vector2 = Vector2.INF
 	var runtime_world := GameManager.get_runtime_world(self)
 	if player == null or enemy_scene == null or runtime_world == null:
 		return null
+	var spawn_position := _pick_spawn_position(player.global_position) if position_override == Vector2.INF else position_override
+	if GameManager.dungeon_map != null:
+		if not spawn_position.is_finite():
+			return null
+		spawn_position = GameManager.dungeon_map.find_spawn_position_near(spawn_position)
+	if not spawn_position.is_finite():
+		return null
 	var boss_data: BossData = DataLoader.bosses[boss_id]
 	var boss := enemy_scene.instantiate()
 	boss.enemy_data = boss_data
@@ -101,7 +105,7 @@ func _spawn_boss_by_id(boss_id: String, position_override: Vector2 = Vector2.INF
 	_encounter_epoch += 1
 	var epoch := _encounter_epoch
 	runtime_world.add_child(boss)
-	boss.global_position = _pick_spawn_position(player.global_position) if position_override == Vector2.INF else position_override
+	boss.global_position = spawn_position
 	boss.health_component.damaged.connect(_on_boss_damaged.bind(boss, epoch))
 	boss.health_component.died.connect(_on_boss_died.bind(boss, epoch), CONNECT_ONE_SHOT)
 
@@ -145,9 +149,14 @@ func start_room_boss(room_number: int, encounter: Dictionary, position_override:
 	if valid.is_empty():
 		valid = DataLoader.bosses.keys()
 	var boss_id := _pick_unspawned_boss_id(valid)
-	if boss_id == "":
-		return null
-	return _spawn_boss_by_id(boss_id, position_override, encounter, defer_activation)
+	var boss: Node = null
+	if boss_id != "":
+		boss = _spawn_boss_by_id(boss_id, position_override, encounter, defer_activation)
+	if boss == null:
+		_room_encounter_active = false
+		_room_encounter_number = 0
+		_room_encounter_final = false
+	return boss
 
 func activate_prepared_room_boss() -> Node:
 	if not _prepared_room_boss or not is_instance_valid(_current_boss):
@@ -158,7 +167,7 @@ func activate_prepared_room_boss() -> Node:
 	_announce_current_boss()
 	return _current_boss
 
-func prepare_room_run() -> void:
+func prepare_map_run() -> void:
 	clear_room_boss()
 	_spawned_boss_ids.clear()
 	_boss_spawn_count = 0
@@ -205,9 +214,18 @@ func debug_defeat_current_boss() -> void:
 ## 記録をリセットしてから全ボスを対象に選び直す(重複出現なしの制約を保ちつつ、
 ## 出現自体は止めない)。
 func _pick_unspawned_boss_id(boss_ids: Array) -> String:
+	if boss_ids.is_empty():
+		return ""
 	var unspawned: Array = boss_ids.filter(func(id): return not _spawned_boss_ids.has(id))
 	if unspawned.is_empty():
-		return ""
+		# Each MAP has only three candidates, but twenty floors. Restart that pool
+		# after a full cycle, keeping the previous boss out of the next draw.
+		var previous_id: String = _spawned_boss_ids.back() if not _spawned_boss_ids.is_empty() else ""
+		for id in boss_ids:
+			_spawned_boss_ids.erase(String(id))
+		unspawned = boss_ids.duplicate()
+		if unspawned.size() > 1:
+			unspawned.erase(previous_id)
 	return unspawned[randi() % unspawned.size()]
 
 ## ボス出現の瞬間、「何か大きなことが起きた」感を出すため、不穏な暗い赤の
@@ -274,10 +292,9 @@ func _play_defeat_impact(at_position: Vector2) -> void:
 func _grant_rewards(at_position: Vector2) -> void:
 	SaveManager.add_meta_currency(boss_meta_currency_reward)
 	_offer_item_choice()
-	if _fragment_select:
-		# ItemSelectが先にopen_modal()するため、こちらは既存キューへ入り、
-		# アイテム選択終了後にだけ順番に表示される。
-		_fragment_select.show_choices("ボス報酬：属性ビルドを1つ選択")
+	# TODO: 属性ビルド報酬(FragmentSelect)は属性システム廃止に伴い撤去した。
+	# ゴールドとショップに差し替える予定。それまでボス撃破の追加報酬は
+	# メタ通貨とItemSelectの3択のみ。
 
 ## data/items/からitem_choice_count件(既定3)の候補を組み立て、ItemSelectへ渡して
 ## プレイヤーに選ばせる。選択後の適用(PlayerUpgradesComponent.apply_item)と
@@ -325,9 +342,9 @@ func _pick_spawn_position(near_world_pos: Vector2) -> Vector2:
 	if map == null:
 		return _fallback_ring_position(near_world_pos)
 
-	var floor_cells := map.get_floor_cells()
+	var floor_cells := map.get_spawn_cells()
 	if floor_cells.is_empty():
-		return _fallback_ring_position(near_world_pos)
+		return Vector2.INF
 
 	var near_grid := map.world_to_grid(near_world_pos)
 	# ROOM Bossは極端な至近/遠距離Spawnで撃破時間がぶれないよう、視認して
@@ -343,7 +360,7 @@ func _pick_spawn_position(near_world_pos: Vector2) -> Vector2:
 		if distance >= min_radius_cells and distance <= max_radius_cells:
 			candidates.append(cell)
 	if candidates.is_empty():
-		return _fallback_ring_position(near_world_pos)
+		return Vector2.INF
 
 	var chosen: Vector2i = candidates[randi() % candidates.size()]
 	return map.grid_to_world(chosen)

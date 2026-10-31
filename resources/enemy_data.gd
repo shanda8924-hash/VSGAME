@@ -2,6 +2,7 @@ extends Resource
 class_name EnemyData
 ## 敵のデータ。数値バランスはJSONから読み込む想定(DataLoader参照)。
 
+@export var special_attack_id: String = ""
 @export var id: String
 @export var display_name: String
 @export var sprite_folder: String # 例: "enemy/Orc"(assets/sprites/以下の実フォルダ名と一致させる)

@@ -20,6 +20,14 @@ const DEATH_ANIM := "death"
 
 var _locked_until_msec: int = 0
 var _dead: bool = false
+var _pose_controlled := false
+
+func set_pose_controlled(value: bool) -> void:
+	_pose_controlled = value
+	_locked_until_msec = 0
+	_attack_speed_reset_msec = 0
+	_sprite.speed_scale = 1.0
+
 var _attack_speed_reset_msec: int = 0
 
 func _ready() -> void:
@@ -31,6 +39,13 @@ func _ready() -> void:
 		_sprite.play(IDLE_ANIM)
 
 func _process(_delta: float) -> void:
+	var player := get_parent() as Player
+	if player and player.weapon_manager._class_attack_in_progress and String(_sprite.animation) == player.weapon_manager._sword_animation and _sprite.is_playing():
+		# Keep the authored motion (including menu pauses) until its last frame.
+		_sprite.flip_h = player.weapon_manager._sword_facing.x < 0.0
+		return
+	if _pose_controlled and not _dead:
+		return
 	if _attack_speed_reset_msec > 0 and Time.get_ticks_msec() >= _attack_speed_reset_msec:
 		_sprite.speed_scale = 1.0
 		_attack_speed_reset_msec = 0
@@ -56,6 +71,13 @@ func _update_facing() -> void:
 
 ## 呼び出し側(Player=武器発射時 / EnemyBasic=接触ダメージ着弾時)が攻撃演出を要求する。
 ## variantはSpriteFramesに定義した"attack1"/"attack2"等の番号。無ければattack1にフォールバックする。
+func cancel_attack_pose() -> void:
+	_locked_until_msec = 0
+	_attack_speed_reset_msec = 0
+	_sprite.speed_scale = 1.0
+	if not _dead and _sprite.sprite_frames and _sprite.sprite_frames.has_animation(IDLE_ANIM):
+		_sprite.play(IDLE_ANIM)
+
 func play_attack(variant: int = 1, speed_multiplier: float = 1.0) -> void:
 	if _dead:
 		return
@@ -65,8 +87,12 @@ func play_attack(variant: int = 1, speed_multiplier: float = 1.0) -> void:
 	_sprite.speed_scale = maxf(speed_multiplier, 0.1)
 	_play_locked(anim_name, _sprite.speed_scale)
 
+func play_block() -> void:
+	if not _dead:
+		_play_locked("block")
+
 func _on_damaged(_amount: float, _current_hp: float, _max_hp: float) -> void:
-	if _dead:
+	if _dead or _pose_controlled:
 		return
 	_play_locked(HURT_ANIM)
 

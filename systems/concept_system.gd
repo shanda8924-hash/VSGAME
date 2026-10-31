@@ -187,13 +187,11 @@ func acquire_completed_skill(skill_id: String) -> int:
 	return next_level
 
 
-func is_completed_skill_available_for_build(definition: Dictionary, active_element_ids: Array) -> bool:
-	var active_fragments: Array[String] = []
-	for element_id in active_element_ids:
-		active_fragments.append(String(element_id).trim_prefix("element_"))
-	for required in definition.get("required_elements", []):
-		if String(required) not in active_fragments:
-			return false
+## 属性システム廃止に伴い、所持属性による解放条件を撤廃した。現在は全ての完成大技が
+## 常に候補になる。
+## TODO: 将来、天賦図の取得状況(どの状態異常を付与できるビルドか)で候補を絞る。
+## 引数は呼び出し元(map_run_controller)の互換のために残してある。
+func is_completed_skill_available_for_build(_definition: Dictionary, _unused: Array = []) -> bool:
 	return true
 
 
@@ -287,7 +285,6 @@ func _execute_skill(chain_index: int, skill: ConceptData, modifier: ConceptData,
 	var completed_definition := _completed_definition_from_metadata(skill_meta)
 	if not completed_definition.is_empty():
 		radius *= _definition_level_value(completed_definition, "radius_multiplier_by_level", skill_level, 1.0)
-	radius *= _element_reach_multiplier(skill)
 	_apply_skill_at(skill, center, radius, skill_meta, skill_level)
 	if is_echo:
 		return
@@ -328,7 +325,6 @@ func _apply_skill_at(skill: ConceptData, center: Vector2, radius: float, skill_m
 	var completed_definition := _completed_definition_from_metadata(skill_meta)
 	if not completed_definition.is_empty():
 		damage *= _definition_level_value(completed_definition, "damage_multiplier_by_level", skill_level, 1.0)
-	damage *= _element_damage_multiplier(skill)
 	for enemy in get_tree().get_nodes_in_group("enemies"):
 		if not is_instance_valid(enemy) or not (enemy is Node2D) or (enemy as Node2D).global_position.distance_to(center) > radius:
 			continue
@@ -339,8 +335,7 @@ func _apply_skill_at(skill: ConceptData, center: Vector2, radius: float, skill_m
 		var actual := health.apply_secondary_damage(damage, hit_meta)
 		if actual <= 0.0:
 			continue
-		var element_id := "element_%s" % String(skill.element_tags[0]) if not skill.element_tags.is_empty() else "concept"
-		EventBus.element_damage_dealt.emit(actual, (enemy as Node2D).global_position, element_id, 1, int(hit_meta.get("generation_depth", 0)))
+		EventBus.damage_dealt.emit(actual, (enemy as Node2D).global_position, false)
 		if String(skill.params.get("skill_kind", "")) == "ice_nova":
 			var status := enemy.get_node_or_null("StatusEffectComponent") as StatusEffectComponent
 			if status:
@@ -413,12 +408,11 @@ func _process_completed_skills_on_hit(target: Node2D, is_critical: bool, _direct
 		_trigger_completed_skill(skill_id, definition, level, target, metadata)
 
 
-func _completed_trigger_matches(definition: Dictionary, target: Node2D, is_critical: bool, element_tags: Array, metadata: Dictionary, level: int) -> bool:
-	var trigger_element := String(definition.get("trigger_element", ""))
-	var normalized_tags: Array[String] = []
-	for tag in element_tags:
-		normalized_tags.append(String(tag).trim_prefix("element_"))
-	if trigger_element != "" and trigger_element not in normalized_tags:
+## 旧仕様は「与えたダメージが火属性か」をmetadataのelement_tagsで判定していたが、
+## 属性システム廃止に伴い「対象に該当の状態異常が乗っているか」で判定する形へ変更した。
+func _completed_trigger_matches(definition: Dictionary, target: Node2D, is_critical: bool, _unused_tags: Array, metadata: Dictionary, level: int) -> bool:
+	var trigger_state := String(definition.get("trigger_state", ""))
+	if trigger_state != "" and not _target_has_state(target, trigger_state):
 		return false
 	if not _target_condition_matches(String(definition.get("target_condition", "")), target):
 		return false
@@ -462,17 +456,24 @@ func _completed_trigger_count(definition: Dictionary, level: int) -> int:
 	return maxi(int(counts[clampi(level - 1, 0, counts.size() - 1)]), 1)
 
 
+## 対象に指定の状態異常が乗っているか。StatusEffectComponentを直接見る
+## (旧属性システム経由の判定は廃止に伴い撤去)。
+func _target_has_state(target: Node2D, state_id: String) -> bool:
+	if target == null or not is_instance_valid(target):
+		return false
+	var status := target.get_node_or_null("StatusEffectComponent") as StatusEffectComponent
+	return status != null and status.has_state(state_id)
+
+
 func _target_condition_matches(condition: String, target: Node2D) -> bool:
 	if condition == "":
 		return true
 	if target == null or not is_instance_valid(target):
 		return false
 	if condition == "burning":
-		var element_system := get_tree().get_first_node_in_group("element_combat_system") as ElementCombatSystem
-		return element_system != null and element_system.is_target_burning(target)
+		return _target_has_state(target, "burning")
 	if condition == "cold":
-		var status := target.get_node_or_null("StatusEffectComponent") as StatusEffectComponent
-		return status != null and (status.has_effect("slow") or status.has_effect("stun"))
+		return _target_has_state(target, "frozen")
 	return true
 
 
@@ -543,13 +544,9 @@ func _signature_auto_target(definition: Dictionary) -> Node2D:
 
 
 func _signature_cooldown_total(definition: Dictionary, level: int) -> float:
+	# 属性Lv/熟練度/Fusionによるクールダウン短縮は属性システム廃止に伴い撤去した。
+	# 基礎値(cooldown_by_level)とビルド由来のhasteのみで決まる。
 	var total := _definition_level_value(definition, "cooldown_by_level", level, 8.0)
-	var element_id := "element_%s" % String(definition.get("trigger_element", ""))
-	var stack := GameManager.get_element_stack(element_id)
-	total *= 1.0 - float(_config.get("completed_element_haste_per_stack", 0.07)) * float(maxi(stack - 1, 0))
-	total *= GameManager.get_element_haste_multiplier()
-	if GameManager.active_fusion_id != "" and element_id in GameManager.get_active_element_ids():
-		total *= GameManager.get_fusion_haste_multiplier()
 	var player := get_tree().get_first_node_in_group("player")
 	if player:
 		var upgrades := player.get_node_or_null("PlayerUpgradesComponent") as PlayerUpgradesComponent
@@ -569,30 +566,6 @@ func _definition_level_value(definition: Dictionary, key: String, level: int, fa
 	if values.is_empty():
 		return fallback
 	return float(values[clampi(level - 1, 0, values.size() - 1)])
-
-
-func _element_id_for_skill(skill: ConceptData) -> String:
-	return "element_%s" % String(skill.element_tags[0]) if not skill.element_tags.is_empty() else ""
-
-
-func _element_damage_multiplier(skill: ConceptData) -> float:
-	var element_id := _element_id_for_skill(skill)
-	if element_id == "":
-		return 1.0
-	var stack := GameManager.get_element_stack(element_id)
-	var multiplier := 1.0 + float(_config.get("completed_element_damage_per_stack", 0.16)) * float(maxi(stack - 1, 0))
-	multiplier *= GameManager.get_element_damage_multiplier(element_id)
-	if GameManager.active_fusion_id != "" and element_id in GameManager.get_active_element_ids():
-		multiplier *= GameManager.get_fusion_damage_multiplier()
-	return multiplier
-
-
-func _element_reach_multiplier(skill: ConceptData) -> float:
-	var element_id := _element_id_for_skill(skill)
-	if element_id == "":
-		return 1.0
-	var stack := GameManager.get_element_stack(element_id)
-	return (1.0 + float(_config.get("completed_element_reach_per_stack", 0.08)) * float(maxi(stack - 1, 0))) * GameManager.get_element_reach_multiplier(element_id)
 
 
 func _player_skill_damage_basis() -> float:

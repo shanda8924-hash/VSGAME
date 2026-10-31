@@ -1,5 +1,6 @@
 extends Node2D
 class_name WaveSpawner
+signal sector_wave_cleared()
 ## 時間経過に応じて敵を生成する簡易版ウェーブシステム。
 ## enemy_data_list を空にしておけばDataLoaderから自動的に全敵データを読み込む
 ## (JSON追加だけで新しい敵がスポーン対象になる)。
@@ -16,27 +17,65 @@ class_name WaveSpawner
 ## 出現するのを防ぐため)。
 @export var min_spawn_distance: float = 220.0
 
-signal room_wave_started(enemy_count: int)
-signal room_wave_cleared()
+
+## 通常敵23種の正式なMAP・基礎階級割り当て。
+## Eliteはstrong個体へのAffix付与、midboss/bossはBossSpawnerが担当する。
+const ENEMY_HIERARCHY := ["mob", "standard", "strong", "elite", "midboss", "boss"]
+const MAP_ENEMY_ROSTERS := {
+	1: {
+		"mob": ["slime", "bat", "fast_enemy"],
+		"standard": ["basic_enemy", "shield_guard", "skeleton_archer"],
+		"strong": ["armored_skeleton", "greatsword_skeleton"],
+	},
+	2: {
+		"mob": ["eyeball_monster"],
+		"standard": ["blood_monster_a", "ghostfire", "demoness_a", "werewolf"],
+		"strong": ["blood_monster_b", "werebear"],
+	},
+	3: {
+		"mob": ["lava_slime", "hellbat"],
+		"standard": ["demoness_b", "hellhound", "orc_rider", "warlock"],
+		"strong": ["armored_orc", "elite_orc"],
+	},
+}
+const ROOM_RANK_PATTERNS := {
+	"first_guard": ["mob"],
+	"guard": ["mob", "standard"],
+	"junction_guard": ["mob", "standard"],
+	"flank": ["mob", "standard"],
+	"cache": ["mob"],
+	"antechamber": ["standard", "strong"],
+	"key_guard": ["strong", "standard"],
+	"elite": ["strong"],
+}
 
 var _timer: float = 0.0
+var _populated_map: DungeonMap = null
+var _exploration_enemy_count := 24
+var exploration_placed_count := 0
 ## 現在進行中の精鋭部屋(Elite Room)攻略の数(通常は0か1だが、念のため
 ## カウンタにしておき、0より大きい間は雑魚湧きを止める)。
 var _active_elite_rooms: int = 0
 ## ボス戦が進行中かどうか(精鋭部屋と同様、この間は通常の雑魚湧きを止める)。
 var _boss_fight_active: bool = false
-var _room_mode_enabled: bool = false
-var _room_wave_active: bool = false
-var _room_wave_prepared: bool = false
-var _room_alive: Dictionary = {}
-var _room_epoch: int = 0
-var _visual_warmup_running := false
+var _spawning_paused: bool = false
 var _map_started_elapsed: float = 0.0
 var _map_progress_offset: float = 0.0
+var _map_move_speed_multiplier := 1.0
 var _map_hp_multiplier: float = 1.0
 var _map_damage_multiplier: float = 1.0
 var _map_enemy_cap: int = 60
 var _map_spawn_batch := Vector2i(1, 2)
+var _map_surge_active := false
+var _map_surge_interval_multiplier := 1.0
+var _map_surge_batch_multiplier := 1.0
+var _sector_active := false
+var _sector_room_index := 0
+var _sector_remaining := 0
+var _sector_rank := "mob"
+var _sector_timer := 0.0
+var _sector_power := 1.0
+var _sector_cells: Array[Vector2i] = []
 
 func _ready() -> void:
 	if enemy_data_list.is_empty():
@@ -61,13 +100,18 @@ func _on_boss_fight_ended() -> void:
 func _process(delta: float) -> void:
 	if GameManager.run_state != GameManager.RunState.PLAYING:
 		return
-	if _room_mode_enabled:
+	if _sector_active:
+		_tick_sector_wave(delta)
 		return
-	if _active_elite_rooms > 0 or _boss_fight_active:
+	if _spawning_paused:
+		return
+	if _active_elite_rooms > 0 or (_boss_fight_active and not GameManager.survival_mode_active):
 		return # 精鋭部屋の攻略中・ボス戦中は通常の雑魚湧きを止める
 	_timer -= delta
 	if _timer <= 0.0:
-		var amount := randi_range(_map_spawn_batch.x, _map_spawn_batch.y) if GameManager.map_mode_active else 1
+		_recycle_distant_enemies()
+		var effective_batch := _effective_map_spawn_batch()
+		var amount := randi_range(effective_batch.x, effective_batch.y) if GameManager.map_mode_active else 1
 		for _index in amount:
 			if _active_enemy_count() >= _map_enemy_cap:
 				break
@@ -77,6 +121,10 @@ func _process(delta: float) -> void:
 ## 経過時間(GameManager.elapsed_seconds)を難易度カーブのbreakpoint間で線形補間し、
 ## 現在のspawn_intervalを求める(数値が段階的にカクつかないようにするため)。
 func _current_spawn_interval() -> float:
+	var base_interval := _base_spawn_interval()
+	return maxf(base_interval * (_map_surge_interval_multiplier if _map_surge_active else 1.0), 0.08)
+
+func _base_spawn_interval() -> float:
 	var breakpoints: Array = DataLoader.difficulty_curves.get(difficulty_curve_id, [])
 	if breakpoints.is_empty():
 		return fallback_spawn_interval
@@ -105,6 +153,29 @@ func _current_spawn_interval() -> float:
 	var last: Dictionary = breakpoints[breakpoints.size() - 1]
 	return float(last.get("spawn_interval", fallback_spawn_interval))
 
+func _map_elapsed() -> float:
+	return maxf(GameManager.elapsed_seconds - _map_started_elapsed, 0.0) if GameManager.map_mode_active else GameManager.elapsed_seconds
+
+## Intervalと同じBreakpointから段階的な同時出現数も読む。MAP別spawn_batchは
+## 後半の上限として使い、開始直後の少数戦から終盤の大群まで密度を引き上げる。
+func _base_map_spawn_batch() -> Vector2i:
+	var breakpoints: Array = DataLoader.difficulty_curves.get(difficulty_curve_id, [])
+	if breakpoints.is_empty():
+		return _map_spawn_batch
+	var selected: Dictionary = breakpoints[0]
+	var elapsed := _map_elapsed()
+	for point_variant in breakpoints:
+		var point := point_variant as Dictionary
+		if elapsed < float(point.get("time_seconds", 0.0)):
+			break
+		selected = point
+	var batch: Array = selected.get("spawn_batch", [])
+	if batch.size() < 2:
+		return _map_spawn_batch
+	var maximum := maxi(_map_spawn_batch.y, 1)
+	var minimum := clampi(int(batch[0]), 1, maximum)
+	return Vector2i(minimum, clampi(int(batch[1]), minimum, maximum))
+
 var _floor_cells: Array[Vector2i] = []
 
 ## GameManager.elapsed_seconds <= min_elapsed_secondsの敵だけを候補にする。
@@ -123,34 +194,176 @@ func _get_eligible_enemy_data(progress_seconds: float = -1.0) -> Array[EnemyData
 func _spawn_enemy() -> void:
 	if enemy_scene == null or enemy_data_list.is_empty():
 		return
-	var eligible := _get_eligible_enemy_data()
+	var eligible := _survival_enemy_pool() if GameManager.map_mode_active else _get_eligible_enemy_data()
 	if eligible.is_empty():
 		return
 	var player := get_tree().get_first_node_in_group("player")
 	if player == null:
 		return
+	var spawn_position := _pick_spawn_position(player.global_position)
+	if not spawn_position.is_finite():
+		return
 	var enemy := enemy_scene.instantiate()
-	enemy.global_position = _pick_spawn_position(player.global_position)
+	enemy.global_position = spawn_position
 	enemy.enemy_data = eligible[randi() % eligible.size()]
 	enemy.room_hp_multiplier = _map_hp_multiplier
 	enemy.room_damage_multiplier = _map_damage_multiplier
+	if GameManager.survival_mode_active:
+		# Walking pursuers leave room to steer; authored boss moves keep their timings.
+		var character: CharacterData = DataLoader.characters.get(GameManager.selected_character_id)
+		var walk_speed: float = character.move_speed * Player.MOVE_SPEED_MULTIPLIER if character else (player as Player).movement_component.base_speed
+		enemy.room_move_speed_multiplier = minf(_map_move_speed_multiplier, walk_speed * 0.75 / maxf(enemy.enemy_data.move_speed, 1.0))
+	if GameManager.survival_mode_active:
+		var progress := clampf(_map_elapsed() / GameManager.survival_duration_seconds, 0.0, 1.0)
+		enemy.room_hp_multiplier *= 1.0 + progress * 0.9
+		enemy.room_damage_multiplier *= 1.0 + progress * 0.4
+	enemy.set_meta("survival_wave", true)
 	GameManager.get_runtime_world(self).add_child(enemy)
 
 func configure_map_phase(config: Dictionary) -> void:
-	clear_room_wave()
-	_room_mode_enabled = false
+	_sector_active = false
+	if GameManager.dungeon_map != _populated_map:
+		encounters_ready = false
+		encounter_enemies.clear()
+	_spawning_paused = false
 	_active_elite_rooms = 0
 	_boss_fight_active = false
-	_timer = 0.45
 	_floor_cells.clear()
 	_map_started_elapsed = GameManager.elapsed_seconds
 	_map_progress_offset = float(config.get("enemy_progress_offset", 0.0))
+	_map_move_speed_multiplier = float(config.get("enemy_move_speed_multiplier", 1.0))
 	_map_hp_multiplier = maxf(float(config.get("enemy_hp_multiplier", 1.0)), 0.1)
 	_map_damage_multiplier = maxf(float(config.get("enemy_damage_multiplier", 1.0)), 0.1)
 	_map_enemy_cap = maxi(int(config.get("enemy_cap", 60)), 1)
+	if GameManager.survival_mode_active and (DisplayServer.is_touchscreen_available() or "--touch-preview" in OS.get_cmdline_user_args()):
+		_map_enemy_cap = mini(_map_enemy_cap, 96)
 	var batch: Array = config.get("spawn_batch", [1, 2])
 	_map_spawn_batch = Vector2i(maxi(int(batch[0]), 1), maxi(int(batch[1]), 1)) if batch.size() >= 2 else Vector2i(1, 2)
+	set_map_surge(false)
 	difficulty_curve_id = String(config.get("difficulty_curve_id", "map_exploration"))
+	_timer = 1.0
+	_exploration_enemy_count = int(config.get("exploration_enemy_count", 24))
+	# No authored room guards or key: start the timed horde instead.
+	_populated_map = GameManager.dungeon_map
+	exploration_placed_count = 0
+	encounter_enemies.clear()
+	encounter_defeated.clear()
+	encounters_ready = true
+
+func start_sector_wave(room_index: int, total: int, rank: String, power: float = 1.0) -> void:
+	_sector_room_index = room_index
+	_sector_cells.clear()
+	var map := GameManager.dungeon_map
+	if map and room_index >= 0 and room_index < map.rooms.size():
+		_sector_cells = map.get_spawn_cells(map.rooms[room_index].grow(-2))
+		if _sector_cells.is_empty():
+			_sector_cells = map.get_spawn_cells(map.rooms[room_index].grow(-1))
+	_sector_remaining = maxi(total, 1)
+	_sector_rank = rank
+	_sector_power = power
+	_sector_timer = 0.25
+	_sector_active = true
+	_spawning_paused = true
+
+func stop_sector_wave() -> void:
+	_sector_active = false
+	_sector_remaining = 0
+	_sector_cells.clear()
+
+func _tick_sector_wave(delta: float) -> void:
+	if _active_elite_rooms > 0 or _boss_fight_active:
+		return
+	_sector_timer -= delta
+	if _sector_remaining > 0 and _sector_timer <= 0.0:
+		var alive := _active_sector_enemy_count()
+		var cap := 28 if DisplayServer.is_touchscreen_available() else 42
+		if GameManager.dungeon_map.get_meta("isolated_room", false):
+			cap = 16
+		for index in mini(mini(3, _sector_remaining), maxi(cap - alive, 0)):
+			if _spawn_sector_enemy():
+				_sector_remaining -= 1
+		_sector_timer = 0.58
+	if _sector_remaining <= 0 and _active_sector_enemy_count() == 0:
+		_sector_active = false
+		sector_wave_cleared.emit()
+
+func _active_sector_enemy_count() -> int:
+	var count := 0
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if is_instance_valid(enemy) and not enemy.is_queued_for_deletion() and enemy.get_meta("sector_wave", false):
+			count += 1
+	return count
+
+func _spawn_sector_enemy() -> bool:
+	var map := GameManager.dungeon_map
+	if map == null or _sector_room_index < 0 or _sector_room_index >= map.rooms.size():
+		return false
+	var roster: Dictionary = MAP_ENEMY_ROSTERS.get(GameManager.current_map_index, MAP_ENEMY_ROSTERS[1])
+	var ids: Array = roster.get(_sector_rank, roster.get("mob", []))
+	if ids.is_empty():
+		return false
+	if _sector_cells.is_empty():
+		return false
+	var actor := get_tree().get_first_node_in_group("player") as Node2D
+	var shape := CircleShape2D.new()
+	shape.radius = 24.0
+	var query := PhysicsShapeQueryParameters2D.new()
+	query.shape = shape
+	query.collision_mask = 9
+	for attempt in 24:
+		var point := map.grid_to_world(_sector_cells.pick_random())
+		if actor and point.distance_to(actor.global_position) < 115.0:
+			continue
+		query.transform = Transform2D(0.0, point)
+		if not get_world_2d().direct_space_state.intersect_shape(query, 1).is_empty():
+			continue
+		var data: EnemyData = DataLoader.enemies.get(ids.pick_random())
+		if data == null:
+			return false
+		var enemy := enemy_scene.instantiate() as EnemyBasic
+		enemy.global_position = point
+		enemy.enemy_data = data
+		enemy.room_hp_multiplier = _map_hp_multiplier * _sector_power
+		enemy.room_damage_multiplier = _map_damage_multiplier * _sector_power
+		enemy.set_meta("sector_wave", true)
+		GameManager.get_runtime_world(self).add_child(enemy)
+		return true
+	return false
+
+func set_map_surge(active: bool, interval_multiplier: float = 0.5, batch_multiplier: float = 1.5) -> void:
+	_map_surge_active = active
+	_map_surge_interval_multiplier = clampf(interval_multiplier, 0.1, 1.0) if active else 1.0
+	_map_surge_batch_multiplier = clampf(batch_multiplier, 1.0, 2.0) if active else 1.0
+	# 通常intervalの残り時間を引き継いで開始合図後だけ敵が来ない状態を避ける。
+	if active:
+		_timer = minf(_timer, _current_spawn_interval())
+
+func _effective_map_spawn_batch() -> Vector2i:
+	var base_batch := _base_map_spawn_batch() if GameManager.map_mode_active else _map_spawn_batch
+	if not _map_surge_active:
+		return base_batch
+	return Vector2i(
+		maxi(ceili(float(base_batch.x) * _map_surge_batch_multiplier), 1),
+		maxi(ceili(float(base_batch.y) * _map_surge_batch_multiplier), 1),
+	)
+
+func is_map_spawn_suppressed() -> bool:
+	return _active_elite_rooms > 0 or (_boss_fight_active and not GameManager.survival_mode_active) or _spawning_paused
+
+func debug_get_map_spawn_snapshot() -> Dictionary:
+	var effective_batch := _effective_map_spawn_batch()
+	var base_batch := _base_map_spawn_batch() if GameManager.map_mode_active else _map_spawn_batch
+	return {
+		"surge_active": _map_surge_active,
+		"spawn_interval": _current_spawn_interval(),
+		"base_spawn_interval": _base_spawn_interval(),
+		"batch_min": effective_batch.x,
+		"batch_max": effective_batch.y,
+		"base_batch_min": base_batch.x,
+		"base_batch_max": base_batch.y,
+		"enemy_cap": _map_enemy_cap,
+		"damage_multiplier": _map_damage_multiplier,
+	}
 
 func _active_enemy_count() -> int:
 	var count := 0
@@ -159,237 +372,9 @@ func _active_enemy_count() -> int:
 			count += 1
 	return count
 
-func enable_room_mode(enabled: bool) -> void:
-	_room_mode_enabled = enabled
+func set_spawning_paused(enabled: bool) -> void:
+	_spawning_paused = enabled
 	_timer = INF if enabled else 0.0
-	if not enabled:
-		clear_room_wave()
-
-func start_room_wave(room_number: int, enemy_count: int, hp_multiplier: float, damage_multiplier: float, special_chance: float) -> int:
-	clear_room_wave()
-	_room_mode_enabled = true
-	_room_epoch += 1
-	var epoch := _room_epoch
-	var runtime_world := GameManager.get_runtime_world(self)
-	var player := get_tree().get_first_node_in_group("player") as Node2D
-	if enemy_scene == null or runtime_world == null or player == null:
-		room_wave_started.emit(0)
-		room_wave_cleared.emit()
-		return 0
-	var progress_seconds := float(maxi(room_number - 1, 0)) * 45.0
-	var eligible := _get_eligible_enemy_data(progress_seconds)
-	if eligible.is_empty():
-		room_wave_started.emit(0)
-		room_wave_cleared.emit()
-		return 0
-	var advanced: Array[EnemyData] = eligible.filter(func(data: EnemyData): return data.min_elapsed_seconds > 0.0)
-	var spawn_positions := _build_room_spawn_positions(player.global_position, enemy_count)
-	for index in enemy_count:
-		var pool: Array[EnemyData] = advanced if not advanced.is_empty() and randf() < special_chance else eligible
-		var enemy := enemy_scene.instantiate() as EnemyBasic
-		enemy.enemy_data = pool[randi() % pool.size()]
-		enemy.room_hp_multiplier = hp_multiplier
-		enemy.room_damage_multiplier = damage_multiplier
-		var spawn_position: Vector2 = spawn_positions[index]
-		# add_child時点から正しい位置へ置き、全個体のCollisionが原点で一度重なる
-		# PhysicsServer更新を発生させない。
-		enemy.position = spawn_position
-		runtime_world.add_child(enemy)
-		_track_room_enemy(enemy, epoch)
-	_room_wave_active = not _room_alive.is_empty()
-	room_wave_started.emit(_room_alive.size())
-	if not _room_wave_active:
-		room_wave_cleared.emit()
-	return _room_alive.size()
-
-## ROOM遷移中にEnemyのScene/AI/Animation/Collision初期化を数Frameへ分散する。
-## 準備中は非表示・停止状態で保持し、全個体の準備完了後に同時有効化するため、
-## Playerから1体ずつポップして見えることはない。
-func prepare_room_wave(room_number: int, enemy_count: int, hp_multiplier: float, damage_multiplier: float, special_chance: float, batch_size: int = 2) -> int:
-	clear_room_wave()
-	_room_mode_enabled = true
-	_room_epoch += 1
-	var epoch := _room_epoch
-	var runtime_world := GameManager.get_runtime_world(self)
-	var player := get_tree().get_first_node_in_group("player") as Node2D
-	if enemy_scene == null or runtime_world == null or player == null:
-		return 0
-	var progress_seconds := float(maxi(room_number - 1, 0)) * 45.0
-	var eligible := _get_eligible_enemy_data(progress_seconds)
-	if eligible.is_empty():
-		return 0
-	var advanced: Array[EnemyData] = eligible.filter(func(data: EnemyData): return data.min_elapsed_seconds > 0.0)
-	var spawn_positions := _build_room_spawn_positions(player.global_position, enemy_count)
-	var safe_batch := maxi(batch_size, 1)
-	for index in enemy_count:
-		if epoch != _room_epoch:
-			return 0
-		var pool: Array[EnemyData] = advanced if not advanced.is_empty() and randf() < special_chance else eligible
-		var enemy := enemy_scene.instantiate() as EnemyBasic
-		enemy.enemy_data = pool[randi() % pool.size()]
-		enemy.room_hp_multiplier = hp_multiplier
-		enemy.room_damage_multiplier = damage_multiplier
-		# 完全に非表示だと全Textureの初回Canvas uploadがCOMBAT開始Frameへ集中する。
-		# ほぼ透明のまま1体ずつ描画準備し、開始時は全員を同時に不透明化する。
-		enemy.visible = true
-		enemy.modulate.a = 0.001
-		enemy.set_room_activation_locked(true)
-		var spawn_position: Vector2 = spawn_positions[index]
-		# 親へ追加する前に配置し、準備中のEnemy全員が原点でCollision登録される
-		# 一時的なoverlap/broadphase負荷を避ける(Runtime worldはidentity transform)。
-		enemy.position = spawn_position
-		runtime_world.add_child(enemy)
-		_track_room_enemy(enemy, epoch)
-		if (index + 1) % safe_batch == 0 and index + 1 < enemy_count:
-			await get_tree().process_frame
-	if epoch != _room_epoch:
-		return 0
-	_room_wave_prepared = not _room_alive.is_empty()
-	return _room_alive.size()
-
-func activate_prepared_room_wave(batch_size: int = 2) -> int:
-	if not _room_wave_prepared:
-		room_wave_started.emit(0)
-		room_wave_cleared.emit()
-		return 0
-	_room_wave_prepared = false
-	var prepared_enemies: Array[EnemyBasic] = []
-	for enemy_variant in _room_alive.values():
-		var enemy := enemy_variant as EnemyBasic
-		if enemy == null or not is_instance_valid(enemy):
-			continue
-		# 全Spriteは同時に見せるが、AI/Physicsの初回処理は数Frameへ分散する。
-		# これによりArea切替直後の12〜15体が同じPhysics frameで初期追跡を
-		# 開始して発生していた50ms級のCOMBAT first-frame spikeを避ける。
-		enemy.visible = true
-		enemy.modulate.a = 1.0
-		prepared_enemies.append(enemy)
-	_room_wave_active = not _room_alive.is_empty()
-	room_wave_started.emit(_room_alive.size())
-	if not _room_wave_active:
-		room_wave_cleared.emit()
-	else:
-		_activate_prepared_enemy_batches(_room_epoch, prepared_enemies, maxi(batch_size, 1))
-	return _room_alive.size()
-
-func _activate_prepared_enemy_batches(epoch: int, enemies: Array[EnemyBasic], batch_size: int) -> void:
-	for index in enemies.size():
-		if epoch != _room_epoch:
-			return
-		var enemy := enemies[index]
-		if is_instance_valid(enemy) and _room_alive.has(enemy.get_instance_id()):
-			enemy.set_room_activation_locked(false)
-		if (index + 1) % batch_size == 0 and index + 1 < enemies.size():
-			await get_tree().process_frame
-
-func warmup_enemy_visuals(room_number: int, batch_size: int = 1) -> void:
-	if _visual_warmup_running:
-		return
-	_visual_warmup_running = true
-	var progress_seconds := float(maxi(room_number - 1, 0)) * 45.0
-	var eligible := _get_eligible_enemy_data(progress_seconds)
-	var loaded_in_batch := 0
-	for data in eligible:
-		if data.sprite_folder == "" or SpriteSheetBuilder.is_cached(data.sprite_folder):
-			continue
-		SpriteSheetBuilder.build_sprite_frames(data.sprite_folder)
-		loaded_in_batch += 1
-		if loaded_in_batch >= maxi(batch_size, 1):
-			loaded_in_batch = 0
-			await get_tree().process_frame
-	_visual_warmup_running = false
-
-func clear_room_wave() -> void:
-	_room_epoch += 1
-	_room_wave_active = false
-	_room_wave_prepared = false
-	var enemies := _room_alive.values().duplicate()
-	_room_alive.clear()
-	for enemy in enemies:
-		if is_instance_valid(enemy):
-			enemy.queue_free()
-
-func get_room_alive_count() -> int:
-	return _room_alive.size()
-
-func debug_defeat_room_wave() -> void:
-	if not OS.is_debug_build():
-		return
-	for enemy_variant in _room_alive.values().duplicate():
-		var enemy := enemy_variant as EnemyBasic
-		if enemy == null or not is_instance_valid(enemy):
-			continue
-		enemy.health_component.current_hp = minf(enemy.health_component.current_hp, 1.0)
-		enemy.health_component.apply_secondary_damage(999999.0, CombatEventMeta.create_secondary("debug_room_clear", [], false))
-
-func _track_room_enemy(enemy: EnemyBasic, epoch: int) -> void:
-	var id := enemy.get_instance_id()
-	_room_alive[id] = enemy
-	enemy.health_component.died.connect(_on_room_enemy_removed.bind(id, epoch), CONNECT_ONE_SHOT)
-	enemy.tree_exited.connect(_on_room_enemy_removed.bind(id, epoch), CONNECT_ONE_SHOT)
-
-func _on_room_enemy_removed(id: int, epoch: int) -> void:
-	if epoch != _room_epoch or not _room_alive.has(id):
-		return
-	_room_alive.erase(id)
-	if _room_wave_active and _room_alive.is_empty():
-		_room_wave_active = false
-		room_wave_cleared.emit()
-
-func _pick_room_spawn_position(player_position: Vector2, occupied: Array[Vector2]) -> Vector2:
-	var map: DungeonMap = GameManager.dungeon_map
-	if map == null:
-		return _fallback_ring_position(player_position)
-	var cells := map.get_floor_cells()
-	cells.shuffle()
-	for cell in cells:
-		var world_position := map.grid_to_world(cell)
-		if world_position.distance_to(player_position) < 180.0:
-			continue
-		var separated := true
-		for other in occupied:
-			if world_position.distance_to(other) < 42.0:
-				separated = false
-				break
-		if separated:
-			return world_position
-	return map.grid_to_world(cells[0]) if not cells.is_empty() else _fallback_ring_position(player_position)
-
-## ROOM開始時の全Spawn位置を1回のfloor cache複製・shuffleで決める。
-## 以前はEnemy 1体ごとに全床セルを複製してshuffleしており、後半の15体生成時に
-## 同じO(floor_cells)処理を15回繰り返していた。
-func _build_room_spawn_positions(player_position: Vector2, count: int) -> Array[Vector2]:
-	var result: Array[Vector2] = []
-	var map: DungeonMap = GameManager.dungeon_map
-	if map == null:
-		for index in count:
-			result.append(_fallback_ring_position(player_position) + Vector2.from_angle(TAU * float(index) / maxf(float(count), 1.0)) * 36.0)
-		return result
-	var cells := map.get_floor_cells()
-	cells.shuffle()
-	for cell in cells:
-		var world_position := map.grid_to_world(cell)
-		if world_position.distance_to(player_position) < 180.0:
-			continue
-		var separated := true
-		for other in result:
-			if world_position.distance_to(other) < 42.0:
-				separated = false
-				break
-		if separated:
-			result.append(world_position)
-			if result.size() >= count:
-				return result
-	# 小さいTemplateでも必要数を必ず返す。通常は上の分離条件だけで充足する。
-	for cell in cells:
-		if result.size() >= count:
-			break
-		var world_position := map.grid_to_world(cell)
-		if world_position.distance_to(player_position) >= 180.0 and world_position not in result:
-			result.append(world_position)
-	while result.size() < count:
-		result.append(_fallback_ring_position(player_position))
-	return result
 
 ## GameManager.dungeon_mapの「床マス」の中から、プレイヤーの近く(ただしmin_spawn_distance
 ## より近い至近距離は除く)のものをランダムに選ぶ(壁マスやマップ範囲外には湧かせない)。
@@ -400,32 +385,231 @@ func _pick_spawn_position(near_world_pos: Vector2) -> Vector2:
 	if map == null:
 		return _fallback_ring_position(near_world_pos)
 
+	if map.get_meta("floor_only", false):
+		var actor := get_tree().get_first_node_in_group("player") as Player
+		var half := get_viewport_rect().size / actor.camera.zoom * 0.5 + Vector2(80, 80)
+		var shape := CircleShape2D.new()
+		shape.radius = 26.0
+		var query := PhysicsShapeQueryParameters2D.new()
+		query.shape = shape
+		query.collision_mask = 9
+		for attempt in 24:
+			var direction := Vector2.from_angle(randf() * TAU)
+			var radius := minf(half.x / maxf(absf(direction.x), 0.001), half.y / maxf(absf(direction.y), 0.001)) + randf_range(32, 96)
+			var point := near_world_pos + direction * maxf(radius, min_spawn_distance)
+			query.transform = Transform2D(0, point)
+			if get_world_2d().direct_space_state.intersect_shape(query, 1).is_empty(): return point
+		return Vector2.INF
 	if _floor_cells.is_empty():
-		_floor_cells = map.get_floor_cells()
+		_floor_cells = map.get_spawn_cells()
 	if _floor_cells.is_empty():
-		return _fallback_ring_position(near_world_pos)
+		return Vector2.INF
 
-	var near_grid := map.world_to_grid(near_world_pos)
-	var max_radius_cells := spawn_radius / DungeonMap.CELL_WORLD_SIZE
-	var min_radius_cells := min_spawn_distance / DungeonMap.CELL_WORLD_SIZE
 
 	var candidates: Array[Vector2i] = []
 	for cell in _floor_cells:
-		var dist := Vector2(cell - near_grid).length()
-		if dist >= min_radius_cells and dist <= max_radius_cells:
+		var dist := map.grid_to_world(cell).distance_to(near_world_pos)
+		if dist >= min_spawn_distance and dist <= spawn_radius:
 			candidates.append(cell)
 	if candidates.is_empty():
-		# 半径内に条件を満たすマスが無い場合、最低距離だけは守ってマップ全体から探す。
-		for cell in _floor_cells:
-			if Vector2(cell - near_grid).length() >= min_radius_cells:
-				candidates.append(cell)
-	if candidates.is_empty():
-		return _fallback_ring_position(near_world_pos)
+		return Vector2.INF
+	candidates.shuffle()
+	var shape := CircleShape2D.new()
+	shape.radius = 26.0
+	var query := PhysicsShapeQueryParameters2D.new()
+	query.shape = shape
+	query.collision_mask = 9 # Walls, solid props and existing enemy bodies.
+	for index in mini(candidates.size(), 48):
+		var point := map.grid_to_world(candidates[index])
+		query.transform = Transform2D(0, point)
+		if get_world_2d().direct_space_state.intersect_shape(query, 1).is_empty():
+			return point
+	return Vector2.INF
 
-	var chosen: Vector2i = candidates[randi() % candidates.size()]
-	return map.grid_to_world(chosen)
+func _survival_enemy_pool() -> Array[EnemyData]:
+	var elapsed := _map_elapsed()
+	var roll := randf()
+	var rank_name := "mob"
+	if elapsed >= 45.0 and roll < (0.45 if elapsed >= 150.0 else 0.25):
+		rank_name = "standard"
+	var roster: Dictionary = MAP_ENEMY_ROSTERS.get(GameManager.current_map_index, MAP_ENEMY_ROSTERS[1])
+	var pool: Array[EnemyData] = []
+	for id: String in roster.get(rank_name, []):
+		var data: EnemyData = DataLoader.enemies.get(id)
+		if data: pool.append(data)
+	return pool
+
+func _recycle_distant_enemies() -> void:
+	var player := get_tree().get_first_node_in_group("player") as Node2D
+	if player == null: return
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		# Despawn only ordinary waves left far behind; no death/EXP/loot signals.
+		if enemy.get_meta("survival_wave", false) and enemy.global_position.distance_squared_to(player.global_position) > 1200.0 * 1200.0:
+			enemy.queue_free()
 
 func _fallback_ring_position(near_world_pos: Vector2) -> Vector2:
 	var radius := maxf(spawn_radius, min_spawn_distance)
 	var angle := randf() * TAU
 	return near_world_pos + Vector2(cos(angle), sin(angle)) * radius
+
+func _populate_exploration_map() -> void:
+	var map: DungeonMap = GameManager.dungeon_map
+	var player := get_tree().get_first_node_in_group("player") as Node2D
+	if not GameManager.map_mode_active or map == null or map == _populated_map or player == null or enemy_scene == null:
+		return
+	_populated_map = map
+	exploration_placed_count = 0
+	if map.get_meta("exploration_layout", false):
+		_populate_authored_encounters(map)
+		return
+	var cells := map.get_spawn_cells()
+	cells.shuffle()
+	var positions: Array[Vector2] = []
+	for cell in cells:
+		var reserved := false
+		for room_index in map.elite_room_indices:
+			if map.rooms[room_index].grow(2).has_point(cell):
+				reserved = true
+		if map.boss_room_index >= 0 and map.rooms[map.boss_room_index].grow(2).has_point(cell):
+			reserved = true
+		if reserved:
+			continue
+		var point := map.grid_to_world(cell)
+		if point.distance_to(player.global_position) < 300.0:
+			continue
+		var crowded := false
+		for placed in positions:
+			if point.distance_to(placed) < 180.0:
+				crowded = true
+				break
+		if crowded:
+			continue
+		positions.append(point)
+		if positions.size() >= _exploration_enemy_count:
+			break
+	positions.sort_custom(func(a: Vector2, b: Vector2): return a.distance_squared_to(player.global_position) < b.distance_squared_to(player.global_position))
+	for index in positions.size():
+		# Deeper locations introduce stronger species; waiting in place never upgrades the roster.
+		var progress := _map_progress_offset + float(index) / maxf(positions.size() - 1, 1) * 180.0
+		var eligible := _get_eligible_enemy_data(progress)
+		if eligible.is_empty():
+			continue
+		var enemy := enemy_scene.instantiate() as EnemyBasic
+		enemy.position = positions[index]
+		enemy.enemy_data = eligible.pick_random()
+		enemy.room_hp_multiplier = _map_hp_multiplier
+		enemy.room_damage_multiplier = _map_damage_multiplier
+		enemy.exploration_guard = true
+		GameManager.get_runtime_world(self).add_child(enemy)
+		exploration_placed_count += 1
+
+
+var encounter_enemies: Dictionary = {}
+var encounters_ready := false
+var encounter_defeated: Dictionary = {}
+
+func _populate_authored_encounters(map: DungeonMap) -> void:
+	encounter_enemies.clear()
+	encounter_defeated.clear()
+	encounters_ready = false
+	await get_tree().physics_frame
+	if map != GameManager.dungeon_map: return
+	var roles: Array = map.get_meta("room_roles",[])
+	var world := GameManager.get_runtime_world(self) as Node2D
+	var elite_manager := world.get_node_or_null("EliteRoomManager") as EliteRoomManager
+	var reinforcement_rooms: Array[int] = []
+	for index in roles.size():
+		if String(roles[index]) in ["guard", "junction_guard", "flank", "antechamber"]:
+			reinforcement_rooms.append(index)
+	var extra_budget := floori(float(GameManager.current_depth - 1) * 0.5)
+	for room_id in roles.size():
+		var role: String = roles[room_id]
+		var enemy_ids := _encounter_enemy_ids(GameManager.current_map_index, role, room_id)
+		var rank := reinforcement_rooms.find(room_id)
+		if rank >= 0 and not reinforcement_rooms.is_empty():
+			var quota := floori(float(extra_budget) / float(reinforcement_rooms.size())) + (1 if rank < extra_budget % reinforcement_rooms.size() else 0)
+			for extra in mini(quota, 2):
+				var reinforcement_rank := "mob" if extra % 2 == 0 else "standard"
+				var reinforcement_id := _enemy_for_rank(GameManager.current_map_index, reinforcement_rank, room_id + extra + 7)
+				if not reinforcement_id.is_empty():
+					enemy_ids.append(reinforcement_id)
+		if enemy_ids.is_empty(): continue
+		var room: Rect2i = map.rooms[room_id]
+		var centre := room.position+room.size/2
+		var cells := map.get_spawn_cells(room.grow(-2))
+		var placed: Array[Vector2] = []
+		encounter_enemies[room_id] = []
+		encounter_defeated[room_id] = 0
+		for index in enemy_ids.size():
+			var preferred := centre+([Vector2i(1,1),Vector2i(-2,2),Vector2i(2,-2)][index%3] as Vector2i)
+			cells.sort_custom(func(a: Vector2i,b: Vector2i): return a.distance_squared_to(preferred)<b.distance_squared_to(preferred))
+			var position := Vector2.INF
+			for cell in cells:
+				var objective: Vector2i = map.get_meta("objective_cells",{}).get(room_id,Vector2i(9999,9999))
+				if absi(cell.x-objective.x)<=2 and absi(cell.y-objective.y)<=2: continue
+				var point := map.grid_to_world(cell)+Vector2.ONE*16.0
+				var crowded := false
+				for other in placed:
+					if point.distance_to(other)<94.0: crowded=true
+				if crowded: continue
+				var query := PhysicsShapeQueryParameters2D.new()
+				var circle := CircleShape2D.new()
+				circle.radius = 28.0
+				query.shape = circle
+				query.transform = Transform2D(0,point)
+				query.collision_mask = 1
+				if not world.get_world_2d().direct_space_state.intersect_shape(query,1).is_empty(): continue
+				position=point
+				break
+			if not position.is_finite():
+				push_error("Encounter has no safe placement: room %d" % room_id)
+				continue
+			var base: EnemyData = DataLoader.enemies.get(String(enemy_ids[index]))
+			if base == null: continue
+			var enemy := enemy_scene.instantiate() as EnemyBasic
+			enemy.position = position
+			enemy.enemy_data = base
+			enemy.room_hp_multiplier = _map_hp_multiplier
+			enemy.room_damage_multiplier = _map_damage_multiplier
+			enemy.exploration_guard = true
+			enemy.exploration_home = position
+			enemy.exploration_room = room_id
+			if role == "elite":
+				enemy.elite_stat_multiplier = 1.35
+				enemy.visual_scale_multiplier = 1.65
+			world.add_child(enemy)
+			if role == "elite" and elite_manager: elite_manager.attach_exploration_affix(enemy,GameManager.current_map_index)
+			enemy.health_component.died.connect(_on_encounter_enemy_defeated.bind(map,room_id),CONNECT_ONE_SHOT)
+			encounter_enemies[room_id].append(weakref(enemy))
+			placed.append(position)
+			exploration_placed_count += 1
+	encounters_ready = true
+
+func _encounter_enemy_ids(map_index: int, room_role: String, room_id: int) -> Array[String]:
+	var enemy_ids: Array[String] = []
+	var pattern: Array = ROOM_RANK_PATTERNS.get(room_role, [])
+	for index in pattern.size():
+		var enemy_id := _enemy_for_rank(map_index, String(pattern[index]), room_id + index * 3)
+		if not enemy_id.is_empty():
+			enemy_ids.append(enemy_id)
+	return enemy_ids
+
+func _enemy_for_rank(map_index: int, rank_name: String, seed_offset: int) -> String:
+	var roster: Dictionary = MAP_ENEMY_ROSTERS.get(map_index, MAP_ENEMY_ROSTERS[1])
+	var pool: Array = roster.get(rank_name, [])
+	if pool.is_empty():
+		return ""
+	var floor_offset := maxi(GameManager.current_depth - 1, 0) % 20
+	return String(pool[posmod(seed_offset + floor_offset, pool.size())])
+
+static func get_enemy_rosters() -> Dictionary:
+	return MAP_ENEMY_ROSTERS.duplicate(true)
+
+func is_encounter_cleared(room_id: int) -> bool:
+	if not encounters_ready or not encounter_enemies.has(room_id): return false
+	if encounter_enemies[room_id].is_empty(): return false
+	return int(encounter_defeated.get(room_id,0)) >= encounter_enemies[room_id].size()
+
+func _on_encounter_enemy_defeated(map: DungeonMap, room_id: int) -> void:
+	if map != _populated_map: return
+	encounter_defeated[room_id] = int(encounter_defeated.get(room_id,0))+1

@@ -28,6 +28,7 @@ var active_skill_damage_multiplier: float = 1.0
 ## trueの間はapply_damage()が何もしない(charge_dash等、突進中無敵になる
 ## 攻撃パターンが一時的に立てる)。ONにした側が必ずOFFへ戻す責任を持つ。
 var invincible: bool = false
+var dodge_iframe_remaining := 0.0
 var current_hp: float
 var shield_amount: float = 0.0
 var shield_max: float = 0.0
@@ -48,21 +49,22 @@ var _iframe_remaining: float = 0.0
 var _damage_taken_this_frame: float = 0.0
 var _last_damage_physics_frame: int = -1
 
-## 闇属性の呪い(Curse)残り秒数。Playerのdamage_taken_multiplierは装備軽減用に
-## PlayerUpgradesComponentが同期するが、Enemy側は誰も同期しないため、Curseは
-## 同じフィールドを「被ダメージ増加」方向に一時利用しても安全(既定1.0のまま放置されている)。
-var _curse_remaining: float = 0.0
+var _curse_multiplier: float = 1.0
+var _player_upgrades_cache: PlayerUpgradesComponent = null
 
 func _ready() -> void:
 	current_hp = max_hp
+	var status := get_parent().get_node_or_null("StatusEffectComponent") as StatusEffectComponent if get_parent() else null
+	if status:
+		status.states_changed.connect(_on_states_changed)
+	if get_parent() and get_parent().is_in_group("enemies"):
+		var player := get_tree().get_first_node_in_group("player")
+		_player_upgrades_cache = player.get_node_or_null("PlayerUpgradesComponent") as PlayerUpgradesComponent if player else null
 
 func _process(delta: float) -> void:
+	dodge_iframe_remaining = maxf(0.0, dodge_iframe_remaining - delta)
 	if _iframe_remaining > 0.0:
 		_iframe_remaining -= delta
-	if _curse_remaining > 0.0:
-		_curse_remaining -= delta
-		if _curse_remaining <= 0.0:
-			damage_taken_multiplier = 1.0
 
 func apply_damage(amount: float, combat_metadata: Dictionary = {}) -> float:
 	return _apply_damage_internal(amount, false, true, combat_metadata)
@@ -73,11 +75,23 @@ func apply_secondary_damage(amount: float, combat_metadata: Dictionary = {}) -> 
 	return _apply_damage_internal(amount, true, false, combat_metadata)
 
 func _apply_damage_internal(amount: float, ignore_iframe: bool, start_iframe: bool, combat_metadata: Dictionary) -> float:
-	if current_hp <= 0.0 or invincible or (not ignore_iframe and _iframe_remaining > 0.0):
+	if current_hp <= 0.0 or invincible or dodge_iframe_remaining > 0.0 or (not ignore_iframe and _iframe_remaining > 0.0):
 		return 0.0
 	if equipment_negate_chance > 0.0 and randf() < equipment_negate_chance:
 		return 0.0
-	var after_flat_defense := maxf(amount - equipment_defense_flat, 1.0) if amount > 0.0 else 0.0
+	var metadata := CombatEventMeta.normalize(combat_metadata)
+	var resolved_amount := amount
+	var owner_entity := get_parent()
+	if owner_entity and owner_entity.is_in_group("enemies") and _is_player_origin_damage(metadata):
+		if _player_upgrades_cache == null:
+			var player := get_tree().get_first_node_in_group("player")
+			_player_upgrades_cache = player.get_node_or_null("PlayerUpgradesComponent") as PlayerUpgradesComponent if player else null
+		if _player_upgrades_cache:
+			var resolved := _player_upgrades_cache.resolve_state_condition_damage(owner_entity, amount, metadata)
+			resolved_amount = float(resolved.get("amount", amount))
+			metadata = resolved.get("metadata", metadata)
+	# Equipment armor alone cannot erase contact damage, even with six high-tier pieces.
+	var after_flat_defense := maxf(resolved_amount - equipment_defense_flat, maxf(1.0, resolved_amount * 0.4)) if resolved_amount > 0.0 else 0.0
 	var reduced_amount := after_flat_defense * damage_taken_multiplier * active_skill_damage_multiplier
 	if shield_amount > 0.0:
 		var absorbed := minf(shield_amount, reduced_amount)
@@ -91,9 +105,9 @@ func _apply_damage_internal(amount: float, ignore_iframe: bool, start_iframe: bo
 	if start_iframe:
 		_iframe_remaining = 0.08 if get_parent() and get_parent().is_in_group("enemies") else IFRAME_DURATION
 	damaged.emit(reduced_amount, current_hp, max_hp)
-	var owner_entity := get_parent()
+	if current_hp > 0.0 and _is_player_origin_damage(metadata) and owner_entity.has_method("receive_hit_impact"):
+		owner_entity.receive_hit_impact(metadata)
 	if owner_entity and owner_entity.is_in_group("enemies"):
-		var metadata := CombatEventMeta.normalize(combat_metadata)
 		metadata["killed"] = current_hp <= 0.0
 		if owner_entity is Node2D:
 			metadata["impact_position"] = (owner_entity as Node2D).global_position
@@ -143,5 +157,27 @@ func clear_shield() -> void:
 ## duration秒後に自動で1.0へ戻す。再付与時は残り時間・倍率のどちらも大きい方を採用する
 ## (連続Hitで途切れず、弱いLvの呪いが強いLvの呪いを上書きしないように)。
 func apply_curse(multiplier: float, duration: float) -> void:
-	damage_taken_multiplier = maxf(damage_taken_multiplier if _curse_remaining > 0.0 else 1.0, multiplier)
-	_curse_remaining = maxf(_curse_remaining, duration)
+	_curse_multiplier = maxf(_curse_multiplier, multiplier)
+	damage_taken_multiplier = maxf(damage_taken_multiplier, _curse_multiplier)
+	var status := get_parent().get_node_or_null("StatusEffectComponent") as StatusEffectComponent if get_parent() else null
+	if status:
+		status.apply_effect("cursed", duration, multiplier)
+
+func _on_states_changed(states: Array[String]) -> void:
+	if "cursed" in states:
+		return
+	_curse_multiplier = 1.0
+	# Enemyの恒常軽減は現状無く、PlayerのStatusEffectにはCurseを付けない。
+	if get_parent() and get_parent().is_in_group("enemies"):
+		damage_taken_multiplier = 1.0
+
+func _is_player_origin_damage(metadata: Dictionary) -> bool:
+	var source := String(metadata.get("source_kind", ""))
+	return source.begins_with("player_") or source.begins_with("element_") or source.begins_with("fusion_") or source.begins_with("concept:") or source.begins_with("completed_skill")
+
+## Authored melee strokes have their own per-target deduplication. Enemy iframe must
+## not swallow the next visible stroke; player dodge/invulnerability stays intact.
+func apply_animation_strike_damage(amount: float, metadata: Dictionary = {}) -> float:
+	if not get_parent().is_in_group("enemies"):
+		return apply_damage(amount, metadata)
+	return _apply_damage_internal(amount, true, false, metadata)

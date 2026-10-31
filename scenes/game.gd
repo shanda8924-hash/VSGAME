@@ -14,24 +14,25 @@ extends Node2D
 @onready var wave_spawner: WaveSpawner = $WaveSpawner
 @onready var boss_spawner: BossSpawner = $BossSpawner
 @onready var combo_system: ComboSystem = $ComboSystem
-@onready var room_run_controller: RoomRunController = $RoomRunController
 @onready var map_run_controller: MapRunController = $MapRunController
 @onready var concept_system: ConceptSystem = $ConceptSystem
+var mobile_controls: MobileControls
 
 func _ready() -> void:
-	# 通常起動はMAP探索。ROOMは明示的Debug request時だけ、埋め込みTest Labは
-	# 従来通り自動進行なしの手動Sandboxに分離する。
-	var room_test_runtime := GameManager.consume_debug_room_mode_request()
-	var map_runtime := get_tree().current_scene == self and not room_test_runtime
-	GameManager.start_run(room_test_runtime, map_runtime)
+	mobile_controls = preload("res://ui/hud/mobile_controls.gd").new()
+	add_child(mobile_controls)
+	if "--survival-check" in OS.get_cmdline_user_args() or "--sector-mobile-check" in OS.get_cmdline_user_args(): SaveManager.begin_ephemeral_session()
+	# 通常起動は大群・自動攻撃のMAP進行、埋め込みTest LabはSandbox。
+	var map_runtime := get_tree().current_scene == self
+	GameManager.start_run(map_runtime)
 	if map_runtime:
 		player.set_movement_locked(true)
-		wave_spawner.enable_room_mode(true)
+		wave_spawner.set_spawning_paused(true)
 		await stage_environment.build_dungeon_async(GameManager.dungeon_map, 5)
 		player.global_position = GameManager.dungeon_map.grid_to_world(GameManager.dungeon_map.spawn_point)
 		player.setup_camera_limits(GameManager.dungeon_map)
 		player.set_movement_locked(false)
-	elif not room_test_runtime:
+	else:
 		stage_environment.build_dungeon(GameManager.dungeon_map)
 		player.global_position = GameManager.dungeon_map.grid_to_world(GameManager.dungeon_map.spawn_point)
 		player.setup_camera_limits(GameManager.dungeon_map)
@@ -44,11 +45,27 @@ func _ready() -> void:
 	combo_system.combo_changed.connect(hud.set_combo)
 	combo_system.combo_reset.connect(hud.reset_combo_display)
 	concept_system.completed_skill_changed.connect(func(skill_id, level): hud.set_completed_skill(skill_id, concept_system.get_completed_skill_display_name(skill_id), level))
-	if room_test_runtime:
-		room_run_controller.begin_run()
-	elif map_runtime:
+	if map_runtime:
 		map_run_controller.begin_run()
-		if OS.is_debug_build() and ("--map-runtime-check" in OS.get_cmdline_user_args() or "--map-combat-check" in OS.get_cmdline_user_args() or "--map-soak-check" in OS.get_cmdline_user_args() or "--map-gui-capture" in OS.get_cmdline_user_args()):
+		if OS.is_debug_build() and "--sector-mobile-check" in OS.get_cmdline_user_args():
+			add_child(preload("res://tests/five_minute_survival_check.gd").new())
+		elif OS.is_debug_build() and "--survival-check" in OS.get_cmdline_user_args():
+			add_child(preload("res://tests/five_minute_survival_check.gd").new())
+		elif OS.is_debug_build() and "--map-terrain-rhythm-check" in OS.get_cmdline_user_args():
+			var terrain_rhythm_check := preload("res://tests/map_terrain_rhythm_check.gd").new()
+			add_child(terrain_rhythm_check)
+		elif OS.is_debug_build() and ("--map-performance-check" in OS.get_cmdline_user_args() or "--map-performance-feature-check" in OS.get_cmdline_user_args() or "--map-mass-density-check" in OS.get_cmdline_user_args()):
+			var performance_check := preload("res://tests/map_performance_accumulation_check.gd").new()
+			add_child(performance_check)
+		elif OS.is_debug_build() and "--run-economy-balance-check" in OS.get_cmdline_user_args():
+			var economy_balance_check := preload("res://tests/run_economy_balance_check.gd").new()
+			add_child(economy_balance_check)
+		elif OS.is_debug_build() and "--imported-assets-map-check" in OS.get_cmdline_user_args():
+			add_child(preload("res://tests/imported_assets_map_check.gd").new())
+		elif OS.is_debug_build() and ("--shop-runtime-check" in OS.get_cmdline_user_args() or "--shop-gui-capture" in OS.get_cmdline_user_args()):
+			var shop_runtime_check := preload("res://tests/shop_runtime_check.gd").new()
+			add_child(shop_runtime_check)
+		elif OS.is_debug_build() and ("--map-runtime-check" in OS.get_cmdline_user_args() or "--map-combat-check" in OS.get_cmdline_user_args() or "--map-soak-check" in OS.get_cmdline_user_args() or "--map-gui-capture" in OS.get_cmdline_user_args() or "--map-phase2-check" in OS.get_cmdline_user_args()):
 			var runtime_check := preload("res://tests/map_exploration_runtime_check.gd").new()
 			add_child(runtime_check)
 	else:

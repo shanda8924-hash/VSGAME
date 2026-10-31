@@ -52,5 +52,5 @@ func _on_body_entered(body: Node2D) -> void:
 	vfx.setup(32.0, Color(0.3, 1.0, 0.5, 0.85), Vector2.UP, 180.0, "aura")
 	GameManager.get_runtime_world(self).add_child(vfx)
 	vfx.global_position = global_position
-	AudioManager.play_sfx("item_pickup")
+	AudioManager.play_sfx("heart_collect")
 	queue_free()

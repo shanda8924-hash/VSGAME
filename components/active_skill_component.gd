@@ -47,10 +47,10 @@ const ISSEN_STRIKE_KNOCKBACK := 55.0
 
 ## 乱撃派/一閃派それぞれの能動発動専用クールダウン(@exportで調整可能)。
 ## 職業固有のactive_skill_cooldown(JSON、6.0秒=school未確定時の居合用)とは別枠。
-@export var rengeki_cooldown: float = 2.0
-@export var issen_cooldown: float = 3.0
+@export var rengeki_cooldown: float = 5.0
+@export var issen_cooldown: float = 7.0
 ## 一閃派の能動発動ダメージ倍率(通常の近接攻撃基準に対して)。
-@export var issen_damage_multiplier: float = 2.5
+@export var issen_damage_multiplier: float = 1.65
 
 var character_data: CharacterData
 var cooldown_remaining: float = 0.0
@@ -66,6 +66,7 @@ var _swordsman_charges_used: int = 0
 ## 同時に動いて移動ロック/無敵状態を奪い合わないよう、順番に実行するキューにする。
 var _swordsman_iai_pending: int = 0
 var _swordsman_iai_running: bool = false
+var _dodge_cancel_epoch := 0
 
 @onready var player: Player = get_parent() as Player
 
@@ -226,7 +227,15 @@ const IAI_CANCEL_POINT_RATIO := 0.65
 ## 2回の居合の間に一瞬だけ無敵が切れる、といった隙間を作らないため)。
 ## チャージが残っていない(school未確定/一閃派、または既に使い切っている)
 ## 場合はこれまで通り最後まで通常再生する。
+func cancel_for_dodge() -> void:
+	_dodge_cancel_epoch += 1
+	_swordsman_iai_pending = 0
+	if player and player._movement_locked_by_attack and _swordsman_iai_running:
+		player.health_component.invincible = false
+		player.set_movement_locked(false)
+
 func _swordsman_iai() -> void:
+	var epoch := _dodge_cancel_epoch
 	var direction := player.get_facing_direction()
 	var distance := _param("dash_distance", 280.0)
 	var half_width := _param("half_width", 38.0)
@@ -234,7 +243,7 @@ func _swordsman_iai() -> void:
 	player.set_movement_locked(true)
 	player.health_component.invincible = true
 	await player.get_tree().create_timer(_param("windup", 0.16)).timeout
-	if not is_instance_valid(player):
+	if not is_instance_valid(player) or epoch != _dodge_cancel_epoch:
 		return
 	# 扇状Polygonは使わず、実移動区間の細いTrail・残像・Hitだけで居合を見せる。
 	var hit_enemies: Dictionary = {}
@@ -243,12 +252,11 @@ func _swordsman_iai() -> void:
 	var cancel_step_index := int(ceil(float(steps) * IAI_CANCEL_POINT_RATIO)) - 1
 	var was_combo_cancelled := false
 	for step in steps:
-		if not is_instance_valid(player):
-			return
+		if not is_instance_valid(player) or epoch != _dodge_cancel_epoch:
+			break
 		var segment_start := player.global_position
 		_spawn_iai_afterimage()
 		var reached_full_segment := _move_iai_segment(direction * distance / float(steps), collision_exceptions)
-		_spawn_iai_element_trail(segment_start, player.global_position)
 		_damage_iai_segment(segment_start, player.global_position, half_width, damage, hit_enemies)
 		if not reached_full_segment:
 			break
@@ -259,7 +267,7 @@ func _swordsman_iai() -> void:
 	for enemy_body in collision_exceptions:
 		if is_instance_valid(enemy_body):
 			player.remove_collision_exception_with(enemy_body)
-	if was_combo_cancelled:
+	if was_combo_cancelled or epoch != _dodge_cancel_epoch:
 		return
 	player.health_component.invincible = false
 	player.set_movement_locked(false)
@@ -269,17 +277,10 @@ func _spawn_iai_afterimage() -> void:
 	var afterimage := AFTERIMAGE_SCRIPT.new() as CharacterAfterimage
 	GameManager.get_runtime_world(player).add_child(afterimage)
 	var alpha := clampf(_param("afterimage_alpha", 0.48), 0.0, 1.0)
-	var element_data: ElementVFXData = DataLoader.element_vfx_effects.get(GameManager.active_element_id)
-	if element_data:
-		alpha *= element_data.iai_afterimage_alpha_multiplier
-	var base_color := element_data.attack_tint if element_data else Color(0.18, 0.32, 0.58, 1.0)
+	var base_color := Color(0.18, 0.32, 0.58, 1.0)
 	var tint := Color(base_color.r, base_color.g, base_color.b, alpha)
 	afterimage.setup(player.animated_sprite, tint, _param("afterimage_lifetime", 0.28))
 
-func _spawn_iai_element_trail(segment_start: Vector2, segment_end: Vector2) -> void:
-	var manager := player.get_tree().get_first_node_in_group("attack_vfx_manager") as AttackVFXManager
-	if manager:
-		manager.play_iai_trail(segment_start, segment_end)
 
 func _move_iai_segment(motion: Vector2, collision_exceptions: Array[CollisionObject2D]) -> bool:
 	var remaining := motion
@@ -404,7 +405,7 @@ func _necromancer_raise_dead() -> void:
 	_summon_empowered_minions(int(_param("summon_count", 3.0)), _param("duration", 18.0))
 
 func _base_damage() -> float:
-	var damage := maxf(character_data.base_damage, 10.0)
+	var damage := maxf(character_data.base_damage, 1.0)
 	var stat_modifier: StatModifierComponent = player.get_node_or_null("StatModifierComponent")
 	if stat_modifier:
 		damage += stat_modifier.get_damage_flat_bonus()
@@ -468,7 +469,6 @@ func _arrow_storm() -> void:
 	data.attack_range = 560.0
 	data.crit_chance = character_data.crit_chance
 	data.crit_multiplier = character_data.crit_multiplier
-	data.vfx_theme_id = GameManager.get_active_element_theme_id()
 	var facing := player.get_facing_direction()
 	for i in 9:
 		var angle := deg_to_rad(lerpf(-42.0, 42.0, float(i) / 8.0))
@@ -514,15 +514,18 @@ func _damage_enemy(enemy: Node, amount: float, knockback: float, is_critical: bo
 	EventBus.damage_dealt.emit(actual_damage, enemy.global_position, is_critical)
 	EventBus.enemy_physical_damage_dealt.emit(actual_damage, enemy.global_position, is_critical)
 	var hurtbox: HurtboxComponent = enemy.get_node_or_null("HurtboxComponent")
-	var element_system := player.get_tree().get_first_node_in_group("element_combat_system") as ElementCombatSystem
-	if element_system and hurtbox:
-		element_system.apply_element_damage(hurtbox, actual_damage, player.global_position, {"combat_metadata": metadata})
+	var status_system := player.get_tree().get_first_node_in_group("status_apply_system") as StatusApplySystem
+	# Space技も通常攻撃と同じ「職業が付与する状態」に揃える。ここだけburning固定だと、
+	# 例えばcursed職のPlayerが自分では使えないburning系カードの条件を満たしてしまう。
+	var skill_status_id := player.weapon_manager.get_applied_status_id() if player.weapon_manager else ""
+	if status_system and skill_status_id != "" and enemy.is_in_group("enemies"):
+		status_system.apply_state(enemy, skill_status_id, actual_damage)
 	AudioManager.play_sfx("hit_impact")
 	if enemy.has_method("apply_knockback"):
 		enemy.apply_knockback((enemy.global_position - player.global_position).normalized(), knockback)
 	var manager := player.get_tree().get_first_node_in_group("effect_theme_manager")
 	if manager and hurtbox:
-		manager.play_weapon_hit(GameManager.get_active_element_theme_id(), enemy.global_position, player.experience_component.level, hurtbox, player.global_position, is_critical)
+		manager.play_weapon_hit("", enemy.global_position, player.experience_component.level, hurtbox, player.global_position, is_critical)
 
 func _damage_circle_at(center: Vector2, radius: float, amount: float, knockback: float) -> void:
 	for enemy in player.get_tree().get_nodes_in_group("enemies"):
@@ -552,5 +555,4 @@ func _cooldown() -> float:
 	return maxf(character_data.active_skill_cooldown, 0.1)
 
 func _skill_color() -> Color:
-	var element_data: ElementVFXData = DataLoader.element_vfx_effects.get(GameManager.active_element_id)
-	return element_data.attack_tint if element_data else Color(0.95, 0.8, 0.3, 1.0)
+	return Color(0.95, 0.8, 0.3, 1.0)

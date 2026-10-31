@@ -9,19 +9,12 @@ signal enemy_drop_requested(death_position: Vector2, is_elite: bool, is_boss: bo
 signal healing_received(amount: float, position: Vector2)
 signal player_damaged(amount: float, current_hp: float, max_hp: float)
 signal player_leveled_up(new_level: int)
-signal fragment_collected(fragment_id: String)
 ## 互換用の主属性通知。2属性保持中は最後に取得した属性を通知する。
-signal active_element_changed(element_id: String)
 ## ラン中の2属性スロットと各Lv。Fusion用欠片所持数とは独立している。
-signal element_loadout_changed(active_element_ids: Array, element_stacks: Dictionary)
 ## 2属性がともにLv3へ到達し、専用Fusion属性が成立した瞬間。1Runにつき一度だけ発火する。
-signal element_fusion_formed(fusion_id: String, display_name: String, source_element_ids: Array)
 ## General / Element / Fusion MasteryのRankが変化した通知。
-signal element_mastery_changed(scope: String, mastery_id: String, rank: int)
 ## Boss属性報酬の確定通知。UIやテストはChoice Dictionaryを読み、攻撃処理とは接続しない。
-signal element_reward_selected(choice: Dictionary)
 ## ベース攻撃とは別に確定した属性追加ダメージ。chain_index=0は初撃、1以上は雷連鎖。
-signal element_damage_dealt(amount: float, position: Vector2, element_id: String, stack_level: int, chain_index: int)
 signal mass_kill_triggered(kill_count: int, trigger_position: Vector2)
 signal damage_dealt(amount: float, position: Vector2, is_critical: bool)
 ## Player由来の物理Damageが敵へ実際に通った通知。COMBO/吸血はPlayer被弾も含む
@@ -33,10 +26,14 @@ signal enemy_damage_confirmed(target: Node, amount: float, is_critical: bool, me
 signal run_started()
 signal run_ended(survived_seconds: float, kill_count: int)
 signal run_cleared(room_count: int, elapsed_seconds: float, kill_count: int)
+## セーブしないラン専用ゴールド。sourceはHUD演出・検証用で、経済計算には使わない。
+signal run_gold_changed(current_gold: int, delta: int, source: String)
 ## 通常RunのMAP探索進行。ROOM進行Signalはテスト／復旧用に残し、通常UIは
 ## こちらだけを購読する。
 signal map_started(map_index: int, total_maps: int, display_name: String)
 signal map_progress_changed(map_index: int, elapsed_seconds: float, fallback_seconds: float, kill_count: int, required_kills: int)
+signal map_surge_started(map_index: int, surge_index: int, trigger_reason: String, duration_seconds: float)
+signal map_surge_ended(map_index: int, surge_index: int, reward_type: String, reward_position: Vector2)
 signal map_boss_unlocked(map_index: int)
 signal map_completed(map_index: int, elapsed_seconds: float, kill_count: int)
 signal treasure_reward_revealed(reward_type: String, rarity: String, position: Vector2)

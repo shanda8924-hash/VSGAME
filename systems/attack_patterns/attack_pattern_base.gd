@@ -9,6 +9,14 @@ class_name AttackPatternBase
 ## パターンで共通する処理はここにヘルパーとしてまとめておく。
 
 const MELEE_HIT_SCENE_PATH := "res://entities/melee_hit/melee_hit.tscn"
+
+## この攻撃パターンが命中時に敵へ付与する状態異常。
+## 各Strategyがoverrideして職業ごとの状態を返す(仕様書36.3参照)。
+## ここはoverrideを持たないPatternのための既定値。
+## TODO: 天賦図による付与状態の追加・変更は後日設計する。
+func applied_status_id() -> String:
+	return "burning"
+
 ## EnemyBasic.HurtboxComponentのcollision_layer(entities/enemies/enemy_basic.tscn参照)。
 ## 円範囲クエリで「敵の被弾判定だけ」を拾うためのマスク値として使う。
 const ENEMY_HURTBOX_LAYER := 4
@@ -134,6 +142,7 @@ func spawn_point_hit(scene_tree: SceneTree, position: Vector2, damage: float, is
 	var hit := hit_scene.instantiate()
 	hit.damage = damage
 	hit.is_critical = is_critical
+	hit.applied_status_id = applied_status_id()
 	hit.setup(character_data.vfx_theme_id, character_level, origin_position)
 	scene_tree.current_scene.add_child(hit)
 	hit.global_position = position
@@ -149,6 +158,7 @@ func spawn_arc_hit(attacker: Player, radius: float, facing: Vector2, half_angle_
 	var roll := roll_damage(character_data, weapon_manager, bonus_crit_chance, force_critical)
 	hit.damage = roll["damage"] * damage_multiplier
 	hit.is_critical = roll["is_critical"]
+	hit.applied_status_id = applied_status_id()
 	hit.setup(character_data.vfx_theme_id, weapon_manager.get_owner_character_level(), attacker.global_position)
 	GameManager.get_runtime_world(attacker).add_child(hit)
 	hit.global_position = attacker.global_position
@@ -164,6 +174,7 @@ func spawn_line_hit(attacker: Player, length: float, half_width: float, facing: 
 	var roll := roll_damage(character_data, weapon_manager)
 	hit.damage = roll["damage"] * damage_multiplier
 	hit.is_critical = roll["is_critical"]
+	hit.applied_status_id = applied_status_id()
 	hit.setup(character_data.vfx_theme_id, weapon_manager.get_owner_character_level(), attacker.global_position)
 	GameManager.get_runtime_world(attacker).add_child(hit)
 	hit.global_position = attacker.global_position
@@ -201,11 +212,11 @@ func apply_direct_damage(hurtbox: HurtboxComponent, damage: float, is_critical: 
 	EventBus.damage_dealt.emit(actual_damage, target_entity.global_position, is_critical)
 	if target_entity.is_in_group("enemies"):
 		EventBus.enemy_physical_damage_dealt.emit(actual_damage, target_entity.global_position, is_critical)
-	var element_system := hurtbox.get_tree().get_first_node_in_group("element_combat_system") as ElementCombatSystem
-	if element_system:
-		element_system.apply_element_damage(hurtbox, actual_damage, origin_position, {"combat_metadata": metadata})
+	var status_system := hurtbox.get_tree().get_first_node_in_group("status_apply_system") as StatusApplySystem
+	if status_system and target_entity.is_in_group("enemies"):
+		status_system.apply_state(target_entity, applied_status_id(), actual_damage)
 	if target_entity.is_in_group("enemies"):
-		AudioManager.play_sfx("hit_impact")
+		AudioManager.play_sfx("combat_hit")
 	var manager: Node = hurtbox.get_tree().get_first_node_in_group("effect_theme_manager")
 	if manager:
 		manager.play_weapon_hit(character_data.vfx_theme_id, target_entity.global_position, character_level, hurtbox, origin_position, is_critical, character_data.vfx_theme_id == "lightning")

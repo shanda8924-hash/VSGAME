@@ -45,3 +45,7 @@ func _on_vulnerable_hit(hurtbox: HurtboxComponent) -> void:
 	await entity.get_tree().create_timer(LV5_VULNERABLE_DURATION, false).timeout
 	if is_instance_valid(health):
 		health.damage_taken_multiplier /= LV5_VULNERABLE_MULTIPLIER
+
+## この攻撃パターンが命中時に付与する状態異常。祈祷が対象へ刻印を刻む。
+func applied_status_id() -> String:
+	return "marked"

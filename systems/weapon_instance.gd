@@ -13,7 +13,7 @@ func _init(weapon_data: WeaponData) -> void:
 func tick(delta: float, owner_entity: Node2D, manager: WeaponManagerComponent) -> void:
 	_cooldown -= delta
 	if _cooldown <= 0.0:
-		var target := manager.find_nearest_enemy(owner_entity.global_position)
+		var target := manager.find_nearest_enemy(owner_entity.global_position, data.attack_range * manager.get_attack_range_multiplier(), true)
 		if target == null:
 			return
 		# rapid_barrageのようなトレードオフ強化で射程が変動する場合があるため、
@@ -23,6 +23,8 @@ func tick(delta: float, owner_entity: Node2D, manager: WeaponManagerComponent) -
 		var effective_range: float = data.attack_range * manager.get_attack_range_multiplier()
 		if owner_entity.global_position.distance_to(target.global_position) > effective_range:
 			return
-		manager.spawn_projectile(data, owner_entity.global_position, target.global_position)
+		var player := owner_entity as Player
+		var origin := player.floating_weapons.get_muzzle(data.id) if player and player.floating_weapons else owner_entity.global_position
+		manager.spawn_projectile(data, origin, target.global_position)
 		# quick_handsのようなアイテムで蓄積した攻撃間隔短縮率を反映する。
 		_cooldown = data.attack_interval * manager.get_attack_interval_multiplier()

@@ -7,20 +7,6 @@ signal lab_ready()
 const GAME_SCENE := preload("res://scenes/game.tscn")
 const ENEMY_SCENE := preload("res://entities/enemies/enemy_basic.tscn")
 const PROJECTILE_SCENE := preload("res://entities/projectiles/projectile.tscn")
-const FUSIONS := [
-	{"id":"frostfire", "label":"THERMAL SHOCK  Fire + Ice", "a":"fire", "b":"ice"},
-	{"id":"plasma", "label":"PLASMA  Fire + Lightning", "a":"fire", "b":"lightning"},
-	{"id":"solar", "label":"SOLAR FLARE  Fire + Light", "a":"fire", "b":"light"},
-	{"id":"inferno", "label":"INFERNO  Fire + Dark", "a":"fire", "b":"dark"},
-	{"id":"superconductor", "label":"SUPERCONDUCTOR  Ice + Lightning", "a":"ice", "b":"lightning"},
-	{"id":"aurora", "label":"AURORA  Ice + Light", "a":"ice", "b":"light"},
-	{"id":"void_frost", "label":"BLACK ICE  Ice + Dark", "a":"ice", "b":"dark"},
-	{"id":"judgment", "label":"RADIANT ARC  Lightning + Light", "a":"lightning", "b":"light"},
-	{"id":"voidstorm", "label":"VOIDSTORM  Lightning + Dark", "a":"lightning", "b":"dark"},
-	{"id":"eclipse", "label":"ECLIPSE  Light + Dark", "a":"light", "b":"dark"},
-]
-const ELEMENTS := ["fire", "ice", "lightning", "light", "dark"]
-const ELEMENT_LABELS := {"fire":"FIRE / 火", "ice":"ICE / 氷", "lightning":"LIGHTNING / 雷", "light":"LIGHT / 光", "dark":"DARK / 闇"}
 const RARITIES := ["uncommon", "rare", "epic", "legendary", "mythic"]
 const BOSS_STRATEGIES := {
 	"Charge":"res://systems/boss_ai/charge_attack_strategy.gd",
@@ -31,12 +17,10 @@ const BOSS_STRATEGIES := {
 
 var runtime_game: Node2D
 var player: Player
-var element_combat: ElementCombatSystem
+var status_apply: StatusApplySystem
 var attack_vfx: AttackVFXManager
 var boss_spawner: BossSpawner
-var fragment_select: FragmentSelect
 var equipment_drop: EquipmentDropSystem
-var room_controller: RoomRunController
 var concept_system: ConceptSystem
 var concept_board: ConceptBoard
 var combo_system: ComboSystem
@@ -47,8 +31,6 @@ var _tabs: TabContainer
 var _status_label: Label
 var _state_label: RichTextLabel
 var _damage_label: RichTextLabel
-var _element_mode: OptionButton
-var _gallery_element: OptionButton
 var _enemy_type: OptionButton
 var _spawn_pattern: OptionButton
 var _elite_toggle: CheckButton
@@ -56,7 +38,6 @@ var _boss_type: OptionButton
 var _equipment_template: OptionButton
 var _equipment_rarity: OptionButton
 var _equipment_summary: RichTextLabel
-var _room_number: SpinBox
 var _completed_skill_select: OptionButton
 var _dummy_hp_label: Label
 var _dummy_infinite := true
@@ -95,7 +76,7 @@ func _ready() -> void:
 	PixelUIStyle.apply_tree(self)
 	spawn_dummy()
 	reset_damage_meter()
-	_set_status("READY — WASD/Arrow: Move, Space: Active Skill, Esc: Stop Preview")
+	_set_status("READY — WASD/Arrow: Move, Auto Attack, J: Counter, K: Dodge, L: Active Skill, Esc: Stop Preview")
 	lab_ready.emit()
 
 func _exit_tree() -> void:
@@ -104,13 +85,10 @@ func _exit_tree() -> void:
 	if _meter_connected:
 		if EventBus.damage_dealt.is_connected(_on_physical_damage):
 			EventBus.damage_dealt.disconnect(_on_physical_damage)
-		if EventBus.element_damage_dealt.is_connected(_on_element_damage):
-			EventBus.element_damage_dealt.disconnect(_on_element_damage)
 	AudioManager.stop_all()
 	Engine.time_scale = 1.0
 	get_tree().paused = false
 	if OS.is_debug_build():
-		GameManager.debug_force_element_state({})
 		GameManager.run_state = GameManager.RunState.NONE
 		GameManager.selected_character_id = _selected_character_before_lab
 	if _save_session_active:
@@ -248,17 +226,15 @@ func _load_runtime_game() -> void:
 	_subviewport.add_child(runtime_game)
 	await get_tree().process_frame
 	await get_tree().physics_frame
-	for node_name in ["WaveSpawner", "BossSpawner", "EliteRoomManager", "RoomRunController", "ComboSystem"]:
+	for node_name in ["WaveSpawner", "BossSpawner", "EliteRoomManager", "ComboSystem"]:
 		var automatic := runtime_game.get_node_or_null(node_name)
 		if automatic:
 			automatic.process_mode = Node.PROCESS_MODE_DISABLED
 	player = runtime_game.get_node("Player") as Player
-	element_combat = runtime_game.get_node("ElementCombatSystem") as ElementCombatSystem
+	status_apply = runtime_game.get_node("StatusApplySystem") as StatusApplySystem
 	attack_vfx = runtime_game.get_node("AttackVFXManager") as AttackVFXManager
 	boss_spawner = runtime_game.get_node("BossSpawner") as BossSpawner
-	fragment_select = runtime_game.get_node("FragmentSelect") as FragmentSelect
 	equipment_drop = runtime_game.get_node("EquipmentDropSystem") as EquipmentDropSystem
-	room_controller = runtime_game.get_node("RoomRunController") as RoomRunController
 	concept_system = runtime_game.get_node("ConceptSystem") as ConceptSystem
 	concept_board = runtime_game.get_node("ConceptBoard") as ConceptBoard
 	combo_system = runtime_game.get_node("ComboSystem") as ComboSystem
@@ -293,49 +269,11 @@ func return_to_title() -> void:
 
 func _build_control_tabs() -> void:
 	_build_player_tab()
-	_build_room_tab()
-	_build_element_tab()
-	_build_fusion_tab()
 	_build_vfx_tab()
 	_build_combat_tab()
 	_build_boss_tab()
 	_build_equipment_tab()
 	_build_concept_tab()
-
-func _build_room_tab() -> void:
-	var body := _new_tab("ROOM")
-	_section(body, "36 ROOM TRANSITION / PERFORMANCE")
-	_room_number = SpinBox.new()
-	_room_number.min_value = 1
-	_room_number.max_value = 36
-	_room_number.value = 4
-	_room_number.step = 1
-	body.add_child(_room_number)
-	var jump_buttons := _grid(body, 3)
-	_add_button(jump_buttons, "JUMP SELECTED", _room_jump_selected)
-	_add_button(jump_buttons, "ROOM 4 BOSS", func(): _room_jump(4))
-	_add_button(jump_buttons, "ROOM 12 BOSS", func(): _room_jump(12))
-	_add_button(jump_buttons, "ROOM 24 BOSS", func(): _room_jump(24))
-	_add_button(jump_buttons, "ROOM 36 FINAL", func(): _room_jump(36))
-	_add_button(jump_buttons, "TRANSITION STRESS x12", _room_transition_stress)
-
-func _room_jump_selected() -> void:
-	await _room_jump(int(_room_number.value))
-
-func _room_jump(room_number: int) -> void:
-	room_controller.debug_jump_to_room(room_number)
-	var deadline := Time.get_ticks_msec() + 6000
-	while room_controller.current_room != room_number or room_controller.state != RoomRunController.RoomState.COMBAT:
-		if Time.get_ticks_msec() >= deadline:
-			_set_status("ROOM %d jump timed out" % room_number)
-			return
-		await get_tree().process_frame
-	_set_status("ROOM %d ready / %s" % [room_number, room_controller.last_transition_profile])
-
-func _room_transition_stress() -> void:
-	_set_status("ROOM transition stress running...")
-	var result := await room_controller.debug_transition_stress(12)
-	_set_status("Transition stress complete: %s" % result)
 
 func _build_concept_tab() -> void:
 	var body := _new_tab("CONCEPT")
@@ -567,77 +505,14 @@ func _build_player_tab() -> void:
 	_add_button(buttons, "LEVEL +10", func(): add_player_levels(10))
 	_add_button(buttons, "MAX Lv50", func(): add_player_levels(maxi(0, 50 - player.experience_component.level)))
 
-func _build_element_tab() -> void:
-	var body := _new_tab("ELEMENT")
-	_section(body, "ELEMENT TEST")
-	_element_mode = OptionButton.new()
-	_element_mode.add_item("NORMAL — Acquire/Level Up runtime")
-	_element_mode.add_item("FORCE — final state only")
-	body.add_child(_element_mode)
-	for fragment_id in ELEMENTS:
-		var element_id := "element_%s" % fragment_id
-		var label := Label.new()
-		label.text = ELEMENT_LABELS[fragment_id]
-		label.add_theme_color_override("font_color", _element_color(element_id))
-		body.add_child(label)
-		var levels := _grid(body, 4)
-		for level in 4:
-			_add_button(levels, "NONE" if level == 0 else "Lv%d" % level, _on_element_level_button.bind(fragment_id, level))
-		var transitions := _grid(body, 3)
-		_add_button(transitions, "Trigger Lv1", trigger_element_transition.bind(fragment_id, 0))
-		_add_button(transitions, "Lv1 → Lv2", trigger_element_transition.bind(fragment_id, 1))
-		_add_button(transitions, "Lv2 → Lv3", trigger_element_transition.bind(fragment_id, 2))
-		var actions := _grid(body, 4)
-		_add_button(actions, "ATTACK", trigger_element_attack.bind(fragment_id))
-		_add_button(actions, "HIT", trigger_element_hit.bind(fragment_id))
-		_add_button(actions, "STATUS", trigger_element_status.bind(fragment_id))
-		_add_button(actions, "IAI (REAL HIT)", trigger_element_iai.bind(fragment_id))
-	_add_button(body, "CLEAR ELEMENT BUILD", func(): set_element_level("fire", 0, true); GameManager.debug_force_element_state({}); element_combat.reset_runtime())
 
-func _build_fusion_tab() -> void:
-	var body := _new_tab("FUSION")
-	_section(body, "FUSION TEST — all 10 runtime pairs")
-	var preview := _grid(body, 2)
-	_add_button(preview, "PREVIEW ALL FUSIONS", preview_all_fusions)
-	_add_button(preview, "STOP (Esc)", stop_all_previews)
-	var compare := _grid(body, 1)
-	_add_button(compare, "LIGHTNING → PLASMA → LIGHTNING", compare_base_fusion.bind("lightning", "plasma"))
-	_add_button(compare, "FIRE → PLASMA → FIRE", compare_base_fusion.bind("fire", "plasma"))
-	_add_button(compare, "LIGHTNING → RADIANT ARC → LIGHTNING", compare_base_fusion.bind("lightning", "judgment"))
-	for entry in FUSIONS:
-		var label := Label.new()
-		label.text = entry["label"]
-		label.add_theme_font_size_override("font_size", 15)
-		body.add_child(label)
-		var actions := _grid(body, 3)
-		_add_button(actions, "CREATE", create_fusion.bind(entry["id"], false))
-		_add_button(actions, "NATURAL", create_fusion.bind(entry["id"], true))
-		_add_button(actions, "TRIGGER ATTACK", trigger_fusion_attack.bind(entry["id"]))
-		_add_button(actions, "TRIGGER HIT", trigger_fusion_vfx.bind(entry["id"], "hit"))
-		_add_button(actions, "TRIGGER BONUS TRAIT", trigger_fusion_bonus.bind(entry["id"]))
-		_add_button(actions, "TRIGGER INTRO", trigger_fusion_intro.bind(entry["id"]))
-		_add_button(actions, "RESET", reset_fusion)
 
 func _build_vfx_tab() -> void:
 	var body := _new_tab("VFX GALLERY")
 	_section(body, "VFX GALLERY — combat can be frozen")
 	_add_check(body, "Gallery Mode / freeze spawned enemies", false, _set_gallery_mode)
-	_gallery_element = OptionButton.new()
-	for element in ELEMENTS:
-		_gallery_element.add_item(ELEMENT_LABELS[element])
-		_gallery_element.set_item_metadata(_gallery_element.item_count - 1, element)
-	body.add_child(_gallery_element)
-	_add_button(body, "COMPARE LV1 / LV2 / LV3", compare_selected_element)
-	var element_grid := _grid(body, 3)
-	for element in ELEMENTS:
-		for level in range(1, 4):
-			_add_button(element_grid, "%s Lv%d" % [element.capitalize(), level], play_element_gallery.bind(element, level))
 	_section(body, "CONCEPT PIXEL VFX")
 	_add_button(body, "WIND BLADE / 風刃", preview_wind_blade_vfx)
-	_section(body, "FUSION VFX")
-	var fusion_grid := _grid(body, 2)
-	for entry in FUSIONS:
-		_add_button(fusion_grid, entry["id"].to_upper(), trigger_fusion_vfx.bind(entry["id"], "attack"))
 
 func _build_combat_tab() -> void:
 	var body := _new_tab("COMBAT")
@@ -649,6 +524,11 @@ func _build_combat_tab() -> void:
 	_add_check(body, "Freeze Position", true, _set_dummy_freeze)
 	_add_check(body, "Show Hitbox", false, _set_dummy_hitbox)
 	_add_check(body, "Show HP", true, func(v): _dummy_show_hp = v)
+	_section(body, "STATUS EFFECTS — apply to dummy")
+	var status_grid := _grid(body, 3)
+	for state_id in ["burning", "frozen", "charged", "marked", "cursed"]:
+		_add_button(status_grid, state_id.to_upper(), _apply_status_to_dummy.bind(state_id))
+	_add_button(status_grid, "CLEAR ALL", _clear_dummy_status)
 	_add_check(body, "Show Damage Received", true, func(v): _dummy_show_damage = v)
 	_add_check(body, "Status Immunity", false, _set_dummy_status_immunity)
 
@@ -701,11 +581,6 @@ func _build_boss_tab() -> void:
 	for strategy_name in BOSS_STRATEGIES:
 		_add_button(boss_buttons, strategy_name.to_upper(), trigger_boss_strategy.bind(strategy_name))
 
-	_section(body, "BOSS REWARD STATE PRESET")
-	var presets := _grid(body, 3)
-	for preset in ["NO ELEMENT", "ONE ELEMENT", "TWO ELEMENT", "ONE MAX", "TWO MAX", "FUSION ACTIVE"]:
-		_add_button(presets, preset, apply_reward_preset.bind(preset))
-	_add_button(body, "OPEN BOSS REWARD", open_boss_reward)
 
 func _build_equipment_tab() -> void:
 	var body := _new_tab("EQUIPMENT / LOOT")
@@ -803,192 +678,6 @@ func add_player_levels(count: int) -> void:
 		player.experience_component.add_exp(player.experience_component.exp_to_next_level - player.experience_component.current_exp)
 	_set_status("Player Level -> %d via ExperienceComponent" % player.experience_component.level)
 
-# ELEMENT / FUSION ------------------------------------------------------------
-func _on_element_level_button(fragment_id: String, level: int) -> void:
-	set_element_level(fragment_id, level, _element_mode.selected == 1)
-
-func set_element_level(fragment_id: String, level: int, force: bool = false) -> bool:
-	var element_id := "element_%s" % fragment_id
-	level = clampi(level, 0, 3)
-	if force:
-		var stacks := {}
-		for active_id in GameManager.get_active_element_ids():
-			stacks[active_id] = GameManager.get_element_stack(active_id)
-		if level <= 0:
-			stacks.erase(element_id)
-		else:
-			stacks[element_id] = level
-		if stacks.size() > 2:
-			_set_status("FORCE rejected: Element Slot is already 2 / 2")
-			return false
-		element_combat.reset_runtime()
-		var forced := GameManager.debug_force_element_state(stacks)
-		_set_status("FORCE %s -> Lv%d" % [fragment_id.to_upper(), level])
-		return forced
-	var current := GameManager.get_element_stack(element_id)
-	if level == 0 or level < current:
-		var rebuild := {}
-		for active_id in GameManager.get_active_element_ids():
-			if active_id != element_id:
-				rebuild[active_id] = GameManager.get_element_stack(active_id)
-		if level > 0:
-			rebuild[element_id] = level
-		GameManager.set_active_element(GameManager.ELEMENT_NONE)
-		element_combat.reset_runtime()
-		for active_id in rebuild:
-			for _rank in int(rebuild[active_id]):
-				GameManager.add_fragment(String(active_id).trim_prefix("element_"))
-	else:
-		for _rank in level - current:
-			GameManager.add_fragment(fragment_id)
-	var success := GameManager.get_element_stack(element_id) == level
-	_set_status("NORMAL %s -> Lv%d%s" % [fragment_id.to_upper(), level, "" if success else " (rejected by runtime rule)"])
-	return success
-
-func trigger_element_transition(fragment_id: String, from_level: int) -> void:
-	GameManager.set_active_element(GameManager.ELEMENT_NONE)
-	element_combat.reset_runtime()
-	for _rank in from_level:
-		GameManager.add_fragment(fragment_id)
-	var before_projectiles := get_tree().get_nodes_in_group("projectiles").size()
-	GameManager.add_fragment(fragment_id)
-	var after_projectiles := get_tree().get_nodes_in_group("projectiles").size()
-	_set_status("%s Lv%d→Lv%d | Projectile delta %d" % [fragment_id.to_upper(), from_level, from_level + 1, after_projectiles - before_projectiles])
-
-func trigger_element_attack(fragment_id: String) -> void:
-	set_element_level(fragment_id, maxi(GameManager.get_element_stack("element_%s" % fragment_id), 1), true)
-	var target := _ensure_dummy()
-	player.active_skill_component._damage_enemy(target, 100.0, 0.0)
-	_set_status("Real physical + %s Element attack applied" % fragment_id.to_upper())
-
-func trigger_element_hit(fragment_id: String) -> void:
-	set_element_level(fragment_id, maxi(GameManager.get_element_stack("element_%s" % fragment_id), 1), true)
-	var target := _ensure_dummy()
-	element_combat.apply_element_damage(target.hurtbox_component, 100.0, player.global_position)
-	_set_status("ElementCombatSystem hit: %s" % fragment_id.to_upper())
-
-func trigger_element_status(fragment_id: String) -> void:
-	set_element_level(fragment_id, 3, true)
-	var target := _ensure_dummy()
-	for _index in 5:
-		element_combat.apply_element_damage(target.hurtbox_component, 80.0, player.global_position)
-	_set_status("%s Lv3 status/mechanic triggered" % fragment_id.to_upper())
-
-func trigger_element_iai(fragment_id: String) -> void:
-	set_element_level(fragment_id, maxi(GameManager.get_element_stack("element_%s" % fragment_id), 1), true)
-	var target := _ensure_dummy()
-	var direction := player.get_facing_direction()
-	if direction.length_squared() <= 0.01:
-		direction = Vector2.RIGHT
-	target.global_position = _safe_world_position(player.global_position + direction * 150.0)
-	player.active_skill_component._swordsman_iai()
-	_set_status("Real IAI attack: %s" % fragment_id.to_upper())
-
-func create_fusion(fusion_id: String, natural: bool = false) -> bool:
-	var entry := _fusion_entry(fusion_id)
-	if entry.is_empty():
-		return false
-	element_combat.reset_runtime()
-	if natural:
-		GameManager.set_active_element(GameManager.ELEMENT_NONE)
-		for _rank in 3:
-			GameManager.add_fragment(entry["a"])
-		for _rank in 3:
-			GameManager.add_fragment(entry["b"])
-	else:
-		var stacks := {"element_%s" % entry["a"]: 3, "element_%s" % entry["b"]: 3}
-		GameManager.debug_force_element_state(stacks, fusion_id)
-	_set_status("%s Fusion: %s" % ["NATURAL" if natural else "FORCE", GameManager.get_fusion_display_name(fusion_id)])
-	return GameManager.active_fusion_id == fusion_id
-
-func trigger_fusion_attack(fusion_id: String) -> void:
-	if GameManager.active_fusion_id != fusion_id:
-		create_fusion(fusion_id, false)
-	var target := _ensure_dummy()
-	element_combat.apply_element_damage(target.hurtbox_component, 120.0, player.global_position)
-	_set_status("Fusion attack runtime: %s" % GameManager.get_fusion_display_name(fusion_id))
-
-func trigger_fusion_bonus(fusion_id: String) -> void:
-	create_fusion(fusion_id, false)
-	_clear_developer_targets()
-	var targets := spawn_enemies(7, "Cluster", _selected_enemy_id(), false, true)
-	if targets.is_empty():
-		return
-	var target := targets[0]
-	for _index in 7:
-		if is_instance_valid(target) and target.health_component.current_hp > 0.0:
-			element_combat.apply_element_damage(target.hurtbox_component, 95.0, player.global_position)
-	if fusion_id in ["plasma", "solar", "inferno"] and is_instance_valid(target) and target.health_component.current_hp > 0.0:
-		target.health_component.current_hp = 1.0
-		target.health_component.apply_secondary_damage(1.0)
-	_set_status("Fusion Bonus Trait exercised: %s" % GameManager.get_fusion_display_name(fusion_id))
-
-func trigger_fusion_vfx(fusion_id: String, mode: String = "attack") -> void:
-	var target := _ensure_dummy()
-	var start := player.global_position + Vector2(42, -12)
-	attack_vfx.play_fusion_effect(fusion_id, start, target.global_position, mode, 1.15)
-	_set_status("Fusion VFX: %s / %s" % [GameManager.get_fusion_display_name(fusion_id), mode])
-
-func trigger_fusion_intro(fusion_id: String) -> void:
-	var entry := _fusion_entry(fusion_id)
-	if entry.is_empty():
-		return
-	create_fusion(fusion_id, false)
-	var sources := ["element_%s" % entry["a"], "element_%s" % entry["b"]]
-	EventBus.element_fusion_formed.emit(fusion_id, GameManager.get_fusion_display_name(fusion_id), sources)
-	_set_status("Fusion formation presentation: %s" % GameManager.get_fusion_display_name(fusion_id))
-
-func reset_fusion() -> void:
-	GameManager.set_active_element(GameManager.ELEMENT_NONE)
-	element_combat.reset_runtime()
-	_set_status("Fusion and Element runtime reset")
-
-func preview_all_fusions() -> void:
-	_preview_token += 1
-	var token := _preview_token
-	_set_status("PREVIEW ALL FUSIONS — generated Attack / Trail / Hit / Burst / Intro")
-	for entry in FUSIONS:
-		if token != _preview_token:
-			return
-		create_fusion(entry["id"], true)
-		trigger_fusion_attack(entry["id"])
-		await get_tree().create_timer(0.72, true, false, true).timeout
-		if token != _preview_token:
-			return
-		trigger_fusion_vfx(entry["id"], "trail")
-		await get_tree().create_timer(0.62, true, false, true).timeout
-		if token != _preview_token:
-			return
-		trigger_fusion_vfx(entry["id"], "hit")
-		await get_tree().create_timer(0.62, true, false, true).timeout
-		if token != _preview_token:
-			return
-		trigger_fusion_bonus(entry["id"])
-		await get_tree().create_timer(1.05, true, false, true).timeout
-		if token != _preview_token:
-			return
-		trigger_fusion_intro(entry["id"])
-		await get_tree().create_timer(1.85, true, false, true).timeout
-		_clear_developer_targets()
-		reset_fusion()
-	_set_status("PREVIEW ALL FUSIONS complete")
-
-func compare_base_fusion(fragment_id: String, fusion_id: String) -> void:
-	_compare_token += 1
-	var token := _compare_token
-	play_element_gallery(fragment_id, 3)
-	await get_tree().create_timer(0.78, true, false, true).timeout
-	if token != _compare_token:
-		return
-	create_fusion(fusion_id, false)
-	trigger_fusion_attack(fusion_id)
-	await get_tree().create_timer(0.78, true, false, true).timeout
-	if token != _compare_token:
-		return
-	GameManager.debug_force_element_state({"element_%s" % fragment_id: 3})
-	element_combat.reset_runtime()
-	play_element_gallery(fragment_id, 3)
-	_set_status("Compare complete: %s Lv3 → %s → %s Lv3" % [fragment_id.to_upper(), GameManager.get_fusion_display_name(fusion_id), fragment_id.to_upper()])
 
 func stop_all_previews() -> void:
 	_preview_token += 1
@@ -996,12 +685,6 @@ func stop_all_previews() -> void:
 	if concept_system:
 		concept_system.set_active(false)
 	_set_status("Automatic previews stopped")
-
-func _fusion_entry(fusion_id: String) -> Dictionary:
-	for entry in FUSIONS:
-		if entry["id"] == fusion_id:
-			return entry
-	return {}
 
 # VFX GALLERY -----------------------------------------------------------------
 func _set_gallery_mode(enabled: bool) -> void:
@@ -1012,24 +695,7 @@ func _set_gallery_mode(enabled: bool) -> void:
 			enemy.movement_component.direction = Vector2.ZERO
 	_set_status("VFX Gallery %s" % ["ON" if enabled else "OFF"])
 
-func play_element_gallery(fragment_id: String, level: int) -> void:
-	set_element_level(fragment_id, level, true)
-	var target := _ensure_dummy()
-	var data: ElementVFXData = DataLoader.element_vfx_effects.get("element_%s" % fragment_id)
-	attack_vfx.play_element_hit(target.global_position, data, level)
-	attack_vfx.play_iai_trail(target.global_position + Vector2(-120, 36), target.global_position + Vector2(120, 36))
-	_set_status("Gallery: %s Lv%d" % [fragment_id.to_upper(), level])
 
-func compare_selected_element() -> void:
-	_compare_token += 1
-	var token := _compare_token
-	var fragment_id := String(_gallery_element.get_item_metadata(_gallery_element.selected))
-	for level in range(1, 4):
-		if token != _compare_token:
-			return
-		play_element_gallery(fragment_id, level)
-		await get_tree().create_timer(1.15, true, false, true).timeout
-	_set_status("Compare complete: %s Lv1 / Lv2 / Lv3" % fragment_id.to_upper())
 
 func preview_wind_blade_vfx() -> void:
 	var target := _ensure_dummy()
@@ -1074,6 +740,25 @@ func remove_dummy() -> void:
 		dummy.queue_free()
 	dummy = null
 	_dummy_hp_label = null
+
+## 状態異常を直接ダミーへ付与する。旧ELEMENTタブのSTATUSボタンの代替
+## (属性システム廃止でapply_element_damage経由の付与が無くなったため)。
+func _apply_status_to_dummy(state_id: String) -> void:
+	var target := _ensure_dummy()
+	if status_apply == null or target == null:
+		_set_status("StatusApplySystem not ready")
+		return
+	status_apply.apply_state(target, state_id, 40.0)
+	_set_status("applied status: %s" % state_id)
+
+func _clear_dummy_status() -> void:
+	var target := _ensure_dummy()
+	var status := target.get_node_or_null("StatusEffectComponent") as StatusEffectComponent if target else null
+	if status == null:
+		return
+	for effect_name in ["burning", "slow", "stun", "charged", "marked", "cursed"]:
+		status.remove_effect(effect_name)
+	_set_status("cleared all status effects")
 
 func _ensure_dummy() -> EnemyBasic:
 	return dummy if is_instance_valid(dummy) else spawn_dummy()
@@ -1135,16 +820,11 @@ func _refresh_dummy_label() -> void:
 func _connect_damage_meter() -> void:
 	if not EventBus.damage_dealt.is_connected(_on_physical_damage):
 		EventBus.damage_dealt.connect(_on_physical_damage)
-	if not EventBus.element_damage_dealt.is_connected(_on_element_damage):
-		EventBus.element_damage_dealt.connect(_on_element_damage)
 	_meter_connected = true
 
 func _on_physical_damage(amount: float, _position: Vector2, is_critical: bool) -> void:
 	_record_damage("physical", amount, is_critical)
 
-func _on_element_damage(amount: float, _position: Vector2, element_id: String, _stack: int, _chain: int) -> void:
-	var category := "fusion" if element_id.begins_with("fusion_") else element_id.trim_prefix("element_")
-	_record_damage(category, amount, false)
 
 func _record_damage(category: String, amount: float, critical: bool) -> void:
 	if amount <= 0.0:
@@ -1253,7 +933,7 @@ func trigger_projectile() -> Projectile:
 	for weapon in DataLoader.weapons.values():
 		if weapon is WeaponData and weapon.projectile_scene != null:
 			projectile_weapon = weapon
-			if weapon.required_fragment_ids.is_empty():
+			if not weapon.is_relic:
 				break
 	if projectile_weapon == null:
 		# Character attacks own their attack pattern rather than registering a
@@ -1329,22 +1009,7 @@ func trigger_boss_strategy(strategy_name: String) -> void:
 	await strategy.execute(boss, player)
 	_set_status("Boss Strategy complete: %s" % strategy_name)
 
-func apply_reward_preset(preset: String) -> void:
-	element_combat.reset_runtime()
-	match preset:
-		"NO ELEMENT": GameManager.debug_force_element_state({})
-		"ONE ELEMENT": GameManager.debug_force_element_state({"element_fire":1})
-		"TWO ELEMENT": GameManager.debug_force_element_state({"element_fire":1, "element_lightning":1})
-		"ONE MAX": GameManager.debug_force_element_state({"element_fire":3})
-		"TWO MAX": GameManager.debug_force_element_state({"element_fire":3, "element_lightning":3})
-		"FUSION ACTIVE": GameManager.debug_force_element_state({"element_fire":3, "element_lightning":3}, "plasma")
-	_set_status("Reward preset: %s" % preset)
 
-func open_boss_reward() -> void:
-	fragment_select.show_choices("DEVELOPER：本番Element Reward Pool")
-	_set_status("Real FragmentSelect opened from current build state")
-
-# EQUIPMENT / LOOT ------------------------------------------------------------
 func _equipment_selection() -> Dictionary:
 	return {
 		"template": String(_equipment_template.get_item_metadata(_equipment_template.selected)),
@@ -1494,8 +1159,8 @@ func reset_lab_state() -> void:
 	for vfx_node in get_tree().get_nodes_in_group("transient_vfx"):
 		vfx_node.queue_free()
 	player.equipment_component.clear_all()
-	GameManager.debug_force_element_state({})
-	element_combat.reset_runtime()
+	if status_apply:
+		status_apply.reset_runtime()
 	concept_system.reset_runtime()
 	concept_system.set_active(true)
 	combo_system.reset_combo()
@@ -1517,9 +1182,6 @@ func _refresh_state_text() -> void:
 	if _state_label == null or player == null:
 		return
 	var parts: Array[String] = []
-	for element_id in GameManager.get_active_element_ids():
-		parts.append("%s Lv%d" % [element_id.trim_prefix("element_").to_upper(), GameManager.get_element_stack(element_id)])
-	var fusion := GameManager.active_fusion_id.to_upper() if GameManager.active_fusion_id != "" else "NONE"
 	var concept_parts: Array[String] = []
 	var completed_parts: Array[String] = []
 	if concept_system:
@@ -1533,12 +1195,10 @@ func _refresh_state_text() -> void:
 			var level := concept_system.get_completed_skill_level(skill_id)
 			if level > 0:
 				completed_parts.append("%s%d %.1f" % [skill_id.left(3).to_upper(), level, concept_system.get_completed_skill_cooldown(skill_id)])
-	_state_label.text = "[b]BUILD[/b] %s   SLOT %d/2\n[b]FUSION[/b] %s\n[b]CONCEPT[/b] %s\n[b]LARGE[/b] %s\n[b]FIELD[/b] Enemy %d  Projectile %d  VFX %d" % [" + ".join(parts) if not parts.is_empty() else "NONE", parts.size(), fusion, " | ".join(concept_parts), " | ".join(completed_parts) if not completed_parts.is_empty() else "NONE", get_tree().get_nodes_in_group("enemies").size(), get_tree().get_nodes_in_group("projectiles").size(), get_tree().get_nodes_in_group("transient_vfx").size()]
+	_state_label.text = "[b]CONCEPT[/b] %s
+[b]LARGE[/b] %s
+[b]FIELD[/b] Enemy %d  Projectile %d  VFX %d" % [" | ".join(concept_parts), " | ".join(completed_parts) if not completed_parts.is_empty() else "NONE", get_tree().get_nodes_in_group("enemies").size(), get_tree().get_nodes_in_group("projectiles").size(), get_tree().get_nodes_in_group("transient_vfx").size()]
 
 func _set_status(message: String) -> void:
 	if _status_label:
 		_status_label.text = message
-
-func _element_color(element_id: String) -> Color:
-	var data := DataLoader.element_vfx_effects.get(element_id) as ElementVFXData
-	return data.attack_tint if data else Color.WHITE

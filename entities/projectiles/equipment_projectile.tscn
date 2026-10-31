@@ -1,0 +1,5 @@
+[gd_scene load_steps=3 format=3]
+[ext_resource type="PackedScene" path="res://entities/projectiles/projectile.tscn" id="1"]
+[ext_resource type="Script" path="res://entities/projectiles/equipment_projectile.gd" id="2"]
+[node name="EquipmentProjectile" instance=ExtResource("1")]
+script = ExtResource("2")

@@ -17,19 +17,17 @@ class_name EliteRoomManager
 @export var elite_stat_multiplier_max: float = 2.2
 ## 通常個体と一目で区別できるよう、見た目を少し大きくする(EnemyBasic.visual_scale_multiplier
 ## 経由でAnimatedSprite2D.scaleと当たり判定用CollisionShape2Dの両方に乗算される)。
-## 通常敵の既定値(1.25)より一回り大きい値にして、精鋭であることが分かるようにする。
-@export var elite_visual_scale: float = 1.6
+## 通常敵の既定値(1.40)より一回り大きい値にして、精鋭であることが分かるようにする。
+@export var elite_visual_scale: float = 1.78
 @export var elite_meta_currency_reward: int = 50
 
 @export var screen_effects_path: NodePath
 @export var vfx_pool_path: NodePath
-@export var fragment_select_path: NodePath
 
 signal roaming_elite_spawned(spawn_time: float, enemy: EnemyBasic)
 
 @onready var _screen_effects: ScreenEffects = get_node_or_null(screen_effects_path)
 @onready var _vfx_pool: VFXPoolManager = get_node_or_null(vfx_pool_path)
-@onready var _fragment_select: FragmentSelect = get_node_or_null(fragment_select_path)
 
 var _map: DungeonMap
 var _rooms_active: Dictionary = {}        # room_index(int) -> bool
@@ -52,13 +50,16 @@ func _ready() -> void:
 func setup(map: DungeonMap) -> void:
 	clear_map_runtime()
 	_map = map
+	_boss_fight_active = false
 	_affix_settings = _load_affix_settings()
 	_spawn_settings = _load_json("res://data/elite_affixes/spawn_curve.json")
 	_rng.randomize()
+	if map.get_meta("exploration_layout", false):
+		return
 	_last_roaming_spawn_at = GameManager.elapsed_seconds
 	_next_roaming_spawn_at = _last_roaming_spawn_at + _roll_delay(_spawn_settings.get("initial_delay_range", [90.0, 120.0]), _rng)
 	_retry_not_before = 0.0
-	_floor_cells = map.get_floor_cells()
+	_floor_cells = map.get_spawn_cells()
 	for room_index in map.elite_room_indices:
 		_create_trigger_area(room_index)
 
@@ -76,6 +77,10 @@ func clear_map_runtime() -> void:
 func _process(_delta: float) -> void:
 	if _map == null or GameManager.run_state != GameManager.RunState.PLAYING:
 		return
+	if _map.get_meta("exploration_layout", false):
+		return
+	var wave := get_parent().get_node_or_null("WaveSpawner") as WaveSpawner
+	if wave and (wave.is_map_spawn_suppressed() or wave._active_enemy_count() >= wave._map_enemy_cap): return
 	if _boss_fight_active or _has_active_elite_room():
 		return
 	var elapsed := GameManager.elapsed_seconds
@@ -152,24 +157,34 @@ func _spawn_roaming_elite() -> bool:
 	var player := get_tree().get_first_node_in_group("player") as Node2D
 	if player == null:
 		return false
-	var enemy_id: String = elite_enemy_ids[_rng.randi() % elite_enemy_ids.size()]
+	var ids: Array = WaveSpawner.MAP_ENEMY_ROSTERS.get(GameManager.current_map_index, {}).get("strong", elite_enemy_ids)
+	var enemy_id: String = ids[_rng.randi() % ids.size()]
 	var base_data: EnemyData = DataLoader.enemies.get(enemy_id)
 	if base_data == null:
 		return false
+	var wave := get_parent().get_node_or_null("WaveSpawner") as WaveSpawner
+	var spawn_position := wave._pick_spawn_position(player.global_position) if wave else _pick_roaming_position(player.global_position)
+	if not spawn_position.is_finite():
+		return false # 既存のretry_delayで再試行。地形内部へのfallbackはしない。
 	var enemy := enemy_scene.instantiate() as EnemyBasic
 	enemy.enemy_data = base_data
+	if wave:
+		enemy.room_hp_multiplier = wave._map_hp_multiplier
+		enemy.room_damage_multiplier = wave._map_damage_multiplier
 	enemy.elite_stat_multiplier = _rng.randf_range(elite_stat_multiplier_min, elite_stat_multiplier_max)
 	enemy.visual_scale_multiplier = elite_visual_scale
 	GameManager.get_runtime_world(self).add_child(enemy)
-	enemy.global_position = _pick_roaming_position(player.global_position)
-	_attach_affixes(enemy)
+	enemy.global_position = spawn_position
+	attach_exploration_affix(enemy, GameManager.current_map_index)
 	roaming_elite_spawned.emit(GameManager.elapsed_seconds, enemy)
 	return true
 
 func _pick_roaming_position(near_world_pos: Vector2) -> Vector2:
-	if _map == null or _floor_cells.is_empty():
+	if _map == null:
 		var fallback_radius := float(_spawn_settings.get("spawn_radius", 520.0))
 		return near_world_pos + Vector2.from_angle(_rng.randf() * TAU) * fallback_radius
+	if _floor_cells.is_empty():
+		return Vector2.INF
 	var near_grid := _map.world_to_grid(near_world_pos)
 	var max_cells := float(_spawn_settings.get("spawn_radius", 520.0)) / DungeonMap.CELL_WORLD_SIZE
 	var min_cells := float(_spawn_settings.get("min_spawn_distance", 280.0)) / DungeonMap.CELL_WORLD_SIZE
@@ -183,7 +198,7 @@ func _pick_roaming_position(near_world_pos: Vector2) -> Vector2:
 			if Vector2(cell - near_grid).length() >= min_cells:
 				candidates.append(cell)
 	if candidates.is_empty():
-		return near_world_pos + Vector2.from_angle(_rng.randf() * TAU) * float(_spawn_settings.get("spawn_radius", 520.0))
+		return Vector2.INF
 	return _map.grid_to_world(candidates[_rng.randi() % candidates.size()])
 
 func _create_trigger_area(room_index: int) -> void:
@@ -233,12 +248,15 @@ func _spawn_elite_enemies(room_index: int) -> void:
 		var base_data: EnemyData = DataLoader.enemies.get(enemy_id)
 		if base_data == null:
 			continue
+		var spawn_position := _pick_position_in_room(room)
+		if not spawn_position.is_finite():
+			continue
 		var enemy := enemy_scene.instantiate()
 		enemy.enemy_data = base_data
 		enemy.elite_stat_multiplier = randf_range(elite_stat_multiplier_min, elite_stat_multiplier_max)
 		enemy.visual_scale_multiplier = elite_visual_scale
 		GameManager.get_runtime_world(self).add_child(enemy)
-		enemy.global_position = _pick_position_in_room(room)
+		enemy.global_position = spawn_position
 		enemy.health_component.died.connect(_on_elite_enemy_died.bind(enemy, room_index))
 		_attach_affixes(enemy)
 		alive.append(enemy)
@@ -283,11 +301,15 @@ func _load_json(path: String) -> Dictionary:
 	return parsed if typeof(parsed) == TYPE_DICTIONARY else {}
 
 func _pick_position_in_room(room: Rect2i) -> Vector2:
-	var cell := Vector2i(
-		randi_range(room.position.x + 1, room.position.x + room.size.x - 2),
-		randi_range(room.position.y + 1, room.position.y + room.size.y - 2)
-	)
-	return _map.grid_to_world(cell)
+	# 精鋭部屋はPillar Fieldと共存する。矩形内の乱数座標だけでは、床から
+	# 除外済みの2x2噴水・柱まで選んでしまうため、同じ室内の安全床だけを使う。
+	var interior := room.grow(-1)
+	if not interior.has_area():
+		return Vector2.INF
+	var cells := _map.get_spawn_cells(interior)
+	if cells.is_empty():
+		return Vector2.INF
+	return _map.grid_to_world(cells[randi() % cells.size()])
 
 func _on_elite_enemy_died(enemy: Node, room_index: int) -> void:
 	var alive: Array = _elite_enemies_alive.get(room_index, [])
@@ -306,8 +328,8 @@ func _grant_rewards(room_index: int) -> void:
 	# MAP探索はElite本体からの確定装備+経験値が報酬。ROOM用の欠片Modalは混ぜない。
 	if not GameManager.map_mode_active:
 		SaveManager.add_meta_currency(elite_meta_currency_reward)
-	if _fragment_select and not GameManager.map_mode_active:
-		_fragment_select.show_choices("精鋭部屋クリア! 属性の欠片を1つ選択")
+	# TODO: 属性の欠片報酬(FragmentSelect)は属性システム廃止に伴い撤去した。
+	# ゴールドとショップに差し替える予定。
 	_play_reward_effect(room_index)
 
 ## 通常の雑魚撃破よりも派手な演出にするため、既存のMassKillTracker用パーティクル
@@ -320,3 +342,17 @@ func _play_reward_effect(room_index: int) -> void:
 	if _screen_effects:
 		_screen_effects.shake(10.0, 0.4)
 		_screen_effects.flash(Color(1.0, 0.85, 0.3), 0.35)
+
+func attach_exploration_affix(enemy: EnemyBasic, map_index: int) -> void:
+	var definitions: Dictionary = _affix_settings.get("affixes", {})
+	var available: Array = definitions.keys()
+	if available.is_empty(): return
+	var rng := RandomNumberGenerator.new()
+	rng.seed = int(_map.get_meta("layout_seed", 1))
+	var ids: Array[String] = []
+	for i in mini(2 if map_index == 3 else 1, available.size()):
+		var index := rng.randi_range(0, available.size()-1)
+		ids.append(String(available.pop_at(index)))
+	var component := EliteAffixComponent.new()
+	component.configure(enemy, ids, definitions)
+	enemy.add_child(component)

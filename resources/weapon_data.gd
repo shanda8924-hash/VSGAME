@@ -12,6 +12,7 @@ class_name WeaponData
 @export var attack_range: float = 150.0
 @export var projectile_scene: PackedScene
 @export var required_fragment_ids: Array[String] = [] # フュージョンに必要な欠片ID
+@export var is_relic: bool = false # 旧Fusion武器を欠片条件から切り離したShop専用遺物武器
 @export var vfx_theme_id: String = "default" # 演出テーマの識別子(将来EffectThemeDataに接続)
 @export var crit_chance: float = 0.15 # クリティカル発生率(0.0〜1.0)
 @export var crit_multiplier: float = 2.0 # クリティカル時のダメージ倍率

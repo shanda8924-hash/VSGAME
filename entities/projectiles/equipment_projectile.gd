@@ -1,0 +1,38 @@
+extends Projectile
+## Equipment shots stay inside the player-centred attack circle and stop at scenery.
+var actor: Player
+var attack_radius := 232.0
+var magic := false
+var _age := 0.0
+
+func _ready() -> void:
+	super._ready()
+	set_meta("equipment_attack", true)
+	if magic:
+		$Visual.texture = load("res://assets/vfx/equipment_comfy/magic_6f.png")
+		$Visual.hframes = 6
+		$Visual.scale = Vector2.ONE * 0.55
+
+func _physics_process(delta: float) -> void:
+	if not is_instance_valid(actor) or actor._is_dead:
+		queue_free()
+		return
+	var previous := global_position
+	super._physics_process(delta)
+	var ray := PhysicsRayQueryParameters2D.create(previous, global_position, 1, [actor.get_rid()])
+	if global_position.distance_to(actor.global_position) > attack_radius or not get_world_2d().direct_space_state.intersect_ray(ray).is_empty():
+		damage_enabled = false
+		queue_free()
+	_age += delta
+	if magic:
+		$Visual.frame = int(_age * 20.0) % 6
+
+func _find_nearest_enemy() -> Node2D:
+	return actor.weapon_manager.find_nearest_enemy(actor.global_position, attack_radius, true) if is_instance_valid(actor) else null
+
+func can_hit(hurtbox: HurtboxComponent) -> bool:
+	var target := hurtbox.get_owner_entity() as Node2D
+	if not is_instance_valid(actor) or target == null or actor.global_position.distance_to(target.global_position) > attack_radius:
+		return false
+	var ray := PhysicsRayQueryParameters2D.create(actor.global_position, target.global_position, 1, [actor.get_rid()])
+	return get_world_2d().direct_space_state.intersect_ray(ray).is_empty() and super.can_hit(hurtbox)

@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://entities/pickups/treasure_chest.gd" id="1"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_interaction"]
-radius = 105.0
+radius = 64.0
 
 [node name="TreasureChest" type="Area2D"]
 script = ExtResource("1")
@@ -15,12 +15,12 @@ shape = SubResource("CircleShape2D_interaction")
 
 [node name="Label" type="Label" parent="."]
 offset_left = -110.0
-offset_top = -82.0
+offset_top = -72.0
 offset_right = 110.0
 offset_bottom = -42.0
 theme_override_colors/font_color = Color(1, 0.91, 0.62, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 5
-theme_override_font_sizes/font_size = 16
-text = "宝箱"
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 12
+text = "螳晉ｮｱ"
 horizontal_alignment = 1

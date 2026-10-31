@@ -18,11 +18,32 @@ class_name BossAttackStrategy
 func execute(_boss: EnemyBasic, _player: Node2D) -> void:
 	pass
 
-func wait_recovery(boss: EnemyBasic) -> void:
-	if not is_instance_valid(boss):
+func wait_recovery(boss) -> void:
+	if not alive(boss):
 		return
 	boss.set_movement_locked(true)
 	boss.movement_component.direction = Vector2.ZERO
-	await boss.get_tree().create_timer(recovery_duration).timeout
-	if is_instance_valid(boss):
+	await boss.get_tree().create_timer(recovery_duration, false).timeout
+	if alive(boss):
 		boss.set_movement_locked(false)
+
+# An await may resume after the boss is freed; validate before typed access.
+func alive(boss) -> bool:
+	return is_instance_valid(boss) and not boss._is_dead and not boss.is_queued_for_deletion()
+
+func begin_attack(boss: EnemyBasic) -> void:
+	if is_instance_valid(boss._attack_warning): boss._attack_warning.queue_free()
+	boss._attack_warning = null
+	boss._normal_attack_state = EnemyBasic.NormalAttackState.COOLDOWN
+	boss._normal_attack_timer = 0.7
+	boss.set_movement_locked(true)
+	boss.movement_component.direction = Vector2.ZERO
+
+func warning_circle(boss: EnemyBasic, position: Vector2, radius: float, duration: float) -> WarningCircle:
+	var warning := WarningCircle.new()
+	warning.radius = radius
+	warning.duration = duration
+	warning.source = boss
+	GameManager.get_runtime_world(boss).add_child(warning)
+	warning.global_position = position
+	return warning

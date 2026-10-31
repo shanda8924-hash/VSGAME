@@ -22,6 +22,42 @@ const MOVE_SPEED_PENALTY_FLOOR := -0.5      # 移動速度が下がりすぎて�
 const ATTACK_RANGE_PENALTY_FLOOR := -0.6    # 射程が縮みすぎて武器が実質機能しなくなるのを防ぐ
 const DAMAGE_MULTIPLIER_FLOOR := 0.3        # 攻撃力が0近くまで下がるのを防ぐ
 const NON_NEGATIVE_FLOOR := 0.0             # 会心率/誘導性能等、マイナスに意味が無い値の下限
+## 状態異常を参照する条件付き強化。効果はresolve_state_condition_damage()と
+## 撃破時フックで実装されており、属性システム廃止後も有効に機能する。
+## LevelUpSelectはこのリストに載っているものだけを候補にする。
+const ACTIVE_STATE_UPGRADE_EFFECTS := [
+	"burning_damage", "burning_kill_xp", "frozen_damage", "frozen_crit",
+	"charged_damage", "marked_damage", "marked_kill_shield",
+	"cursed_damage", "cursed_kill_spread",
+]
+## 状態異常 -> それを参照する強化カードのeffect_type。
+## LevelUpSelectは「現在の職業が付与する状態」のカードだけを候補にする
+## (付与しない状態のカードは効果が永久にゼロになるため、仕様書36.7)。
+const UPGRADE_EFFECTS_BY_STATE := {
+	"burning": ["burning_damage", "burning_kill_xp"],
+	"frozen": ["frozen_damage", "frozen_crit"],
+	"charged": ["charged_damage"],
+	"marked": ["marked_damage", "marked_kill_shield"],
+	"cursed": ["cursed_damage", "cursed_kill_spread"],
+}
+## 旧属性カードを状態異常／汎用効果へ再定義したショップ専用強化。
+## LevelUpSelectへは戻さず、ShopSystemが現在職業の付与状態で絞り込む。
+const SHOP_STATE_UPGRADE_EFFECTS := [
+	"fire_heatwave", "fire_scorching", "fire_ashes",
+	"ice_permafrost", "ice_absolute_zero", "ice_deep_freeze",
+	"lightning_speed", "lightning_overload", "lightning_field",
+	"light_rapid_holy", "light_judgment", "light_blessing",
+	"dark_abyss", "dark_bind", "dark_corrosion",
+	"charged_chain",
+]
+const SHOP_UPGRADE_EFFECTS_BY_STATE := {
+	"burning": ["fire_heatwave", "fire_scorching", "fire_ashes"],
+	"frozen": ["ice_permafrost", "ice_absolute_zero", "ice_deep_freeze"],
+	"charged": ["lightning_speed", "lightning_overload", "lightning_field", "charged_chain"],
+	"marked": ["light_rapid_holy", "light_judgment", "light_blessing"],
+	"cursed": ["dark_abyss", "dark_bind", "dark_corrosion"],
+}
+const STATE_UPGRADE_EFFECTS := ACTIVE_STATE_UPGRADE_EFFECTS + SHOP_STATE_UPGRADE_EFFECTS
 
 # --- レベルアップの通常強化オプション由来(data/upgrades/)+ボス撃破アイテム由来(data/items/) ---
 # 両者は同じ蓄積値を共有する(damage_up等は同じeffect_typeを再利用しているため)。
@@ -49,6 +85,45 @@ var equipment_crit_damage_bonus: float = 0.0
 var equipment_attack_speed_bonus: float = 0.0
 var equipment_low_hp_threshold: float = 0.0
 var equipment_low_hp_damage_bonus: float = 0.0
+var state_upgrade_counts: Dictionary = {}
+var survival_upgrade_counts: Dictionary = {}
+
+func get_survival_rank(id: String) -> int:
+	return int(survival_upgrade_counts.get(id, 0))
+
+func _ready() -> void:
+	EventBus.enemy_damage_confirmed.connect(_on_enemy_damage_confirmed)
+
+func get_state_upgrade_count(effect_type: String) -> int:
+	return int(state_upgrade_counts.get(effect_type, 0))
+
+func resolve_state_condition_damage(target: Node, amount: float, metadata: Dictionary) -> Dictionary:
+	var result_metadata := metadata.duplicate(true)
+	if target == null or not is_instance_valid(target) or amount <= 0.0:
+		return {"amount": amount, "metadata": result_metadata}
+	var status := target.get_node_or_null("StatusEffectComponent") as StatusEffectComponent
+	if status == null:
+		return {"amount": amount, "metadata": result_metadata}
+	var multiplier := 1.0
+	if status.has_state("burning"):
+		multiplier *= 1.0 + 0.25 * get_state_upgrade_count("burning_damage")
+	if status.has_state("frozen"):
+		multiplier *= 1.0 + 0.25 * get_state_upgrade_count("frozen_damage") + 0.20 * get_state_upgrade_count("ice_deep_freeze")
+		var bonus_crit := 0.15 * get_state_upgrade_count("frozen_crit") + 0.10 * get_state_upgrade_count("ice_absolute_zero")
+		if not bool(result_metadata.get("is_critical", false)) and bonus_crit > 0.0 and randf() < minf(bonus_crit, 0.75):
+			multiplier *= 2.0
+			result_metadata["is_critical"] = true
+	if status.has_state("charged"):
+		multiplier *= 1.0 + 0.25 * get_state_upgrade_count("charged_damage") + 0.20 * get_state_upgrade_count("lightning_overload")
+	if status.has_state("marked"):
+		multiplier *= 1.0 + 0.25 * get_state_upgrade_count("marked_damage") + 0.20 * get_state_upgrade_count("light_judgment")
+		var marked_crit := 0.10 * get_state_upgrade_count("light_rapid_holy")
+		if not bool(result_metadata.get("is_critical", false)) and marked_crit > 0.0 and randf() < minf(marked_crit, 0.60):
+			multiplier *= 2.0
+			result_metadata["is_critical"] = true
+	if status.has_state("cursed"):
+		multiplier *= 1.0 + 0.25 * get_state_upgrade_count("cursed_damage") + 0.20 * get_state_upgrade_count("dark_corrosion")
+	return {"amount": amount * multiplier, "metadata": result_metadata}
 
 func get_equipment_conditional_damage_multiplier() -> float:
 	if equipment_low_hp_damage_bonus <= 0.0 or equipment_low_hp_threshold <= 0.0:
@@ -78,10 +153,36 @@ func apply_character_passives(character_data: CharacterData) -> void:
 ## class_school(文字列)を渡す必要があるため、通常のeffect_type/valueディスパッチャ
 ## (_apply_effect())を経由せずここで直接処理する(代償も持たないため早期returnでよい)。
 func apply_upgrade(upgrade: UpgradeData) -> void:
+	if upgrade.category == "survival":
+		var rank := get_survival_rank(upgrade.id)
+		var maximum := int(upgrade.effect_params.get("max_rank", 0))
+		if maximum > 0 and rank >= maximum: return
+		survival_upgrade_counts[upgrade.id] = rank + 1
+		var manager := _get_sibling("WeaponManagerComponent") as WeaponManagerComponent
+		match upgrade.effect_type:
+			"survival_area":
+				_apply_effect("attack_range_multiplier", upgrade.value)
+				if manager: manager.sector_arc_width_level = mini(manager.sector_arc_width_level + 1, 3)
+			"survival_haste": _apply_effect("attack_interval_multiplier", upgrade.value)
+			"survival_power": _apply_effect("damage_up", upgrade.value)
+			"survival_pierce":
+				if manager: manager.sector_pierce_level = mini(manager.sector_pierce_level + 1, 2)
+		if manager: manager.sector_style_changed.emit()
+		return
 	if upgrade.effect_type == "class_school_select":
 		var weapon_manager := _get_sibling("WeaponManagerComponent") as WeaponManagerComponent
 		if weapon_manager:
 			weapon_manager.select_class_school(upgrade.class_school)
+		return
+	if upgrade.effect_type in STATE_UPGRADE_EFFECTS:
+		state_upgrade_counts[upgrade.effect_type] = get_state_upgrade_count(upgrade.effect_type) + 1
+		# 3枚は旧範囲／連鎖語彙を安全な常時Statへ再定義する。状態対応職だけが
+		# Shopで取得できるため、状態カードとしてのBuild識別は維持される。
+		match upgrade.effect_type:
+			"fire_heatwave", "lightning_field":
+				_apply_effect("attack_range_multiplier", upgrade.value)
+			"lightning_speed":
+				_apply_effect("attack_interval_multiplier", upgrade.value)
 		return
 	_apply_effect(upgrade.effect_type, upgrade.value)
 	if upgrade.effect_type == "melee_lifesteal":
@@ -160,3 +261,72 @@ func _sync_health_component() -> void:
 func _get_sibling(node_name: String) -> Node:
 	var parent := get_parent()
 	return parent.get_node_or_null(node_name) if parent else null
+
+func _on_enemy_damage_confirmed(target: Node, _amount: float, _is_critical: bool, metadata: Dictionary) -> void:
+	if not bool(metadata.get("killed", false)) or target == null or not is_instance_valid(target):
+		return
+	var status := target.get_node_or_null("StatusEffectComponent") as StatusEffectComponent
+	if status == null:
+		return
+	if status.has_state("burning"):
+		var bonus_xp := get_state_upgrade_count("burning_kill_xp")
+		var experience := _get_sibling("ExperienceComponent") as ExperienceComponent
+		if bonus_xp > 0 and experience:
+			experience.add_exp(bonus_xp)
+	if status.has_state("marked"):
+		var shield_stacks := get_state_upgrade_count("marked_kill_shield")
+		var blessing_stacks := get_state_upgrade_count("light_blessing")
+		var player_health := _get_sibling("HealthComponent") as HealthComponent
+		if (shield_stacks > 0 or blessing_stacks > 0) and player_health:
+			player_health.grant_temporary_shield(player_health.max_hp * (0.08 * shield_stacks + 0.06 * blessing_stacks))
+	if status.has_state("charged") and get_state_upgrade_count("charged_chain") > 0:
+		_spread_charged_from(target as Node2D, get_state_upgrade_count("charged_chain"))
+	if status.has_state("cursed") and get_state_upgrade_count("cursed_kill_spread") > 0:
+		_spread_curse_from(target as Node2D)
+
+func _spread_curse_from(source: Node2D) -> void:
+	if source == null:
+		return
+	# 数値はStatusApplySystemの呪い付与と揃える(属性Lvによる変動は廃止済み)。
+	var duration := StatusApplySystem.CURSED_DURATION
+	var ratio := StatusApplySystem.CURSED_BONUS_DAMAGE_TAKEN
+	for enemy_variant in get_tree().get_nodes_in_group("enemies"):
+		var enemy := enemy_variant as Node2D
+		if enemy == null or enemy == source or not is_instance_valid(enemy) or enemy.global_position.distance_to(source.global_position) > 150.0:
+			continue
+		var health := enemy.get_node_or_null("HealthComponent") as HealthComponent
+		if health and health.current_hp > 0.0:
+			health.apply_curse(1.0 + ratio, duration)
+
+func _spread_charged_from(source: Node2D, target_count: int) -> void:
+	if source == null or target_count <= 0:
+		return
+	var candidates: Array[Node2D] = []
+	for enemy_variant in get_tree().get_nodes_in_group("enemies"):
+		var enemy := enemy_variant as Node2D
+		if enemy == null or enemy == source or not is_instance_valid(enemy) or enemy.global_position.distance_to(source.global_position) > 160.0:
+			continue
+		var health := enemy.get_node_or_null("HealthComponent") as HealthComponent
+		if health and health.current_hp > 0.0:
+			candidates.append(enemy)
+	candidates.sort_custom(func(a: Node2D, b: Node2D): return a.global_position.distance_squared_to(source.global_position) < b.global_position.distance_squared_to(source.global_position))
+	var status_system := get_tree().get_first_node_in_group("status_apply_system") as StatusApplySystem
+	if status_system == null:
+		return
+	for index in mini(target_count, candidates.size()):
+		status_system.apply_charged(candidates[index])
+
+func get_burn_duration_multiplier() -> float:
+	return 1.0 + 0.50 * get_state_upgrade_count("fire_ashes")
+
+func get_burn_damage_multiplier() -> float:
+	return 1.0 + 0.40 * get_state_upgrade_count("fire_scorching")
+
+func get_frozen_duration_multiplier() -> float:
+	return 1.0 + 0.40 * get_state_upgrade_count("ice_permafrost")
+
+func get_cursed_duration_multiplier() -> float:
+	return 1.0 + 0.60 * get_state_upgrade_count("dark_bind")
+
+func get_cursed_bonus_damage_taken() -> float:
+	return StatusApplySystem.CURSED_BONUS_DAMAGE_TAKEN + 0.12 * get_state_upgrade_count("dark_abyss")

@@ -11,7 +11,11 @@ signal exp_changed(current_exp: int, exp_to_next_level: int)
 
 @export var level: int = 1
 @export var current_exp: int = 0
-@export var exp_to_next_level: int = 5
+const BASE_EXP_TO_LEVEL := 15
+const QUICK_LEVEL_END := 10
+
+@export var exp_to_next_level: int = BASE_EXP_TO_LEVEL
+var _requirement_multiplier: float = 1.0
 
 func _ready() -> void:
 	EventBus.enemy_died.connect(_on_enemy_died)
@@ -33,7 +37,24 @@ func add_exp(amount: int) -> void:
 	while current_exp >= exp_to_next_level:
 		current_exp -= exp_to_next_level
 		level += 1
-		exp_to_next_level = int(exp_to_next_level * 1.25) + 3
+		# Lv10までは短い間隔で成長し、その後は敵密度の上昇に負けない範囲で徐々に重くする。
+		exp_to_next_level = _paced_requirement(level)
 		leveled_up.emit(level)
 		EventBus.player_leveled_up.emit(level)
 	exp_changed.emit(current_exp, exp_to_next_level)
+
+## Runごとの倍率を掛け直す。通常MAPは1.0なので、序盤の通常敵約10体で初回成長する。
+func set_requirement_multiplier(multiplier: float) -> void:
+	_requirement_multiplier = maxf(multiplier, 0.1)
+	exp_to_next_level = _paced_requirement(level)
+	exp_changed.emit(current_exp, exp_to_next_level)
+
+func _paced_requirement(current_level: int) -> int:
+	return maxi(int(round(float(required_exp_for_level(current_level)) * _requirement_multiplier)), 1)
+
+static func required_exp_for_level(current_level: int) -> int:
+	var safe_level := maxi(current_level, 1)
+	if safe_level <= QUICK_LEVEL_END:
+		return BASE_EXP_TO_LEVEL + (safe_level - 1) * 5
+	var levels_after_ten := safe_level - QUICK_LEVEL_END
+	return 60 + levels_after_ten * 7 + int(round(pow(float(levels_after_ten), 2.0) * 0.35))

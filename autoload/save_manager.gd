@@ -10,6 +10,7 @@ const DEFAULT_DATA := {
 	"unlocked_weapon_ids": [],
 	"unlocked_character_ids": ["soldier"],
 	"best_survival_seconds": 0.0,
+	"deepest_cleared_floor": 0,
 	"music_volume": 0.8,
 	"sfx_volume": 0.9,
 }
@@ -53,6 +54,11 @@ func add_meta_currency(amount: int) -> void:
 func update_best_survival(seconds: float) -> void:
 	if seconds > float(data.get("best_survival_seconds", 0.0)):
 		data["best_survival_seconds"] = seconds
+		save_data()
+
+func record_cleared_floor(depth: int) -> void:
+	if depth > int(data.get("deepest_cleared_floor", 0)):
+		data["deepest_cleared_floor"] = depth
 		save_data()
 
 func begin_ephemeral_session() -> void:

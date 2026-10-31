@@ -9,6 +9,8 @@ class_name ItemData
 @export var display_name: String = ""
 @export var effect_type: String = ""
 @export var value: float = 0.0
+## 選択カードに表示する32x32 Pixel icon。空なら従来どおり文字だけ表示する。
+@export var icon_path: String = ""
 ## 選択UI(ItemSelect)に表示する効果の説明文。空の場合はeffect_type/valueから
 ## 自動生成した説明文で補われる(ItemSelect._resolve_description参照)。
 @export var description: String = ""

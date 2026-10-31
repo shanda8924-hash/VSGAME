@@ -15,8 +15,10 @@ const ANIM_SUFFIX_CANDIDATES := {
 	"idle": ["Idle", "Flying", "Walk"],
 	"walk": ["Walk", "Walk01", "Flying", "Idle"],
 	"attack1": ["Attack01", "Attack1", "Attack"],
-	"attack2": ["Attack02", "Attack2"],
+	# Native effect-free variants keep Ghostfire/Lava Slime's melee hit honest.
+	"attack2": ["Attack02(No beam effects)", "Attack02(No spike effects)", "Attack02", "Attack2"],
 	"attack3": ["Attack03", "Attack3"],
+	"block": ["Block"],
 	"hurt": ["Hurt"],
 	"death": ["Death", "DEATH"],
 }

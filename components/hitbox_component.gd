@@ -7,10 +7,17 @@ signal landed(hurtbox: HurtboxComponent)
 
 @export var damage: float = 10.0
 @export var destroy_on_hit: bool = true
-## Playerの通常攻撃／Spaceスキル由来Hitだけtrueにし、属性追加ダメージの入口にする。
-## Enemy ContactHitboxなどはfalseのままなので、プレイヤー被弾へ属性が逆流しない。
-@export var applies_player_elements: bool = false
+## Playerの通常攻撃／Spaceスキル由来Hitだけtrueにする。HurtboxComponentが
+## combat_metadataを自動生成する際に「Player直撃(player_direct_attack)」と
+## 「非Player由来(non_player_hit)」を区別するために使う。
+## Enemy ContactHitboxやBoss弾はfalseのままにすること(nova_strategy.gd参照)。
+@export var is_player_attack: bool = false
 var is_critical: bool = false # クリティカル判定は攻撃側(Projectile等)が発射時に決める
+## このHitが命中した敵へ付与する状態異常ID(burning/frozen/charged/marked/cursed)。
+## 空文字なら何も付与しない。Playerの攻撃だけが生成時に職業の
+## AttackPatternBase.applied_status_id()を書き込む(仕様書36.3)。
+## Enemy ContactHitboxやBoss弾は空のままにすること。
+var applied_status_id: String = ""
 ## 空の場合はHurtbox側がPlayer直撃/非Playerを判定して既定Metadataを生成する。
 var combat_metadata: Dictionary = {}
 ## trueの間だけHurtboxComponentが実際にダメージを適用する。Projectile/MeleeHit等の

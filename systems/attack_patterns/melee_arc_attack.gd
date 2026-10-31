@@ -59,6 +59,8 @@ func execute(attacker: Player, character_data: CharacterData, weapon_manager: We
 	var upgrades := weapon_manager.get_owner_upgrades()
 	if upgrades and randf() < upgrades.multishot_chance:
 		_swing(attacker, character_data, weapon_manager)
+	if weapon_manager.sector_follow_up_level > 0 and randf() < 0.16 * weapon_manager.sector_follow_up_level:
+		_sector_follow_up(attacker, character_data, weapon_manager)
 
 ## 乱撃派: 連続斬り数がLv2で2、Lv3で3、Lv5で4に増える。最後の一撃はLv5で確定クリティカル。
 ## 一閃派: 単発(常に1回)だが、_swing()側でダメージ/クリティカル率/間合いが伸びる。
@@ -83,6 +85,13 @@ func _execute_swordsman(attacker: Player, character_data: CharacterData, weapon_
 	var upgrades := weapon_manager.get_owner_upgrades()
 	if upgrades and randf() < upgrades.multishot_chance:
 		_swing(attacker, character_data, weapon_manager)
+	if weapon_manager.sector_follow_up_level > 0 and randf() < 0.16 * weapon_manager.sector_follow_up_level:
+		_sector_follow_up(attacker, character_data, weapon_manager)
+
+func _sector_follow_up(attacker: Player, character_data: CharacterData, weapon_manager: WeaponManagerComponent) -> void:
+	await attacker.get_tree().create_timer(0.16, false).timeout
+	if is_instance_valid(attacker) and not attacker._is_dead and attacker.dodge_remaining <= 0.0:
+		_swing(attacker, character_data, weapon_manager)
 
 ## Lv2以上で確定の追加スイング数(2連続化)+SoldierのLv5だけ20%で更にもう1回。
 ## (Swordsmanは_execute_swordsman()側で独自に連続斬り数を管理するためここは通らない)
@@ -102,6 +111,7 @@ func _swing(attacker: Player, character_data: CharacterData, weapon_manager: Wea
 	var upgrades := weapon_manager.get_owner_upgrades()
 	if upgrades:
 		half_angle *= 1.0 + upgrades.melee_range_bonus
+	half_angle += weapon_manager.sector_arc_width_level * 12.0
 	var active_seconds: float = character_data.attack_pattern_params.get("hitbox_active_seconds", 0.08)
 	var knockback: float = character_data.attack_pattern_params.get("knockback_distance", 8.0)
 	var facing := facing_override if facing_override != Vector2.ZERO else attacker.get_facing_direction()
@@ -150,3 +160,33 @@ func _get_effective_radius(character_data: CharacterData, weapon_manager: Weapon
 			if school == "issen" and ability_level >= 3:
 				radius *= 1.3
 	return radius
+
+## melee_arc(と wide_cleave)は soldier / swordsman / armored_axeman の3職業が
+## 同じStrategyを共有している(WeaponManagerComponent.ATTACK_PATTERN_SCRIPTS参照)ため、
+## ここだけ職業IDで付与する状態異常を分ける。
+func applied_status_id() -> String:
+	match GameManager.selected_character_id:
+		"armored_axeman":
+			return "frozen"   # 大斧の重い一撃で怯ませる
+		"swordsman":
+			return "cursed"   # 居合の斬撃が傷を蝕む
+		_:
+			return "burning"  # soldier: 連撃で熱を帯びる
+
+## One visible motion = one new hitbox. Split the old attack budget across its strikes.
+func execute_animation_strike(attacker: Player, data: CharacterData, manager: WeaponManagerComponent, strike_count: int, last: bool, thrust: bool) -> void:
+	var budget := 1.0
+	if school == "rengeki":
+		budget = 4.0 if ability_level >= 5 else (3.0 if ability_level >= 3 else (2.0 if ability_level >= 2 else 1.0))
+	var upgrades := manager.get_owner_upgrades()
+	if upgrades and randf() < upgrades.multishot_chance:
+		budget += 1.0
+	var hit := _swing(attacker, data, manager, Vector2.ZERO, last and school == "rengeki" and ability_level >= 5)
+	hit.animation_strike = true
+	hit.damage *= budget / maxf(strike_count, 1)
+	hit.damage *= manager.consume_counter_bonus()
+	if thrust:
+		hit._half_angle_degrees = 24.0
+		hit._knockback_distance = 1.5
+	if last and school == "issen" and ability_level >= 5:
+		_apply_issen_execute_bonus(attacker, data, manager)

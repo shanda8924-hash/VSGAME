@@ -21,7 +21,6 @@ func _ready() -> void:
 		add_child(n)
 		_pool.append(n)
 	EventBus.damage_dealt.connect(_on_damage_dealt)
-	EventBus.element_damage_dealt.connect(_on_element_damage_dealt)
 	EventBus.healing_received.connect(_on_healing_received)
 
 func _on_damage_dealt(amount: float, position: Vector2, is_critical: bool) -> void:
@@ -40,10 +39,3 @@ func _on_healing_received(amount: float, position: Vector2) -> void:
 			n.play_heal(amount, position)
 			return
 
-func _on_element_damage_dealt(amount: float, position: Vector2, element_id: String, stack_level: int, chain_index: int) -> void:
-	if _screen_effects and not _screen_effects.quality_settings.get("damage_numbers_enabled", true):
-		return
-	for n in _pool:
-		if not n.visible:
-			n.play_element(amount, position, element_id, stack_level, chain_index)
-			return

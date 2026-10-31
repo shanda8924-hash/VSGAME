@@ -11,8 +11,11 @@ var _drop_table: Dictionary = {}
 var _templates: Array[Dictionary] = []
 var _templates_by_id: Dictionary = {}
 var _serial := 0
+var last_failure_loss := 0
+var rng := RandomNumberGenerator.new()
 
 func _init() -> void:
+	rng.randomize()
 	_drop_table = _read_json_dictionary(DROP_TABLE_PATH)
 	var parsed = JSON.parse_string(FileAccess.get_file_as_string(TEMPLATES_PATH))
 	if typeof(parsed) == TYPE_ARRAY:
@@ -20,6 +23,15 @@ func _init() -> void:
 			var entry := Dictionary(raw_entry)
 			_templates.append(entry)
 			_templates_by_id[String(entry.get("id", ""))] = entry
+
+static func required_count(rarity: String) -> int:
+	return 3 if rarity in ["uncommon", "rare", "epic", "legendary"] else 0
+
+func success_rate(rarity: String) -> float:
+	return float(_drop_table.get("merge_rules", {}).get(rarity, {}).get("success_rate", 0.0))
+
+func failure_loss(rarity: String) -> int:
+	return int(_drop_table.get("merge_rules", {}).get(rarity, {}).get("failure_loss", 1))
 
 func get_next_rarity(rarity: String) -> String:
 	var index := RARITY_ORDER.find(rarity)
@@ -52,7 +64,7 @@ func get_merge_count(component: EquipmentComponent, selected: EquipmentData) -> 
 	return get_merge_materials(component, selected).size()
 
 func can_merge(component: EquipmentComponent, selected: EquipmentData) -> bool:
-	return get_merge_count(component, selected) >= MATERIAL_COUNT
+	return selected != null and required_count(selected.rarity) > 0 and get_merge_count(component, selected) >= required_count(selected.rarity)
 
 func get_mergeable_groups(component: EquipmentComponent) -> Array[Dictionary]:
 	var groups := {}
@@ -66,7 +78,7 @@ func get_mergeable_groups(component: EquipmentComponent) -> Array[Dictionary]:
 		groups[item.rarity]["count"] = int(groups[item.rarity]["count"]) + 1
 	var result: Array[Dictionary] = []
 	for group in groups.values():
-		if int(group["count"]) >= MATERIAL_COUNT:
+		if int(group["count"]) >= required_count(String(group["rarity"])):
 			result.append(group)
 	return result
 
@@ -75,8 +87,11 @@ func get_mergeable_groups(component: EquipmentComponent) -> Array[Dictionary]:
 func get_merge_validation(component: EquipmentComponent, materials: Array[EquipmentData]) -> Dictionary:
 	if component == null:
 		return _invalid("装備インベントリを確認できません")
-	if materials.size() != MATERIAL_COUNT:
-		return _invalid("素材を3個選択してください（%d / 3）" % materials.size())
+	if materials.is_empty() or materials[0] == null:
+		return _invalid("同じレア度の素材を選択してください")
+	var needed := required_count(materials[0].rarity)
+	if needed == 0 or materials.size() != needed:
+		return _invalid("素材を%d個選択してください（%d / %d）" % [needed, materials.size(), needed])
 
 	var seen := {}
 	var rarity := ""
@@ -96,7 +111,7 @@ func get_merge_validation(component: EquipmentComponent, materials: Array[Equipm
 		if rarity == "":
 			rarity = item.rarity
 		elif item.rarity != rarity:
-			return _invalid("素材3個のレアリティを統一してください")
+			return _invalid("素材のレアリティを統一してください")
 
 	var next_rarity := get_next_rarity(rarity)
 	if next_rarity == "":
@@ -115,10 +130,10 @@ func can_merge_materials(component: EquipmentComponent, materials: Array[Equipme
 
 func build_preview(component: EquipmentComponent, selected: EquipmentData) -> EquipmentData:
 	var candidates := get_merge_materials(component, selected)
-	if candidates.size() < MATERIAL_COUNT:
+	if selected == null or candidates.size() < required_count(selected.rarity):
 		return null
 	var materials: Array[EquipmentData] = []
-	materials.assign(candidates.slice(0, MATERIAL_COUNT))
+	materials.assign(candidates.slice(0, required_count(selected.rarity)))
 	if not can_merge_materials(component, materials):
 		return null
 	return _build_promoted_item(materials)
@@ -127,26 +142,34 @@ func build_preview(component: EquipmentComponent, selected: EquipmentData) -> Eq
 ## with the three explicit slot references.
 func merge(component: EquipmentComponent, selected: EquipmentData) -> EquipmentData:
 	var candidates := get_merge_materials(component, selected)
-	if candidates.size() < MATERIAL_COUNT:
+	if selected == null or candidates.size() < required_count(selected.rarity):
 		return null
 	var materials: Array[EquipmentData] = []
-	materials.assign(candidates.slice(0, MATERIAL_COUNT))
+	materials.assign(candidates.slice(0, required_count(selected.rarity)))
 	return merge_materials(component, materials)
 
 ## Atomic 3 -> 1 transaction: validate references, construct a complete output,
 ## then ask EquipmentComponent to replace all three in one inventory mutation.
 func merge_materials(component: EquipmentComponent, materials: Array[EquipmentData]) -> EquipmentData:
+	last_failure_loss = 0
 	if not can_merge_materials(component, materials):
 		return null
 	var result := _build_promoted_item(materials)
 	if result == null:
+		return null
+	if rng.randf() >= success_rate(materials[0].rarity):
+		var loss := failure_loss(materials[0].rarity)
+		var consumed: Array[EquipmentData] = []
+		consumed.assign(materials.slice(0, loss))
+		if component.replace_merge_materials(consumed, null):
+			last_failure_loss = loss
 		return null
 	if not component.replace_merge_materials(materials, result):
 		return null
 	return result
 
 func _build_promoted_item(materials: Array[EquipmentData]) -> EquipmentData:
-	if materials.size() != MATERIAL_COUNT:
+	if materials.is_empty() or materials[0] == null or materials.size() != required_count(materials[0].rarity):
 		return null
 	var source_rarity := materials[0].rarity
 	for material in materials:

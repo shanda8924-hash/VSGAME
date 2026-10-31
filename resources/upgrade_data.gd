@@ -14,6 +14,9 @@ class_name UpgradeData
 ## 選択UI(LevelUpSelect)に表示する効果の説明文。特にトレードオフ付きの
 ## オプションでは、代償の内容が一目で分かるよう必ず設定することを推奨する。
 @export var description: String = ""
+## LevelUpSelect / Shop / TalentTreeで共有する72x72のPixel icon。
+## 空なら各画面のcategory iconへfallbackする。
+@export var icon_path: String = ""
 ## "melee" / "ranged" / "common"。候補抽選時の適性フィルタに使用する。
 @export var category: String = "common"
 ## 吸血上限など、効果固有の調整値。

@@ -14,22 +14,18 @@ func _init() -> void:
 	recovery_duration = 1.5
 
 func execute(boss: EnemyBasic, player: Node2D) -> void:
-	if not is_instance_valid(boss) or not is_instance_valid(player):
+	if not alive(boss) or not is_instance_valid(player):
 		return
 
 	var target_position: Vector2 = player.global_position
-	boss.set_movement_locked(true)
-	boss.movement_component.direction = Vector2.ZERO
-	var warning := WarningCircle.new()
-	warning.radius = damage_radius
-	GameManager.get_runtime_world(boss).add_child(warning)
-	warning.global_position = target_position
+	begin_attack(boss)
+	var warning := warning_circle(boss, target_position, damage_radius, telegraph_duration)
 
-	await boss.get_tree().create_timer(telegraph_duration).timeout
+	await boss.get_tree().create_timer(telegraph_duration, false).timeout
 
 	if is_instance_valid(warning):
 		warning.queue_free()
-	if not is_instance_valid(boss):
+	if not alive(boss):
 		return
 	_deal_area_damage(boss, target_position)
 	await wait_recovery(boss)

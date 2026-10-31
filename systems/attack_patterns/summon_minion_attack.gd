@@ -76,3 +76,7 @@ func _prune_dead_minions() -> void:
 		if is_instance_id_valid(id) and is_instance_valid(instance_from_id(id)):
 			alive.append(id)
 	_active_minion_ids = alive
+
+## この攻撃パターンが命中時に付与する状態異常。死霊術が対象を呪う。
+func applied_status_id() -> String:
+	return "cursed"

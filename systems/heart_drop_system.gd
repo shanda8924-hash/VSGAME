@@ -4,6 +4,7 @@ class_name HeartDropSystem
 const HEART_SCENE := preload("res://entities/pickups/heart_pickup.tscn")
 const CONFIG_PATH := "res://data/pickups/heart.json"
 
+var max_ground_hearts := 5
 var heart_drop_chance: float = 0.05
 var elite_heart_drop_chance: float = 0.10
 var heal_ratio: float = 0.15
@@ -22,6 +23,7 @@ func _load_config() -> void:
 	if typeof(parsed) != TYPE_DICTIONARY:
 		push_warning("HeartDropSystem: Heart設定JSONが不正です")
 		return
+	max_ground_hearts = maxi(1, int(parsed.get("max_ground_hearts", 5)))
 	heart_drop_chance = clampf(float(parsed.get("heart_drop_chance", heart_drop_chance)), 0.0, 1.0)
 	elite_heart_drop_chance = clampf(float(parsed.get("elite_heart_drop_chance", elite_heart_drop_chance)), 0.0, 1.0)
 	heal_ratio = maxf(float(parsed.get("heal_ratio", heal_ratio)), 0.0)
@@ -35,6 +37,7 @@ func _on_enemy_drop_requested(position: Vector2, is_elite: bool, is_boss: bool) 
 		return
 	var heart := HEART_SCENE.instantiate() as HeartPickup
 	heart.setup(heal_ratio, lifetime_seconds)
+	heart.set_meta("random_recovery", true)
 	var runtime_world := GameManager.get_runtime_world(self)
 	_add_heart_deferred.call_deferred(runtime_world, heart, position)
 
@@ -42,6 +45,11 @@ func _on_enemy_drop_requested(position: Vector2, is_elite: bool, is_boss: bool) 
 func _add_heart_deferred(runtime_world: Node, heart: HeartPickup, position: Vector2) -> void:
 	if not is_instance_valid(runtime_world) or not is_instance_valid(heart):
 		return
+	if heart.has_meta("random_recovery"):
+		if get_tree().get_nodes_in_group("random_recovery_hearts").size() >= max_ground_hearts:
+			heart.queue_free()
+			return
+		heart.add_to_group("random_recovery_hearts")
 	runtime_world.add_child(heart)
 	heart.global_position = position
 

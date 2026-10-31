@@ -4,6 +4,7 @@ class_name EquipmentDropSystem
 
 const DROP_TABLE_PATH := "res://data/equipment/drop_table.json"
 const TEMPLATES_PATH := "res://data/equipment/templates.json"
+const CAPPED_GROUND_RARITIES := ["uncommon", "rare", "epic"]
 @export var ground_item_scene: PackedScene
 var _drop_table: Dictionary = {}
 var _templates: Array = []
@@ -35,27 +36,56 @@ func _on_enemy_drop_requested(death_position: Vector2, is_elite: bool, is_boss: 
 		_spawn_equipment_drop(_generate_equipment(rarity_override), death_position, true)
 
 func _spawn_equipment_drop(equipment: EquipmentData, death_position: Vector2, deferred: bool) -> GroundEquipmentItem:
+	if deferred:
+		# Boss death also creates the chest/stairs. Resolve placement afterwards so
+		# their interaction areas and earlier drops participate in the same check.
+		_spawn_equipment_drop.call_deferred(equipment, death_position, false)
+		return null
 	var runtime_world := GameManager.get_runtime_world(self)
 	if equipment == null or ground_item_scene == null or runtime_world == null:
 		return null
+	var safe_position := _find_safe_drop_position(death_position)
+	if not safe_position.is_finite():
+		push_error("EquipmentDropSystem: no reachable floor for equipment drop")
+		return null
 	var ground_item := ground_item_scene.instantiate() as GroundEquipmentItem
 	ground_item.setup(equipment)
-	var safe_position := _find_safe_drop_position(death_position)
-	if deferred:
-		runtime_world.call_deferred("add_child", ground_item)
-		ground_item.call_deferred("set_global_position", safe_position)
-	else:
-		runtime_world.add_child(ground_item)
-		ground_item.global_position = safe_position
+	runtime_world.add_child(ground_item)
+	ground_item.global_position = safe_position
+	_enforce_ground_item_cap()
 	EventBus.equipment_dropped.emit(equipment, safe_position)
 	AudioManager.play_sfx("equipment_drop")
 	return ground_item
 
+func _enforce_ground_item_cap() -> void:
+	if GameManager.survival_completed: return
+	var cap := maxi(int(_drop_table.get("ground_item_low_rarity_cap", 24)), 1)
+	var warning_seconds := maxf(float(_drop_table.get("ground_item_expiration_warning_seconds", 1.2)), 0.0)
+	var low_rarity_items: Array[GroundEquipmentItem] = []
+	var pending_count := 0
+	for item_variant in get_tree().get_nodes_in_group("ground_equipment"):
+		var item := item_variant as GroundEquipmentItem
+		if item == null or not is_instance_valid(item) or item.equipment == null or item.equipment.rarity not in CAPPED_GROUND_RARITIES:
+			continue
+		low_rarity_items.append(item)
+		if item.cap_expiration_pending:
+			pending_count += 1
+	var new_reservations := maxi(low_rarity_items.size() - cap - pending_count, 0)
+	if new_reservations <= 0:
+		return
+	var candidates := low_rarity_items.filter(func(item: GroundEquipmentItem): return not item.cap_expiration_pending)
+	candidates.sort_custom(func(first: GroundEquipmentItem, second: GroundEquipmentItem):
+		if first.spawned_at_usec == second.spawned_at_usec:
+			return first.get_instance_id() < second.get_instance_id()
+		return first.spawned_at_usec < second.spawned_at_usec
+	)
+	for index in mini(new_reservations, candidates.size()):
+		candidates[index].begin_cap_expiration(warning_seconds)
+
 func _current_room_number() -> int:
 	if GameManager.map_mode_active:
-		return 36 if GameManager.current_map_index >= 3 else 13 if GameManager.current_map_index == 2 else 1
-	var controller := get_parent().get_node_or_null("RoomRunController") as RoomRunController
-	return controller.current_room if controller else 1
+		return 36 if GameManager.current_depth >= 45 else 24 if GameManager.current_depth >= 25 else 13 if GameManager.current_depth >= 12 else 1
+	return 1
 
 ## 宝箱からも実物の床ドロップを出す共通入口。UIへ直接装備を付与しない。
 func spawn_treasure_drop(position: Vector2, rarity_id: String = "") -> GroundEquipmentItem:
@@ -128,7 +158,13 @@ func _generate_equipment(rarity_override: String = "", template_id_override: Str
 	item.template_id = template.get("id", "")
 	item.display_name = template.get("display_name", "装備")
 	item.slot = template.get("slot", "weapon")
+	item.attack_kind = template.get("attack_kind", "slash")
 	item.icon_path = template.get("icon_path", "")
+	var readable_icon := "res://assets/visuals/ember_v5/equipment/%s.png" % item.template_id
+	if ResourceLoader.exists(readable_icon):
+		item.icon_path = readable_icon
+	elif ResourceLoader.exists("res://assets/ui/equipment_readable_v4/%s.png" % item.template_id):
+		item.icon_path = "res://assets/ui/equipment_readable_v4/%s.png" % item.template_id
 	item.rarity = rarity_id
 	var available_stats: Array = template.get("stats", []).duplicate()
 	available_stats.shuffle()
@@ -191,19 +227,49 @@ func _find_safe_drop_position(origin: Vector2) -> Vector2:
 	var map: DungeonMap = GameManager.dungeon_map
 	if map == null:
 		return origin
-	var radius := float(_drop_table.get("drop_offset_radius", 52.0))
-	for attempt in 12:
-		var candidate := origin + Vector2.from_angle(randf() * TAU) * randf_range(12.0, radius)
-		var cell := map.world_to_grid(candidate)
-		if map.is_floor(cell):
-			return map.grid_to_world(cell)
 	var origin_cell := map.world_to_grid(origin)
-	if map.is_floor(origin_cell):
-		return map.grid_to_world(origin_cell)
-	for cell in map.get_floor_cells():
-		if Vector2(cell - origin_cell).length_squared() <= 9.0:
-			return map.grid_to_world(cell)
-	return origin
+	var candidates := map.get_spawn_cells(Rect2i(origin_cell - Vector2i(8, 8), Vector2i(17, 17))) if map.get_meta("floor_only", false) else map.get_spawn_cells()
+	# Stay on the death/chest side of a wall, instead of scattering into a
+	# neighbouring corridor. Navigation-clear cells leave room for the player.
+	for room in map.rooms:
+		if not map.get_meta("floor_only", false) and room.has_point(origin_cell):
+			candidates = map.get_spawn_cells(room)
+			break
+	candidates.sort_custom(func(a: Vector2i, b: Vector2i): return map.grid_to_world(a).distance_squared_to(origin) < map.grid_to_world(b).distance_squared_to(origin))
+	var shape := CircleShape2D.new()
+	shape.radius = 20.0
+	var query := PhysicsShapeQueryParameters2D.new()
+	query.shape = shape
+	query.collision_mask = 1 # Walls and solid decorations; not enemy bodies.
+	var player := get_tree().get_first_node_in_group("player") as CollisionObject2D
+	if player: query.exclude = [player.get_rid()]
+	var space := get_viewport().find_world_2d().direct_space_state
+	var content := get_tree().get_nodes_in_group("map_content")
+	var existing := get_tree().get_nodes_in_group("ground_equipment")
+	var crowded_fallback := Vector2.INF
+	for cell in candidates:
+		var point := map.grid_to_world(cell)
+		query.transform = Transform2D(0.0, point)
+		if not space.intersect_shape(query, 1).is_empty(): continue
+		var blocked := false
+		for node in content:
+			if node.is_queued_for_deletion(): continue
+			if node is TreasureChest or (node is MapLandmark and node.kind == "descent_stairs"):
+				var separation := 112.0
+				if node is TreasureChest and not node.is_boss_chest:
+					separation = 48.0 if node.is_opened else 96.0
+				if point.distance_to(node.global_position) < separation:
+					blocked = true
+					break
+		if blocked: continue
+		if not crowded_fallback.is_finite(): crowded_fallback = point
+		for item in existing:
+			if not item.is_queued_for_deletion() and point.distance_to(item.global_position) < 56.0:
+				blocked = true
+				break
+		if not blocked: return point
+	# A crowded bag of drops may share a safe floor, never a wall or a chest.
+	return crowded_fallback
 
 func _read_json(path: String) -> Dictionary:
 	var parsed = _read_json_variant(path)

@@ -52,3 +52,7 @@ func _get_effective_range(character_data: CharacterData, weapon_manager: WeaponM
 	if ability_level >= 3:
 		thrust_range *= 1.3
 	return thrust_range
+
+## この攻撃パターンが命中時に付与する状態異常。貫通の一撃で動きを止める。
+func applied_status_id() -> String:
+	return "frozen"

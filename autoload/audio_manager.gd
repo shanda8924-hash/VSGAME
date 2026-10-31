@@ -12,8 +12,13 @@ var bgm_table: Dictionary = {} # id: String -> AudioStream
 var _sfx_players: Array[AudioStreamPlayer] = []
 var _bgm_player: AudioStreamPlayer
 var _current_bgm_id: String = ""
+var _last_combat_hit_ms := -1000
 
 func _ready() -> void:
+	# Test-only silence never changes the saved player volume.
+	if "--mute-audio" in OS.get_cmdline_user_args():
+		AudioServer.set_bus_mute(0, true)
+		print("TEST_AUDIO_MUTED driver=%s" % AudioServer.get_driver_name())
 	_load_sound_dir(SE_DIR, sfx_table)
 	_load_sound_dir(BGM_DIR, bgm_table)
 
@@ -50,6 +55,11 @@ func _load_sound_dir(dir_path: String, table: Dictionary) -> void:
 func play_sfx(id: String) -> void:
 	if not sfx_table.has(id):
 		return
+	if id == "combat_hit":
+		var now := Time.get_ticks_msec()
+		if now - _last_combat_hit_ms < 80:
+			return
+		_last_combat_hit_ms = now
 	var player := _get_free_sfx_player()
 	player.stream = sfx_table[id]
 	player.play()
@@ -120,8 +130,8 @@ func _connect_event_bus() -> void:
 	EventBus.enemy_died.connect(func(_enemy_data, _pos): play_sfx("enemy_death"))
 	EventBus.player_damaged.connect(func(_amount, _cur, _max): play_sfx("player_hurt"))
 	EventBus.player_leveled_up.connect(func(_level): play_sfx("level_up"))
-	EventBus.fragment_collected.connect(func(_id): play_sfx("item_pickup"))
 	EventBus.item_acquired.connect(func(_id, _name): play_sfx("item_pickup"))
+	EventBus.equipment_picked_up.connect(func(_equipment): play_sfx("equipment_pickup"))
 	EventBus.boss_fight_started.connect(func(_name): _on_boss_fight_started())
 	EventBus.boss_fight_ended.connect(_on_boss_fight_ended)
 	EventBus.run_started.connect(_on_run_started)

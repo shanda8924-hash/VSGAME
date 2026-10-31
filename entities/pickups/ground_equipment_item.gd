@@ -6,13 +6,21 @@ class_name GroundEquipmentItem
 const ICON_HEIGHT_RATIO := 0.82
 const ICON_HEIGHT_MIN := 24.0
 const ICON_HEIGHT_MAX := 42.0
+const ICON_METRICS := preload("res://resources/equipment_icon_metrics.gd")
+const LOOT_SEAL_TEXTURE_PATH := "res://assets/vfx/pixel/loot_seal.png"
+static var _icon_used_rect_cache: Dictionary = {}
+static var _icon_image_read_count: int = 0
 var equipment: EquipmentData
 var _player: Player
 var _icon_visual_size := Vector2(28.0, 28.0)
 var _icon_visual_top := -24.0
+var spawned_at_usec: int = 0
+var cap_expiration_pending := false
+var _cap_expiration_tween: Tween
 
 func setup(item: EquipmentData) -> void:
 	equipment = item
+	spawned_at_usec = Time.get_ticks_usec()
 
 func _ready() -> void:
 	add_to_group("ground_equipment")
@@ -31,7 +39,6 @@ func _build_visual() -> void:
 	add_child(visual)
 	_build_icon(visual)
 	_build_ground_effects(visual)
-	_build_labels(visual)
 
 func _build_icon(visual: Node2D) -> void:
 	if equipment.icon_path != "" and ResourceLoader.exists(equipment.icon_path):
@@ -39,8 +46,7 @@ func _build_icon(visual: Node2D) -> void:
 		icon.name = "EquipmentIcon"
 		icon.texture = load(equipment.icon_path)
 		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		var image := icon.texture.get_image()
-		var used := image.get_used_rect() if image else Rect2i(0, 0, icon.texture.get_width(), icon.texture.get_height())
+		var used := _get_cached_icon_used_rect(equipment.icon_path, icon.texture)
 		var target_height := clampf(_get_player_visual_height() * ICON_HEIGHT_RATIO, ICON_HEIGHT_MIN, ICON_HEIGHT_MAX)
 		var visual_scale := target_height / maxf(float(used.size.y), 1.0)
 		icon.scale = Vector2.ONE * visual_scale
@@ -67,144 +73,95 @@ func _build_icon(visual: Node2D) -> void:
 		_icon_visual_top = -24.0
 
 func _build_labels(visual: Node2D) -> void:
+	if visual.get_node_or_null("ItemLabel") != null:
+		return
 	var beam_length := _get_beam_length()
 	var label := Label.new()
 	label.name = "ItemLabel"
-	label.text = "%s\n%s" % [equipment.display_name, equipment.get_rarity_display_name()]
+	label.text = "%s\n%s" % [equipment.display_name, equipment.get_rarity_display_name().get_slice(" / ", 1)]
 	label.position = Vector2(-110, _icon_visual_top - beam_length - 48.0)
 	label.size = Vector2(220, 42)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.add_theme_font_size_override("font_size", 14)
 	label.add_theme_color_override("font_color", equipment.get_rarity_color())
+	label.add_theme_color_override("font_outline_color", Color("10121d"))
+	label.add_theme_constant_override("outline_size", 4)
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	label.visible = false
 	visual.add_child(label)
 	var prompt := Label.new()
 	prompt.name = "Prompt"
 	prompt.text = "E / X：拾う"
+	prompt.add_theme_color_override("font_color", Color("fff0c7"))
+	prompt.add_theme_color_override("font_outline_color", Color("10121d"))
+	prompt.add_theme_constant_override("outline_size", 4)
 	prompt.position = Vector2(-80, _icon_visual_top - 28.0)
 	prompt.size = Vector2(160, 24)
 	prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	prompt.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	prompt.visible = false
 	visual.add_child(prompt)
-	if equipment.rarity in ["legendary", "mythic"]:
-		var particles := CPUParticles2D.new()
-		particles.name = "LootParticles"
-		particles.amount = 7 if equipment.rarity == "mythic" else 4
-		particles.lifetime = 0.9
-		particles.emission_shape = CPUParticles2D.EMISSION_SHAPE_SPHERE
-		particles.emission_sphere_radius = maxf(_icon_visual_size.x * 0.42, 8.0)
-		particles.direction = Vector2(0, -1)
-		particles.spread = 28.0
-		particles.initial_velocity_min = 12.0
-		particles.initial_velocity_max = 24.0
-		particles.gravity = Vector2(0, 2)
-		particles.color = Color(equipment.get_rarity_color(), 0.58 if equipment.rarity == "mythic" else 0.4)
-		particles.position = Vector2(0, _icon_visual_top + _icon_visual_size.y * 0.5)
-		particles.z_index = 1
-		visual.add_child(particles)
 
 func _build_ground_effects(visual: Node2D) -> void:
 	var color := equipment.get_rarity_color()
-	var half_width := maxf(_icon_visual_size.x * 0.5 + 4.0, 12.0)
-	# Smooth ellipse/長い縦Beamは画面占有率が高いため撤去。Icon直下に硬い
-	# 8点Pixel台座と短いCorner markだけを置き、Rarityは色とFragment数で読む。
-	var plate := Polygon2D.new()
-	plate.name = "PixelLootPlate"
-	plate.polygon = PackedVector2Array([
-		Vector2(-half_width + 3, 6), Vector2(half_width - 3, 6),
-		Vector2(half_width, 9), Vector2(half_width - 3, 12),
-		Vector2(-half_width + 3, 12), Vector2(-half_width, 9),
-	])
-	plate.color = Color(color.r, color.g, color.b, 0.24)
-	plate.z_index = 0
-	visual.add_child(plate)
-	var outline := Line2D.new()
-	outline.name = "PixelLootOutline"
-	outline.points = PackedVector2Array([
-		Vector2(-half_width + 3, 6), Vector2(half_width - 3, 6),
-		Vector2(half_width, 9), Vector2(half_width - 3, 12),
-		Vector2(-half_width + 3, 12), Vector2(-half_width, 9), Vector2(-half_width + 3, 6),
-	])
-	outline.width = 1.5
-	outline.default_color = color
-	outline.antialiased = false
-	outline.z_index = 1
-	visual.add_child(outline)
-	_build_loot_particles(visual, color)
-	_build_spawn_burst(visual, color)
+	var rank := _rarity_rank()
+	# 台座/輪郭/刻印/2Emitterを、生成画像の静止紋章＋0.7秒の6コマへ統合。
+	# 常駐VFXはSprite1枚だけ。希少度は既存の色と段階的な大きさで区別する。
+	var width := clampf(_icon_visual_size.x + 18.0, 36.0, 52.0) + rank * 2.0
+	var seal := Sprite2D.new()
+	seal.name = "RoyalLootSeal"
+	seal.texture = load(LOOT_SEAL_TEXTURE_PATH) as Texture2D
+	seal.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	seal.modulate = color
+	seal.scale = Vector2(width / 64.0, width / 128.0)
+	seal.position = Vector2(0, 8)
+	seal.z_index = 1
+	visual.add_child(seal)
+	var awakening := PixelSpriteVFX.spawn(visual, visual.global_position + Vector2(0, -_icon_visual_size.y * 0.35), "loot_awaken", Vector2.ONE * (56.0 + rank * 4.0), 0.7, 0.0, color.lightened(0.75))
+	if awakening != null:
+		awakening.name = "LootAwakening"
+		awakening.z_index = 3
 
-func _build_loot_particles(visual: Node2D, color: Color) -> void:
-	var particles := CPUParticles2D.new()
-	particles.name = "LootAmbientParticles"
-	particles.amount = int({"uncommon":2, "rare":3, "epic":4, "legendary":6, "mythic":9}.get(equipment.rarity, 2))
-	particles.lifetime = 1.15
-	particles.emission_shape = CPUParticles2D.EMISSION_SHAPE_SPHERE
-	particles.emission_sphere_radius = maxf(_icon_visual_size.x * 0.42, 7.0)
-	particles.direction = Vector2(0, -1)
-	particles.spread = 32.0
-	particles.initial_velocity_min = 7.0
-	particles.initial_velocity_max = 16.0
-	particles.gravity = Vector2(0, 1.5)
-	particles.color = Color(color.r, color.g, color.b, float({"uncommon":0.28, "rare":0.34, "epic":0.42, "legendary":0.52, "mythic":0.64}.get(equipment.rarity, 0.28)))
-	particles.position = Vector2(0, _icon_visual_top + _icon_visual_size.y * 0.55)
-	particles.z_index = 1
-	visual.add_child(particles)
-
-func _build_spawn_burst(visual: Node2D, color: Color) -> void:
-	var burst := CPUParticles2D.new()
-	burst.name = "LootSpawnBurst"
-	burst.amount = int({"uncommon":3, "rare":4, "epic":5, "legendary":7, "mythic":9}.get(equipment.rarity, 3))
-	burst.one_shot = true
-	burst.explosiveness = 1.0
-	burst.lifetime = 0.5
-	burst.emission_shape = CPUParticles2D.EMISSION_SHAPE_SPHERE
-	burst.emission_sphere_radius = maxf(_icon_visual_size.x * 0.3, 6.0)
-	burst.direction = Vector2(0, -1)
-	burst.spread = 72.0
-	burst.initial_velocity_min = 18.0
-	burst.initial_velocity_max = 30.0
-	burst.gravity = Vector2(0, 12)
-	burst.color = Color(color.r, color.g, color.b, 0.88)
-	burst.position = Vector2(0, _icon_visual_top + _icon_visual_size.y * 0.55)
-	burst.z_index = 3
-	visual.add_child(burst)
-	burst.emitting = true
-
-func _ellipse_points(half_width: float, half_height: float, center_y: float) -> PackedVector2Array:
-	var points := PackedVector2Array()
-	for index in 24:
-		var angle := TAU * float(index) / 24.0
-		points.append(Vector2(cos(angle) * half_width, sin(angle) * half_height + center_y))
-	return points
+func _rarity_rank() -> int:
+	return int({"uncommon":1, "rare":2, "epic":3, "legendary":4, "mythic":5}.get(equipment.rarity, 1))
 
 func _get_beam_length() -> float:
 	return 0.0
 
 func _get_player_visual_height() -> float:
-	var player := get_tree().get_first_node_in_group("player") as Player
-	if player == null or player.animated_sprite == null:
-		return 32.0
-	var sprite := player.animated_sprite
-	var frames := sprite.sprite_frames
-	if frames == null or not frames.has_animation(sprite.animation):
-		return 32.0
-	var texture := frames.get_frame_texture(sprite.animation, sprite.frame)
-	if texture == null:
-		return 32.0
-	var image := texture.get_image()
-	if image == null:
-		return 32.0
-	var used := image.get_used_rect()
-	if used.size.y <= 0:
-		return 32.0
-	return clampf(float(used.size.y) * absf(sprite.global_scale.y), 24.0, 56.0)
+	# AttackVFXManagerがPlayer接続時に一度だけ計算した値を共有し、Drop生成側からも
+	# Sprite AtlasのGPU→CPU読み戻しを発生させない。
+	var attack_vfx := get_tree().get_first_node_in_group("attack_vfx_manager") as AttackVFXManager
+	if attack_vfx != null:
+		return attack_vfx._get_player_visual_height()
+	return 32.0
+
+static func _get_cached_icon_used_rect(icon_path: String, texture: Texture2D) -> Rect2i:
+	if _icon_used_rect_cache.has(icon_path):
+		return _icon_used_rect_cache[icon_path] as Rect2i
+	var fallback := Rect2i(0, 0, texture.get_width(), texture.get_height())
+	# Boundsは新しいPNGを正規化するときにCPU上で保存する。
+	# 初めて出た装備もGPU readbackせず、未知の画像は全体寸法で安全に表示する。
+	var used: Rect2i = ICON_METRICS.BOUNDS.get(icon_path, fallback)
+	if used.size.x <= 0 or used.size.y <= 0:
+		used = fallback
+	_icon_used_rect_cache[icon_path] = used
+	return used
+
+static func debug_reset_icon_read_cache() -> void:
+	_icon_used_rect_cache.clear()
+	_icon_image_read_count = 0
+
+static func debug_get_icon_read_snapshot() -> Dictionary:
+	return {"cached_paths": _icon_used_rect_cache.size(), "image_reads": _icon_image_read_count}
 
 func _on_body_entered(body: Node2D) -> void:
 	if body is Player:
 		_player = body
 		_player.register_ground_equipment(self)
+		var visual := get_node_or_null("Visual") as Node2D
+		if visual != null:
+			_build_labels(visual)
 		_set_nearby_visible(true)
 
 func _on_body_exited(body: Node2D) -> void:
@@ -216,8 +173,44 @@ func _on_body_exited(body: Node2D) -> void:
 func _set_nearby_visible(value: bool) -> void:
 	var visual := get_node_or_null("Visual")
 	if visual:
-		visual.get_node("ItemLabel").visible = value
-		visual.get_node("Prompt").visible = value
+		var item_label := visual.get_node_or_null("ItemLabel") as Label
+		var prompt := visual.get_node_or_null("Prompt") as Label
+		if item_label != null:
+			item_label.visible = value
+		if prompt != null:
+			prompt.visible = value
+
+func begin_cap_expiration(warning_seconds: float) -> bool:
+	if cap_expiration_pending or equipment == null or equipment.rarity not in ["uncommon", "rare", "epic"]:
+		return false
+	cap_expiration_pending = true
+	var visual := get_node_or_null("Visual") as CanvasItem
+	if visual == null or warning_seconds <= 0.0:
+		_expire_from_cap()
+		return true
+	var blink_count := 5
+	var half_blink := maxf(warning_seconds / float(blink_count * 2), 0.04)
+	_cap_expiration_tween = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	for _blink in blink_count:
+		_cap_expiration_tween.tween_property(visual, "modulate:a", 0.22, half_blink)
+		_cap_expiration_tween.tween_property(visual, "modulate:a", 1.0, half_blink)
+	_cap_expiration_tween.tween_callback(_expire_from_cap)
+	return true
+
+func _expire_from_cap() -> void:
+	if is_inside_tree() and not is_queued_for_deletion():
+		queue_free()
+
+func _cancel_cap_expiration() -> void:
+	if _cap_expiration_tween != null and _cap_expiration_tween.is_valid():
+		_cap_expiration_tween.kill()
+	_cap_expiration_tween = null
+	cap_expiration_pending = false
+	var visual := get_node_or_null("Visual") as CanvasItem
+	if visual: visual.modulate.a = 1.0
+
+func _exit_tree() -> void:
+	_cancel_cap_expiration()
 
 func collect(player: Player) -> bool:
 	if equipment == null or player == null:
@@ -225,7 +218,9 @@ func collect(player: Player) -> bool:
 	var component := player.get_node_or_null("EquipmentComponent") as EquipmentComponent
 	if component == null:
 		return false
-	component.add_item(equipment)
+	if not component.add_item(equipment):
+		return false
 	player.unregister_ground_equipment(self)
+	_cancel_cap_expiration()
 	queue_free()
 	return true

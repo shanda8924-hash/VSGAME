@@ -31,6 +31,12 @@ func _ready() -> void:
 	add_to_group("allies")
 	ai_component.behavior = ChaseStrategy.new()
 	health_component.died.connect(_on_died)
+	# 召喚した味方の攻撃も、召喚主(Player)の職業が付与する状態異常を運ぶ。
+	# Necromancerは本体が直接殴らずこの接触ダメージが唯一の与ダメージ経路なので、
+	# ここを繋がないと職業に割り当てたcursedが一度も立たない(仕様書36.3)。
+	var summoner := get_tree().get_first_node_in_group("player") as Player
+	if summoner and summoner.weapon_manager:
+		contact_hitbox.applied_status_id = summoner.weapon_manager.get_applied_status_id()
 
 func _physics_process(delta: float) -> void:
 	if _is_dead:

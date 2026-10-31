@@ -6,6 +6,8 @@ class_name HurtboxComponent
 @export var health_component_path: NodePath
 
 var _health_component: HealthComponent
+## 命中ごとにGroup検索するのを避けるための遅延Cache(被弾はゲーム中もっとも頻度が高い経路)。
+var _status_system_cache: StatusApplySystem = null
 
 func _ready() -> void:
 	if health_component_path != NodePath():
@@ -32,9 +34,9 @@ func apply_hitbox_damage(hitbox: HitboxComponent) -> void:
 		return
 	var metadata := hitbox.combat_metadata.duplicate(true)
 	if metadata.is_empty():
-		metadata = CombatEventMeta.create_direct("player_direct_attack", hitbox.is_critical) if hitbox.applies_player_elements else CombatEventMeta.create_secondary("non_player_hit", [], false)
+		metadata = CombatEventMeta.create_direct("player_direct_attack", hitbox.is_critical) if hitbox.is_player_attack else CombatEventMeta.create_secondary("non_player_hit", [], false)
 	metadata["is_critical"] = hitbox.is_critical
-	var actual_damage := _health_component.apply_damage(hitbox.damage, metadata)
+	var actual_damage := _health_component.apply_animation_strike_damage(hitbox.damage, metadata) if hitbox is MeleeHit and hitbox.animation_strike else _health_component.apply_damage(hitbox.damage, metadata)
 	if actual_damage <= 0.0:
 		return
 	var owner_entity := get_owner_entity()
@@ -44,17 +46,25 @@ func apply_hitbox_damage(hitbox: HitboxComponent) -> void:
 	EventBus.damage_dealt.emit(actual_damage, hit_position, hitbox.is_critical)
 	if owner_entity and owner_entity.is_in_group("enemies"):
 		EventBus.enemy_physical_damage_dealt.emit(actual_damage, hit_position, hitbox.is_critical)
-	if hitbox.applies_player_elements and owner_entity and owner_entity.is_in_group("enemies"):
-		var element_system := get_tree().get_first_node_in_group("element_combat_system") as ElementCombatSystem
-		if element_system:
-			element_system.apply_element_damage(self, actual_damage, hitbox.global_position, {"combat_metadata": metadata})
+		_apply_hitbox_status(hitbox, owner_entity, actual_damage)
 	# 「敵にダメージが入った瞬間」のSEなので、被弾した側がenemiesグループの
 	# 時だけ鳴らす(プレイヤー被弾側はplayer_hurt SEと別に扱うため)。
 	if owner_entity and owner_entity.is_in_group("enemies"):
-		AudioManager.play_sfx("hit_impact")
+		AudioManager.play_sfx("combat_hit")
 
-## 被弾した本体(Entity)を取得する。武器属性VFX(EffectThemeManager)が
-## 状態異常付与や氷結判定のためにStatusEffectComponentへ辿り着くのに使う。
+## Hitboxが運んできた状態異常を敵へ付与する。ダメージ適用の「後」に呼ぶこと
+## (先に付与すると、その状態を条件にするダメージ強化が、状態を付けた当のHitにも
+## 乗ってしまう)。AttackPatternBase.apply_direct_damage()と同じ順序に揃えてある。
+func _apply_hitbox_status(hitbox: HitboxComponent, owner_entity: Node, actual_damage: float) -> void:
+	if hitbox.applied_status_id == "":
+		return
+	if _status_system_cache == null or not is_instance_valid(_status_system_cache):
+		_status_system_cache = get_tree().get_first_node_in_group("status_apply_system") as StatusApplySystem
+	if _status_system_cache:
+		_status_system_cache.apply_state(owner_entity as Node2D, hitbox.applied_status_id, actual_damage)
+
+## 被弾した本体(Entity)を取得する。状態異常の付与・判定のために
+## StatusEffectComponentへ辿り着くのに使う。
 func get_owner_entity() -> Node:
 	if _health_component == null:
 		return null

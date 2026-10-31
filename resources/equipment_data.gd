@@ -6,10 +6,13 @@ class_name EquipmentData
 @export var template_id: String = ""
 @export var display_name: String = ""
 @export var slot: String = "weapon"
+@export var attack_kind: String = "slash"
 @export var rarity: String = "uncommon"
 @export var icon_path: String = ""
 @export var stats: Dictionary = {}
 @export var special_effects: Array[String] = []
+## Run-scoped marker used by the item box. It does not grant stats or forge protection.
+@export var is_favorite: bool = false
 ## Reserved for inventory safety. Locked items are never selected as merge materials.
 @export var is_locked: bool = false
 ## 特殊効果ごとの実数値。効果IDはspecial_effectsに残し、レアリティ別の強さだけを
@@ -29,11 +32,11 @@ func get_rarity_display_name() -> String:
 
 func get_rarity_color() -> Color:
 	match rarity:
-		"rare": return Color(0.25, 0.55, 1.0)
-		"epic": return Color(0.72, 0.3, 1.0)
-		"legendary": return Color(1.0, 0.5, 0.08)
-		"mythic": return Color(1.0, 0.12, 0.12)
-		_: return Color(0.25, 0.9, 0.35)
+		"rare": return Color("67a1d3")
+		"epic": return Color("ac82ca")
+		"legendary": return Color("d5a35f")
+		"mythic": return Color("d16c70")
+		_: return Color("6bb88c")
 
 func get_slot_display_name() -> String:
 	return {"weapon":"武器", "head":"頭", "body":"胴", "arms":"腕", "legs":"脚", "accessory":"アクセサリー"}.get(slot, slot)

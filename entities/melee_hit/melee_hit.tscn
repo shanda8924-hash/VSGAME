@@ -11,7 +11,7 @@ collision_mask = 0
 monitoring = false
 script = ExtResource("1")
 destroy_on_hit = false
-applies_player_elements = true
+is_player_attack = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_1")

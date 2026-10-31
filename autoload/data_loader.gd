@@ -8,9 +8,6 @@ const WEAPON_DIR := "res://data/weapons/"
 const FRAGMENT_DIR := "res://data/fragments/"
 const EFFECT_THEME_DIR := "res://effects/themes/"
 const ATTACK_VFX_DIR := "res://effects/attack_vfx/"
-const ELEMENT_VFX_DIR := "res://effects/element_vfx/"
-const FUSION_VFX_DIR := "res://effects/fusion_vfx/"
-const ELEMENT_COMBAT_PATH := "res://data/elements/element_combat.json"
 const DIFFICULTY_DIR := "res://data/difficulty/"
 const CHARACTER_DIR := "res://data/characters/"
 const UPGRADE_DIR := "res://data/upgrades/"
@@ -25,10 +22,7 @@ var weapons: Dictionary = {}          # id: String -> WeaponData
 var fragments: Dictionary = {}        # id: String -> WeaponFragmentData
 var effect_themes: Dictionary = {}    # id: String -> EffectThemeData
 var attack_vfx_effects: Dictionary = {} # id: String -> AttackVFXData
-var element_vfx_effects: Dictionary = {} # element_id: String -> ElementVFXData
-var fusion_vfx_effects: Dictionary = {} # fusion_id: String -> FusionVFXData
-var element_combat_config: Dictionary = {} # stack damage / slot / lightning chain balance
-var difficulty_curves: Dictionary = {} # id: String -> Array[Dictionary] ({time_seconds, spawn_interval}を時間昇順で保持)
+var difficulty_curves: Dictionary = {} # id: String -> Array[Dictionary] ({time_seconds, spawn_interval, spawn_batch?}を時間昇順で保持)
 var characters: Dictionary = {}        # id: String -> CharacterData
 var upgrades: Dictionary = {}          # id: String -> UpgradeData
 var bosses: Dictionary = {}            # id: String -> BossData
@@ -41,9 +35,6 @@ func _ready() -> void:
 	_load_fragments()
 	_load_effect_themes()
 	_load_attack_vfx_effects()
-	_load_element_vfx_effects()
-	_load_fusion_vfx_effects()
-	_load_element_combat_config()
 	_load_difficulty_curves()
 	_load_characters()
 	_load_upgrades()
@@ -83,6 +74,7 @@ func _load_enemies() -> void:
 		data.contact_damage = float(entry.get("contact_damage", 5.0))
 		data.exp_value = int(entry.get("exp_value", 1))
 		data.min_elapsed_seconds = float(entry.get("min_elapsed_seconds", 0.0))
+		data.special_attack_id = String(entry.get("special_attack_id", ""))
 		data.attack_interval = float(entry.get("attack_interval", 1.0))
 		data.attack_range = float(entry.get("attack_range", 52.0))
 		data.attack_windup = float(entry.get("attack_windup", 0.45))
@@ -101,6 +93,7 @@ func _load_weapons() -> void:
 		for f in entry.get("required_fragment_ids", []):
 			required.append(String(f))
 		data.required_fragment_ids = required
+		data.is_relic = bool(entry.get("is_relic", false))
 		data.vfx_theme_id = entry.get("vfx_theme_id", "default")
 		data.crit_chance = float(entry.get("crit_chance", 0.15))
 		data.crit_multiplier = float(entry.get("crit_multiplier", 2.0))
@@ -151,44 +144,8 @@ func _load_attack_vfx_effects() -> void:
 		file_name = dir.get_next()
 	dir.list_dir_end()
 
-func _load_element_vfx_effects() -> void:
-	var dir := DirAccess.open(ELEMENT_VFX_DIR)
-	if dir == null:
-		push_warning("DataLoader: Element VFXフォルダが見つかりません -> %s" % ELEMENT_VFX_DIR)
-		return
-	dir.list_dir_begin()
-	var file_name := dir.get_next()
-	while file_name != "":
-		if file_name.ends_with(".tres"):
-			var data: ElementVFXData = load(ELEMENT_VFX_DIR + file_name)
-			if data and data.element_id != "" and data.hit_sprite_sheet and data.iai_trail_sprite_sheet:
-				element_vfx_effects[data.element_id] = data
-			else:
-				push_warning("DataLoader: Element VFX読込失敗 -> %s" % file_name)
-		file_name = dir.get_next()
-	dir.list_dir_end()
 
-func _load_fusion_vfx_effects() -> void:
-	var dir := DirAccess.open(FUSION_VFX_DIR)
-	if dir == null:
-		push_warning("DataLoader: Fusion VFXフォルダが見つかりません -> %s" % FUSION_VFX_DIR)
-		return
-	dir.list_dir_begin()
-	var file_name := dir.get_next()
-	while file_name != "":
-		if file_name.ends_with(".tres"):
-			var data: FusionVFXData = load(FUSION_VFX_DIR + file_name)
-			if data and data.fusion_id != "" and data.attack_sprite_sheet and data.trail_sprite_sheet and data.hit_sprite_sheet and data.burst_sprite_sheet and data.intro_sprite_sheet:
-				fusion_vfx_effects[data.fusion_id] = data
-			else:
-				push_warning("DataLoader: Fusion VFX読込失敗 -> %s" % file_name)
-		file_name = dir.get_next()
-	dir.list_dir_end()
 
-func _load_element_combat_config() -> void:
-	element_combat_config = _read_json_file(ELEMENT_COMBAT_PATH)
-	if element_combat_config.is_empty():
-		push_warning("DataLoader: Element Combat設定を読み込めません -> %s" % ELEMENT_COMBAT_PATH)
 
 func _load_difficulty_curves() -> void:
 	# 難易度カーブのJSONは(欠片/武器/敵と違い)1ファイル=1個のオブジェクトではなく
@@ -259,6 +216,7 @@ func _load_upgrades() -> void:
 		data.effect_type = entry.get("effect_type", "")
 		data.value = float(entry.get("value", 0.0))
 		data.description = entry.get("description", "")
+		data.icon_path = entry.get("icon_path", "")
 		data.category = entry.get("category", "common")
 		data.effect_params = entry.get("effect_params", {})
 		data.downside_type = entry.get("downside_type", "")
@@ -293,6 +251,7 @@ func _load_bosses() -> void:
 		data.attack_windup = float(entry.get("attack_windup", 0.55))
 		data.visual_scale = float(entry.get("visual_scale", 2.2))
 		data.attack_pattern_id = entry.get("attack_pattern_id", "")
+		data.special_attack_id = entry.get("special_attack_id", "")
 		bosses[data.id] = data
 
 func _read_json_file(path: String) -> Dictionary:
@@ -318,6 +277,7 @@ func _load_items() -> void:
 		data.display_name = entry.get("display_name", "")
 		data.effect_type = entry.get("effect_type", "")
 		data.value = float(entry.get("value", 0.0))
+		data.icon_path = entry.get("icon_path", "")
 		data.is_special = bool(entry.get("is_special", false))
 		data.description = entry.get("description", "")
 		items[data.id] = data

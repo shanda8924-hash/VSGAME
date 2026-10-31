@@ -1,27 +1,25 @@
 extends Node
 class_name VFXPoolManager
-## パーティクルのオブジェクトプール管理。
-## 大量撃破時にinstantiate/queue_freeを連発するとGC負荷でカクつくため、
-## あらかじめプールしておいた粒子を使い回す。
+## 大量撃破の生成Pixel Burstを最大6個で使い回す。Particle/Timerは生成しない。
 
+# 既存Sceneの公開設定を保持。描画は生成済みmass_kill.pngへ移行済み。
 @export var mass_kill_particle_scene: PackedScene
 @export var pool_size: int = 6
 
-var _pool: Array[GPUParticles2D] = []
+var _pool: Array[PixelSpriteVFX] = []
 
 func _ready() -> void:
-	if mass_kill_particle_scene == null:
-		return
-	for i in pool_size:
-		var p: GPUParticles2D = mass_kill_particle_scene.instantiate()
-		p.emitting = false
+	for i in clampi(pool_size, 0, 6):
+		var p := PixelSpriteVFX.new()
+		p.pooled = true
+		if not p.configure("mass_kill", Vector2(144.0, 144.0), 0.6):
+			p.free()
+			return
 		add_child(p)
 		_pool.append(p)
 
 func play_mass_kill_burst(at_position: Vector2) -> void:
 	for p in _pool:
-		if not p.emitting:
-			p.global_position = at_position
-			p.restart()
-			p.emitting = true
+		if not p.active:
+			p.play_once(at_position)
 			return

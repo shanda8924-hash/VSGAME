@@ -36,6 +36,7 @@ func execute(attacker: Player, character_data: CharacterData, weapon_manager: We
 		return
 
 	var count: int = character_data.attack_pattern_params.get("projectile_count", DEFAULT_PROJECTILE_COUNT)
+	count += weapon_manager.get_survival_extra_projectiles()
 	if ability_level >= 2:
 		count += 1
 	var spread_degrees: float = character_data.attack_pattern_params.get("spread_angle_degrees", DEFAULT_SPREAD_ANGLE_DEGREES)
@@ -58,3 +59,7 @@ func _build_weapon_data(character_data: CharacterData) -> WeaponData:
 	data.vfx_theme_id = character_data.vfx_theme_id
 	data.projectile_scene = load(PROJECTILE_SCENE_PATH)
 	return data
+
+## この攻撃パターンが命中時に付与する状態異常。速射が的に電荷を溜める。
+func applied_status_id() -> String:
+	return "charged"

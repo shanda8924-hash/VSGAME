@@ -52,3 +52,7 @@ func _get_effective_radius(character_data: CharacterData, weapon_manager: Weapon
 	elif character_data.id == "priest" and ability_level >= 4:
 		radius *= 1.25
 	return radius
+
+## この攻撃パターンが命中時に付与する状態異常。聖なる波動が対象へ刻印を刻む。
+func applied_status_id() -> String:
+	return "marked"
