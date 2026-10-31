@@ -28,9 +28,10 @@ func _ready() -> void:
 		var item := drops.debug_generate_equipment(String(template.id), String(template.rarity))
 		assert(item != null and item.template_id == template.id and item.slot == template.slot)
 		assert(not item.stats.is_empty())
-		var pixel_path := "res://assets/ui/equipment_readable_v4/%s.png" % item.template_id
+		# 実行時は 64px の ember_v5 版（readable_v4 と同じ原画・同じ手順）を使う。
+		var pixel_path := "res://assets/visuals/ember_v5/equipment/%s.png" % item.template_id
 		assert(item.icon_path == pixel_path and ResourceLoader.exists(pixel_path), "regenerated icon must reach inventory, world drops and floating weapon")
-		assert((load(pixel_path) as Texture2D).get_size() == Vector2(48,48))
+		assert((load(pixel_path) as Texture2D).get_size() == Vector2(64,64))
 		var texture := (game.get_node("EquipmentScreen") as EquipmentScreen)._load_trimmed_icon(item.icon_path)
 		assert(texture != null)
 		var picture := texture.get_image()

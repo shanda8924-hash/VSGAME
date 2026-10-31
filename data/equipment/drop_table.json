@@ -253,22 +253,22 @@
   "merge_rules": {
     "uncommon": {
       "count": 3,
-      "success_rate": 0.95,
+      "success_rate": 1.0,
       "failure_loss": 1
     },
     "rare": {
       "count": 3,
-      "success_rate": 0.9,
+      "success_rate": 1.0,
       "failure_loss": 1
     },
     "epic": {
       "count": 3,
-      "success_rate": 0.85,
+      "success_rate": 1.0,
       "failure_loss": 2
     },
     "legendary": {
       "count": 3,
-      "success_rate": 0.8,
+      "success_rate": 1.0,
       "failure_loss": 2
     }
   }

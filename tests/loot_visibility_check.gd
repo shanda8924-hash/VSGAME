@@ -42,7 +42,7 @@ func _run_checks() -> void:
 	var dropped_seal := dropped.get_node_or_null("Visual/RoyalLootSeal") as Sprite2D
 	_check(dropped_seal != null and dropped_seal.texture != null and dropped_seal.texture.resource_path == GroundEquipmentItem.LOOT_SEAL_TEXTURE_PATH, "drop connects the generated loot seal PNG")
 	_check(dropped.get_node_or_null("Visual/PixelLootPlate") == null and dropped.get_node_or_null("Visual/PixelLootOutline") == null, "procedural plate and line are removed")
-	_check(dropped.get_node_or_null("Visual/LootBeam") == null and dropped.get_node_or_null("Visual/LootBeamGlow") == null, "drop creates no long loot beam")
+	_check(dropped.get_node_or_null("Visual/LootBeam") is GroundEquipmentItem.LootBeam and dropped.get_node_or_null("Visual/LootBeamGlow") == null, "drop creates one rarity-coloured loot beam (Diablo-style pillar)")
 	_check(dropped.get_node_or_null("Visual/LootAmbientParticles") == null and dropped.get_node_or_null("Visual/LootSpawnBurst") == null, "drop creates no persistent or duplicate CPU emitter")
 	_check(dropped.get_node_or_null("Visual/LootAwakening") is PixelSpriteVFX, "drop creates one authored sprite animation")
 
@@ -84,7 +84,7 @@ func _run_checks() -> void:
 		var seal := ground.get_node_or_null("Visual/RoyalLootSeal") as Sprite2D
 		_check(seal != null and seal.scale == seal_scales[index] and seal.position == Vector2(0, 8) and seal.modulate.a == 1.0, "%s solid seal retains its fixed size and position after arrival" % ground.equipment.rarity)
 		_check(ground.get_node_or_null("Visual/LootAwakening") == null, "%s arrival animation expires" % ground.equipment.rarity)
-		_check(ground.get_node_or_null("Visual/LootBeam") == null and ground.get_node_or_null("Visual/LootSpawnBeam") == null, "%s never creates a vertical beam" % ground.equipment.rarity)
+		_check(ground.get_node_or_null("Visual/LootBeam") is GroundEquipmentItem.LootBeam and ground.get_node_or_null("Visual/LootSpawnBeam") == null, "%s keeps its one rarity-coloured loot beam after arrival" % ground.equipment.rarity)
 
 	var dropped_ref: WeakRef = weakref(dropped)
 	var inventory_before := player.equipment_component.get_all_inventory().size()

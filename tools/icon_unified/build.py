@@ -24,6 +24,9 @@ from PIL import Image, ImageDraw, ImageEnhance
 ROOT = Path(__file__).resolve().parents[2]
 SHEETS = ROOT / "assets" / "items" / "painted_200"
 OUT = ROOT / "assets" / "ui" / "equipment_readable_v4"
+# 実行時に EquipmentDropSystem が最優先で読む 64px 版（本体 56px）。同じ原画・同じ手順。
+OUT_EMBER = ROOT / "assets" / "visuals" / "ember_v5" / "equipment"
+EMBER_PREFIX = "res://assets/visuals/ember_v5/equipment/"
 METRICS = ROOT / "resources" / "equipment_icon_metrics.gd"
 RES_PREFIX = "res://assets/ui/equipment_readable_v4/"
 
@@ -173,13 +176,13 @@ def board(out_dir: Path, results: list[tuple[dict, Image.Image]]):
     b.save(out_dir / "icons_all_1x.png")
 
 
-def write_metrics(results: list[tuple[dict, Image.Image]], tabs: list[tuple[str, Image.Image]]):
+def write_metrics(results: list[tuple[dict, Image.Image]], tabs: list[tuple[str, Image.Image]], ember: list[tuple[dict, Image.Image]]):
     lines = METRICS.read_text(encoding="utf-8").splitlines()
     tab_paths = {f"res://{rel}" for rel, _ in tabs}
-    kept = [ln for ln in lines if RES_PREFIX not in ln and not any(path in ln for path in tab_paths)]
+    kept = [ln for ln in lines if RES_PREFIX not in ln and EMBER_PREFIX not in ln and not any(path in ln for path in tab_paths)]
     end = max(i for i, ln in enumerate(kept) if ln.strip() == "}")
     new_lines = []
-    for res_path, img in [(f"res://{rel}", img) for rel, img in tabs] + [(f"{RES_PREFIX}{item['id']}.png", img) for item, img in results]:
+    for res_path, img in [(f"res://{rel}", img) for rel, img in tabs] + [(f"{RES_PREFIX}{item['id']}.png", img) for item, img in results] + [(f"{EMBER_PREFIX}{item['id']}.png", img) for item, img in ember]:
         bbox = img.getbbox()
         if bbox is None:
             continue
@@ -194,6 +197,7 @@ def main():
     by_id = {item["id"]: item for item in templates}
     results = [(item, pixelize(item)) for item in templates]
     tabs = [(rel, pixelize(by_id[item_id], size=64, subject=54)) for rel, item_id in TAB_ICONS.items()]
+    ember = [(item, pixelize(item, size=64, subject=56)) for item in templates]
     if board_dir:
         board(board_dir, results)
         strip = Image.new("RGBA", (len(tabs) * 136, 136), (40, 38, 46, 255))
@@ -206,8 +210,11 @@ def main():
             img.save(OUT / f"{item['id']}.png")
         for rel, img in tabs:
             img.save(ROOT / rel)
-        write_metrics(results, tabs)
-        print(f"wrote {len(results)} icons and {len(tabs)} tab icons")
+        OUT_EMBER.mkdir(parents=True, exist_ok=True)
+        for item, img in ember:
+            img.save(OUT_EMBER / f"{item['id']}.png")
+        write_metrics(results, tabs, ember)
+        print(f"wrote {len(results)} icons, {len(tabs)} tab icons and {len(ember)} runtime 64px icons")
 
 
 if __name__ == "__main__":

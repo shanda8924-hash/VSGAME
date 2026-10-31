@@ -164,11 +164,9 @@ func _ready() -> void:
 	visible = false
 	inventory_list.set_drag_forwarding(Callable(), _can_drop_equipment.bind(""), _drop_equipment.bind(""))
 	($Background/Margin/Main/Columns/InventoryPanel/Margin/VBox/InventoryBody/InventoryWell as Control).set_drag_forwarding(Callable(), _can_drop_equipment.bind(""), _drop_equipment.bind(""))
-	equip_button.hide()
-	unequip_button.hide()
-	if DisplayServer.is_touchscreen_available() or "--touch-preview" in OS.get_cmdline_user_args():
-		equip_button.show()
-		unequip_button.show()
+	# 「装備する／外す」は常に見せる（ダブルクリックと E も使える）。
+	equip_button.show()
+	unequip_button.show()
 	var touch_close := Button.new()
 	touch_close.text = "閉じる"
 	touch_close.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
@@ -261,6 +259,10 @@ func _ready() -> void:
 	_setup_compact_bag()
 
 func _apply_crafted_details() -> void:
+	# 詳細：見出しのすぐ下に「装備する／外す」を置き、能力表は内容ぶんだけ伸ばす（ボタンが隠れない）。
+	var buttons_row := detail_view.get_node("Buttons") as Control
+	detail_view.move_child(buttons_row, detail_view.get_node("DetailHeader").get_index() + 1)
+	comparison.custom_minimum_size = Vector2(326.4, 170)
 	FrameArt.plaque($Background/Margin/Main/Columns/CharacterPanel/Margin/VBox/CharacterHeader)
 	FrameArt.plaque(detail_tab)
 	FrameArt.panel($Background/Margin/Main/Columns/CharacterPanel/Margin/VBox/StatsPanel, true)
@@ -627,11 +629,18 @@ func _autofill_candidates() -> Array[EquipmentData]:
 				break
 	if active_rarity == "" or _merge_system.get_next_rarity(active_rarity) == "":
 		return result
-	for item in _equipment.get_all_inventory():
+	# 主素材（または選択中）と同じ部位を先に、足りなければ他の部位で埋める。
+	var preferred_slot := result[0].slot if not result.is_empty() else (_selected.slot if _selected and _selected.rarity == active_rarity else "")
+	var pool := _equipment.get_all_inventory().filter(func(item: EquipmentData): return item.rarity == active_rarity and item not in result and not item.is_locked and not _equipment.is_equipped(item))
+	pool.sort_custom(func(a: EquipmentData, b: EquipmentData):
+		if (a.slot == preferred_slot) != (b.slot == preferred_slot):
+			return a.slot == preferred_slot
+		return item_score(a) < item_score(b)
+	)
+	for item in pool:
 		if result.size() >= EquipmentMergeSystem.required_count(active_rarity):
 			break
-		if item.rarity == active_rarity and item not in result and not item.is_locked and not _equipment.is_equipped(item):
-			result.append(item)
+		result.append(item)
 	return result
 
 func _autofill_materials() -> void:
@@ -807,6 +816,57 @@ func _build_slot_button(slot: String) -> Button:
 		_attach_item_hover(button, item)
 	return button
 
+## 装備スコア：一目で強さを比べるための単一指標。固定値と割合値を同じ尺度へ寄せる。
+static func item_score(item: EquipmentData) -> float:
+	if item == null:
+		return 0.0
+	var score := item.get_stat("attack_power") * 2.0 + item.get_stat("defense") * 1.5 + item.get_stat("max_hp") * 0.25
+	score += item.get_stat("move_speed") * 120.0 + item.get_stat("attack_speed") * 120.0 + item.get_stat("crit_rate") * 160.0 + item.get_stat("crit_damage") * 60.0
+	score += item.special_effects.size() * 8.0
+	score += maxi(EquipmentMergeSystem.RARITY_ORDER.find(item.rarity), 0) * 2.0
+	return score
+
+## 同じ部位の装備中と比べたスコア差。未装備なら自身のスコア。
+func _score_delta(item: EquipmentData) -> float:
+	var current := _equipment.get_equipped(item.slot) if _equipment else null
+	if current == item:
+		return 0.0
+	return item_score(item) - item_score(current)
+
+func _add_top_left_badge(button: Button, text: String, color: Color) -> void:
+	var badge := Label.new()
+	badge.text = text
+	badge.add_theme_font_size_override("font_size", 13)
+	badge.add_theme_color_override("font_color", color)
+	badge.add_theme_color_override("font_outline_color", Color("0b0c13"))
+	badge.add_theme_constant_override("outline_size", 3)
+	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	button.add_child(badge)
+	badge.offset_left = 5.0
+	badge.offset_top = 3.0
+	badge.offset_right = 22.0
+	badge.offset_bottom = 20.0
+
+## 所持品マスのレア度の下地（Diablo 系の色付きマス）。アイコンの後ろに敷く。
+func _add_rarity_underlay(button: Button, item: EquipmentData) -> void:
+	var underlay := Panel.new()
+	underlay.name = "RarityUnderlay"
+	underlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var style := StyleBoxFlat.new()
+	var color := item.get_rarity_color()
+	style.bg_color = Color(color, 0.14 + 0.03 * maxi(EquipmentMergeSystem.RARITY_ORDER.find(item.rarity), 0))
+	style.border_color = Color(color, 0.85)
+	style.border_width_bottom = 3
+	style.anti_aliasing = false
+	underlay.add_theme_stylebox_override("panel", style)
+	button.add_child(underlay)
+	button.move_child(underlay, 0)
+	underlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	underlay.offset_left = 5
+	underlay.offset_top = 5
+	underlay.offset_right = -5
+	underlay.offset_bottom = -5
+
 func _build_inventory_button(item: EquipmentData) -> Button:
 	var button := Button.new()
 	button.custom_minimum_size = Vector2(48, 48)
@@ -832,6 +892,20 @@ func _build_inventory_button(item: EquipmentData) -> Button:
 	button.add_theme_stylebox_override("focus", PixelUIStyle._focus_box(PixelUIStyle.JEWEL))
 	if item == _selected:
 		button.add_theme_stylebox_override("normal", FrameArt.styled("slot", 5, Color(0.9, 1.25, 1.2)))
+	_add_rarity_underlay(button, item)
+	if not _equipment.is_equipped(item) and not item.is_locked:
+		var delta := _score_delta(item)
+		if delta > 0.5:
+			_add_top_left_badge(button, "▲", Color("69f092"))
+		elif delta < -0.5:
+			_add_top_left_badge(button, "▼", Color("a85858"))
+	if _right_mode == "forge":
+		# 鍛造中は素材にできない品（装備中・保護・別レア度・最高レア）を沈める。
+		var eligible := not _equipment.is_equipped(item) and not item.is_locked and _merge_system.get_next_rarity(item.rarity) != ""
+		if eligible and not _merge_materials.is_empty() and item.rarity != _merge_materials[0].rarity:
+			eligible = false
+		if not eligible and item not in _merge_materials:
+			button.modulate = Color(0.55, 0.55, 0.6)
 	var corner_frame := CornerSelectionFrame.new()
 	corner_frame.visible = item == _selected
 	button.add_child(corner_frame)
@@ -912,6 +986,10 @@ func _on_inventory_item_pressed(item: EquipmentData) -> void:
 	if _merge_in_progress:
 		return
 	_selected = item
+	if _right_mode == "forge" and not _equipment.is_equipped(item) and not item.is_locked and _merge_system.get_next_rarity(item.rarity) != "":
+		# 鍛造中は 1 クリックで素材へ出し入れする（「素材に追加」ボタンはキーボード用に残す）。
+		_toggle_merge_material(item)
+		return
 	_refresh()
 	call_deferred("_focus_inventory_item", item)
 	if _right_mode == "details":
@@ -947,15 +1025,27 @@ func _refresh_comparison() -> void:
 	detail_name.text = _selected.display_name
 	detail_name.tooltip_text = _selected.display_name
 	detail_name.add_theme_color_override("font_color", Color("f1e3c8"))
-	detail_meta.text = RARITY_NAMES.get(_selected.rarity, _selected.rarity)
+	detail_name.add_theme_color_override("font_color", _selected.get_rarity_color().lightened(0.3))
+	var kind_text := ""
+	if _selected.slot == "weapon":
+		var kind_profiles: Dictionary = (_equipment.get_parent() as Player).weapon_manager.equipment_attack.PROFILES
+		kind_text = " ・ " + String(kind_profiles.get(_selected.attack_kind, kind_profiles.slash).name)
+	detail_meta.text = "%s ・ %s%s" % [RARITY_NAMES.get(_selected.rarity, _selected.rarity), _selected.get_slot_display_name(), kind_text]
 	detail_meta.tooltip_text = _selected.get_slot_display_name()
 	detail_meta.add_theme_color_override("font_color", _selected.get_rarity_color().lightened(0.2))
-	var rarity_rank := mini(3, maxi(1, EquipmentMergeSystem.RARITY_ORDER.find(_selected.rarity) + 1))
-	var rank_marks: Array[String] = []
-	for index in 3:
-		rank_marks.append("◆" if index < rarity_rank else "◇")
-	detail_rank.text = " ".join(rank_marks)
-	detail_rank.add_theme_color_override("font_color", _selected.get_rarity_color().lightened(0.22))
+	# 装備スコアと、同じ部位の装備中との差を一行で。
+	var score := item_score(_selected)
+	var score_delta := _score_delta(_selected)
+	if _equipment.is_equipped(_selected):
+		detail_rank.text = "装備スコア %d ・ 装備中" % roundi(score)
+		detail_rank.add_theme_color_override("font_color", Color("9fe6c6"))
+	elif _equipment.get_equipped(_selected.slot) == null:
+		detail_rank.text = "装備スコア %d ・ この部位は未装備" % roundi(score)
+		detail_rank.add_theme_color_override("font_color", Color("69f092"))
+	else:
+		var sign := "+" if score_delta >= 0 else "−"
+		detail_rank.text = "装備スコア %d　%s%d %s" % [roundi(score), sign, roundi(absf(score_delta)), "▲ 強くなる" if score_delta > 0.5 else ("▼ 弱くなる" if score_delta < -0.5 else "＝ 同等")]
+		detail_rank.add_theme_color_override("font_color", Color("69f092") if score_delta > 0.5 else (Color("ff7a6a") if score_delta < -0.5 else Color("cccccc")))
 	PixelUIStyle.apply_panel(detail_icon_frame, _selected.get_rarity_color())
 	FrameArt.hide_old_ornament(detail_icon_frame)
 	FrameArt.panel(detail_icon_frame, true, true)
@@ -973,24 +1063,52 @@ func _refresh_comparison() -> void:
 	(lock_button.get_node("LockGlyph") as LockGlyph).queue_redraw()
 	PixelUIStyle.apply_button(lock_button, Color("e0b960") if _selected.is_locked else Color("647384"))
 	_refresh_add_material_button()
-	var current_name := current.display_name if current else "未装備"
-	comparison_summary.text = "[color=#64baff]比較[/color]\n%s\n%s 攻撃力  %s → %s\n%s 防御力  %s → %s" % [current_name,
-		_stat_icon("attack_power"), _stat_display("attack_power", current.get_stat("attack_power") if current else 0.0), _stat_display("attack_power", _selected.get_stat("attack_power")),
-		_stat_icon("defense"), _stat_display("defense", current.get_stat("defense") if current else 0.0), _stat_display("defense", _selected.get_stat("defense"))]
+	# 比較カード：装備中の名前とスコア、入れ替えで「得るもの／失うもの」だけを短く。
 	var stat_order := ["max_hp", "attack_power", "defense", "move_speed", "attack_speed", "crit_rate", "crit_damage"]
+	if current == null or current == _selected:
+		comparison_summary.text = "[color=#64baff]装備中[/color]\n%s" % ("この装備" if current == _selected else "なし ― 装備すると全能力が加わる")
+	else:
+		var gains: Array[String] = []
+		var losses: Array[String] = []
+		for stat_name in stat_order:
+			var diff := _selected.get_stat(stat_name) - current.get_stat(stat_name)
+			if absf(diff) < 0.0005:
+				continue
+			var text := "%s %s%s" % [STAT_NAMES[stat_name], "+" if diff > 0 else "−", _stat_display(stat_name, absf(diff))]
+			if diff > 0:
+				gains.append(text)
+			else:
+				losses.append(text)
+		for effect in current.special_effects:
+			if effect not in _selected.special_effects:
+				losses.append("効果 " + _special_description(current, effect).get_slice("（", 0))
+		for effect in _selected.special_effects:
+			if effect not in current.special_effects:
+				gains.append("効果 " + _special_description(_selected, effect).get_slice("（", 0))
+		var summary := "[color=#64baff]装備中[/color] %s（スコア %d）" % [current.display_name, roundi(item_score(current))]
+		if not gains.is_empty():
+			summary += "\n[color=#65e878]得る  %s[/color]" % " / ".join(gains)
+		if not losses.is_empty():
+			summary += "\n[color=#ff8a7a]失う  %s[/color]" % " / ".join(losses)
+		if gains.is_empty() and losses.is_empty():
+			summary += "\n[color=#cccccc]能力は同じ[/color]"
+		comparison_summary.text = summary
 	var lines: Array[String] = []
 	if _selected.slot == "weapon":
 		var profiles: Dictionary = (_equipment.get_parent() as Player).weapon_manager.equipment_attack.PROFILES
 		var profile: Dictionary = profiles.get(_selected.attack_kind, profiles.slash)
 		lines.append("[color=#8dd9dd]◇ %s — %s[/color]" % [profile.name, profile.trait])
-		lines.append("[color=#b8c5cd]基準間隔 %.2f秒 / 一撃 ×%.2f[/color]" % [profile.interval, profile.power])
+		lines.append("[color=#b8c5cd]間隔 %.2f秒 ・ 一撃 ×%.2f ・ 射程 %d[/color]" % [profile.interval, profile.power, int(profile.range)])
+	# 能力は「この装備か装備中のどちらかが持つ行」だけ。0 ばかりの表にしない。
 	lines.append("[table=6]")
 	for stat_name in stat_order:
 		var before := current.get_stat(stat_name) if current else 0.0
 		var after := _selected.get_stat(stat_name)
+		if absf(before) < 0.0005 and absf(after) < 0.0005:
+			continue
 		var arrow := "↑" if after > before else ("↓" if after < before else "=")
 		var color := "#65e878" if after > before else ("#ff6969" if after < before else "#cccccc")
-		lines.append("[cell]%s[/cell][cell expand=1]%s[/cell][cell]%s[/cell][cell] → [/cell][cell][color=%s]%s[/color][/cell][cell][color=%s]%s[/color][/cell]" % [_stat_icon(stat_name), STAT_NAMES[stat_name], _stat_display(stat_name, before), color, _stat_display(stat_name, after), color, arrow if arrow != "=" else " "])
+		lines.append("[cell]%s[/cell][cell expand=1]%s[/cell][cell][color=#9aa3ad]%s[/color][/cell][cell] → [/cell][cell][color=%s][b]%s[/b][/color][/cell][cell][color=%s]%s[/color][/cell]" % [_stat_icon(stat_name), STAT_NAMES[stat_name], _stat_display(stat_name, before), color, _stat_display(stat_name, after), color, arrow if arrow != "=" else " "])
 	lines.append("[/table]")
 	if not _selected.special_effects.is_empty():
 		lines.append("[color=#d6a957]◇ パッシブ効果[/color]")
@@ -1073,20 +1191,21 @@ func _refresh_merge_view() -> void:
 	else:
 		merge_notice.text = String(validation.get("reason", "必要数の素材を選択してください"))
 		if valid:
-			merge_notice.text = "成功率 %d%% ／ 失敗時 %d個消費・残り返却" % [roundi(_merge_system.success_rate(_merge_materials[0].rarity)*100), _merge_system.failure_loss(_merge_materials[0].rarity)]
+			var rate := _merge_system.success_rate(_merge_materials[0].rarity)
+			merge_notice.text = "下のとおり完成 ・ 必ず成功" if rate >= 0.999 else "成功率 %d%% ／ 失敗時 %d個消費・残り返却" % [roundi(rate*100), _merge_system.failure_loss(_merge_materials[0].rarity)]
 		elif _merge_materials.is_empty():
-			merge_notice.text = "同レア素材 → 成功率・消費確認 → 合成"
+			merge_notice.text = "同じレア度を3つ。枠1の部位が完成品の部位"
 		merge_notice.add_theme_color_override("font_color", Color(1.0, 0.84, 0.35) if valid else Color(0.68, 0.68, 0.74))
 	var accent := _merge_materials[0].get_rarity_color() if valid and not _merge_materials.is_empty() else Color(0.32, 0.36, 0.42)
 	PixelUIStyle.apply_button(merge_button, accent)
 	var auto_candidates := _autofill_candidates()
 	autofill_button.disabled = _merge_in_progress or auto_candidates.is_empty() or auto_candidates.size() != EquipmentMergeSystem.required_count(auto_candidates[0].rarity) or _merge_materials.size() == _needed_materials()
-	autofill_button.text = "同レア素材セット"
+	autofill_button.text = "同部位でセット"
 	clear_materials_button.disabled = _merge_in_progress or _merge_materials.is_empty()
 	sort_button.disabled = _merge_in_progress
 	rarity_filter.disabled = _merge_in_progress
 	rarity_filter.tooltip_text = "所持品の表示だけを絞ります。セットした素材はそのまま残ります。"
-	forge_caption.text = "必要数：緑3・青3・紫3・橙3"
+	forge_caption.text = "同レア3つ → 1段上のレア度1つ（部位は主素材）"
 	if _merge_result:
 		forge_caption.text = "鍛造完了 — 装備詳細タブで確認・装備"
 	elif valid:
@@ -1103,14 +1222,14 @@ func _refresh_merge_slots() -> void:
 		button.add_theme_constant_override("icon_max_width", 28)
 		button.add_theme_font_size_override("font_size", 18)
 		if index >= _merge_materials.size():
-			button.text = "%d" % (index + 1)
-			button.tooltip_text = "所持品を選択し「素材に追加」でセット"
+			button.text = "主" if index == 0 else "%d" % (index + 1)
+			button.tooltip_text = "所持品をクリックでセット（枠1＝主素材。完成品はその部位になる）"
 			button.disabled = true
 			PixelUIStyle.apply_button(button, Color(0.30, 0.34, 0.40))
 			continue
 		var item := _merge_materials[index]
-		button.text = "外す"
-		button.tooltip_text = "%s / %s\n決定で素材から取り外す" % [item.display_name, RARITY_NAMES.get(item.rarity, item.rarity)]
+		button.text = "主" if index == 0 else "外す"
+		button.tooltip_text = "%s / %s\n%s決定で素材から取り外す" % [item.display_name, RARITY_NAMES.get(item.rarity, item.rarity), "主素材：完成品はこの部位になる\n" if index == 0 else ""]
 		button.set_meta("material_item", item)
 		button.disabled = _merge_in_progress
 		button.icon = _load_trimmed_icon(item.icon_path)
@@ -1128,8 +1247,25 @@ func _show_merge_preview() -> void:
 		merge_preview.text = "[b]%s[/b]\n最高レアリティのため合成できません" % RARITY_NAMES.get(source_rarity, source_rarity)
 		return
 	var color := _rarity_color(next_rarity).lightened(0.28).to_html(false)
-	merge_preview.text = "[b]%s ×%d[/b]\n→ [color=#%s][b]%s ×1[/b][/color]\n完成品の種類・部位・能力は合成完了時に確定" % [
-		RARITY_NAMES.get(source_rarity, source_rarity), _needed_materials(), color, RARITY_NAMES.get(next_rarity, next_rarity)]
+	var preview_item := _merge_system.preview_result(_equipment, _merge_materials)
+	if preview_item == null:
+		merge_preview.text = "[b]%s ×%d[/b] → [color=#%s][b]%s ×1[/b][/color]\n完成品は主素材（枠1）の部位を受け継ぐ。\n素材が揃うと完成品の名前と能力をここに表示。" % [
+			RARITY_NAMES.get(source_rarity, source_rarity), _needed_materials(), color, RARITY_NAMES.get(next_rarity, next_rarity)]
+		return
+	if preview_item.icon_path != "" and ResourceLoader.exists(preview_item.icon_path):
+		merge_preview_icon.texture = _load_trimmed_icon(preview_item.icon_path)
+	var current := _equipment.get_equipped(preview_item.slot)
+	var score := item_score(preview_item)
+	var delta_text := ""
+	if current != null:
+		var delta := score - item_score(current)
+		delta_text = "　[color=%s]%s%d vs 装備中[/color]" % ["#65e878" if delta > 0.5 else ("#ff8a7a" if delta < -0.5 else "#cccccc"), "+" if delta >= 0 else "−", roundi(absf(delta))]
+	var stat_bits: Array[String] = []
+	for stat_name in preview_item.stats:
+		stat_bits.append("%s %s" % [STAT_NAMES.get(stat_name, stat_name), _stat_display(String(stat_name), preview_item.get_stat(String(stat_name)))])
+	merge_preview.text = "[b]%s ×%d[/b] → [color=#%s][b]%s ×1[/b][/color]\n[color=#%s][b]%s[/b][/color]（%s）\n装備スコア %d%s\n%s" % [
+		RARITY_NAMES.get(source_rarity, source_rarity), _needed_materials(), color, RARITY_NAMES.get(next_rarity, next_rarity),
+		color, preview_item.display_name, preview_item.get_slot_display_name(), roundi(score), delta_text, " / ".join(stat_bits)]
 
 func _show_merge_result(result: EquipmentData) -> void:
 	if result.icon_path != "" and ResourceLoader.exists(result.icon_path):
@@ -1440,7 +1576,9 @@ func _position_item_popup() -> void:
 		forge_panel.size = Vector2(forge_panel.custom_minimum_size.x, minf(700.0, viewport_size.y - 32.0))
 		forge_panel.position = (viewport_size - forge_panel.size) * 0.5
 		return
-	forge_panel.size = Vector2(390, 620 if _right_mode == "details" else 700)
+	forge_panel.size = Vector2(390, 700)
+	if _right_mode == "details":
+		forge_panel.size = Vector2(390, clampf(forge_panel.get_combined_minimum_size().y + 12.0, 420.0, viewport_size.y - 16.0))
 	var bag := ($Background as Control).get_global_rect()
 	var x := bag.end.x + 8.0
 	if x + forge_panel.size.x > viewport_size.x - 8.0:

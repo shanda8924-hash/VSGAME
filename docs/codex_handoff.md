@@ -1,5 +1,13 @@
 # Codex Handoff — 2026-10-31（Phase 4まで）
 
+## 今回（装備の流れ：ドロップ演出・アイテムボックス・詳細・鍛造、2026-10-31）
+- 発見：実行時の装備アイコンは`assets/visuals/ember_v5/equipment/`（64px）が最優先で、ここが旧素材の混在だった。`tools/icon_unified/build.py`でこの200点も同じ原画・同じ手順で生成するようにし（本体56px）、`equipment_icon_metrics.gd`に範囲を追加。`equipment_catalog_200`の期待パスもember_v5へ。
+- ドロップ演出（Diablo参考）：`GroundEquipmentItem`にレア度色の光の柱`LootBeam`（高さ56〜168px・幅7〜20px・明滅・加算合成）、名札（暗い板＋レア度色の左帯。レア以上は常時、アンコモンは接近時）、落下して弾む着地（0.5秒、柱は着地後に立つ）、伝説以上は着地の閃光`hit_light`と鐘の音`legendary_drop.wav`。`equipment_drop.wav`も新規（どちらもnumpyで合成した短い音）。`loot_visibility_check`は柱ありを期待するよう更新。
+- アイテムボックス：マスにレア度の下地（薄い色＋下辺の色帯）、装備中より強ければ▲緑／弱ければ▼を左上に表示（`item_score`＝固定値と割合値を一つの尺度にした装備スコア）。鍛造タブでは所持品の1クリックで素材の出し入れ、素材にできない品は沈める。
+- 詳細ポップアップ：名前（レア度色）／「レア・武器・細剣・槍」／「装備スコア 27　+25 ▲ 強くなる」、直下に「装備する／外す」（常時表示）、武器は間隔・一撃・射程、能力は0でない行だけ、装備中カードは「得る／失う」だけを短く。
+- 鍛造の合理化：完成品は主素材（枠1）の部位を受け継ぎ、武器は攻撃種別も優先。`preview_result`で合成前に完成品の名前・部位・スコア・能力を表示（素材IDのハッシュで決まるので一致する）。`drop_table.json`のmerge_rules success_rateを全段1.0に（失敗消費を廃止。戻すなら数値だけ）。「同部位でセット」は主素材と同じ部位を優先し、弱い順に埋める。
+- 検証：`script_load_check` 0件、`equipment_merge_check` 0件、`loot_visibility_check` 0件、`equipment_auto_attack_check` 0件、`five_minute_survival_check` PASS。実画面は`tools/capture_item_flow.tscn`（xvfb）→`docs/screens/loot_drop_diablo_style.png`、`item_box_detail.png`、`item_box_forge.png`。`forge_balance_check`は変更前から500秒で終わらない。
+
 ## 今回（UIスキン：石板と古金の9-sliceを全メニューへ、2026-10-31）
 - 画像生成環境は無いため、`tools/ui_unified/build.py`で1ドット＝2pxのドット絵として部品を描き、`assets/ui/stoneworks/`へ出力（panel_major=石のレール＋金の角金具、panel_inset=石の縁＋飾り鋲、button_normal/hover/pressed/disabled、plaque=槍頭の見出し板、slot=所持品のマス、well=金具なしの窪み、bar_track/bar_fill、backdrop_tile）。中央はタイル繰り返し。`python3 tools/ui_unified/build.py [--board DIR]`。
 - `ui/common/relic_frame_art.gd`を書き直し（旧`assets/visuals/ember_v5/ui_panel.png`等は未参照に）。`box(inset)`＝大パネル/内側パネル、`button_box(state)`、`well_box`、`bar_box`、`styled(kind)`、`plaque()`。`pixel_ui_style.gd`のボタン・区画・ゲージ・カードをこれに接続。使い分け：モーダルと3列パネル＝major、カード・区画＝inset、カード内の小区画＝well、所持品マス＝slot。

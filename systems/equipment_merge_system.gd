@@ -204,25 +204,34 @@ func _build_promoted_item(materials: Array[EquipmentData]) -> EquipmentData:
 			result.special_effect_values[effect_id] = _special_values(effect_id, next_rarity)
 	return result
 
-## All current characters use the same six equipment slots. Prefer a slot represented
-## by the materials so the result is immediately useful, then fall back to the complete
-## existing next-rarity pool. This is a preference, not an exact recipe.
+## 完成品は「主素材（素材枠1）」の部位を受け継ぐ。武器なら攻撃種別（slash/bow…）も
+## できるだけ受け継ぐ。候補の中からの選択は素材IDのハッシュで決まるので、同じ素材なら
+## 合成前のプレビューと完成品が一致する（preview_result 参照）。
 func _select_output_template(materials: Array[EquipmentData], next_rarity: String) -> Dictionary:
 	var all_candidates := _templates_for_rarity(next_rarity)
 	if all_candidates.is_empty():
 		return {}
-	var material_slots := {}
+	var primary := materials[0]
 	var seed_parts: Array[String] = [next_rarity]
 	for material in materials:
-		material_slots[material.slot] = true
 		seed_parts.append(material.instance_id if material.instance_id != "" else str(material.get_instance_id()))
-	var preferred: Array[Dictionary] = []
+	var same_slot: Array[Dictionary] = []
+	var same_kind: Array[Dictionary] = []
 	for candidate in all_candidates:
-		if material_slots.has(String(candidate.get("slot", ""))):
-			preferred.append(candidate)
-	var pool := preferred if not preferred.is_empty() else all_candidates
+		if String(candidate.get("slot", "")) != primary.slot:
+			continue
+		same_slot.append(candidate)
+		if primary.slot == "weapon" and String(candidate.get("attack_kind", "")) == primary.attack_kind:
+			same_kind.append(candidate)
+	var pool := same_kind if not same_kind.is_empty() else (same_slot if not same_slot.is_empty() else all_candidates)
 	var index := posmod("|".join(seed_parts).hash(), pool.size())
 	return pool[index]
+
+## 合成せずに完成品を組み立てる（消費なし）。素材が無効なら null。
+func preview_result(component: EquipmentComponent, materials: Array[EquipmentData]) -> EquipmentData:
+	if not can_merge_materials(component, materials):
+		return null
+	return _build_promoted_item(materials)
 
 func _templates_for_rarity(rarity: String) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []

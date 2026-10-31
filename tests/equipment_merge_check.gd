@@ -70,8 +70,8 @@ func _run_checks() -> void:
 	screen._set_mode("merge")
 	_check(screen.forge_view.visible and not screen.detail_view.visible, "forge tab replaces the right detail pane without hiding equipment or inventory")
 	for item in uncommon_materials:
+		# 鍛造タブでは所持品の 1 クリックが素材の出し入れ（「素材に追加」ボタンはキーボード用）。
 		screen._on_inventory_item_pressed(item)
-		screen.add_material_button.pressed.emit()
 	await get_tree().process_frame
 	await get_tree().process_frame
 	_check_workspace_bounds(screen)
@@ -248,6 +248,7 @@ func _run_checks() -> void:
 	await get_tree().process_frame
 	var keyboard_button := screen.inventory_list.get_child(1) as Button
 	var keyboard_item := keyboard_button.get_meta("inventory_item") as EquipmentData
+	var keyboard_inventory_before := component.inventory.size()
 	keyboard_button.grab_focus()
 	var accept := InputEventAction.new()
 	accept.action = "ui_accept"
@@ -258,7 +259,8 @@ func _run_checks() -> void:
 	release.action = "ui_accept"
 	Input.parse_input_event(release)
 	await get_tree().process_frame
-	_check(screen._selected == keyboard_item and screen._merge_materials.is_empty(), "keyboard accept selects a different item without triggering a forge transaction")
+	# 鍛造タブでは決定＝素材へ置く（消費はしない）。
+	_check(screen._selected == keyboard_item and component.inventory.size() == keyboard_inventory_before, "keyboard accept selects a different item without triggering a forge transaction")
 	_phase = "crowded inventory"
 	await _check_crowded_inventory(screen, component, drop_system)
 
