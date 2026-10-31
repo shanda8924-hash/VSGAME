@@ -3,7 +3,8 @@
 ## 今回（装備アイコン：原画200点を同じ手順でドット化、2026-10-31）
 - 実行時の装備アイコンは`assets/ui/equipment_readable_v4/*.png`（48px）。約170点が単色シルエットで、残り30点の細密なドット絵と画風が揃っていなかった。細密な30点は`assets/items/painted_200/sheet_*.png`の原画（200点すべて同じ画風）をドット化したものなので、`tools/icon_unified/build.py`で200点すべてを同じ手順（art_regionで切り出し→長辺44pxへ面積平均縮小→明るさ/コントラスト/彩度を持ち上げ→14色へ減色→二値アルファ→飛び除去→明るい縁1px）で描き直し、同名上書き。`python3 tools/icon_unified/build.py [--board DIR] [--dry]`。
 - 最初に試した図形生成（平坦なドット絵）はユーザー判断で不採用。
-- `resources/equipment_icon_metrics.gd`へreadable_v4の200件のBoundsを追加（床Dropと浮遊武器の寸法換算に使う）。
+- 所持品画面のスロット絞り込みタブ用6点（`assets/items/weapons/weapon_sword_uncommon_001.png`など、64px・本体54px）も同じ原画・同じ手順で上書き（`build.py`の`TAB_ICONS`）。
+- `resources/equipment_icon_metrics.gd`へreadable_v4の200件とタブ用6件のBoundsを追加（床Dropと浮遊武器の寸法換算に使う）。
 - 検証：`script_load_check` 0件、`loot_visibility_check` 0件。比較は`docs/screens/icons_unified_compare.png`、一覧は`icons_unified_all.png`。
 
 ## 今回（VFX統一スタイル：全シート描き直し、2026-10-31）

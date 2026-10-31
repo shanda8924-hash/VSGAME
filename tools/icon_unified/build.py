@@ -1,6 +1,6 @@
 """装備アイコン200点を、原画（assets/items/painted_200/sheet_*.png）から同じ手順でドット化する。
 
-  python3 tools/icon_unified/build.py                 # 生成して assets/ui/equipment_readable_v4/ を上書き、metrics も更新
+  python3 tools/icon_unified/build.py                 # 200点とタブ用6点を上書きし、metrics も更新
   python3 tools/icon_unified/build.py --board DIR     # 旧(HEAD)と新の比較ボードも書く
   python3 tools/icon_unified/build.py --dry --board DIR
 
@@ -46,7 +46,18 @@ def load_templates() -> list[dict]:
     return json.loads((ROOT / "data" / "equipment" / "templates.json").read_text(encoding="utf-8"))
 
 
-def pixelize(item: dict) -> Image.Image:
+# 所持品画面のスロット絞り込みタブ用。同じ原画から 64px（本体 54px）で作る。
+TAB_ICONS = {
+    "assets/items/weapons/weapon_sword_uncommon_001.png": "wanderer_iron_sword",
+    "assets/items/head/head_cap_uncommon_001.png": "leather_scout_cap",
+    "assets/items/body/body_coat_uncommon_001.png": "traveler_leather_coat",
+    "assets/items/arms/arms_gloves_uncommon_001.png": "scout_gloves",
+    "assets/items/legs/legs_boots_rare_001.png": "windrunner_boots",
+    "assets/items/accessories/accessory_ring_epic_001.png": "amethyst_ring",
+}
+
+
+def pixelize(item: dict, size: int = SIZE, subject: int = SUBJECT) -> Image.Image:
     x, y, w, h = item["art_region"]
     src = sheet(item["art_sheet"]).crop((x, y, x + w, y + h))
     a = np.asarray(src)[:, :, 3]
@@ -56,7 +67,7 @@ def pixelize(item: dict) -> Image.Image:
     arr = np.asarray(src).astype(np.float32)
     alpha = arr[:, :, 3:4] / 255.0
     pre = np.concatenate([arr[:, :, :3] * alpha, arr[:, :, 3:4]], axis=2)
-    scale = SUBJECT / max(src.width, src.height)
+    scale = subject / max(src.width, src.height)
     tw, th = max(1, round(src.width * scale)), max(1, round(src.height * scale))
     small = Image.fromarray(pre.astype(np.uint8), "RGBA").resize((tw, th), Image.BOX)
     sarr = np.asarray(small).astype(np.float32)
@@ -78,9 +89,9 @@ def pixelize(item: dict) -> Image.Image:
     d = ((pix.reshape(-1, 1, 3).astype(np.int32) - pal[None, :, :]) ** 2).sum(axis=2)
     quant = pal[d.argmin(axis=1)].reshape(pix.shape).astype(np.uint8)
     # 48 の中央へ置き、外周アウトライン
-    canvas = np.zeros((SIZE, SIZE, 4), np.uint8)
-    ox, oy = (SIZE - tw) // 2, (SIZE - th) // 2
-    full_mask = np.zeros((SIZE, SIZE), bool)
+    canvas = np.zeros((size, size, 4), np.uint8)
+    ox, oy = (size - tw) // 2, (size - th) // 2
+    full_mask = np.zeros((size, size), bool)
     full_mask[oy : oy + th, ox : ox + tw] = mask
     canvas[oy : oy + th, ox : ox + tw, :3] = quant
     canvas[full_mask, 3] = 255
@@ -162,31 +173,41 @@ def board(out_dir: Path, results: list[tuple[dict, Image.Image]]):
     b.save(out_dir / "icons_all_1x.png")
 
 
-def write_metrics(results: list[tuple[dict, Image.Image]]):
+def write_metrics(results: list[tuple[dict, Image.Image]], tabs: list[tuple[str, Image.Image]]):
     lines = METRICS.read_text(encoding="utf-8").splitlines()
-    kept = [ln for ln in lines if RES_PREFIX not in ln]
+    tab_paths = {f"res://{rel}" for rel, _ in tabs}
+    kept = [ln for ln in lines if RES_PREFIX not in ln and not any(path in ln for path in tab_paths)]
     end = max(i for i, ln in enumerate(kept) if ln.strip() == "}")
     new_lines = []
-    for item, img in results:
+    for res_path, img in [(f"res://{rel}", img) for rel, img in tabs] + [(f"{RES_PREFIX}{item['id']}.png", img) for item, img in results]:
         bbox = img.getbbox()
         if bbox is None:
             continue
         x0, y0, x1, y1 = bbox
-        new_lines.append(f'\t"{RES_PREFIX}{item["id"]}.png": Rect2i({x0}, {y0}, {x1 - x0}, {y1 - y0}),')
+        new_lines.append(f'\t"{res_path}": Rect2i({x0}, {y0}, {x1 - x0}, {y1 - y0}),')
     METRICS.write_text("\n".join(kept[:end] + new_lines + kept[end:]) + "\n", encoding="utf-8")
 
 
 def main():
     board_dir = Path(sys.argv[sys.argv.index("--board") + 1]) if "--board" in sys.argv else None
-    results = [(item, pixelize(item)) for item in load_templates()]
+    templates = load_templates()
+    by_id = {item["id"]: item for item in templates}
+    results = [(item, pixelize(item)) for item in templates]
+    tabs = [(rel, pixelize(by_id[item_id], size=64, subject=54)) for rel, item_id in TAB_ICONS.items()]
     if board_dir:
         board(board_dir, results)
+        strip = Image.new("RGBA", (len(tabs) * 136, 136), (40, 38, 46, 255))
+        for k, (_, img) in enumerate(tabs):
+            strip.alpha_composite(img.resize((128, 128), Image.NEAREST), (k * 136 + 4, 4))
+        strip.save(board_dir / "tab_icons_2x.png")
     if "--dry" not in sys.argv:
         OUT.mkdir(parents=True, exist_ok=True)
         for item, img in results:
             img.save(OUT / f"{item['id']}.png")
-        write_metrics(results)
-        print(f"wrote {len(results)} icons")
+        for rel, img in tabs:
+            img.save(ROOT / rel)
+        write_metrics(results, tabs)
+        print(f"wrote {len(results)} icons and {len(tabs)} tab icons")
 
 
 if __name__ == "__main__":
