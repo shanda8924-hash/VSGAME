@@ -7,6 +7,8 @@
 > 推測で正とせず、関連するCode / Scene / Resource / Data / Assetsを確認したうえで、
 > 採用する現行仕様へ両者を同じ作業内で同期します。
 
+> **現行進行（2026-10-13）:** 床だけの広い戦場で約4分の大群戦、その後に強敵由来のBossを撃破してクリア。約5分が目標。壁・地形障害物なし。最新の数値・終了条件は末尾の2026-10-13節を参照。
+
 ---
 
 ## 1. 概要
@@ -14,9 +16,9 @@
 | 項目 | 内容 |
 |---|---|
 | ジャンル | MAP探索型ローグライト・サバイバー |
-| プラットフォーム | **Steam(PC)専用**(スマホ版は当面対象外) |
+| プラットフォーム | PC版とスマートフォン版（横画面）を開発中。スマホ実機・ストア向け書き出しは未検証 |
 | 画面 | 横長ワイドスクリーン(既定ウィンドウサイズ1600×900、リサイズ可能。UI一部要素は1920×1080基準で設計されているが解像度非依存で動作する) |
-| 操作 | キーボード(WASD/矢印キー)で移動。通常攻撃は自動、Spaceで職業固有アクティブスキル。共通InteractionはE、ゲームパッドX。ゲームパッド移動・UI操作対応 |
+| 操作 | キーボード(WASD/矢印キー)で移動。通常攻撃は自動、Kで回避、Lで職業固有アクティブスキル。共通InteractionはE、ゲームパッドX。ゲームパッド移動・UI操作対応 |
 | 収益モデル | **買い切り**。広告・リワード広告システムは撤去済み(AdManagerはautoloadから除外) |
 | エンジン | Godot 4.7系、GDScript |
 | 独自要素 | 合体武器(フュージョン)システム |
@@ -35,7 +37,7 @@
 ```
 ホーム画面(職業選択・恒常強化)
   → MAP 1探索(自動攻撃、自然湧き、Elite、配置宝箱/祭壇)
-       → 敵撃破XPでLevel Up → Attribute 3択
+       → 敵撃破XPでLevel Up → 属性Lv/属性深化/条件強化/汎用/職業の統合3択
        → 宝箱をE/Xで開封 → 装備/回復/Skill/Attribute報酬
        → 撃破条件達成後、最深部Boss領域をE/Xで開始（長期探索時だけ救済解放）
        → Boss撃破 → 確定装備+Boss宝箱Skill → MAP 2
@@ -44,7 +46,7 @@
   → 途中死亡 → RUN OVERリザルト
 ```
 
-現行通常ゲームは上記の3 MAP探索制を使用する。旧36 ROOMのScene/Controller/Data/Testは削除せず、
+現行通常ゲームは3テーマを各20層、計60層として探索する。上の旧3MAPフローは初期仕様の記録。旧36 ROOMのScene/Controller/Data/Testは削除せず、
 Developer Test Lab、回帰テスト、`codex/room-system-backup-20260825`からの復旧用に保持する。
 通常経路では`RoomRunController.begin_run()`、ROOM CLEAR、ROOM選択、毎ROOM報酬を呼ばない。
 
@@ -61,10 +63,10 @@ Developer Test Lab、回帰テスト、`codex/room-system-backup-20260825`から
 - 部屋は8×8〜14×14マス程度、通路は最低3〜4マス幅(1マスの細い迷路にしない。
   理由: このゲームの核である「大量の敵に囲まれて薙ぎ払う」爽快感を壁で殺さないため)
 - 外周は必ず壁で囲む。壁には実際の当たり判定があり、プレイヤー・敵は通行できない
-- 壁の見た目: 目地のはっきりした暗色レンガをベースに、旗・檻・アーチ型の門・松明を
-  低頻度で装飾として混ぜる。壁の下端には苔の縁取り、上端には明るい縁取りを入れる
-- 出入り口(部屋と通路の接続部)には、柱を左右対称に配置する。柱は壁の直線部分には
-  使わない(出入り口専用の装飾とする)
+- 壁の見た目: 目地のはっきりした暗色レンガをベースに、旗・格子・松明を
+  床がすぐ下にある正面壁だけへ低頻度で配置する。壁天面・側面には付けない。
+- 出入り口(部屋と通路の接続部)は床の敷居と正面壁の旗で示す。
+  壁奥の柱・void境界の柱列・柱画像のアーチ代用は使わない。通行を遮る実体柱はPillar Fieldのみ。
 - 床タイルは「石畳・ひび割れ石畳」など、地面として自然に見えるものだけを2〜4種類
   使う(木箱・樽・檻などの物体的な絵柄は床タイル候補から除外する)
 - お宝コーナー(樽・木箱を2〜4個まとめた装飾)は、一部の部屋の隅にのみ配置する
@@ -88,10 +90,13 @@ Developer Test Lab、回帰テスト、`codex/room-system-backup-20260825`から
 - MAP通常進行では精鋭ごとの高XP+確定地面装備を報酬にし、戦闘を止める属性4択/メタ通貨Modalは出さない。
   旧ROOM/Test互換経路の報酬だけは回帰用に維持する(詳細は23章)。
 
-## 6. レベルアップ(Attribute 3択+小回復)
+## 6. レベルアップ(統合成長3択+小回復)
 
-- MAP通常進行では経験値が一定量たまると、Element/Attribute/Masteryの3択から1つを選ぶ。
+- MAP通常進行では経験値が一定量たまると、属性Lv上げ・所持属性の
+  属性深化カード・状態条件カード・既存汎用強化・既存職業強化を単一プールから3枚提示する。
   SkillはLevel Upへ混ぜず、宝箱/Boss宝箱だけから取得する。
+- 必要XPは`28 + round((level - 1) * 1.7)`を基本とし、Lv5〜8は+5、Lv15〜18は+3で
+  敵Roster解禁直後の連続Level Upを抑える。論25分の3 MAP実測モデルで各Level間隔を30〜42秒に収める。
 - 欠片は `data/weapons/*.json` の `required_fragment_ids` と一致すると自動で
   武器に合成される(固定レシピ表。現状15種類以上。詳細は15章)
 - MAP Level Up時は最大HPの12%だけ回復する。全回復は旧ROOM/Test互換経路だけに残す。
@@ -165,8 +170,14 @@ Developer Test Lab、回帰テスト、`codex/room-system-backup-20260825`から
 - `ItemData`3択はDeveloper Test Lab / 旧明示Boss Spawn互換経路だけで提示する。
   通常ROOM Bossはこの経路を呼ばず、属性3択とBoss宝箱の完成済みSkill 3択を使用する
 - 選択肢には、アイテム名+効果の説明文(description)を表示する
-- 戦利品選択カードは1920×1080基準で、アイテム名22px、説明文18px、
-  カード最小サイズ280×132pxとする。説明文は中央揃え・自動折り返しで読みやすさを優先する
+- 戦利品選択カードは1600×900基準で、72×72pxのPixel icon、アイテム名24px、説明文20px、
+  カード最小サイズ340×244pxとする。説明文は中央揃え・自動折り返しとする。
+- `ItemData.icon_path`と`data/items/*.json`で旧互換報酬8種のiconを指定する。
+  通常MAPのBoss宝箱で表示する完成済みSkill 23種も`data/skills/completed_skills.json`の
+  `icon_path`から個別iconを表示し、画像がない定義だけ従来の文字iconへ戻す。
+- iconはShikashi's Fantasy Icons Pack v2の透明版から32×32で切り出し、Nearestで72×72表示する。
+  実使用31枚に加えて、全284候補の透明sheet、影付きsheet、原ライセンス／順序catalogを
+  `assets/ui/icons/shikashi/`へ保持する。製品CreditにはShikashiとgame-icons.net（CC BY 3.0）を記載する。
 - 獲得したアイテムは、画面上部(または右上)に戦利品トレイとしてアイコン表示する。
   同じアイテムを複数回獲得した場合は「×2」等の重ね取得数を表示し、
   種類数が5〜6個を超えたら省略して「+N」のバッジで表示する
@@ -204,7 +215,7 @@ Developer Test Lab、回帰テスト、`codex/room-system-backup-20260825`から
   職業・武器本来のThemeによる控えめなGlowを纏う。Element Stackの取得・Lv変更では
   Projectileの生成・置換を行わない。新Element Fusionも専用Projectileを必要とするTrait以外は
   Projectileを使わず、Script描画の専用現象VFXで表現する
-- 武器の属性(炎/氷/雷)ごとに着弾エフェクトの色・簡易パーティクルを変える
+- 武器Theme(炎/氷/雷等)ごとに生成Pixel PNGの着弾アニメーションを変える（§35.6）。属性成長システムは廃止済み。
   (専用の派手な演出は保留、まずは色分けレベルの差別化を安定動作させる)
 - **キャラクターの向き**: プレイヤー・敵(ボスを含む全EnemyBasic系)ともに、
   `AnimationComponent`が移動方向の左右成分に応じて`AnimatedSprite2D.flip_h`を
@@ -246,6 +257,27 @@ Developer Test Lab、回帰テスト、`codex/room-system-backup-20260825`から
   弱い敵→中堅→強めの敵、と段階的に出現の幅が広がるようにする
 - 目安: 0秒〜(Slime, Bat, Skeleton, Orc等)/ 90秒〜(Armored Orc, Skeleton Archer等)/
   180秒〜(Elite Orc, Werebear, Werewolf等)
+
+#### 2026-09-07追補: 所有済み・未登録の通常敵10種
+
+- `Desktop/111`のFull版42キャラクターは既存素材と一致。主人公10種・既存敵/ボスの
+  重複取り込みは行わず、ユーザー承認により既存画像だけ存在していた次の10種を登録する。
+  通常敵Catalogは12→22種。ボス10体、主人公10職業の登録・元画像は変更しない。
+
+| 通常MAPの出現解禁 | 追加した敵ID |
+|---|---|
+| 0秒 | blood_monster_a / eyeball_monster / hellbat / lava_slime |
+| 90秒 | blood_monster_b / demoness_a / ghostfire |
+| 180秒 | demoness_b / hellhound / warlock |
+
+- `data/enemies/*.json`→DataLoader→WaveSpawnerの既存経路へ接続。出現数/間隔/上限、
+  既存12種の能力値は変えず、既存の弱〜中堅敵を基準に新規10種の初期値を設定する。
+- 今回は共通の追跡AI・停止予備動作→近距離攻撃→クールダウンを使用する。
+  付属の待機/歩行または飛行/攻撃1・2/被弾/死亡を再生し、既存の被弾/撃破/XP/Dropへ接続。
+  固有の遠距離弾・召喚・状態付与・ボス化は未実装であり、素材の炎や魔法の見た目だけで付与しない。
+- 元PNGの編集・複製は不要。`enemy/<名前>/<名前>`の既存影なしフォルダを直接参照する。
+  GhostfireとLava SlimeのAttack02は同梱の`No beam effects`/`No spike effects`版を優先し、
+  実判定に存在しない長距離ビーム/地面の棘を表示しない。この接尾辞は既存主人公/ボス/12種にはない。
 
 ### 12.1 Heart回復ドロップ
 
@@ -384,26 +416,23 @@ dark.tres)に対応する単体演出テーマを持つ。
   プロジェクト全体のデフォルトをNearest(ニアレストネイバー)に変更した。
   個々のシーン/ノードごとの`texture_filter`上書きは不要
 
-### 16.2 キャラクター表示スケールの底上げ(1.25倍基準)
+### 16.2 キャラクター表示スケールの底上げ（現行Phase 2）
 
 - Player: `entities/player/player.tscn` の `AnimatedSprite2D.scale` を
-  1.2→1.5、当たり判定(体の`CircleShape2D.radius`を16→20、
+  1.2→1.5→**1.65**、当たり判定(体の`CircleShape2D.radius`を16→20、
   `HurtboxComponent`の`RectangleShape2D.size`を32×32→40×40)も
-  同じ倍率(×1.25)で同期して拡大した
+  キャラクター本体を包む現行40pxのまま維持した
 - 通常敵: `entities/enemies/enemy_basic.gd` の `visual_scale_multiplier` の
-  既定値を1.0→1.25に変更。この1値の変更だけで、`AnimatedSprite2D.scale`と
+  既定値を1.0→1.25→**1.40**に変更。この1値の変更だけで、`AnimatedSprite2D.scale`と
   当たり判定3種(本体`CollisionShape2D`・`HurtboxComponent`・`ContactHitbox`)が
   連動して拡大される(既存の`_scale_collision_shapes()`ロジックをそのまま利用)
 - 精鋭部屋の敵: `systems/elite_room_manager.gd` の `elite_visual_scale` を
-  1.3→1.6に変更(5章参照、通常敵の1.25倍基準よりさらに一回り大きく)
-- ボス: `data/bosses/*.json` の `visual_scale` を、各体の相対的な大小関係を
-  保ったまま一律×1.25した(Black Knight_A 1.08→1.35、B 1.12→1.40、
-  C 1.15→1.44、Demon_A 1.04→1.30、B 1.08→1.35、C 1.12→1.40、
-  D 1.15→1.44、E 1.19→1.49、Flame Golem 1.3→1.63、Minotaur 1.12→1.40)。
-  `resources/boss_data.gd` の既定値(JSON側で`visual_scale`省略時のみ使用)も
-  1.08→1.35に合わせて更新した
-- いずれの倍率変更も、見た目のスケールと当たり判定(移動用コリジョン・被弾判定・
-  接触ダメージ判定)を必ず同じ倍率で連動させており、見た目と判定のズレは発生しない
+  1.3→1.6→**1.78**に変更(通常敵の1.40倍基準よりさらに一回り大きく)
+- ボス: 旧倍率の相対差は廃止。Idle全コマの不透明範囲を素材ごとに実測し、全10体が
+  **約65px高**になる個別倍率へ変更した。標準2D剣士（22px×1.65）に対して約1.79倍で、
+  HD-2D試作のMinotaurと同じ体格差を通常2Dへ移している（詳細は§39）。
+- 通常敵・精鋭・ボスは、見た目と3種の当たり判定を同じ倍率で連動させる。
+  Playerは40px判定が1.65倍表示後の標準本体約36pxを引き続き包む。
 
 ## 17. 所持武器の確認UI(HUDトレイ・ポーズメニュー)
 
@@ -424,6 +453,8 @@ dark.tres)に対応する単体演出テーマを持つ。
 
 ### 17.2 ポーズメニュー(所持武器一覧)
 
+- 武器名24px、数値18px、説明20pxを使用する。天賦図は278×112pxのノードへ拡大し、
+  高さ520pxのScrollContainer内で表示する。Tab/矢印のフォーカスにスクロールが追従し、下段も読める。
 - `ui/pause_menu/pause_menu.tscn`を新設。Escキー(`ui_cancel`)で開閉する
   簡易ポーズメニューで、所持武器をアイコンだけでなく、武器名・攻撃力・攻撃間隔・
   属性・効果説明をリスト形式で確認できる
@@ -760,26 +791,38 @@ Swordsman(melee_arc)のみの試験実装**であり、うまく機能するこ�
   (MeleeHit自体を「対象ごとに異なるダメージ」を出せる作りに拡張するのは
   過剰と判断し、既存のダメージ適用パイプラインを2回に分けて呼ぶ形にした)
 
-**天賦図(TalentTree)UI**:
+**天賦図(TalentTree)UI — 見開き魔導書（2026-09-11更新）**:
 
-- 既存のポーズメニュー(`ui/pause_menu/`、所持武器一覧画面)に「所持武器」/
-  「天賦図」の切り替えタブを追加した(`ui/pause_menu/pause_menu.tscn`の
-  `TabBar`、`pause_menu.gd`の`_show_tab()`)
-- レイアウト: 上部中央に起点ノード「居合」、その下に2列(左: 乱撃派、
-  右: 一閃派)でLv.2〜Lv.5のノードを縦に並べ、`↓`のテキスト矢印で接続する
-  (`pause_menu.gd`の`_refresh_talent_tree()`/`_build_school_column()`/
-  `_build_talent_node()`が`WeaponManagerComponent.get_class_school()`/
-  `get_class_ability_level()`の現在値からその場で組み立てる)
-- ノードの状態は3通り: **習得済み**(選んだ流派の到達済み段階、金色系の
-  枠・背景ではっきり表示)/**未到達**(流派未確定、またはこれから来る
-  段階、薄暗い枠+🔒アイコン)/**選択不可**(流派確定後、選ばなかった側は
-  ヘッダーごとさらに沈んだグレーで永続的に表示し続ける)
-- Swordsman以外の職業を選んでいる場合は「この職業の天賦図は現在準備中です」
-  という案内文を表示する(19.9がSwordsmanのみの試験実装であるため)
-- 「居合」という名称は、Swordsmanの既存Spaceアクティブスキル(19.6)と
-  同じ名前を天賦図の起点ラベルとして流用している(依頼内容の指定通り)。
-  両者は別の仕組み(19.6は即時発動のアクティブスキル、19.9は通常攻撃の
-  強化ツリーの起点表示)である点に注意
+- 同日配置調整: 起点中心Y270、分岐線Y326、流派見出しY338〜368、各段階中心Y410／486／562／638。文字の背後に接続線を通さず、最下段の外枠をページ下端の装飾から離す。
+
+- `T`で直接開閉。ゲームパッドはBack。Escでも閉じられる。ポーズメニューの「天賦図 [T]」からも同じ本を開く。他の選択モーダルが開いている間は割り込まず、GameManagerのモーダル数を通じて停止・再開する。
+- `ui/pause_menu/talent_grimoire.gd`が、生成背景`assets/ui/talent_grimoire/open_book.png`上へ操作できるノードと文字を描画する。羊皮紙、赤革、金の角金具、栞、書庫背景を参考画像に合わせ、1600×900基準で等比スケールする。
+- 左ページは起点「居合」から乱撃派／一閃派の段階2〜5を金の円形印章と接続線で表示。習得済み・未習得（錠前）・別流派の選択不可を区別し、選択中は青緑の外周で示す。クリック・矢印・WASD・Tabで閲覧できる。
+- 右ページは実Playerの肖像、職業名、現在の流派、職業熟練5段階、選択ノード名・実データの効果・習得状態・取得条件を表示。熟練は`get_class_ability_level()`を参照し、キャラクターEXPとは分離する。
+- 天賦図は閲覧画面。取得・流派確定は既存のレベルアップ候補選択で行う。条件達成だけで取得できる表示にはしない。段階2の「双連斬／剛剣」等は天賦図内の短い表示名で、既存Upgrade IDと効果に接続する。
+- 現行の分岐は剣士2流派のみ。他職業は「分岐は準備中」と実際の職業・熟練情報を表示し、架空の分岐や取得操作を追加しない。
+- 「居合」は従来の起点名を維持。Spaceの能動スキルとは別の通常攻撃強化ツリーの表示。
+- 生成プロンプトと再利用方法は`assets/ui/talent_grimoire/README.md`。報告用実画面は`artifacts/talent_grimoire/implemented.png`。
+
+**戦闘・魔法Pixel iconの接続(2026-09-10)**:
+
+- `UpgradeData.icon_path`を追加し、全85件の通常/条件/Shop/職業強化へ72×72の
+  個別iconを割り当てた。`LevelUpSelect`と`ShopScreen`は同じdata pathを読むため、
+  同じ強化が画面ごとに違う図柄にならない。path未設定・読込失敗時は従来のcategory
+  iconへfallbackする。
+- 物理技はsteel/cyan系の剣・斧・弓、burningは赤、charged/markedは黄、frozenは青、
+  cursedは紫で統一した。×2/×3は攻撃回数、扇状の刃は範囲/多段、光点は会心、
+  円環はfield/barrierという意味を優先して選定した。
+- Swordsman天賦図の起点と8ノードは、LevelUpと同じ職業強化iconを表示する。
+  習得済みは原色、未到達は55%、選択不可側は28%のopacityで、既存の枠色・lock表示と
+  同じ進行状態を示す。
+- Boss報酬の完成大技23件も魔法系sheetの図柄へ更新した。元のShikashi iconは削除せず、
+  旧Boss ItemData 8件と将来候補として保持する。原sheetと全割り当て座標は
+  `assets/ui/icons/battle_skills/source/`と`mapping.csv`へ保存する。
+- 全191 GDScript load、実GameのLevel Up/天賦図/完成大技UI、Shop購入・補充、
+  通常3MAPのBoss報酬→遷移→RUN CLEARを再実行してPASS。実描画は
+  `artifacts/secondary_readability_level_up_icons.png`、`secondary_readability_talent_top.png`、
+  `secondary_readability_completed_skill_select.png`、`shop_screen.png`へ保存した。
 
 **検証方法**: ヘッドレス実行で、(1)`LevelUpSelect._open()`と同じ抽選ロジック
 (school_select系を強制採用+残りをシャッフル)を10回試行し、毎回
@@ -964,6 +1007,9 @@ Space押下でダッシュしながら直線上の敵を斬る(`dash_distance` 2
   (9章)とは別の安全策で、両方とも有効なまま重ね合わさる
 
 ## 21. ホーム画面の職業選択UI(グリッドレイアウト)
+
+**2026-09-11 現行仕様**: 正式Playerはソルジャー・剣士・弓兵・騎士・重装斧兵・魔導士の6職。`GameManager.PLAYABLE_CHARACTER_IDS`を基準に選択画面を3列×2段、350×280pxの石枠カードへ変更した。槍兵・聖堂騎士・司祭・死霊術師のデータはボス転用に備えて保持し、Player選択には出さない。旧IDが選択状態に残っている場合は開始時にソルジャーへ戻す。解放済み記録・通貨は削除しない。未解放職業の肖像も見えるようにし、解放条件は文字で表示する。以下の10職業／5列の記述は旧版の履歴であり、現行仕様は本段落を優先する。
+
 
 2026年8月、ホーム画面(`ui/home/`)の職業選択を、縦一列のボタン一覧から
 5列×2行のグリッド(10職業ぶん)へ作り替えた。ドラゴンクエストの記念画像の
@@ -1205,17 +1251,25 @@ slam/novaの床予兆など、回避可能な事前表示を持つ。
   ROOM 36はUncommon 0%、Legendary+Mythic合計62%とする。撃破と同時に自動取得はしない
 - 死亡位置から最大52pxのランダムオフセットを付け、`DungeonMap.is_floor()`で
   床マスであることを確認する。候補が壁・範囲外なら死亡位置または近傍床へ戻す
-- `GroundEquipmentItem`を地面へ実体として生成し、ラン中は時間で自動消滅させない
+- `GroundEquipmentItem`を地面へ実体として生成する。通常の時間寿命は持たないが、
+  Uncommon / Rare / Epicの未取得品は維持上限を24個とし、上限を超えた場合は生成時刻が
+  最も古い品を1.2秒点滅させてから消滅させる。点滅中だけ実Node数は一時的に上限を超える。
+  点滅中も取得可能で、削除予約中の品も上限判定へ含めて同じ品の二重予約を防ぐ。
+  Legendary / Mythicはこの自動整理の対象外とする。
+  上限値と点滅時間は`data/equipment/drop_table.json`の
+  `ground_item_low_rarity_cap` / `ground_item_expiration_warning_seconds`で管理する
 - 取得範囲72pxへ入ると、レアリティ色のアイテム名・レアリティ名・
   「E / X：拾う」を表示する。EキーまたはゲームパッドXで最寄りの1個を取得する
-- 地面表示は64×64pxの画像全体ではなく、アルファ付き画像の不透明画素範囲
-  （`Image.get_used_rect()`）をVisual Sizeとして扱う。現在のプレイヤーフレームの不透明画素高と
+- 地面表示は64×64pxの画像全体ではなく、生成時に保存した`EquipmentIconMetrics.BOUNDS`の
+  不透明画素範囲をVisual Sizeとして扱う。Drop時のGPU `texture.get_image()`は行わない。現在のプレイヤーフレームの不透明画素高と
   `AnimatedSprite2D.global_scale`から見た目の高さを求め、装備本体をその82%（最小24px、最大42px）へ
   正規化する。全10職業で結果がプレイヤー本体の70〜100%に収まることを回帰テストする
 - カード背景、上下浮遊、バウンド、大きな装備Sprite、円形・楕円形のレアリティリング、縦方向Loot Beamは
-  使用しない。アイコン真下に6頂点の`PixelLootPlate`と非AAの`PixelLootOutline`だけを置く
-- レアリティはPlate/Outline色、常駐Pixel粒子数（Uncommon 2 / Rare 3 / Epic 4 / Legendary 6 / Mythic 9）、
-  粒子Contrastで区別する。Drop瞬間は3〜9粒の短いBurstだけを再生し、長いBeam・柔らかいGlow・全画面Flashは生成しない
+  使用しない。アイコン真下の`PixelLootPlate`/非AA Outlineへ、古金の角飾りと1〜5個のレアリティ刻印を加える
+- レアリティはPlate/Outline色、刻印数、常駐Pixel粒子数（Uncommon 2 / Rare 3 / Epic 4 / Legendary 5 / Mythic 6）で区別する。
+  Drop瞬間は0.7秒の局所展開→崩壊と6〜14粒の短いBurst。長いBeam・柔らかいGlow・全画面Flashは生成しない
+- Drop瞬間のBurst Nodeは再生完了時に解放し、常駐粒子は画面外で停止・画面内で再開する。
+  アイテム名と取得Promptはプレイヤーが取得範囲へ初めて入った時点で生成する
 - 同時に複数の対象がある場合は、プレイヤーから最も近い装備を取得する
 - ROOM遷移時は未取得の`ground_equipment`を退役させ、旧ROOMのDropを後半まで蓄積しない。
   取得成功時はHUDへ小さく「○○を入手」と表示し、戦闘を停止する大型UIは出さない
@@ -1235,9 +1289,9 @@ slam/novaの床予兆など、回避可能な事前表示を持つ。
 | Mythic / ミシック | 赤 | 1% | 4+強力な特殊効果 |
 
 上記はドロップ成立後の相対確率で、色だけでなく英語・日本語のレアリティ名も表示する。
-Legendary/Mythicは橙/赤の硬いPixel Plateと多めの局所パーティクルで強調する。
-巨大リング・縦Beam・柔らかい足元Glowは全レアリティで生成しない。Plate・Outline・パーティクルはGodot側で
-画像と分離して重ねる。一方、装備本体は
+Legendary/Mythicは橙/赤の生成Pixel紋章と短い6コマ出現画像で強調する。
+地面演出は静止`loot_seal.png`1枚＋0.7秒の`loot_awaken.png`1枚。常駐粒子・線・Polygon台座は使わない。
+紋章の色と寸法をレアリティで変え、巨大リング・縦Beam・柔らかい足元Glowは生成しない。一方、装備本体は
 レアリティ専用テンプレートと専用アイコンを使い、同じ物理デザインの単純な色替えにはしない。
 Uncommonは実用品、Rareは青鋼と宝石、Epicはルーン魔装、Legendaryは王級の黄金装飾、
 Mythicは黒赤の異形装備というように、シルエット・装飾密度・素材感も段階的に変える。
@@ -1270,28 +1324,49 @@ Mythicは黒赤の異形装備というように、シルエット・装飾密�
 
 ### 23.6 装備UI・比較UI
 
+- 2026-09-11: 中央タブ、レア度／並び順、鍛造切替、装備・解除を青石と古金の画像枠へ統一。左下はアイコン・能力名・数値の3列、HP／攻撃力／防御力／移動速度／会心率／会心ダメージの6行を18pxで表示。202pxの専用枠に収め、折り返しを無効化する。
+- ALLの下の部位フィルタは、新規生成の白黒シルエット6種（剣・兜・胴・手袋・靴・指輪）。実在装備のアイコンはフィルタで使用しない。生成原画`assets/ui/relic_frames/equipment_parts.png`を領域参照し、黒マット除去は描画Shaderで行う。
+
+
+- 2026-09-11装飾更新: `assets/ui/relic_frames/ornament_atlas.png`の生成石枠・彫金・紋章・尖形見出しを実UIに使用。
+  `ui/common/relic_frame_art.gd`の伸縮描画で四隅金具を保ち、比較枠・所持金枠にも再利用する。詳細は白い名前、Rarity色、錠前、能力画像と数値列、現装備画像付き比較を表示する。
+
 - `ui/equipment/equipment_screen.tscn`をCキーまたはゲームパッドYで開閉する。
   Iキーは旧装備画面からの互換エイリアスとして同じ画面を開く。ESCでも閉じられる。
   既存モーダルが開いている間は割り込まず、`GameManager.active_modal_count`を使って
   安全に一時停止する
-- 左: 既存キャラクタースプライトを中央に置き、その周囲へ6装備スロットと現在ステータス。
-  右は「装備」「合成」の2モードを明確に分け、装備モードでは所持一覧・固定比較・装備/解除を表示する
+- 1600×900で「装備／所持品／右操作」の3列を常時表示する。左はキャラクターと周囲6装備スロット・現在ステータス、
+  中央は5列の実アイコングリッド、右は既定の装備詳細と遺物鍛造を上部タブで切り替える。
+  右タブだけを切り替え、装備欄と所持品は常に残す。所持品の選択は鍛造中も同じ一覧から行う。
+- 所持品には部位タブ（全て／武器／頭／胴／腕／脚／装飾）、レア度Filter、整理順を置く。
+  選択品はレア度枠の内側へ古金、外周の四隅へ青緑の選択標を表示する。装備中は`E`、保護中は`◆`、
+  お気に入りは`★`、鍛造候補は`鍛`で示す。所持上限は50枠とし、`所持数 / 50`を表示する。
+  満杯時は拾得を成立させず、地面の装備を残して消失を防ぐ。
 - 比較は同じスロットの現在装備を基準に、各値を「現在→選択中」と表示する。
   上昇=緑の↑、低下=赤の↓、同値=灰色の=を用いる
 - 地面取得後は所持一覧へ即時追加する。通常ROOM RunではCLEAR/REWARD/次ROOM準備中だけC/I画面を開け、
   COMBAT中は開かない。装備画面を閉じると準備済みの次ROOMへ自動遷移する
 - 地面ドロップ、所持装備一覧、中央の装備済みスロットは、同じ`icon_path`の画像を表示する。
   取得や装備で別画像へ置き換えず、装備実体の同一性を視覚的に維持する
-- 合成モードは独立した素材スロット3個、Rarity別素材候補数、素材用所持一覧、
-  `現Rarity ×3 → 次Rarity ×1`プレビュー、合成Button、完成品Cardを表示する。
-  所持カード単位の`1 / 3`表示は行わない。一覧選択で左から空きSlotへ入り、Slot選択で取り外す。
-  最初の素材と同Rarityを強調し、他Rarityを暗くするが選択時は日本語の不成立理由を表示する。
-  装備中・Lock中は状態を明記して選択不可とする。完成品の種類・部位・Statsは合成後に開示し、
-  現在装備との比較と即時装備を可能にする
-- 合成演出は約1.2秒。3つの実Iconが中央へ収束し、局所Pixel FragmentとImpactを経て完成Iconを開示する。
-  Rarityが高いほどFragment数と展開距離を増やすが、巨大Bloom・Gradient・全画面Flashは使用しない。
+- 宝物庫に「レア度順／部位順／新規入手順」とレア度Filterを設ける。表示用コピーだけを整理し、Inventoryの内容・取得順データは変えない。
+- 右側の遺物鍛造タブに素材3個、`現Rarity ×3 → 次Rarity ×1`プレビュー、合成Button、完成品を表示する。
+  一覧クリックは比較対象の選択だけ。「素材に追加」で空きSlotへ置き、素材Slotの選択で取り外す。
+  所持カード単位の`1 / 3`表示は行わない。素材を置いても他Rarityや装備品を自動で隠さない。
+  「同レア3点セット」は未装備・未Lockの完全な3点を候補へ並べるだけで、消費は合成確定時のみ。
+  整理/任意Filter/素材全解除は同時に操作できる。最上位Mythicは合成候補にしない。
+  装備中・Lock中も比較・装備操作は可能だが、素材追加は拒否する。「装備を外す」は選択品自身が装備中の時だけ有効。
+  装備枠の選択でも比較対象を指定でき、素材に置いた品を装備すると素材候補から自動で外れる。
+  完成品はFilterを解除して中央で選択し、右側を装備詳細へ戻して比較と即時装備を可能にする。
+  比較/完成品/装備枠のRarity文字は基準色から28%明るくし、枠とDataの色は変更しない。
+  比較対象が変わった時だけ説明のスクロールを先頭へ戻す。同じ対象の更新では読んでいる位置を保つ。
+- 合成演出は約1.64秒。右欄へ収まる古代炉・金属刻印・八角紋章台へ3つの実Iconが収束し、局所Pixel FragmentとImpactを経て完成Iconを開示する。
+  炉内部の132px原寸描画を欄の寸法へ合わせて縮小し、所持品・装備枠を覆わない。
+  Impact/Fragmentは新規`forge_awaken.png`の6コマで再生し、Rarityで表示寸法と弱い色味を変える。
+  出現/合成画像のTintは75%白へ寄せ、青・紫Rarityでも原画の金/白い芯を濁らせない。静止紋章はRarity色そのまま。
+  合成用画像1枚は戦闘VFX予算とは独立させ、Pause中の戦闘VFX飽和でも演出を欠落させない。
+  巨大Bloom・Gradient・全画面Flashは使用しない。
   初回は全再生し、2回目以降はMouse / E(`interact`) / 決定(`ui_accept`)で表示だけをSkipできる。
-  合成中Flagにより連打しても取引は1回だけ実行する
+  合成中Flagにより連打しても取引は1回だけ実行する。SkipはGUIより先に入力を捕捉し、全子Tweenを停止してから演出Nodeを解放する
 - Developer Test LabのEQUIPMENT / LOOTへ「アンコモン素材×3」「レア素材×3」
   「エピック素材×3」「合成画面を開く」を置き、異なる既存Templateを即投入できる
 - `tests/equipment_merge_check.tscn`で異名Uncommon→Rare、Rare→Epic、混在/装備中/Lock/出力候補なしの
@@ -1312,6 +1387,9 @@ Mythicは黒赤の異形装備というように、シルエット・装飾密�
 - オリジナル生成素材はクロマキー除去後、`tools/equipment_icon_pipeline.py`で外接矩形を切り出し、
   54px以内へアスペクト比を保って最近傍縮小し、64×64px中央へ配置する。同スクリプトで
   サイズ・透明四隅・二値アルファを検証する
+- 2026-09-05のRoyal版は`tools/source_art/royal_equipment_atlas.png`の新規25画像を`import-royal-atlas`で切り出し、
+  2px論理ドット・64x64へ正規化する。`validate-catalog`で25種・画像重複なし・二値透過・offline Bounds一致を検査する。
+  同時生成する`resources/equipment_icon_metrics.gd`も素材と一緒に更新する。
 - 属性追加は属性JSON+必要なら再利用可能な発動Strategy、装備追加はtemplates.json、
   レアリティ調整はdrop_table.jsonを優先し、EnemyBasicやPlayerへ個別条件を増やさない
 
@@ -1334,6 +1412,8 @@ Mythicは黒赤の異形装備というように、シルエット・装飾密�
 
 ### 23.9 オリジナル装備アイコン第1弾(25種、2026年8月)
 
+- 2026-09-05: 下記25種を新規Royal Pixel Artへ差し替え。`icon_path`は維持し、地面/宝物庫/装備/合成を同じ画像へ接続。
+  原画・生成指示は`tools/source_art/royal_equipment_*`、目視一覧は`artifacts/royal_equipment_contact_sheet.png`。
 - 第1弾は武器10種、頭3種、胴3種、腕3種、脚3種、アクセサリー3種の計25種
 - `EquipmentDropSystem`は従来どおり`drop_table.json`でレアリティを先に抽選し、続いて
   `templates.json`から同じ`rarity`を持つ5つの専用デザインだけを候補にして1つ選ぶ。
@@ -1350,10 +1430,9 @@ Mythicは黒赤の異形装備というように、シルエット・装飾密�
 | Legendary | 太陽炎の戦斧、不死鳥の弩 | 獅子王の兜、竜爪の篭手、陽輪の護符 |
 | Mythic | 虚無の双爪、終焉の魔導書 | 虚空歩きの靴、星堕ちの脚甲、深淵の心核 |
 
-Godot側の地面レアリティ演出は硬いPixel Plate + 非AA Outline + 少量Fragment方式とする。
-リング・縦方向Loot Beam・柔らかいGlowは生成しない。Legendary/MythicほどFragment数とContrastを増やし、
-素材画像にはGlow・Beam・パーティクルを焼き込まず、地面・インベントリ・装備済みスロットで
-同じ画像を再利用する。
+Godot側の地面レアリティ演出は§23.4の生成画像2枚方式とする。
+リング・縦方向Loot Beam・柔らかいGlowは生成しない。Legendary/Mythicほど紋章を大きく明確にする。
+装備アイコン本体には演出を焼き込まず、地面・インベントリ・装備済みスロットで同じ画像を再利用する。
 
 ## 24. エリート・装備ハクスラ改善（2026年8月9日）
 
@@ -1424,11 +1503,13 @@ Mythic=4+強力な特殊効果1で固定する。テンプレートの`stats`候
 - C/Yで開くと`GameManager.open_modal()`でワールドを停止し、UIはPROCESS_MODE_ALWAYSで動く。
   C/YまたはESCで閉じ、`close_modal()`で他モーダルがなければゲームを再開する
 - 1600×900基準。左パネル中央へ現在キャラクターの既存SpriteFramesの現在frameを表示し、
-  周囲へ武器・頭・胴・腕・脚・アクセサリーの6スロットを配置する
+  周囲へ武器・頭・胴・腕・脚・アクセサリーの6スロットを配置する。中央は部位Filter付き5列所持品、
+  右は選択品の大Icon・Rarity・能力差・現在装備との比較を表示し、右上タブから遺物鍛造へ切り替える
 - 下部にHP、攻撃力、防御力、攻撃速度、移動速度、Crit率、Critダメージを表示する。
   総合戦闘力は導入しない
-- 右側は既存ラン内Inventoryを再利用し、下側の固定比較パネルに現在→候補、↑/↓/=、
-  固定値と%を区別して表示する。「装備する」「装備を外す」で即時再集計・再描画する
+- 既存ラン内Inventoryを再利用し、所持上限は50。満杯時の拾得品は地面へ残す。
+  比較欄は現在→候補、↑/↓/=、固定値と%を区別して表示し、「装備する」「外す」で即時再集計・再描画する。
+  お気に入り`★`と鍛造保護`◆`はラン中の装備実体へ保持する
 - `tests/character_screen_layout_check.tscn`で1600×900、6スロット、キャラクター、
   ステータス、Inventory、比較パネルがViewport内に収まることを検証する
 
@@ -2033,314 +2114,6 @@ READMEも同期する。コードだけ、または仕様書だけを更新し�
 - `scenes/game.tscn`単体もヘッドレス起動し、通常Wave/Boss/Elite/装備/既存入力を含む構成の
   parse・instantiateでScript Errorがないことを確認する
 
-## 27. Elite 100% Drop / Element Shard / Attack Type + Element Modifier（2026年8月9日）
-
-### 27.1 Elite装備ドロップ保証
-
-- `enemy_drop_requested`が「精鋭=true、ボス=false」で届いた場合、装備を最低1個必ず生成する。
-  見えない壁、精鋭生成条件、属性Affix、撃破追跡、通常Wave、Bossには変更を加えない
-- `drop_table.json`は`elite_minimum_drop_count=1`、`elite_extra_drop_chance=0.0`、
-  `elite_extra_drop_count=1`を持つ。現在は1撃破=1個。将来、追加確率だけを上げれば2個目を
-  生成でき、最低保証を失わない
-- 旧`elite_drop_chance`と「落ちない」抽選は廃止する。レアリティ抽選は従来の
-  Uncommon/Rare/Epic/Legendary/Mythic = 50/30/15/4/1を各Dropで独立して行う
-- テンプレート、Affix数/値域、Legendary/Mythic特殊効果、床位置補正、取得、Inventoryは維持する
-
-### 27.2 Element Shardの状態管理
-
-| Element ID | 対応欠片 | Theme ID | HUD例 |
-|---|---|---|---|
-| `element_none` | なし | なし | 属性：なし |
-| `element_fire` | `fire` / 炎の欠片 | `fire` | 属性：主 火 Lv3 |
-| `element_ice` | `ice` / 氷の欠片 | `ice` | 属性：氷 Lv2 |
-| `element_lightning` | `lightning` / 雷の欠片 | `lightning` | 属性：主 雷 Lv1 |
-| `element_light` | `light` / 光の欠片 | `light` | 属性：光 Lv2 |
-| `element_dark` | `dark` / 闇の欠片 | `dark` | 属性：主 闇 Lv1 |
-
-- 正式な保存先は`GameManager.active_element_ids`（古い→新しい取得順、末尾が主属性）と
-  `element_stacks`。最大2属性・各Lv3。`active_element_id`は既存呼び出し互換の主属性値である
-- 同属性はLvを1上げて主属性へ移動する。Lv3以後は通常属性カードを候補から外し、
-  属性固有Masteryへ置き換える。直接再取得を要求してもStack/欠片を増やさない
-- 異なる属性は空きスロットへLv1で入る。2属性取得後はBuildを正式にLockし、
-  3種類目の取得要求を拒否する。既存2属性を置換せず、そのRunの報酬候補にも出さない
-- `held_fragment_ids`とは独立したラン内一時状態で、`SaveManager`へ保存しない。ゲーム開始時と
-  `run_ended`時に全スロット・全Lvを0へ戻す。Fusion消費ではLoadoutを消さない
-- 火/氷/雷/光/闇の5属性をElement Modifierとして扱う
-- 互換通知`active_element_changed(primary_id)`に加え、正式通知
-  `element_loadout_changed(active_ids, stacks)`をHUD等へ送る
-
-### 27.3 Attack Type + Element Modifier
-
-```text
-Character attack_pattern_id（Attack Type）
-  + GameManager.active_element_ids / element_stacks（最大2 Element Modifier）
-  = 職業・武器本来のAttack開始Sprite / Projectile
-    + 主属性による居合Trail
-    + ElementCombatSystemで追加Damageが成立した属性の確定Hit Sprite
-    + ElementCombatSystemによる各属性の独立追加Damage
-    + 雷なら敵から敵へのGameplay Chain
-```
-
-- 通常近接の攻撃開始時はPresentation専用`attack_slash`を生成しない。`attack_projectile` / `attack_pulse`、
-  Character Animation、攻撃範囲、速度、Damage、Critical、Hitboxは変更しない。
-  通常攻撃の物理HitはCharacter/Weaponの`vfx_theme_id`を使うが、Lightning Themeの通常近接だけは
-  黄色い三日月/星を残さないため汎用`hit_normal` / `hit_critical`と黄色の基底Lightning Particleを生成しない。
-  紫の強化Lightning、ElementCombatSystemによる属性Hit、Chain、Damage、SEは維持する
-- 職業通常攻撃へ現在属性・Fusion由来の追加Flash/Aura/Trail/Projectile置換を自動付与しない。
-  属性Hit Spriteは`ElementCombatSystem`で実際の属性追加Damageが成立した地点だけに生成する。
-  Element Fusion成立後は継承Gameplayを維持しつつ、画面上では通常属性Hitを抑止して専用Fusion VFXだけを出す
-- `AttackPatternBase`の近接/直線/AoE HitとArcher/Wizardの一時`WeaponData`も
-  `CharacterData.vfx_theme_id`を使う。現在Elementを通常攻撃Themeへ流用しないため、光のBeamや
-  闇の吸収Particleが属性取得/Lv変更直後の通常攻撃へ逆流しない。Active Skillの属性Themeは維持する
-- 職業Projectileは共通Arrowと職業・武器Theme Glowを維持する。Element/Fusion取得・Lv変更は
-  職業Projectileを生成・置換せず、Fusion固有処理も意図しないArrowを生成しない
-- `ElementVFXData`と`AttackVFXManager`はVisual専用。追加Damage・Chainは
-  `data/elements/element_combat.json`と`ElementCombatSystem`が担当し、VFX欠損でもGameplayを続行する
-
-### 27.4 居合Trailと属性Hit
-
-| Element | Iai Visual Language | 実再生時間 / Safety | Hit Visual |
-|---|---|---|---|
-| 火 | 橙〜赤の細い燃焼帯、揺れる炎、火の粉。実通過区間へ連続配置 | 6f/12fps=0.50s、Safety 0.95s | 外向きに咲いて散る小型火花 |
-| 氷 | 白〜水色の冷気、直線的な氷晶、砕ける残像 | 6f/13fps≈0.46s、Safety 0.78s | 氷晶の放射破砕+冷気 |
-| 雷 | 青〜紫の鋭い不規則分岐、途切れた瞬間発光 | 6f/22fps≈0.27s、Safety 0.36s | 短い分岐電撃+残留Spark |
-| 光 | 白〜金の細い直線斬光、Lv2で小星粒、Lv3で二層細線。高輝度の面を作らない | 6f/16fps=0.38s、Safety 0.50s | 小型星Burst、Lv3だけ細い神聖星Core |
-| 闇 | 紫黒の細い裂け目、Lv2で残滓、Lv3で黒芯+紫縁の二層亀裂。画面暗転を使わない | 6f/14fps≈0.43s、Safety 0.50s | 小型裂傷Burst+局所的な虚無Rift |
-
-- `ActiveSkillComponent._swordsman_iai()`の各実移動segment完了後に
-  `AttackVFXManager.play_iai_trail(start,end)`を呼ぶ。壁衝突時は実際に通った距離だけ表示する
-- Trail/HitはParticleだけで済ませず、各6フレームの`AnimatedSprite2D`を主表示とする。
-  afterimageも現在属性色へ寄せるが、既存モーション、チャージ、キャンセル、無敵、Damageは維持する
-- 旧`ActiveSkillVFX(style="slash")`の半透明扇形/三角形は居合から外す。Dash、残像、実移動Trail、
-  各stepのHitは残し、細く鋭い斬線を主役にする
-- VFXはStackごとにScale 1.00/1.16/1.32とSecondary detailを段階強化する。主Spriteの
-  OpacityはLv1から1.00を維持し、最初から薄い面として出さない。画面を覆う面積やLifetimeを
-  増やす方式にはしない
-- Lv2/Lv3はScaleだけでなく、Elementごとの局所Secondaryを追加する。火=`embers`、氷=`crystals`、
-  雷=`arcs`、光=`rays`、闇=`rifts`。Lv3はLv2よりParticle/Shard/Arc/Ray数とCore detailを増やす
-- Lv2/Lv3到達時はPlayer周辺だけに0.74秒のRing、Burst、`LEVEL 2` / `LEVEL MAX`を表示する。
-  このSignal経路はAttack、Damage、Weapon生成、Fusion判定、Projectile生成を呼ばない
-- 光・闇の到達Burstは最大17px/sの短い局所Particleに制限し、遠くへ飛ぶ弾や斬撃に見える
-  指向性移動を使わない。光は細い縦Core、闇は細い不規則Riftで属性差を表現する
-- 5属性は別々に調整したSprite Sheetを使い、単純な色替えを禁止する。画面全体を覆う大きさ、
-  通常Hit Stop、通常Shake、無条件の全画面Flashは追加しない
-
-### 27.5 UI・データ・追加手順
-
-- HUD左上のHP/EXP直下に`ActiveElementLabel`を置き、0属性は`属性：なし SLOT 0 / 2`、1〜2属性は
-  `火 Lv3 | 主 雷 Lv1 SLOT 2 / 2 LOCKED`の形式で各色表示する。Fusion後はFusion名とSignature Rankを表示する。
-  既存HUD、Skill Panel、Boss HP、Character Screen、InputMapへ新しい操作は追加しない
-- `resources/element_vfx_data.gd`がVisual schema、`effects/element_vfx/*.tres`が5属性Data、
-  `assets/vfx/elements/`が最終Sprite、`AttackVFXManager`が合成・自動破棄を担当する。
-  Gameplay値は`data/elements/element_combat.json`へ分離する
-- 新属性追加は、(1)Trail/Hit 6-frame PNG作成、(2)`ElementVFXData`の`.tres`追加、
-  (3)一意な`element_*` / `vfx_*` ID設定、(4)`GameManager.ACTIVE_ELEMENT_BY_FRAGMENT`と
-  Theme mapping追加、(5)追加Damage表・必要な固有GameplayをCombat Data/Systemへ追加、
-  (6)HUD/Stack/2-slot lock/reset/全Attack Type/Hit/expiryテスト、(7)本章とAsset README更新
-
-### 27.6 属性現象の共通Lifecycle
-
-- 新属性/Fusionの主Spriteを始点から終点へ平行移動させない。Attack/Trailは実攻撃区間の中央へ
-  固定し、6 frame内で中心から横へ形状が展開→最大発光→外周/両端が欠けて粒子化する
-- Sprite Sheet生成で全体Alphaを段階的に下げない。可視Pixelは全frameで強い発色を保ち、
-  最後のごく短い残光以外は、Alphaではなく可視形状の減少と欠片で消滅を表現する
-- Lv2/Lv3のTrail/Hit補助もRoot全体の`modulate.a` Fadeを使わず、線分を両端から短くするか
-  外周形状を中心へ畳んで解放する。このLifecycleを今後の新属性VFXにも適用する
-- 居合は攻撃区間へ固定した属性/Fusion Trailで空間を斬る。命中敵を追従する横線、傷Overlay、
-  属性別Slash Mark Resourceは生成・保持しない。居合Damage、属性追加Damage、Trail/Hit Spriteは維持する
-
-### 27.7 実ゲーム検証
-
-- `tests/equipment_integration_check.tscn`: 旧No-drop keyが存在しないこと、最低1個、追加率0%、
-  精鋭撃破通知3回から地面装備が正確に3個増え、全て既存5レアリティ・床マス・iconを使うこと
-- `tests/element_stack_combat_check.tscn`: 実`scenes/game.tscn`でLv1〜3、Lv4上限、2スロット、
-  3属性目の拒否、2属性の追加Damage増加、色付き数値、実Space Hit、職業Projectile維持、
-  雷Lv3の4連鎖・310px・重複なし・撃破打起点、HUD、Fusion成立、run resetを確認
-- `tests/element_shard_vfx_check.tscn`: 5属性それぞれLv1〜3の実居合・Hit・Scale増加、
-  職業ProjectileのArrow維持、雷連鎖、Fire 4択取得UIのpause解除と
-  blackout用CanvasLayer残留なしを実Game sceneで確認
-- 実レンダラー1600×900で`artifacts/equipment_element_polish/iai_{fire,ice,lightning,light,dark}_lv{1,2,3}.png`、
-  `lightning_projectile_lv3.png`、`lightning_chain_lv3.png`を保存し、扇形なし、電撃形状、
-  床・敵・HUDの可読性を目視確認する。両テストは`failures=0`
-- `tests/loot_visibility_check.tscn`でElite実Drop、全5RarityのPlate色・Fragment数/Contrast、到着Burstから常駐表示への移行、
-  取得後の残留なしを確認し、`mass_combat_loot_visibility.png`で敵・弾・Damage Number混在時の可読性を確認する
-- `tests/element_level_no_attack_check.tscn`で光/闇Lv1〜3の各取得単体がProjectile、Weapon、
-  Attack Event、Damage Event、Hitboxを一切生成せず、Lv2/3の局所Feedbackだけを出すことを確認する
-- `tests/auto_attack_vfx_regression_check.tscn`で敵接近から実通常攻撃を発生させ、職業Attack/Hit、
-  Element Damageは維持しつつ、現在光/闇Theme、Lv/Fusion VFX、謎Projectileが混入しないことを確認する
-- `tests/light_dark_vfx_visual_check.tscn`をVulkan Forward Mobile 1600×900で実行し、
-  `artifacts/light_dark_vfx_polish/`へ光闇Lv1〜3、Lv feedback、Hit、全属性比較を保存する
-- 既存`elite_spawn_regression_check.tscn`と`gameplay_vfx_capture.tscn`も再実行し、通常敵、
-  部屋/巡回Elite、Affix、壁0、逃走、Boss、既存Attack/Hit、Damageがエラーなしであることを確認。
-  回帰テスト内では巡回Elite 1体＋部屋Elite 2体を実際に撃破し、本番の死亡通知経路から
-  地面装備が正確に3個増えることも確認する
-
-## 28. Element Stack / Element Damage / Lightning Chain 正式仕様（2026年8月9日）
-
-### 28.1 採用方針と調査結果
-
-同属性はStackして投資価値を上げ、異属性は最大2種類を同時保持する。2属性を両方Lv3にした瞬間、
-順序に依存しない10種類のElement Fusionへ一度だけ進化する。旧完成武器レシピとは責務を分け、
-Element ModifierのGameplay/VFX/Masteryは`ElementCombatSystem`と`FusionCombatRuntime`が担当する。
-色だけに依存せず、属性名・Lv・Slot Lock・Fusion名・Signature RankをUIへ併記する。
-
-### 28.2 Stack・追加Damage・Lv4
-
-| Lv | VFX Scale | Opacity | 火追加 | 氷追加 | 雷追加 | 光追加 | 闇追加 |
-|---:|---:|---:|---:|---:|---:|---:|---:|
-| 1 | 1.00 | 0.78 | 10% | 8% | 12% | 9% | 11% |
-| 2 | 1.16 | 0.90 | 17.5% | 14% | 21% | 15.75% | 19.25% |
-| 3 | 1.32 | 1.00 | 30% | 24% | 36% | 27% | 33% |
-
-- 上限はLv3。Lv4相当の通常属性カードは抽選から除外し、属性固有Masteryへ移行する。
-  直接再取得も拒否し、二重成立や不要な旧Fusion素材を発生させない
-- 各確定Hitで、実際に通った物理ベースDamage × 上表比率を各保持属性ごとに要求する。
-  `HealthComponent.apply_secondary_damage()`が既存iframeだけを無視し、防御、Shield、1Hit上限、
-  死亡判定は通常Damageと同じ規則で処理する。追加Damageは新しいiframeを開始しない
-- 物理Criticalは従来のCritical倍率・赤30px数値を維持する。属性比率はCritical適用後の
-  実ベースDamageを参照するが、属性数値自体はCritical扱いにせず17〜19pxの属性色で別表示する
-- 2属性保持時は両方の追加Damageを独立適用する。主属性だけが居合Trailを決め、
-  Hit Spriteと追加Damageは両属性を表示・適用する。通常攻撃開始色と職業Projectileは職業・武器本来のThemeを維持する
-
-### 28.3 雷Gameplay Chain
-
-| 雷Lv | 最大Jump | Jumpの初期雷追加Damage比 | 1Link距離 |
-|---:|---:|---|---:|
-| 1 | 1 | 78% | 200px |
-| 2 | 2 | 78% / 62% | 250px |
-| 3 | 4 | 78% / 62% / 50% / 42% | 310px |
-
-- 雷属性取得・Lv変更はProjectileを生成せず、職業Projectileも`vfx_lightning_projectile`へ置換しない。
-  当該Resource/Assetは将来の専用攻撃用に登録状態を維持するが、Element Stackイベントからは未接続とする
-- 雷追加Damageが成立したHit（ベース攻撃が起点を倒した撃破打を含む）から、現在地点の
-  Lv別Range以内にいる最寄りの生存敵を順に選ぶ。訪問済みinstance IDを保持し、同一敵へ戻らない
-- Chain Damageは最初の雷追加Damage実適用値へ上表を掛ける。対象不足、距離超過、死亡時はその場で終了する
-- Damage/対象選択は`ElementCombatSystem`、表示は`vfx_lightning_chain`が担当する。
-  旧`EffectThemeManager`のVisual-only疑似Chainはactive lightning中だけ抑止し、二重線を出さない
-- 通常敵/Elite/Bossの既存Spawn、Affix、撃破、報酬、装備Dropは変更しない。Chainで死亡した敵も
-  `HealthComponent.died`から従来の撃破・Drop経路へ入る
-
-### 28.4 Damage Number・HUD・Save境界
-
-- 物理通常=`#F2F2F2`/20px、物理Critical=`#FF4033`/30px、火=`#FF611A`、
-  氷=`#9EEBFF`、雷=`#B899FF`。属性はLv1/2/3で17/18/19px、Chainは2px小さくする
-- 同時表示増加に合わせDamage Number Poolを20→36へ拡張する。OFF設定時は物理・属性とも表示しない
-- HUDはRichTextで2属性の名称・Lv・主属性・Slot Lockを常時表示する。Fusion成立後は
-  専用Fusion名とSignature Rankを表示し、旧完成武器を追加表示しない
-- Element Loadout / Stack / Chain履歴はラン内状態で、Save schemaを変更しない。ラン開始/終了で
-  全消去し、メタ通貨、解放、装備、職業データへ永続化しない
-
-## 29. 2属性Build / Boss 4択 / 全10 Element Fusion（2026年8月10日）
-
-### 29.1 Boss報酬と2属性Lock
-
-- Element報酬は常に2×2の4枠。0属性時は異なる通常属性3枚+General Element Mastery 1枚、
-  1属性時は所持属性Lv Up+未取得属性2枚+General 1枚とする
-- 2属性取得後は`SLOT 2 / 2 LOCKED`となり、未取得3属性を候補から完全除外する。
-  所持属性のLv Up、Lv3属性Mastery、General Masteryだけを候補にする
-- Lv3属性の通常カードは出さない。2属性ともLv3になった瞬間に順序非依存でFusionを一度だけ成立させる
-- Fusion後は通常5属性カードを一切出さず、Fusion Power / Echo / Haste / Signatureの固定4枠に移行する。
-  各Rank上限は3。全4系統が上限の場合だけ、報酬Modalを閉じられる`FUSION COMPLETE`を1枠目に出す
-- Bossの既存Item 3択は変更せず、モーダルキューでItem 3択の後にElement/Fusion 4択を表示する
-
-### 29.2 属性成長・Mastery・Echo
-
-| 属性 | Lvで成長する固有Mechanic |
-|---|---|
-| Fire | Burn tick/継続/範囲が増え、Lv3でBurn対象死亡Explosion |
-| Ice | Slow時間/強度とFreeze率が増え、Lv3で完成形のFreeze/Shatter条件 |
-| Lightning | Chainが1→2→4 Jump、Rangeが200→250→310pxへ増える |
-| Light | Holy Strike必要Hitが5→4→3、Bonus Damageと一時Shieldが増える |
-| Dark | Curse時間と被Damage増加が15%→28%→45%へ増える |
-
-- Fire Burnは対象更新中の死亡Explosion/AoEで別Burn対象が同期削除されることを前提に、Dictionaryを
-  `get()`で安全取得する。死亡・期限切れ・無効Target・Runtime ResetではBurn本体と死亡Signalを同時に
-  退役し、Callback削除後のEntryを書き戻して復活させない
-
-- General MasteryはPower（属性Damage +15%/Rank）、Echo（+15%/Rank、最大45%）、
-  Haste（Interval -10%/Rank）、Reach（AoE/Range +12%/Rank）の4系統、各Rank 3
-- Lv3属性MasteryはPower（+25%/Rank）、Echo（+15%/Rank）、Reach（+20%/Rank）、
-  Signature（固有Mechanic強化）の4系統、各Rank 3
-- Element Echoは元Hitごと・属性ごとに最大1回だけ二次発動する。Echo Damage/Chain/Statusは維持するが、
-  二次発動からEcho抽選やFusion Signature抽選へ戻さず、再帰を禁止する
-
-### 29.3 全10 Fusion Gameplay
-
-| Fusion | 組合せ | 継承Trait | 第3Trait |
-|---|---|---|---|
-| THERMAL SHOCK / 熱衝撃 | Fire+Ice | Burn + Freeze | Thermal Collapse: 両状態から小型Steam圧AoE |
-| PLASMA / プラズマ | Fire+Lightning | Burn + Chain | Overcharge: 遅延/死亡時Plasma Core爆発 |
-| SOLAR FLARE / 太陽炎 | Fire+Light | Burn + Holy | Corona: Burn対象死亡時Solar Flare |
-| INFERNO / 煉獄 | Fire+Dark | Burn + Curse | Soul Devour: 死亡Soul蓄積から黒炎強化 |
-| SUPERCONDUCTOR / 超伝導 | Ice+Lightning | Freeze + Chain | Resonance Shatter: 凍結Networkの連鎖破砕 |
-| AURORA / 極光 | Ice+Light | Freeze + Holy | Refraction: Prismから別Targetへ分裂 |
-| BLACK ICE / 黒氷 | Ice+Dark | Freeze + Curse | Gravity Collapse: 凍結地点へ吸引+Collapse |
-| RADIANT ARC / 聖雷 | Lightning+Light | Chain + Holy | Afterglow Circuit: Chain軌道へ短時間の追加判定 |
-| VOIDSTORM / 虚雷 | Lightning+Dark | Chain + Curse | Space Jump: Portal間を跳ぶEnergy |
-| ECLIPSE / 日蝕 | Light+Dark | Holy + Curse | Total Eclipse: Gaugeから時限State+専用AoE |
-
-- Fusion Signatureの追加Damageは`apply_secondary_damage()`だけを使い、Element Combat入口へ再投入しない。
-  Death/AoE/Spread/ChainからFusion→Element→Fusionの再帰を起こさない
-- Fusion Powerは継承属性Payloadと専用Traitを強化し、Fusion Echoは元Hitごとに最大1回、
-  Fusion HasteはInterval/Cooldownを短縮する。Signature Rank 1〜3は各固有Mechanicの対象数、範囲、
-  Gauge、蓄積、Spread等を段階的に進化させる
-- PlasmaはLightning Chain先ごとにFireのBurn/AoEを適用し、各到達敵へOvercharge Coreを残す。
-  Core更新中は爆発させず、更新/無効ID収集とDetonationを別Phaseにする。Coreごとの死亡Signalは
-  時間爆発、無効Target、Runtime Resetで解除し、死亡時はOne-shot Callbackから1回だけ爆発する。
-  Dictionary参照は`get()`を使い、AoE死亡による再入削除や`queue_free`済みHealthを直接参照しない
-  Radiant ArcはChain先ごとにLight Hit/Holy進行を適用し、細い軌道を0.16秒だけ残して
-  `apply_secondary_damage()`による追加判定を1回行う。内部IDは既存Save/Test互換のため`judgment`を維持する
-- 旧2属性完成武器は同時生成しない。職業Weapon数、職業Projectile、通常Auto AttackのThemeを変えない
-
-### 29.4 Fusion Presentation / 成立演出
-
-- Fusion中は内部で2属性Traitを適用しても通常属性Hit Spriteを重ねず、専用Fusion VFXだけを表示する。
-  居合Trailも現在Fusionの現象表現へ切り替える
-- VFXは既存属性Spriteの合成・色替えではない。組み込みImageGenで全10 Fusionを別々の新規Pixel Artとして生成し、
-  `assets/vfx/fusions/<fusion_id>/fx_fusion_<fusion_id>_<mode>_6f.png`へ保存する。
-  各FusionはAttack / Trail / Hit / Burst / Introの5枚、各画像は64px×6 frameの透過Sprite Sheetとする
-- 現象設計はThermal Shock=小さな蒸気圧破砕、Plasma=細いChain+各着弾Fire Burst、
-  Solar Flare=火炎帯+短い光線、Inferno=小型黒炎+Soul Ember、Superconductor=細い放電+結晶破砕、
-  Aurora=氷片+短い屈折光、Black Ice=黒い亀裂+氷片、Radiant Arc=白金の細いChain+小Holy Burst、
-  Voidstorm=欠けた紫電、Eclipse=光Burstを横切る闇亀裂とする。巨大紋章、柱、Portal Ring、
-  Event Horizon、画面を占有するCoronaを主役にせず、元属性と同じ小VFXを反応回数で豪華にする
-- `FusionVFXData` Resourceが5画像を保持し、`DataLoader.fusion_vfx_effects`からRuntimeへ供給する。
-  `FusionVFXEffect`は対応する6 frame `AnimatedSprite2D`を主描画として再生し、旧Canvas形状とParticleは
-  低Alphaの補助Layerだけに制限する。Formation/StateはIntro、Signature/Pillar/PortalはBurst、SoulはTrailを使う
-- 画像は18fps。Attack/Trail/Hit/Burst/Introの表示寿命は概ね0.42/0.32/0.38/0.50/0.72秒、
-  主Sprite倍率は0.74〜1.12とし、現行Element Hit/Chainと同じ占有率へ収める。
-  Gameplayを止めずPresentationだけを間引く同時Fusion VFX上限192を設ける。通常Attack/Hit等は176枠までとし、
-  Fusion成立Introが高密度Hitの末尾で欠落しないようFormation用16枠を予約する
-- VFXはCollision/Hitboxを持たないVisual-only Nodeで、実時間Lifetimeにより自己解放する。
-  瞬間的な多層Burst/Glow/Shake/Hit Stopは許可するが、長時間の白画面・暗転・Player/予兆の不可視化は禁止する
-- 各FusionはAttack=区間中央で横展開するPixel Sprite、Trail=区間中央固定の方向追従Sprite、Hit=着弾Sprite、Burst/Signature=拡張Sprite、
-  Formation=Intro/Awakening Spriteの用途別画像を持つ。全10種×5用途は同じVisual-only APIで生成し、
-  Element SpriteやGameplay Collisionを再利用しない
-- `tools/build_fusion_pixel_vfx.py`は全50 Sprite Sheetへ共通Lifecycleを適用する。frame 0〜3は
-  中央から可視形状を増やし、frame 4〜5は外周を不規則に欠かせて短い破片へ分解する。
-  全体Opacity倍率やGodot側のAttack Sprite座標Tweenは使用しない
-- 成立時は元2色のShardがPlayerへ収束→消失→新Fusion Core/衝撃波→
-  `ELEMENT A × ELEMENT B → FUSION NAME`を約1〜2秒表示する。最後の通常Lv3演出は重ねない
-
-### 29.5 Runtime State / 検証基準
-
-- `GameManager`が2属性Stack、General/属性/Fusion Mastery、`active_fusion_id`をラン内管理する。
-  Run開始/終了/Retryで、Fusion Gauge、Mark、Soul、Portal、Plasma Core、Timer接続を含め全てResetする
-- `ElementCombatSystem`は継承Trait、`FusionCombatRuntime`は第3Trait、`AttackVFXManager`と
-  `FusionVFXEffect`はPresentationだけを担当する。GameplayとVFX欠損を相互依存させない
-- 必須回帰は`element_reward_pool_check`、`element_fusion_matrix_check`、
-  `element_damage_scaling_check`、`fusion_trait_check`、`fusion_proc_safety_check`、
-  `fusion_chain_grammar_check`、
-  `fusion_runtime_integration_check`、`fusion_pixel_art_asset_check`、`developer_test_lab_check`、
-  `fusion_pixel_art_lab_visual_check`、`plasma_core_lifecycle_check`、`burn_lifecycle_check`、`element_system_2_visual_check`、
-  `element_system_2_soak_check`
-- Vulkan GUI成果物は`artifacts/element_system_2/`へ保存し、報酬5状態、成立瞬間、
-  全10FusionのAttack/Hit・大量戦・Boss戦、10種一覧、各Fusionの5用途比較、Soakピークを
-  比較できる状態にする。現行実Game GUIテストは47画像を生成する。
-  さらに`artifacts/fusion_pixel_vfx_gui/`へDeveloper Test Lab内の全10種×5用途10画像、
-  全10 Intro一覧1画像、Lightning/Plasma/Lightning、Fire/Plasma/Fire、
-  Lightning/Radiant Arc/Lightningの3比較画像を保存する
-
 ## 30. Developer Test Lab（2026年8月10日）
 
 ### 30.1 起動と安全境界
@@ -2548,6 +2321,7 @@ Element ModifierのGameplay/VFX/Masteryは`ElementCombatSystem`と`FusionCombatR
   命中判定直前の移動入力で逆方向へ反転して至近距離の敵を永久に外さない。
 - `ChaseStrategy`は直接床Lineが通る間は従来の直進を使い、障害物で遮られた場合だけ280ms間隔の軽量Grid経路へ切り替える。
   中間Cellは周囲1 Cellの床余白を要求し、柱角へPlayer/EnemyのCollisionが食い込んで停止する経路を選ばない。
+  この「周囲1 Cellの床余白」判定と再探索の間引きは2026年9月に性能上の理由で作り直した（38章参照）。
 - 敗北Entityは死亡Animation終了までTreeへ残るが、HP 0への遅延Healを拒否し、`EnemyBasic._on_died()`も一度だけ処理する。
   Aura/Elite Affix等の遅延Heal後に2回目の`died`を発火し、`death_finished`を二重接続する競合を防ぐ。
 - Plasma/Burn/FusionのDictionaryは参照前に`get()`/型/Instance有効性を確認し、死亡・Timer・ROOM ResetのCleanupを冪等化する。
@@ -2599,6 +2373,8 @@ Element ModifierのGameplay/VFX/Masteryは`ElementCombatSystem`と`FusionCombatR
 
 ## 34. 3MAP探索Run（2026年8月25日）
 
+**現行追記（2026-09-23）:** 大群・自動攻撃・広いランダム部屋へ復帰。現行仕様は本書末尾の2026-09-23節を参照。以下は2026-09-15時点の履歴：3つの作画テーマを各20層、計60層へ拡張。各層は`ExplorationLayout`で再生成し、部屋別の有限遭遇、番人の鍵、各層のボス、別位置の階段を使う。旧撃破数・大量自然湧き・3MAP終了の数値は履歴として以下に残す。現在値は本章末の2026-09-15節を参照。
+
 ### 34.1 通常経路と互換境界
 
 - `scenes/game.gd`は通常Main Scene時だけ`GameManager.start_run(false, true)`から`MapRunController.begin_run()`を呼ぶ。
@@ -2611,50 +2387,1603 @@ Element ModifierのGameplay/VFX/Masteryは`ElementCombatSystem`と`FusionCombatR
 
 | MAP | 寸法 / 部屋 | 目安 / Boss解放（救済） | 通常敵HP / Damage | 同時上限 | Boss HP / Damage |
 |---|---|---|---|---|---|
-| 1 忘却の地下回廊 | 78×78 / 10 | 約10分 / 420体（15分） | ×2.50 / ×1.00 | 32 | ×2.2 / ×0.62 |
-| 2 紫晶の深層 | 86×86 / 11 | 約11分 / 650体（16分） | ×3.25 / ×1.10 | 40 | ×3.8 / ×0.72 |
-| 3 終焉の炉心 | 94×94 / 12 | 約12分 / 900体（17分） | ×4.00 / ×1.20 | 48 | ×5.8 / ×0.82 |
+| 1 忘却の地下回廊 | 78×78 / 10 | 約10分 / 420体（15分） | ×2.80 / ×1.00 | 96 | ×3.0 / ×0.62 |
+| 2 紫晶の深層 | 86×86 / 11 | 約11分 / 650体（16分） | ×3.60 / ×1.10 | 144 | ×4.6 / ×0.72 |
+| 3 終焉の炉心 | 94×94 / 12 | 約12分 / 900体（17分） | ×4.50 / ×1.20 | 192 | ×6.8 / ×0.82 |
 
 - 難易度はMAP番号・MAP内時間だけで決まり、Player火力、Attribute/Fusion/装備所持数から逆算しない。
 - Boss領域は固定Timer待ちでは解放しない。通常は各MAPの累計撃破数で封印を解き、さらに最遠部のBoss Areaへ到達してE/Xを押す。
   拡散力のない極端なBuildでもRunが詰まらないよう15/16/17分だけ救済解放とし、HUDには撃破進捗と救済までの残り時間を表示する。
 - MAP1開始Poolの平均HPは初期Soldier通常攻撃換算で約8.0Hit。後続MAPは想定Build成長を受けても
   通常敵8〜15Hit、強敵15〜25Hitを基準にする固定倍率であり、RuntimeのPlayer能力追従補正は行わない。
-- `WaveSpawner`はPlayerから220〜480pxの床に1〜3体ずつ自然生成する。MAP内間隔は1.35→0.62秒へ変化し、
+- `WaveSpawner`はPlayerから220〜480pxの床に自然生成する。MAP開始時は2.80秒ごとに1体、
+  90/210/360/540/720秒のBreakpointを経て、出現間隔は従来のまま、同時数だけ
+  1→1〜2→2〜3→3〜5→5〜8→8〜12体へ段階上昇する。生存敵上限はMAP1/2/3で96/144/192体。
   Boss/Elite Encounter中は停止する。MAP切替で床Cache、Elite/Boss停止Counter、進行Offsetを必ずリセットする。
+- 各MAPはBoss必要撃破数の25% / 50% / 75%で侵攻（Surge）を開始する。未到達時はMAP 1=
+  180/360/540秒、MAP 2=195/390/585秒、MAP 3=210/420/630秒で同じ侵攻へ入る。
+  侵攻は45秒、Spawn間隔×0.5、同時Spawn batch×1.5。整数化後も生存敵上限96/144/192を共用し、
+  敵HP・敵1発Damage・`MAX_DAMAGE_PER_HIT_RATIO`は通常時から変更しない。
+- 侵攻中はHUDへ回数/残り秒/敵密度上昇を常時表示し、Stageを短い紫系Toneへ変える。開始/終了SFXを鳴らし、
+  終了ごとにRecovery→Equipment→Recoveryの順で確定DropをPlayer付近の到達可能床へ生成する。
 - `game.tscn`で旧ROOM/Test Lab用にDisabled配置された`WaveSpawner`/`EliteRoomManager`は、
   `MapRunController.begin_run()`時だけInheritへ戻す。通常MAPで自然SpawnとElite Areaが停止したままにならないこと。
 - COMBO猶予は3.5秒。Triggered hitは数値へ加算するが猶予を更新せず、戦闘が途切れれば自然に切れる。
 
-### 34.3 探索配置・報酬・回復
+### 34.3 戦闘地形と生成タイル
 
-- 各MAPに通常/希少宝箱4、Attribute祭壇1、生命祭壇1、最遠部Boss領域1を配置する。
+- 各通常生成MAPは専用Boss Arenaを先に予約し、他の部屋へArena / Pillar Field / Chokepointを割り当てる。
+  Arenaは四方からの大群処理、Pillar Fieldは直線追跡を切る回避を担う。
+  2026-09-05追加修正で、橙の格子が並ぶHazard領域と床Damageの生成を廃止した。
+  Chokepointは横長部屋内の縦短壁と中央3セルの開口だけ維持し、縦長部屋へ並ぶ横短壁は生成しない。
+- Pillar/Chokepoint障害物は通常壁と同じTileSet Physics layer 1を使用する。Pillarは2x2セルの一体画像で、
+  A/B 2種を決定的に混在させる。柱本体2セル+通行間隔3セルの5セルpitchと中央十字レーンを維持し、
+  4セルすべてをPlayer/敵が通過しない。下地は同じ石床にCollision alternative 3を付け、柱の透過画像を別Layerへ重ねる。
+  旧Hazard型/画像/設定値は互換用に残るが、通常MAPの割当とArea生成からは切り離す。敵の毒床など攻撃Hazardは対象外。
+- 敵の出現位置は`DungeonMap.get_spawn_cells()`を使い、既存の3×3通行余裕がある床に限定する。
+  噴水はPillar FieldのB画像であり、4セルの障害物登録/Collisionは正しかったが、旧精鋭部屋の矩形乱数には
+  床検査がなく内部へ生成できた。床だけを見る通常/巡回精鋭/Bossも、本体半径ぶんの余白を取っていなかった。
+  室内精鋭は同じ部屋内の安全床、通常/サージ/巡回精鋭/Bossは従来の距離条件と安全床を併用する。
+  Boss召喚の円周候補も`find_spawn_position_near()`で安全セルへ寄せる。地形/本体Collision/敵数値は変えない。
+  安全床一覧は既存clearance cacheと同時に構築し、地形変更まで再利用する。毎Spawnで全床の通行判定をやり直さない。
+  候補なしは`Vector2.INF`を返し生成を中止する（地形内へのfallback/無限再抽選なし）。
+  全員生成できない精鋭部屋は既存の空部屋解放処理、巡回精鋭は既存の再試行に従う。
+  `tests/fountain_spawn_check.tscn`で実噴水Collision・各出現経路・実精鋭移動・実Boss召喚・空候補を検証する。
+- 生成後はSpawn床から全床への4近傍BFSを行う。`tests/map_terrain_rhythm_check.gd`は3サイズ×12 seed=
+  36生成MAPについて到達不能床0、現行3地形、Hazard不存在、壁下地と透過装飾、障害物を自動検証する。
+- 床・収納装飾は`assets/tiles/royal/dungeon_atlas.png`（352x192）を使用する。
+  普通壁は元の暗い上面/明るい正面を保持し、加工した接合部とともに`wall_relief.png`へ集約する（§35.8）。
+  `CombatTerrainTileMapLayer`は`assets/tiles/royal/combat_atlas.png`（128x96、16px単位8x6）を使用し、
+  Arena=row 0 col 0〜3、Hazard=row 0 col 4〜7、Pillar床=row 1 col 0〜3、Chokepoint床=row 1 col 4〜7、
+  旧Chokepoint壁/Pillar合成済みタイルは現行描画に使わない。短壁は主壁材、柱は`wall_overlays.png`を使う。
+- `tools/build_royal_dungeon.py`が生成原画`tools/source_art/royal_dungeon_source.png`から再生成する。
+  床は地形タイプをまたいで同じ青灰色石材。通常MAPには危険噴出口を描かない。
+  壁正面/天面は方向で選び、緑/紫のランダムな色帯は使用しない。樽/木箱は1タイル内に全体を収め、
+  壁奥へ退避する入口柱、void境界の柱列、柱に見えるアーチ装飾は廃止する。
+  入口は元の床開口に敷居を置き、旗・格子・松明は直下に床がある正面壁だけに配置する。
+  正面壁の旗/格子/壁付柱は透過Overlayとして重ね、下地の壁や笠木を置換しない。
+  2x2柱・噴水の通行不可範囲は維持。Boss部屋予約と撤回したHazard/横短壁以外の地形構造は維持する。
+  松明16x24は6コマ8fps、結晶24x24は静止画を整数2倍表示。開始床に透過の金象嵌を配置する。
+  2x2障害物のA/Bは柱/噴水。`artifacts/royal_dungeon_asset_preview.png`はオフライン素材組立見本であり、Runtimeの証拠ではない。
+- MAP2「紫晶の深層」とMAP3「終焉の炉心」は、MAP1と同じ部屋生成・通路・Boss予約・安全床・衝突規則を使い、
+  景観素材だけを専用化する。MAP2は暗紫の連続石床、青緑の鉱脈、紫晶群・封印碑・採掘台車。MAP3は煤けた炉床、
+  赤熱亀裂、溶鉱炉・金床・歯車・排気塔で構成する。voidもMAP2は濃紺、MAP3は暗い焦茶へ分離する。
+- MAP2/3の床は256x256の連続Macro Atlasを16px単位で参照し、部屋ごとに32pxの亀裂・鉱脈・格子・残滓を
+  決定的に配置する。16px単位で同じ印が並ぶCombat Overlayは透明化し、壁の色線も反復させない。
+  大型小物は各MAP4種、MAP2は18個、MAP3は16個を置く。全て足元Collision付きでPlayer/敵が通過しない。
+- MAP2/3の壁Atlasは1024x256。床8近傍256形状ごとに4種の石組みを持ち、座標Hashで欠け・継ぎ目を変える。
+  結晶埋没／鉄帯／炉刻印の強い装飾は約2%だけに置き、長い壁で同じ記号を反復させない。
+  透過壁装飾もMAP別に生成し、入口旗、Boss旗、壁柱、檻、Pillar Fieldを紫晶建築／炉心建築へ分離する。
+  MAP2/3だけ壁掛け・檻をやや増やし、MAP1の密度と素材は変更しない。
+- `tools/build_map_themes.py`が両MAPのRuntime素材を再生成する。`tests/map_theme_check.tscn`は専用床、Detail、
+  4種小物、壁・小物Collisionを3MAP同条件で検証し、`tools/capture_map_themes.tscn`は
+  `artifacts/map_themes/map1.png`〜`map3.png`を比較用に保存する。
+
+### 34.4 探索配置・報酬・回復
+
+- 各通常MAPに通常/希少宝箱4、生命祭壇1、最遠部Boss領域1を配置する（Attribute祭壇は§36の廃止に伴い生成しない）。
+  Boss部屋indexはGenerator/描画/Controllerで共有し、探索宝箱・生命祭壇・Elite部屋を同じ部屋へ割り当てない。
   宝箱/祭壇/Boss領域はPlayerの共通Interact登録を使い、範囲外E/X、二重Open、二重Rewardを拒否する。
-- XP Level UpはAttribute 3択。Skillは通常宝箱の割当と各MAP Boss宝箱だけ。Fusionは6回目のAttribute取得を目安に
-  MAP1後半〜MAP2で成立する。旧Concept Parts/Boardは通常UIへ出さない。
+- XP Level Upは6章/36章の統合成長3択。Skillは通常宝箱の割当と各MAP Boss宝箱だけ。Fusionは
+  属性Lv選択で両属性がLv3へ到達した時点で成立する。旧Concept Parts/Boardは通常UIへ出さない。
 - Skill候補は現在の1〜2属性だけから選び、完成大技へ+1.65の初回Weightを与える。取得済みSkillのLv.UP優先は従来どおり維持する。
 - 通常敵装備率2%、MAP Eliteは1体ごと確定、Bossは最低1個確定。宝箱Equipmentも実物Ground Itemとして生成する。
   Recoveryは通常/EliteのHeart Drop、宝箱Heart、生命祭壇40%、MAP間25%、Level Up12%を使用する。
 - C/I Character ScreenはMAP戦闘中もModal pauseで安全に開け、Inventory/Equip/Mergeは通常Run進行と同じラン状態を参照する。
 
-### 34.4 遷移・表示・検証
+### 34.5 遷移・表示・検証
 
 - 遷移はMAP間だけ。濃紺Pixel Overlayを表示し、`StageEnvironment.build_dungeon_async()`で敷設する。
   壁装飾/檻/結晶候補は全矩形走査ではなく床近傍/Room外周/床Cacheから列挙する。
 - MAP HUDは2行進捗と案内文を別領域へ置く。Boss戦中はMAP進捗を一時非表示にしてBoss名/HPを優先し、終了後に復帰する。
 - `--map-runtime-check`は実Game SceneでAttribute、3MAP、各Boss、Boss宝箱、Skill、Run Clearを短縮完走する。
   MAP2/3遷移の2026-08-25 headless最終実測は最大slice 21.842/24.338ms（最適化前53.698/71.546ms）。
+- 同Checkは3MAPすべてで撃破率/時間の両入口、侵攻3回の終了、確定報酬、Spawn間隔/Batch、敵上限、
+  Damage倍率不変も検証する。`--map-terrain-rhythm-check`は実Tile描画、Physics layer 1、通常MAPのHazard不存在、
+  柱越しの敵追跡をVulkan Runtimeで検証する。
 - `--map-combat-check`は4倍速・雷Lv3+雷帝落雷Lv1のMAP1中盤代表Build、通常移動Input/実近接Hitboxで、
-  自然撃破420/420を論理370.6秒で確認する。大技なしの比較実測は209体/840秒で、Build取得による殲滅差を確認する。
-- `--map-soak-check`は20倍速で論理2006.3秒、自然Spawn、通常宝箱12、Elite完了経路、3Boss、
-  全遷移、敵上限32/40/48、Run Clearを確認する。
-- `--map-gui-capture`はRTX 4060 / Vulkan Forward MobileでMAP開始、Boss領域、Boss戦を
-  `artifacts/map_exploration_*.png`へ保存する。Debugger gameplay error、暗転残留、HUD重なりは0件。
+  Phase 1調整後の自然撃破424/420を論理432.3秒で確認する。序盤78秒25体、中盤308秒207体、
+  終盤432秒424体と増加率が明確に上がる。4倍速・検証用高HP条件のため実プレイヤー中央値ではない。
+- `--map-soak-check`は20倍速で論理1998.5秒、自然Spawn、時間側侵攻3回/各MAP、通常宝箱、Elite完了経路、
+  3Boss、全遷移、敵上限32/40/48、Run Clearを確認する。
+- `--map-gui-capture`はRTX 4060 / Vulkan Forward Mobileで4地形を`artifacts/map_region_*.png`、
+  侵攻中画面を`artifacts/map_surge.png`へ保存する。Combat地形差し替え後も4地形、2x2 Pillar、Player/敵/宝箱の
+  可読性を確認し、Debugger gameplay error、暗転残留、HUD重なりは0件。
 - 31〜33章のROOM数値・検証結果は旧方式の回帰資料であり、現行通常Runの進行仕様は本34章を優先する。
+
+## 35. 古王国Pixel UI（2026年9月5日ブラッシュアップ）
+
+既存のHUD・Shop・LevelUp・宝物庫・鍛造を「朽ちた王国の地下遺跡」で統一する。
+今回の変更は表示と所持品の操作補助。戦闘数値・抽選・価格・セーブ・成長条件は変えない。
+
+### 35.1 色と文字
+
+`PixelUIStyle` / `RetroHUDStyle`は濃紺 `#151b29`、青紺石板、古金
+`#9d7138 / #d6a957`、象牙文字 `#f2e6cd`、緑玉 `#70d5cc`を基準にする。
+HPは赤、職業スキルは青緑。本文20px、補助18px以上、見出し24〜32pxを基準にする。
+文字は可読性を優先し`assets/fonts/MPLUS1p-Medium.ttf`（Google Fonts公式/OFL同梱）を使用する。
+FontFileはgrayscale AA有効・subpixel配置無効。通常Labelに加えRichTextLabelのnormal/bold等も同じ書体へ揃える。
+小さい日本語のドット書体・太い縁取り・影重ねを廃止する。枠/装備画像/マップのPixel Artと最近傍表示は維持する。
+既存Sceneは同じテーマを使い、欠落時だけGodotフォントへフォールバックする。
+
+### 35.2 枠・装飾
+
+`RetroPanel.content`はそのまま使い、48x48の金属9-slice（patch 10px）と濃紺中央へ変更する。
+旧グラデーション/ガラス光沢/複数Glow矩形は描かない。古金の角鎹・緑玉の印章・翼付き紋章は
+`PixelUIStyle.RelicOrnament`の非AAドット描画で加える。Containerの本文レイアウトから装飾を分離する。
+静止パネルは毎frame更新せず、サイズ・フォーカス変更時だけ再描画する。
+
+### 35.3 HUD配置
+
+1600x900基準で、左上に職業/LV/HP/細いXP、上中央にMAP名・封印解除進捗・時間救済の案内、
+右上に所持金と探索情報、下中央に職業スキルとSPACE/残り秒数・5段階ピップ、右下にComboを置く。
+実Boss戦中は既存Boss名/HP表示を優先する。旧属性/Fusion欄は復活させない。
+HP枠は370×132px、技枠は560×96px。MAP本文20pxには濃紺の静的背景を付け、背景タイルから分離する。
+HP/技の本文20px、Gold22px。取得時の動的通知も同じ日本語書体を使う。
+LVバッジは濃紺背景と金文字にする。右上トレイは幅276px内で132px×2列へ折り返す。
+武器/アイテム/完成技は18pxの固定幅Labelで名前だけ省略し、個数/Lvは残す。全文はTooltipへ表示する。
+`RetroSegmentGauge`と`RetroPipRow`は既存値を描画するのみで、成長・ダメージ計算は持たない。
+
+### 35.4 選択画面
+
+- LevelUpは「魂の刻印」。3枚の石板に種類・アイコン・名前・説明・取得段階を分離し、
+  現職固有/状態反応/基礎能力を見分ける。候補生成や付与効果は既存のまま。
+- Shopは「灯火の遺物商」。ランタン/木箱と古金の紋章、4枚の商品カード、所持金/不足額、
+  購入後残高の案内を表示する。購入/リロール結果は自動focus復帰で消さない。
+- Keyboard/Gamepadでカードを選び決定する。Mouse必須にはしない。
+- Shopカードは420×250px以上、LevelUpは360×322px。種類18px・名前26px・本文/価格20px。
+  Shop4枚/LevelUp3枚を1600×900へ収める。
+- タイトルの説明は幅640pxの枠で折り返し、文字拡大で枠外に出ないようにする。
+- 宝物庫と鍛造の整理・候補補助・演出は§23.6。部品再利用を優先する制約より世界観の一貫性を優先する。
+- アイテムボックスは左に装備紙人形、中央に5列所持品、右に大きな選択Icon・Rarity・部位・現在装備との差分を置く。
+  濃紺石板、古金の装備枠、青緑の操作焦点、Rarity色の外枠を同時に使い、画像モックと実画面で同じ情報階層にする。
+  Complete UI Book Styles Pack FreeのCoin／Starを所持金とお気に入りへ最近傍表示で使う。青緑の選択角は
+  伸縮によるPixel崩れを避けるため整数座標で描き、Creditと変更内容は`assets/ui/complete_ui_pack/README.md`と各Licenseへ記録する。
+
+### 35.4b 生成石枠の全画面展開（2026-09-11）
+
+**同日更新・タイトルの例外**: タイトルは専用キービジュアル`title_sealed_kingdom.png`を採用。共通石枠・見出し札はタイトルから撤去し、銀のVS GAMEロゴと封印門の一枚絵に、左下の文字メニューを重ねる。通常探索・演出確認室の選択は維持。下記のタイトル石枠適用は旧版の記録。素材生成指示は`assets/ui/backgrounds/TITLE_KEYART.md`。
+
+
+- 共通`PixelUIStyle`のボタン・パネル・三択カード・主要枠を`relic_frame_art.gd`の生成画像へ統合。石の二重枠、古金の彫金、四隅金具を共有し、細枠と厚枠を用途で分ける。アイテムのレア度枠は従来の識別色を保持。
+- レベルアップ三択は王家の紋章と青緑、ボス戦利品三択は新規生成の髑髏紋章と赤銅。タイトルと6職選択には尖形の見出し札を配置。共通スタイルを使用するショップ・探索記録などにも石枠が反映される。
+- HUDのHP／EXP、MAP状況、武装・戦利品欄、金貨、能動技、コンボを同じ素材へ変更。ゲージ・数値・戦闘判定は既存のまま。
+- 三択UIの画像変更は既存ItemSelectへ接続。停止済みの旧属性宝箱や完成大技報酬の通常MAP経路を復活させる変更ではない。
+- 生成原画・プロンプトは`assets/ui/relic_frames/`。報告用実画面6枚は`artifacts/crafted_ui/`。今回はユーザーの希望に沿って全体テストを行わず、実画面を撮影した。
+
+### 35.5 今回の検証境界
+
+`tests/pixel_visual_check.tscn`は本編Sceneを使い、MAP/LevelUp/Shopを採取し、
+3択・4枠・キーボード決定・購入後focus・Modal解放・画面内収容を検査する。
+2026-09-05追検証: 新Royal版の2箇所の未型付け配列ループが座標`x := ...`の型推論を失敗させ、
+起動を阻害した。Dropは`for side: float`、鍛造は`for side: int`と明記し、描画内容を変えずに修正した。
+装備以外のControlがfocusを持つ際の`inventory_item`参照も`has_meta`確認後だけ行う。
+`tests/script_load_check.gd`による全147 Script実loadは失敗0。Title/Home/Game/Test Lab起動、
+VulkanのPixel Visual / Equipment Merge / Equipment IntegrationもPASS、最終ログのERRORは0件。
+同日追加依頼（壁内の柱/可読性/装備と鍛造の統合）では、VulkanのPixel Visual/Equipment Mergeと
+本編Map Terrainを再実行しPASS。36seed実描画で廃止柱0・正面壁装飾・到達性・床/障害物不変、
+本編のHazard tick/柱Collisionを検査。最新画像は`artifacts/readability_after_*.png`と`artifacts/equipment_merge_overhaul/`。
+装備50点/長文能力/別装備選択時の先頭復帰、Pause/天賦図最下段までのキーボード操作、
+実ItemData3択/Title/モード選択も最終VulkanでPASS。全148 Script実load失敗0。
+全MAP移動・長時間・物理Gamepad検証などの残りは`docs/royal_visual_implementation.md`を参照する。
+
+### 35.6 移動接触・壁の背面・画像VFX統一（2026年9月5日）
+
+- Player/Enemy本体は押し合わず通過する。壁と同じlayer=1を使うPlayerを、Enemy生成時に
+  本体衝突だけ相互除外する。壁・Hurtbox/Hitbox・拾得Areaは除外しない。
+  予備動作後の通常敵攻撃、Boss攻撃、武器のKnockbackは維持する。新しい接触ダメージは加えない。
+- 壁の元の正面/天面の立体表現を保持し、§35.8の接合加工済みAtlasを使う。
+  旧`wall_edges.png`は縁だけを素材として使用し、別色の中央部分は使わない。建築配置の整理は§35.7を参照。
+- 生成VFXは`assets/vfx/pixel/`へ保存。34種の64×64×6コマPNGと、警告輪/弾Core/Drop紋章の静止PNG3枚。
+  Space12種、Concept6種、完成大技5外観、武器Theme Hit5種、Beam/Chain/大量撃破/Drop/Forge/毒床へ接続する。
+  元属性/Fusionシステムは復活させない。既存の画像Projectile/Pulse/通常Hit/Critical Hitと本人の残像は保持する。
+  不要な通常攻撃の黄色い三日月は引き続き出さない。
+- `PixelSpriteVFX`で6コマの形成→成長→外周崩壊→残滓を再生する。本体Position/AlphaをTweenしない。
+  透過画素は0/255、Nearest。SpriteFrames/Textureを共有し、実行時のImage読み戻しは行わない。
+  Space/Conceptの描画だけ最大192world pxに抑え、広い攻撃半径で原画を巨大化しない。実ダメージ範囲は不変。
+  敵の警告輪はこの表示上限の対象外とし、実攻撃半径へ合わせる（64px原画の円周本体外端25px、目盛りは別）。
+- 戦闘画像の生成は最大96個・1frame32個。大量撃破は6個を再利用する。
+  VFX予算からダメージ/状態付与へ分岐しない。合成用はトランザクションにつき独立した最大1枚。
+- カメラシェイク/Hit-stop、短い画面フラッシュ、Bossの本体縁取り、頭上の状態情報UI、静的な宝箱/炉/ランドマークは
+  今回の攻撃画像化とは別。全ての描画コードやShaderを機械的に削除するものではない。
+
+調査の根拠・全画像の接続先・実測ログ・検証範囲は`docs/pixel_vfx_and_contact.md`。
+生成は組み込みimage_genを使用。全採用プロンプト/元画像は`assets/vfx/pixel/source_manifest.json`と`sources/`、
+再整形スクリプトは`tools/import_generated_pixel_vfx.py`。元画像は`.gdignore`で実行時import対象外とする。
+
+### 35.7 壁装飾の透過分離・不要地形撤去・Boss広間（2026年9月5日）
+
+- 撤去対象は橙の格子状Hazardエリア（床Damageも廃止）と横方向の短壁。縦の小壁、正面の金縁、上/側面の壁厚は残す。
+- `wall_overlays.png`（128×64）は元画像の旗・壁付柱・格子・浮彫・床柱・噴水の透過部分を保持する。
+  `WallOverlayTileMapLayer`/Source 3で描き、下地の壁材や床材を消さない。床柱は2×2セルの同じ矩形Collisionを維持する。
+- `DungeonMap.boss_room_index`は開始位置から部屋中心への距離二乗が最大の部屋。同距離では後index。
+  通常MAPは配置候補の段階で14×14マスの広さと隣室からの余白を確保し、配置後の拡幅は行わない。
+  Boss部屋の196セルは全て通行可能。柱・短壁・Hazard・Elite・探索報酬を置かない。
+- Boss広間は既存の青灰色の石床を継続し、内周に古金の象嵌、中央に256world pxの薄い床紋章（2026-09-22以降：待機中のみ・不透明度28%、戦闘中／撃破後は非表示）、
+  実在する正面壁へ左右一対の王旗・壁付柱・松明を置く。入口を塞がず、片側しか置けない壁装飾は無理に配置しない。
+  無作為な樽/瓦礫/結晶を広間へ散布しない。Bossゲートの旧紫色矩形描画は撤去し、紋章下に読みやすい操作案内を置く。
+- Boss解放の撃破/救済条件、E/X操作、出現位置、攻撃/報酬/ショップ導線は変更しない。
+  画像は静的TileMapとSpriteとして描画し、常時処理/Particle/Shaderを新設しない。
+- 新規画像`boss_floor_seal.png`（128×128）と`boss_floor_border.png`（48×48/9-slice）は組み込みimage_genで制作。
+  保存先は`assets/tiles/royal/`。承認済みPython整形は`tools/build_royal_dungeon.py`、
+  原画/全プロンプトは`tools/source_art/map_architecture_manifest.json`（原画は`.gdignore`でimport対象外）。
+
+### 35.8 元の立体壁・明るい縦壁とL字の統一・松明/結晶（2026年9月5日）
+
+- 2026-09-11: 水晶に可視外接矩形の下側55%・幅80%の足元衝突を追加。Sprite再利用時に衝突も無効化／再設定する。樽・壺は16pxタイル座標の(-6,-2)〜(6,7)を衝突矩形とし、装飾レイヤーの実拡大率へ追従する。双方とも壁と同じcollision layer 1を使用。床模様・松明は非衝突。
+- 同日: MAPの「生命の祭壇」（赤い台座）は生成停止。宝箱との重複表示を解消する。宝箱、Bossゲート、回復ドロップの処理は維持。
+
+
+- ユーザーの実機評価により平面的な`wall_material.png`案を撤回。元のRoyal壁へ戻し、
+  `dungeon_atlas.png`の暗い上面(7,3)・明るい正面/金笠木(9,3)の石積みと立体陰影を保持する。
+  正面の高さ16pxと側面の横幅は別の表現であり、同幅/同輝度に平坦化しない。
+  縦壁はユーザー画像の紫枠内にある既存の明るい壁が基準（石を紫色へ変更する意味ではない）。
+  `wall_edges.png`のセル2・左3px（明るい石2列＋接触目地1列）を使い、右側は同じ画素の水平反転。
+  暗い右側セル4や角用の別色材を混ぜない。壁本体は元の上面へ揃え、距離0.7 Tintを復活させない。
+- `assets/tiles/royal/wall_relief.png`（256×256）は16px×256タイル。Source 5の通常壁専用Atlas。
+  `StageEnvironment._wall_neighbor_mask`は床の8近傍N1/E2/S4/W8/NW16/NE32/SE64/SW128を使用し、
+  `(mask & 15, mask >> 4)`を選ぶ。Sが床なら元の正面、それ以外は元の暗い上面と同一材の明るい縁を使う。
+  SW/SEの内L・正面外角も幅3pxへ統一し、4〜15行は直線縦壁の画素をそのまま連続させる。
+  内Lの0〜3行だけ隣接する正面端3pxを水平反転して笠木を接続し、外角の上4行は元正面のまま。
+  NW/NE内角も同じ縦材の3×3pxを使う。暖灰色4pxの旧生成Lと正面端列を全高へ貼る方式は使わない。
+  全256タイルの中央8×8pxは元の上面または正面そのまま。元画像を別の石模様で置き換えない。
+- 同期・非同期とも`_set_wall_cell`へ接続。床柱の下地alt 3を優先し、元の16px矩形Collisionを保持する。
+  床/壁の地形、BFS描画範囲、出入口、Boss領域、松明の配置座標、data/数値は変更しない。
+  壁画像はオフライン合成・静的TileMap。毎フレームの画像生成や追加Shader/Particleはない。
+- 松明の1コマ画像を`torch_6f.png`（96×24、16×24×6コマ）へ変更し、8fpsのループを再生する。
+  上12行の炎は6種類の異なる形、下12行の金具は全コマ同一。Position/AlphaをTweenしない。
+  全コマ共通の下端透明余白を除き、炎の根元（11行目）を金具（12行目）へ接続して浮きを防ぐ。
+  Shared SpriteFrames＋既存poolを継続。開始frame/速度に差を付け、未使用poolはhide＋stop、再利用時にplay。
+  静止画の結晶は再生停止。金具を含むSpriteの配置/大きさを変えず、炎のコマだけ動かす。
+- 現行接合画像は承認済みPythonの`tools/build_wall_relief.py`で既存画素の切出し・水平反転・合成から再現する。
+  前回のimage_gen角原画は保持するが現行builderでは参照しない。履歴/採用画素は`tools/source_art/wall_relief_manifest.json`。
+  好評だった炎画像/再生は変更しない。炎の原画/全プロンプトは`tools/source_art/wall_material_manifest.json`、
+  再整形は`tools/build_wall_material.py --torch`。旧平面壁の生成コマンドは現行壁へ接続しない。
+  壁は完全不透明、炎の背景は透過。PNGは`assets/tiles/royal/`、原画は`.gdignore`でimport対象外。
+- 検証は`tests/wall_junction_check.tscn`と`tests/wall_material_animation_check.tscn`。
+  256近傍/元画像保持/全側面の明るい3px一致/笠木と角の接続/Collision、実移動6ケース、3MAP同期非同期、実本編の同位置4時点で炎だけ変化、
+  同seed6回rebuildでpool増殖なし/非表示停止を確認する。描画は`artifacts/wall_material_animation/`。
+- 結晶は`StageEnvironment._scatter_crystal_decorations`から、実TileMapの描画セル中心を使って配置する。
+  24×24画像の不透明外接範囲（2倍表示で36×40px）を初回のみ取得/cacheし、矩形全体＋3px余白を検査する。
+  壁/void/柱/Boss広間/収納/壁Overlay/既存Spriteと重なる候補は使わない。壁際の候補を有限回だけ調べ、
+  セル中心から最大各軸8pxの内寄せを試す。安全な場所がなければ省略し、危険位置へfallbackしない。
+  画像・表示倍率・静止表示・既存poolは保持。全オブジェクトへ一律16px補正する変更は行わない。
+  `tests/crystal_placement_check.tscn`で36生成MAPの全不透明画素/3px隙間/他prop、同期非同期/座標変換/狭い床/poolを検証する。
+- 通路掘削後の薄い横壁、および松明の配置原点による一部はみ出しは別件として未修正。
+
+### 35.9 剣士の2.5D小規模試作（正式移行とは独立）
+
+- 入口はタイトル→ゲームスタート→「2.5D試作 / 剣士」。通常ゲーム／既存Test Labの入口は維持する。
+  `prototypes/hd2d/hd2d_arena.tscn`の単独1部屋（床25×17セル・柱4本）で120秒の生存戦を試す。
+  職業は剣士のみ、初期10体・通常上限24体。スライム/オーク/コウモリの既存データを使い、JSONの数値は変更しない。
+  自動通常攻撃、Space/Aの居合、撃破XP→既存3択強化、回復拾得を含む。
+  長いMAP進行・Boss・ショップ・装備合成・天賦図はこの試作へ持ち込まない。
+- 表示はGodotの実3D空間＋約30度の固定斜め上Camera3D。2026-09-06、箱を組み合わせた剣士モデルは撤去。
+  元SwordsmanのPNG/AnimatedSprite2Dを変更せず、待機/歩行/攻撃3種/被弾/死亡の選択中フレームを
+  QuadMeshへ同期する。専用Shaderでドット内だけの弱い面の丸み・銀鎧の反射・実照明を加え、輪郭は拡張しない。
+  Idle全コマの不透明範囲から高さ1.68単位と足元を固定。影も同じフレームのアルファを地面へ投影する。
+  Vは同じ画像・大きさ・足位置による「光加工あり／原画色のunshaded」比較。敵は既存Sprite3Dを維持する。
+- 舞台は「薄明の森」。新規生成した`assets/prototypes/hd2d/forest_props.png`（木2種/シダ/根と苔石）と
+  `forest_ground.png`を使用。木は前/中/遠の3層、草木は共有MultiMeshの計66個、石の境界と4障害物は
+  共有の面取りMesh。地面の十字ブロック舗装は使わず、外側の土面も連続させる。
+  草木は画像の根元baseline184/192で接地し、遠景だけに深度霧を使用。画面端の弱い陰影はUIより後ろに配置する。
+  松明は既存6コマ/8fps＋暖色2灯、主光源は寒色＋影。全敵への動的影、被写界深度、ボリューム霧は使わない。
+  生成原画・全プロンプト・整形手順は`tools/source_art/hd2d_forest_manifest.json`と`tools/prepare_hd2d_forest.py`。
+- 戦闘/敵AI/HP/衝突/XPは既存の2Dゲーム側を唯一の正として継続し、3D側は表示のみ。
+  `game.tscn`の試作インスタンスだけ起動スクリプトを外し、小MAPを与える。`scenes/game.gd`は変更しない。
+  試作インスタンスのStageだけ(-16,-16)補正し、32px=1単位でセル中心と3D壁/柱を一致させる。
+  居合の移動軌跡には固定位置の斬線を短時間残す。Phase 1でBoxMeshから滑らかな発光Quad/Shaderへ変更。
+  中心から展開し、端と幅を削って消す。火花は個別に散り、画像全体の横滑り/Alphaフェードは使わない。
+  `combat_effect_3d.gd` / `combat_energy.gdshader`が表示専用。居合最大24区間・寿命0.26秒。
+  AttackVFXManagerのhit_normal/criticalとEffectThemeManagerのhit_*を3D命中表示へ接続。
+  前者は元AnimatedSprite2Dの進行、後者は元PixelSpriteVFXのelapsed/durationに同期し、元Node終了で解放。
+  Nodeを挟むEffectThemeManager配下もvisibility_layer=0として、2Dの命中画像が画面へ重ならないようにする。
+  黄色い大量撃破演出mass_killは本試作で非表示（2D visibility_layer=0、3D proxy生成なし）。
+  撃破判定/報酬/元Poolの寿命は維持。他の既存Pixel VFXは従来どおり。生成PNGは削除・上書きしない。
+  ダメージ数字はCamera3Dの投影位置へ表示する。
+- Phase 1の敵縮尺: Idle全コマの不透明範囲を初回だけ測定し、剣士1.68に対しオーク1.50、
+  スライム1.05、コウモリ1.10の表示高を基準にする。透明余白を除外し、足元/アニメ中の伸縮を維持。
+  変更は3D表示のみ。敵のHP・接触判定・攻撃範囲や通常ゲームの敵サイズは変更しない。
+  この森を今後も実験室として保持する。自動攻撃方式は現状維持、攻撃が変化する装備の仕様/実装は保留。
+  旧VFX全体の整理・元剣士PNG内の描き込み斬撃の分離・Boss/ウェーブ/天賦は後続の別作業。
+- 操作: WASD/矢印/左スティック移動、Space/A居合、Esc/Bメニュー、R再試行、N敵追加（上限内）、
+  Lで点光源＋主光源の影を比較、Vで剣士の光加工／原画色を比較。UI決定はEnter/A。
+  UIのA/BはTitleと試作の滞在中だけ不足分を登録し、退出時は自身が追加したEventだけを除去する。
+  既存強化3択中は試作HUD/数字を隠し、Rで選択を飛ばせない。試作中の装備/天賦UIは無効化する。
+  死亡/120秒生存で再試行・タイトル帰還のメニューを出す。
+- SaveManagerのephemeral sessionを使用し、通常Saveファイルへ書き込まない。再試行で試作内の成長を破棄し、
+  退出で元職業・Dungeon参照・停止状態・独自Actionを復元/解除する。通常ゲームの2D描画を置き換える決定ではない。
+  回帰は`tests/hd2d_arena_check.tscn`、全57フレームの同期と接写は`tests/hd2d_character_visual_check.tscn`、
+  短時間の人工負荷比較は`tests/hd2d_performance_check.tscn`。
+  Phase 1の縮尺/新命中/2D重複防止/寿命/個数上限は`tests/hd2d_phase1_check.tscn`。
+  24体/48体・高HPの負荷チェックは本編の過去の性能問題を再現/解決した証拠として扱わない。
+
+### 35.10 HD-2D Phase 2 — 森の闘技場（独立試作）
+
+- 入口: GAME START→「2.5D Phase 2 / ウェーブとボス」。旧25×17の小実験室/通常ゲームは別に維持。
+- `hd2d_expedition.tscn/.gd`、床45×31（旧面積約3.28倍）、障害物4個、追従Camera。
+- 準備2秒、3ウェーブ総数18/24/30、2.5秒ごと最大6体・同時24体。全滅で4秒休憩。
+  出現はPlayerから170px超480px以内の安全候補床。自動通常攻撃/Space・A居合/既存XP選択を維持。
+- 最後に既存Minotaur AIのボス1体。3D表示高3.0（剣士比約1.79）。インスタンスHP倍率3.0に
+  既存難易度倍率が適用される。敵/職業JSONは変更しない。自然な撃破時間は未実測。
+- 撃破1.2秒後に新しい3D宝箱。`chest_view_3d.gd`の丸い蓋/木板/金属帯/鋲/錠/内部コイン。
+  normal木＋銀、rare青＋銀、legendary赤紫＋金。蓋はヒンジ回転0.6秒。
+  試作ボスの外観はrare80%/legendary20%、報酬性能との段階連動は後続作業。
+- 既存TreasureChestの一度だけ開封/InputMap経路を使い、試作範囲58px。E/Pad Xで開封。
+  0.8秒後に既存ItemSelectの最大3候補から1件取得、クリアメニューで再試行/帰還。
+  中のコインは視覚装飾。新装備効果/大量装備Drop/ショップ/天賦/次周は未追加。
+- 通常ゲームの2D宝箱/Save/攻撃方式は変更しない。SaveManager ephemeralで試作成長を破棄。
+  旧小実験室と同様に黄色mass_killは非表示。詳細は`docs/hd2d_phase2.md`。
+- 検証: `tests/hd2d_phase2_check.tscn`。撃破/HP早送りfixtureを含む進行検証であり、自然な1周の
+  時間/難易度・長時間性能・物理Pad手動プレイの完了証拠とはしない。
+
+### 35.11 HD-2D Phase 3 — 剣士のみの再配分天賦
+
+- §35.10の森の闘技場のみ更新。入口はGAME START→「2.5D Phase 3 / 剣士の天賦」。
+  通常ゲームと旧小実験室のレベルアップ選択は従来のまま。
+- XPレベルアップ1回につき1P。ラン獲得量は現在Lv−1、残量は獲得量−配分済み。
+  この試作ではランダム3択を開かない。乱撃派／一閃派の既存Lv2〜5カードを読み、
+  一方に順番に1Pずつ配分（最大4P）。余剰は保持。専属スキルの新設計ではない。
+- 最初と各ウェーブ終了後は自動で天賦図を開き、プレイヤーが「次の戦闘へ」を選ぶまで待つ。
+  準備中／ボス後の宝箱待ちで1P返却・無料全リセット可能。戦闘中T/Pad Yは閲覧のみ。
+  Esc/Pad Bで閉じる。準備画面を閉じると戦闘開始。加点操作はボタン／方向キー＋決定。
+- 返却は最終段階から。全返却後に他方の流派へ変更可能。既存攻撃Strategyのschoolと
+  ability_levelへ反映する。攻撃処理中は変更不可。HP・装備ボーナス・既存cooldownは変更しない。
+  使いかけの連続使用回数は変更前の技の再充填時間へ変換し、切替による無料補充を防ぐ。
+- 他職業、新規専属スキル、装備効果、大量ドロップ、周回は今回対象外。
+  SaveManagerの試作セッション内に閉じ、再試行／終了で天賦ポイントを持ち越さない。
+- 実装: `prototypes/hd2d/swordsman_talents.gd` と `hd2d_expedition.gd`。
+  検証: `tests/hd2d_phase3_check.tscn`（XP加算fixture）、既存Phase 2進行検証。
+  自然プレイの成長速度・強さ比較・物理Controller操作は別途評価が必要。
+
+### 35.12 HD-2D Phase 4 — ボス装備散布・回収・装備画面
+
+- 剣士の森の闘技場のみ。入口「2.5D Phase 4 / ボスの戦利品」。通常ゲーム／旧小部屋は維持。
+- ボス死亡後に既存EquipmentDropSystemの生成処理で5品（試作配分Rare 3／Epic 2）。
+  既存テンプレート・能力値範囲・特殊効果をそのまま使い、装備内容や職業スキルを追加しない。
+- loot_view_3d.gd: 既存アイコンの3D表示、0.75秒の放物線飛散、着地リング・音。
+  レアリティ色の細い光柱は上位ほど長い。全画面フラッシュや常設PointLightは使わない。
+  安全床へ配置し宝箱から112px以上、装備同士80px以上を確保。
+- 着地後38px以内で最寄りの1品をE/Pad Xで回収。近距離のみ名前とガイドを表示。
+  取得フラグを先に立てて既存EquipmentComponentへ1回だけ追加。自動装着はしない。
+- Iまたは天賦図の「装備・比較・合成」から既存統合EquipmentScreenを開く。
+  準備／宝箱待ち／回収中のみ使用可能。整列・比較・装着解除・同レアリティ素材補助・合成は既存仕様。
+  天賦と装備の入力を分離し、Pad Yは天賦入口として維持。
+- 宝箱の既存報酬選択後は即終了せず回収状態へ戻す。Fで明示終了。未回収品を残して終了可能。
+  時間制限なし。終了・再試行で装備を持ち越さない。周回／次の戦闘追加はPhase 5以降。
+- 検証はtests/hd2d_phase2_check.tscnを拡張。XP/撃破早送りfixtureを含むため自然なバランス測定とはしない。
+
+### 35.13 HD-2D Phase 5 — 剣士の3周チャレンジ
+
+- 入口「2.5D Phase 5 / 剣士の3周チャレンジ」。既存試作アリーナを3周まで連続プレイ。
+  各周は3ウェーブ→Minotaur→装備散布5個＋宝箱→回収・組み替えの流れ。
+- 宝箱報酬選択後、F/Pad STARTで「次の周へ／回収へ戻る／終了」を選ぶ。
+  3周目は次周ボタンを無効にし制覇終了できる。途中終了・未回収品破棄も明示する。
+- 続行では同じPlayerを保持し、所持装備・装着・経験値・天賦・取得強化を維持。
+  HP自動回復・技待ち時間リセットは行わない。次周の準備天賦画面で戦闘開始を待つ。
+  再試行は新ラン、タイトル帰還は試作セッション破棄。通常Saveに持ち越さない。
+- 暫定難易度: 各ウェーブ総数18/24/30に周ごと+6体、同時上限24は維持。
+  通常敵とボスHPは1周目比1.00/1.35/1.70。攻撃力・速度・装備性能・XP量のJSONは変更しない。
+  ボスの基礎倍率3.0および既存難易度倍率に追加適用。自然プレイの難易度は未調整。
+- 周回遷移時は未回収装備・回復・宝箱・ボス攻撃を清掃し、前周の参照を解除。
+  ボス通知の周番号を検証。周回選択の状態チェックで多重遷移を防止。
+- 通常ゲーム／旧小部屋・他職業は変更しない。無限周回、新マップ、新スキル、
+  新しい装備効果は今回対象外。`tests/hd2d_phase5_check.tscn`で3周経路を確認する。
+
+### 35.14 試作ボスの攻撃追加・剣士の後退攻撃
+
+- 3周闘技場のMinotaurに専用Strategy `minotaur_patterns.gd` を接続した。当初は試作限定だったが、
+  2026-09-08の通常2D Phase 2で同じ4攻撃を`minotaur_combo_strategy.gd`へ移植した（§39）。
+- 突進→前方薙ぎ払い→環状衝撃波→3連地割れの順に繰り返す。
+  突進は横回避、薙ぎ払いは側面/後方、衝撃波は内側75px以内または外側180px超、
+  地割れは狙われた地点（半径62px）から継続移動して回避する。攻撃方向/地点は各予告開始時に固定。
+- 予告1.05秒（地割れは各0.85秒）、発動後硬直1.5秒、次技待ち2.2秒。
+  突進は700px/sで0.4秒。技ダメージは既存contact_hitbox.damage相当、既存防御/無敵/被弾上限を経由。
+  HPはPhase 5のままで追加増加なし。硬直終了直後に古い通常攻撃が出ないようWindupを解除する。
+- `boss_attack_zone.gd`の地面Meshと当たり判定で半径・角度・幅を共用する。床予告→局所発光→終了。
+  同時生成は1予告。Pause中は予告/突進/硬直が進まない。ボス死亡時に予告を除去し遅延ダメージを拒否。
+- ボス本体の演技は `boss_attack_performance.gd` が試作内だけで制御する。
+  環状波は既存Attack03、突進/地割れはAttack01を使用。Attack02は前方への突きなので薙ぎ払いには使わない。
+  薙ぎ払いは元の`Minotaur.aseprite`のAttack01 body層を複製した`hd2d/source_edit/`の3枚×8コマを使用。
+  元の顔・角・鎧・配色に加え、握り手・前腕・肩・胴・武器が一体で動く原画モーションを保持する。
+  元の白いfx層だけを除外し、構え3コマ→全身で振る3コマ→振り抜き2コマとして接続する。
+  `tools/export_minotaur_source_layers.py`は28コマのbody+fxが既存PNGとRGBA完全一致することを検証。
+  `tools/build_minotaur_source_motion.py`は生成8コマが元Attack01 body層とRGBA完全一致し、上半身が6ポーズ以上あることを検証。
+  2026-09-08、武器内縁の切り抜き漏れ3px（元座標x57〜59/y55）が本体の足元に残る不具合を修正。
+  マスクの内縁を延長し、該当3pxを本体から回転する武器へ移す。全3枚×8コマを再出力。
+  原画の顔/角/鎧は不変。本体への武器残留なし・武器の元画素保持・本体の連結性を生成時に検証する。
+  2026-09-08、武器だけが回転して握り手・腕・胴が静止する不整合を廃止。
+  第一形態の薙ぎ払い3枚×8コマは、元AsepriteのAttack01 body層8コマをRGBAそのままで使用する。
+  元の白いfx層だけを除き、構えから振り抜きまで握り手・前腕・肩・胴・武器を原画どおり一体で動かす。
+  side/back/frontは床の三日月方向を選ぶ名称とし、キャラクターは存在しない正面/背面を新造しない。
+  左向きだけ全身を反転し、剣撃の掃引方向も反転する。攻撃半径・半角・威力・0.18秒の命中進行は変更しない。
+  元Aseprite/PNGは不変。前段のAI再生成版は第一形態には使わず、第二形態候補として削除せず保管する。
+  第二形態の変身条件/専用攻撃は未確定・未実装。現在のゲームには未接続。
+  side/back/frontは床の三日月方向（横/奥/手前）の区別。元データにない正面/背面の顔は新造せず、
+  元の斜め向き全身モーションを維持する。左向きだけ全身と剣撃進行を同時に反転する。
+- 薙ぎ払いの姿勢・`boss_cleave_slash.gd`・`boss_attack_zone.gd.contains_sweep`は0.18秒の共通進行度で同期。
+  予告終了と同時に扇全体へ瞬間命中させず、刃が通った角度だけが有効（1回の攻撃で最大1回命中）。
+  これは従来の0.18秒の局所発光期間を使い、1.05秒の予告と1.5秒の硬直、既存威力は維持する。
+  刃と予告は同じ床高さ0.065・原点・方向・半径145px・半角70度。高い空中の弧による画面上のズレを避ける。
+  剣撃の形はユーザー参照画像の「白い外縁・青白い内側、中央が厚く両端が尖った三日月」に固定する。
+  細い直線への置換、一定幅のリング、扇全体の青い塗りは不可。最大厚は半径の16%、
+  sin(角度内の割合×PI)^1.4で両端の幅を0にし、内側には細い弧状の残像を1本添える。
+  掃引済みの角度だけを順に描き、0.18秒の振り抜き完了で三日月全体が完成する。
+  終了直後0.04秒は完成形を保持し、後端から削れつつ厚みを縮め、0.24秒で除去する。
+  画像の横移動/全体フェード/黄色い星/全画面フラッシュは使わない。白い芯は消失直前まで発色を保持する。
+  薙ぎ払い予告/実行中にボスが2px超の強制移動を受けた場合は中断し、古い予告位置からの攻撃を防ぐ。
+  演出側はダメージを与えず、既存Strategyのみが命中を処理する。
+- 演技の所有者は常に1つ。3連地割れの次予告へ移る際は前の演技を解放。
+  Pause中はポーズ/刃軌跡も停止し、死亡/Scene終了で除去してDeathアニメを上書きしない。
+  演技終了時に既存Idle/Walk制御を復帰する。通常2D/旧小ルーム/他職業には適用しない。
+- 承認済みの自動照準は `swordsman_aim.gd` で剣士の試作アリーナだけに適用。
+  元の通常攻撃にも自動照準はあったが、移動がSpriteの向きを上書きし、溜め中に照準が古くなる。
+  1振りの対象を保持して命中時に現在方向へ補正し、近距離の敵へ見た目を向けたまま後退可能にする。
+  射程外への攻撃、射程/威力/速度の強化はしない。居合を敵への自動追尾には変更しない。
+- 2026-09-08、保持中の敵が死亡して`queue_free()`された次フレームに、解放済み参照を
+  型付き`_alive(Node2D)`へ渡した時点で関数内の有効性検査より先に型エラーになる不具合を修正。
+  `_alive(Variant)`でインスタンス有効性→Node2D復元→削除予約→HPの順に検査し、無効な対象は
+  既存の最寄り敵再検索へ流す。攻撃対象の選び方、射程、威力、速度、VFXは変更しない。
+  検証は解放済み対象fixtureを含む照準16項目と、通常Spawnerで72体を死亡させる敵Lifecycle 452項目を
+  Vulkan実描画で実行し、失敗0・ERROR/WARNINGなし。
+
+### 35.15 所有済みの敵10種を森の闘技場へ追加（2026-09-07）
+
+- §12追補の10種を3周チャレンジ`hd2d_expedition`へ接続する。最初の1周で全種に遭遇可能。
+  旧小実験室`hd2d_arena`はスライム/オーク/コウモリの比較用構成を維持する。
+- ウェーブごとの固定巡回候補（重複は出現比率の重み）。通常MAPの秒数解禁とは別に設定する。
+
+| Wave | 巡回候補 |
+|---|---|
+| 1 | Slime / Blood Monster_A / Orc / Hellbat / Slime / Eyeball Monster / Bat / Lava Slime |
+| 2 | Orc / Blood Monster_B / Slime / Hellhound / Bat / Ghostfire / Hellbat / Demoness_A |
+| 3 | Blood Monster_A / Demoness_B / Orc / Warlock / Lava Slime / Blood Monster_B / Hellhound / Demoness_A |
+
+- 各Wave18/24/30体、次周+6体、同時上限24体、既存の周回HP倍率・ボス・報酬は不変。
+  新素材はプレイ開始前に1フレーム1種ずつSpriteFramesキャッシュへ読み込み、戦闘中にまとめてロードしない。
+- 3D表示高はBlood A1.40/B1.35、Demoness A1.75/B1.80、Eyeball1.05、Ghostfire1.30、
+  Hellbat1.10、Hellhound1.15、Lava Slime1.05、Warlock1.70。剣士1.68/ボス3.0との体格差を維持する。
+  待機の不透明範囲を基準に表示し、余白を含めた一律拡大はしない。影なし原画＋既存の床影を使用する。
+  戦闘・衝突・死亡の正は共通EnemyBasic、3D側は元アニメーションの表示だけを担当する。
+- 個別の敵専用AI/攻撃技の作成や自然プレイの難易度調整は今回の範囲外。
+- 検証: `tests/hd2d_enemy_roster_check.tscn`で通常Spawner経由の10種生成、元画像全行動、
+  移動/攻撃命中・回避/剣士の攻撃/死亡/XP・Drop一度だけ、実Wave72体→Boss、通常Save不変を確認。
+  実描画452確認・失敗0（`artifacts/enemy_roster_runtime.log`）。並列表示は`artifacts/enemy_roster/lineup.png`。
+  3周進行と旧小ルームの既存回帰も失敗0。位置/高HP/死亡早送りを使った統合検証であり、
+  自然1ランの難易度・長時間性能・個別技の完成を保証するものではない。
+
+## 36. 状態異常システム（2026年9月・属性/フュージョン廃止に伴う再定義）
+
+### 36.1 廃止したもの
+
+属性システム（火・氷・雷・光・闇）とフュージョンシステムを**全廃**した。廃止理由:
+
+- 属性オプションの入手経路がボス/エリート報酬とレベルアップ候補プールに二重化していた
+- フュージョン成立条件（2属性が両方LvMAX）が重く、ほとんどのランで発生せず成長動機として機能しなかった
+- 職業10種 × 属性5種 × 天賦図分岐の組み合わせが、個人開発で調整可能な規模を超えていた
+
+削除対象: 属性レベル/スロット/熟練度倍率、fragment、フュージョン一式（スクリプト・VFX・アセット・
+テーマ3種）、`ElementRewardSystem`、`FragmentSelect`、ボス/エリート撃破時の属性報酬、
+レベルアップの属性Lv候補生成。
+
+### 36.2 存続する「状態異常」レイヤー
+
+`StatusEffectComponent`が扱う状態異常を、属性体系から切り離して`slow`/`stun`と同列に扱う。
+
+| 状態ID | 内部effect名 | 効果 |
+|---|---|---|
+| `burning` | `element_burning` | 継続ダメージ（0.5秒間隔）。既定3.0秒 |
+| `frozen` | `slow` / `stun` | 移動速度低下または停止。既定2.0秒・速度55% |
+| `charged` | `element_charged` | 状態のみ（条件付き強化の参照先）。既定3.0秒 |
+| `marked` | `element_marked` | 状態のみ。既定3.5秒 |
+| `cursed` | `element_cursed` | 被ダメージ+25%。既定3.5秒 |
+
+内部effect名からは`element_`接頭辞を撤去済み（`burning` / `charged` / `marked` / `cursed`）。
+`frozen`だけは`slow`と`stun`の2つのeffectから立つ（`STATE_BY_EFFECT`参照）。
+API名も`has_state()` / `get_states()` / `states_changed` / `STATE_BY_EFFECT` / `STATE_ORDER`へ統一した。
+
+### 36.3 付与の責務: `systems/status_apply_system.gd`
+
+旧`ElementCombatSystem`から**状態異常の付与処理だけ**を救出した`StatusApplySystem`
+（`game.tscn`のノード、group `status_apply_system`）が担当する。属性ダメージ計算・
+属性Lv・熟練度倍率・属性ID体系は引き継いでいない。
+
+付与する状態は各攻撃Strategyの`applied_status_id()`が決める。サブクラスで
+overrideすることで職業ごとに変えられる。
+
+#### 付与経路（2026年9月4日に接続）
+
+`applied_status_id()`が返す状態IDは、攻撃判定の生成時に`HitboxComponent.applied_status_id`
+へ書き込まれ、`HurtboxComponent.apply_hitbox_damage()`がダメージ適用の**後**に
+`StatusApplySystem.apply_state()`を呼ぶ。ダメージより先に付与すると、その状態を条件に
+するダメージ強化が「状態を付けた当のHit」にも乗ってしまうため、順序は
+`AttackPatternBase.apply_direct_damage()`と揃えてある。空文字のHitboxは何も付与しない
+（EnemyBasicのContactHitbox、Boss弾はここに該当する）。
+
+書き込み箇所は5つ。
+
+| 経路 | 書き込み位置 | 対象職業 |
+|---|---|---|
+| 近接・点/扇/線Hit | `attack_pattern_base.gd`の`spawn_point_hit`/`spawn_arc_hit`/`spawn_line_hit` | melee_arc, wide_cleave, self_pulse, holy_pulse_heal, piercing_thrust |
+| Player由来Projectile | `weapon_manager_component.gd`の`_fire_single_projectile()` | spread_shot ＋ 装備武器すべて |
+| homing_bolt | `homing_bolt_attack.gd`（weapon_managerを経由せず自前でinstantiateするため個別） | wizard |
+| 召喚した味方の接触ダメージ | `ally_skeleton.gd`の`_ready()`で召喚主の職業から引く | necromancer |
+| Hurtboxを経由しない直撃 | `attack_pattern_base.gd`の`apply_direct_damage()`（従来どおり） | charge_dash, 一閃派の処刑, homing_bolt Lv4爆発 |
+
+Space技（`active_skill_component.gd`の`_damage_enemy()`）も職業の状態に揃えてある。
+以前はここだけ`burning`固定で、cursed職のPlayerが自分では使えないburning系カードの
+条件を満たしてしまう状態だった。
+
+【経緯】属性システム廃止時に`hurtbox_component.gd`の`apply_element_damage`ブロックを
+撤去した際、この接続を作り直し忘れていた。結果として各職業の**主力攻撃が一度も状態異常を
+付与しない**状態が続いており、状態カード9枚と天賦図の状態トリガー23件がすべて空振りしていた
+（900秒の実測で`_burning_targets`が全区間0だったことから発覚）。
+
+#### 職業ごとの割り当て
+
+`WeaponManagerComponent.ATTACK_PATTERN_SCRIPTS`が示す通り、`melee_arc`と`wide_cleave`は
+同じStrategyを共有するため、そこだけ`GameManager.selected_character_id`で分岐させている。
+
+| Strategy | 職業 | 付与する状態 |
+|---|---|---|
+| `melee_arc_attack` | soldier | `burning` |
+| `melee_arc_attack` | swordsman | `cursed` |
+| `melee_arc_attack` | armored_axeman（wide_cleave） | `frozen` |
+| `charge_dash_attack` | knight | `frozen` |
+| `piercing_thrust_attack` | lancer | `frozen` |
+| `spread_shot_attack` | archer | `charged` |
+| `homing_bolt_attack` | wizard | `charged` |
+| `self_pulse_attack` | knight_templar | `marked` |
+| `holy_pulse_heal_attack` | priest | `marked` |
+| `summon_minion_attack` | necromancer | `cursed` |
+
+5状態すべてが最低1職業でカバーされており、23件の完成大技すべてを自然発動で検証できる。
+
+#### 実測（2026年9月4日、10職業を順に起動して確認）
+
+10職業すべてで、期待どおりの状態だけが敵に立つことを確認済み（他状態の混入なし）。
+
+| 職業 | 期待 | 観測 | | 職業 | 期待 | 観測 |
+|---|---|---|---|---|---|---|
+| soldier | burning | burning | | knight_templar | marked | marked |
+| swordsman | cursed | cursed | | priest | marked | marked |
+| armored_axeman | frozen | frozen | | necromancer | cursed | cursed |
+| knight | frozen | frozen | | archer | charged | charged |
+| lancer | frozen | frozen | | wizard | charged | charged |
+
+**TODO: 天賦図による付与状態の追加・変更は後日設計する。**
+
+### 36.9 付与を有効化したことによる難易度影響（2026年9月4日実測）
+
+同一の的（HP固定）へ60秒間攻撃し続けた与ダメージ合計を、`StatusApplySystem`を
+groupから外して付与を止めた状態と比較した（強化カードは未取得＝Lv1相当）。
+
+| 職業 | 状態 | 付与なし | 付与あり | 差 |
+|---|---|---:|---:|---:|
+| soldier | burning | 854 | 1012 | **+18.5%** |
+| swordsman | cursed | 1022 | 1292 | **+26.4%** |
+| priest | marked | 348 | 348 | ±0% |
+| archer | charged | 1305 | 1296 | ±0%（-0.7%は計測誤差） |
+
+素の与ダメージが増えるのは**burning（継続ダメージ）とcursed（被ダメージ+25%）だけ**で、
+frozen / charged / markedは対応する強化カードを取るまで数値上の差を生まない。
+ただしfrozenは敵の移動速度を2秒間-45%にするため、与ダメージには表れない形で
+実際の難易度を下げる。
+
+敵HP倍率（Phase 1後はMAP1で2.8倍〜MAP3で4.5倍）は「状態異常が一切効いていない状態」で
+調整された数字なので、実プレイの手応えを見たうえで再調整すること。この表の数値は
+カード未取得時の下限であり、状態カードを取るほど差は開く。
+
+### 36.4 完成大技（天賦図）との接続
+
+`concept_system.gd`の完成大技は**維持**した。属性依存を以下へ置き換えている。
+
+- `required_elements`による解放条件 → **撤廃**。`is_completed_skill_available_for_build()`は
+  常に`true`を返す。TODO: 将来、天賦図の取得状況で絞り込む
+- `trigger_element`（与ダメージの属性で判定）→ **`trigger_state`**（対象に該当の状態異常が
+  乗っているかで判定）。`completed_skills.json`の23件を
+  fire→burning / ice→frozen / lightning→charged / light→marked / dark→cursed へ置換済み
+- 属性Lv/熟練度による威力・範囲・クールダウン補正 → **全廃**。基礎値のみで決まる
+
+### 36.5 属性報酬廃止後の報酬経路（ラン内経済 Phase 1）
+
+| 経路 | 現状 |
+|---|---|
+| MAP1/2ボス撃破 | ラン内ゴールド＋完成スキル宝箱。ショップUI接続までは宝箱開封後に次MAPへ進む |
+| MAP3ボス撃破 | 完成スキル宝箱。ラン内ゴールド追加なし |
+| 精鋭部屋クリア | ラン内ゴールド。精鋭本体の確定装備・経験値も従来どおり |
+| サージ完了 | ラン内ゴールド＋既存の回復／装備報酬 |
+| 属性祭壇 | **生成を停止**（触れても何も起きないオブジェクトを残さないため） |
+| 宝箱の`attribute`枠 | 抽選テーブルから除外。equipment / recovery / skill の3種のみ |
+| ROOM属性報酬 | 選択UIを挟まず直接宝箱報酬へ進む |
+
+ラン内ゴールドは`SaveManager.meta_currency`とは別で、セーブせずRun開始／終了時に0へ戻す。
+ショップ画面と商品抽選は次Phaseで接続する。
+
+### 36.6 融合武器15種（未着手）
+
+`required_fragment_ids`を持つ武器15種は**入手経路が存在しない**まま残置している
+（`add_weapon()`の呼び出しは開始武器のみ。`fusion_system.gd`は本作業以前に削除済み）。
+`required_fragment_ids`は現在「融合武器か否か」のフラグとして`projectile.gd`のVFX分岐に
+使われているだけ。TODO: 将来ショップの商品に転用する。
+
+### 36.7 レベルアップ候補からの旧属性カード除外
+
+`data/upgrades/`のA1カード25枚のうち、**状態異常を参照する9枚だけ**を抽選候補に残し、
+旧属性メカニクス（燃焼範囲・連鎖数・聖光回数など、実装が`ElementCombatSystem`にあった）に
+依存する**16枚は抽選から除外**した。取っても効果がないカードを引かせないため。
+
+- 候補に残す9枚: `ACTIVE_STATE_UPGRADE_EFFECTS`（`player_upgrades_component.gd`）
+- 除外する16枚: `DISABLED_LEGACY_UPGRADE_EFFECTS`。**JSONは削除せず残置**しており、
+  将来ショップの商品や天賦図の素材へ転用する可能性がある
+
+`category`は`element_fire`等のまま残っているが、これは旧データの識別子であり、
+属性システムとしての意味は持たない。
+
+#### 職業が付与しない状態のカードは候補に出さない
+
+状態異常カード9枚をそのまま候補にすると、**その職業が付与しない状態のカードが出てしまい、
+取っても効果が永久にゼロ**になる（例: swordsmanは`cursed`を付与するのに「聖印追撃」＝
+`marked`参照のカードが候補に出る）。
+
+そのため`LevelUpSelect`は`WeaponManagerComponent.get_applied_status_id()`
+（＝現在の職業の`applied_status_id()`）を参照し、
+`PlayerUpgradesComponent.UPGRADE_EFFECTS_BY_STATE`で対応するカードだけを候補に入れる。
+
+| 状態 | 対応カード |
+|---|---|
+| `burning` | 灼熱追撃 / 火葬の知恵 |
+| `frozen` | 氷砕追撃 / 氷点看破 |
+| `charged` | 感電追撃 |
+| `marked` | 聖印追撃 / 殉光の護り |
+| `cursed` | 呪殺追撃 / 伝染呪 |
+
+`charged`だけ1枚なのは、`charged_chain`（導電路）が雷連鎖依存で無効化されたため。
+
+#### 候補総数（実測）
+
+絞り込みにより状態異常カードは1〜2枚に減るため、重みは2.8→**1.5**へ引き下げた
+（枚数が少ないのに重みが高いと、同じカードばかり出て他の候補を圧迫するため）。
+
+| 職業 | 付与状態 | 状態カード | common | 近接/遠隔 | 職業 | 合計 |
+|---|---|---:|---:|---:|---:|---:|
+| soldier | burning | 2 | 8 | 4 | 1 | **15** |
+| swordsman | cursed | 2 | 8 | 4 | 2 | **16** |
+| armored_axeman | frozen | 2 | 8 | 4 | 1 | **15** |
+| knight | frozen | 2 | 8 | 4 | 1 | **15** |
+| knight_templar | marked | 2 | 8 | 4 | 1 | **15** |
+| lancer | frozen | 2 | 8 | 4 | 1 | **15** |
+| priest | marked | 2 | 8 | 4 | 1 | **15** |
+| necromancer | cursed | 2 | 8 | 4 | 1 | **15** |
+| archer | charged | 1 | 8 | 4 | 1 | **14** |
+| wizard | charged | 1 | 8 | 4 | 1 | **14** |
+
+swordsmanの職業カードが2枚なのは流派選択（`class_school_select`）が
+Lv2到達時に追加で候補へ入るため。重みは状態カード1.5 / common・近接遠隔1.0 / 職業2.0。
+
+### 36.10 検証Testの復旧（2026年9月4日）
+
+属性/フュージョン削除の際、`tests/`配下の8本が削除済みAPIを参照したまま残り、
+**2026年9月1日以降まったく実行できない状態**になっていた。全8本を復旧し、いずれも
+failures=0で通ることを確認した。
+
+| Test | 残っていたもの | 対応 |
+|---|---|---|
+| `developer_test_lab_check` | Fusion Gallery/属性Lv/属性攻撃のLab API、`lab.element_combat` | Fusion系検証を削除。属性LvはSTATUSボタン経由の5状態付与検証へ置換。Damage Meterは`trigger_projectile()`の実WeaponManager経路で確認 |
+| `final_polish_soak_check` | 空の欠片取得ループ、`combat.apply_element_damage` | 燃焼の追跡解放検証を`StatusApplySystem.apply_state()`へ移植（検証の意図は保持） |
+| `global_audit_check` | `element._fusion_runtime`のtag検証 | 削除 |
+| `iai_and_mode_check` | 属性IAIのtrail VFX計測 | 削除 |
+| `pixel_visual_integration_check` | Fusion VFX Resource 10種の存在検証 | 削除 |
+| `room_combo_mvp_check` | 属性報酬選択Helperのbody（関数の外に残存） | 削除 |
+| `room_mvp_visual_check` | 属性報酬のCaptureとその分岐残骸 | 削除 |
+| `vfx_spawn_stall_check` | 属性Lv構築の空if/else | 削除 |
+
+`final_polish_soak_check`はあわせて、VFX残留判定が「Line2Dは全部VFX」という粗い
+ヒューリスティックだったために、後から入った床装備の枠線（生存中のドロップ品）を
+誤検出していた点も直した。床装備の寿命は上限・期限切れ検証が別途担当する。
+
+#### `--editor --quit`ではパースエラーを拾えない
+
+この8本は`--headless --path . --editor --quit`を通してもエラーとして出てこなかった。
+全スクリプトを実際に`load()`する掃き出しを行って初めて発覚している（145本中8本が失敗）。
+36.8の教訓に加えて、**削除作業の後は「全.gdをload()して0件失敗」まで確認すること**。
+さらに`lab.element_combat`のような自動読み込み/プロパティ参照は`load()`でも
+検出できず、実際にTestを起動して初めて出る。
+
+### 36.8 削除作業の検証方法（重要な教訓）
+
+属性/フュージョン削除の過程で、**`--headless --editor --quit`（構文チェック）を通過しても
+実行時に落ちる**不具合が発生した。原因は`EventBus.fragment_collected.connect(...)`のような
+**Autoloadのプロパティアクセス**で、GDScriptはこれを実行時解決するためパース時には検出されない。
+
+HUDの`_ready()`がこの1行で停止し、キャラクター選択後に画面が真っ暗になった。
+
+**シンボル削除を伴う変更では、構文チェックだけを根拠にしないこと。** 以下の2段構えで検証する。
+
+1. **削除したAPI名の文字列全走査**: 削除したシグナル名・関数名・定数名・クラス名を列挙し、
+   `.gd`と`.tscn`の両方をgrepする。`.tscn`の`@export`/NodePath参照も対象に含める
+2. **実シーンの起動確認**: `godot --headless --path . <scene>.tscn` を
+   `title` / `home`(キャラクター選択) / `game` / `developer_test_lab` の4つで実行し、
+   `SCRIPT ERROR` / `Invalid access` / `Invalid call` / `null instance` が0件であることを確認する
+
+削除済みAPIの一覧は本章36.1と、`docs/codex_handoff.md`の該当節に残す。
+
+## 37. ラン内ゴールド／ボス後ショップ（2026年9月確定仕様）
+
+**現行追記（2026-09-15）:** 少数の有限遭遇と60層進行に合わせ、ショップは各層のボス宝箱を開けた後、階段を調べると開く。60層目はクリアへ。旧2回来店・旧価格は履歴。現在値は本章末の2026-09-15節を参照。
+
+### 37.1 役割と進行
+
+ショップはラン中のゴールドを「今の戦力」へ変換する任意購入層であり、永続アンロックには
+使わない。初期実装では探索MAP中に店を配置せず、**MAP1とMAP2のボス撃破後だけ**開く。
+来店回数は1Runにつき2回。MAP3最終ボス後は使う戦闘が残らないためショップを開かない。
+
+進行順は`ボス撃破 → ラン内ゴールド獲得 → 完成スキル宝箱 → ショップ → 次MAP`。
+完成スキルを確定した後のBuildを見て購入判断できる順序にする。
+
+### 37.2 ラン内ゴールド
+
+- 正本は`GameManager.run_gold`。加算は`add_run_gold()`、購入／リロールは
+  `try_spend_run_gold()`だけを通す
+- `SaveManager.meta_currency`とは分離し、保存・持越し・キャラクター解放への変換を行わない
+- Run開始／死亡終了／クリア終了で0へ戻す
+- 敵ごとのコインNodeは生成せず、既存の撃破イベントから直接加算する
+- HUDは`EventBus.run_gold_changed`を購読し、MAP Run中だけ現在値を表示する
+
+初期収入値:
+
+| 経路 | ゴールド |
+|---|---:|
+| 敵撃破 | 1G |
+| 精鋭個体撃破 | 通常1Gに加えて10G |
+| 精鋭部屋クリア | 50G |
+| サージ完了 | 20G |
+| MAP1ボス撃破 | 100G |
+| MAP2ボス撃破 | 150G |
+| MAP3ボス撃破 | 0G |
+
+ここでいうサージは新規機能ではない。各MAPの撃破進行25%／50%／75%付近（または救済時刻）で
+発生する、約45秒間の既存の敵密度上昇イベントを指す。既存の回復／装備報酬を残したまま、
+完了報酬へ20Gを追加する。
+
+### 37.3 商品枠と購入後の補充
+
+1店舗は常に次の**4枠**を表示する。
+
+1. 遺物武器 1枠
+2. 汎用強化 1枠
+3. 現在の職業が付与する状態異常に対応した強化 1枠
+4. 回復 1枠
+
+購入後に`SOLD OUT`枠は残さず、**購入したカテゴリの商品を1つ再抽選して同じ枠へ補充**する。
+同一来店中に購入済みの商品は再抽選候補から外す。候補を使い切ったカテゴリだけ枠を詰める。
+
+### 37.4 価格と購入量
+
+1来店でおおむね2商品を買える収支を基準とする。
+
+| 商品 | 初期価格 |
+|---|---:|
+| 回復 | 160G（35%）／200G（60%） |
+| 汎用強化 | 240G前後 |
+| 状態異常強化 | 240G前後 |
+| 1回目・低～中Tier遺物武器 | 450～550G |
+| 2回目・高Tier遺物武器 | 600～800G |
+
+高Tier武器と汎用強化の価格差は約3倍以内にする。1回目は100Gリロール後も武器枠が死なない
+よう上限550G、2回目だけ600～800Gを出す。価格・収入は`exploration_run.json`と商品Catalogへ
+置き、実測で調整する。
+
+#### 実測値と評価上の注意
+
+Godot本編Runtimeを自然Spawn・Player自動攻撃・全精鋭部屋クリアでMAP2 Bossまで通した結果、
+MAP1 Boss直後666G、MAP2 Boss直後累計1687Gだった。ただし計測は**4倍速・検証用高HP**で、
+被弾回避による攻撃停止や死亡リスクがない。666Gは上振れの可能性があり、実プレイヤーの
+中央値はこれより低い前提で1回目価格を安全側の450～550Gにする。
+
+MAP1実測666Gのうち通常敵撃破は422G（63.4%）、MAP2累計1687Gのうち通常敵撃破は
+1066G（63.2%）であり、収入の6割以上が通常敵撃破に由来する。したがって現状のゴールドは
+実質的に**撃破数の関数**である。ボス領域の時間救済を待って撃破数を減らす判断と、敵を倒して
+ショップ購買力を増やす判断のトレードオフが実際に機能するかは、ショップ画面完成後の
+実プレイで再検証する。
+
+### 37.5 リロール
+
+ショップにはゴールド消費のリロールを設ける。初回100G、同じ店舗内では実行ごとに+50G。
+リロールは未購入を含む4カテゴリすべてを再抽選し、同一来店中に既に購入した商品は候補へ
+戻さない。購入前に所持金不足を判定し、失敗時は商品も所持金も変更しない。
+
+### 37.6 商品化の制約
+
+- 旧融合武器15種は「遺物武器」として再定義する。`required_fragment_ids`を取得条件・描画判定に
+  使わず、`is_relic`で矢画像を隠して発光弾体と現存Hit Themeへ接続する
+- 除外済み旧属性カード16枚は状態異常または汎用効果へ再実装する。レベルアップ候補には戻さず、
+  現在の職業が付与できる状態で絞り込んだショップ専用商品にする
+- 購入・リロール・回復はすべてラン内だけに作用し、通常セーブを変更しない
+
+旧カード16枚の再定義と出現条件:
+
+| 職業が付与する状態 | ショップ専用カード | 再定義した効果 |
+|---|---|---|
+| burning | 熱波／焦熱／灰燼 | 攻撃範囲／燃焼Damage／燃焼時間 |
+| frozen | 永久凍土／絶対零度／深凍 | 凍結時間／対凍結Crit／対凍結Damage |
+| charged | 雷速／過負荷／電界／導電路 | 攻撃間隔／対帯電Damage／攻撃範囲／死亡時帯電伝播 |
+| marked | 連撃聖光／裁き／加護 | 対Marked Crit／対Marked Damage／死亡時Shield |
+| cursed | 深淵／呪縛／侵蝕 | 呪い脆弱率／呪い時間／対呪いDamage |
+
+商品正本は`data/shop/shop_catalog.json`（全41商品）。`ShopSystem`が来店回数、現在の職業状態、
+所持武器、購入済みIDで抽選し、`ShopScreen`はそのStockだけを4枠で表示する。遺物武器15種は
+1回目10種／2回目5種、旧カードは上記16枚。高位3武器を含め、削除済みElement Theme IDを
+参照せず現存Hit Themeへ接続する。
+
+### 37.7 実装Phase
+
+- Phase 1（完了）: ラン内ゴールドの加算・消費API、報酬経路、HUD表示、Runリセット
+- Phase 2（完了）: 遺物武器15種／旧カード16枚の有効化とData-driven商品Catalog
+- Phase 3（完了）: 4枠ショップUI、購入後補充、有料リロール、ボス宝箱後のMAP進行接続
+
+実装済み進行は`MAP1/2 Boss宝箱 → 完成スキル選択 → ShopScreen → 次MAP`。MAP3はShopを
+開かずRun Clearへ進む。ショップはGameManagerの共通Modalへ接続し、キーボード／ゲームパッドの
+既存UIフォーカス操作で購入・リロール・退出まで完結する。
+
+### 37.8 ショップPixel Art素材
+
+`tools/generate_shop_pixel_ui.py`を正本とし、実行時に`assets/ui/shop/`へ次を再生成する。
+
+- 16x16カテゴリIcon: `weapon_icon.png` / `upgrade_icon.png` / `status_icon.png` /
+  `recovery_icon.png`
+- 48x48 9-slice枠: `shop_frame.png`（Patch Margin 10px、中央はalpha 220の濃紺）
+- 8x8選択Cursor: `cursor.png`
+- 店内背景Object: `crate.png`（32x32）/ `lantern.png`（16x24）
+
+各Assetは最終解像度へ直接描画し、アンチエイリアスを使わない。可視色は画像ごとに8色以下、
+Frame以外のalphaは0/255、Frameだけ透過Cornerと半透明中央を許可する。PaletteはScript上部の
+定数へ集約する。2026-09-05に`ShopScreen`へ全種を接続した。画面は「灯火の遺物商」、古金/緑玉紋章と
+ランタン/木箱、画像・商品名・説明・価格帯を持つ4カードで構成。所持金不足の商品もフォーカスして不足額を確認できる。
+購入/補充後は同じ枠へフォーカスを戻す。抽選/価格/購入ロジックは変更しない。最終Royal版GUI検証状況は§35.5を参照。
 
 ---
 
-**本仕様書の使い方**: この内容と実際のコード・データの間に相違がある場合、
-仕様書または実装の片方を推測で上書きせず、関連Code / Scene / Resource / Data / Assetsと
-直近の変更意図を確認してください。確認後に採用した現行仕様へ両者を同期し、同じ作業内で
-整合性確認まで行います。プレイ調整済みの数値は明確な根拠なしに変更しません。
+## 38. 敵AI経路探索の性能設計（2026年9月4日）
+
+MAP刷新後に「敵が出現し始めると重くなり、時間経過で悪化し、最終的に静止画同然になって
+二度と戻らない」症状が出た。計測の結果、原因は敵AIの経路探索`components/ai/chase_strategy.gd`
+だった。属性/フュージョン廃止・状態異常システム・ラン内ゴールドとは無関係である。
+
+### 38.1 症状の機構
+
+`ChaseStrategy.compute_direction()`はプレイヤーへの直線視界が壁で遮られた敵に対して
+幅優先探索を実行する。ここに3つの問題があった。
+
+1. 通行可否判定`_has_navigation_clearance()`が、1マスにつき`DungeonMap.is_floor()`を
+   3x3＝9回呼んでいた。`is_floor()`は1回あたり実測1,396ns（GDScriptのメソッド呼び出しが
+   コストの支配項）なので、1マスの判定に約12.6µsかかる。平均336セルを探索する
+   1回の経路探索は約12,100回の呼び出し＝**実測15.8ms**に達した。
+2. 再探索の間引き条件が`_path.is_empty() or goal != _path_target or now >= 期限`で、
+   前2つはどちらも毎フレーム成立しうる（探索が失敗すると`_path`は空のまま、
+   プレイヤーが1マス動くだけで`goal`は変わる）。**最も高コストな場面でだけ
+   280msの間引きが無効**になっていた。
+3. 1フレームあたりの実行数に上限が無かった。フレーム時間が280msを超えると
+   全敵の再探索期限が毎フレーム切れる状態に入り、**フレーム時間が自分自身を
+   維持する正のフィードバック**が成立する。これが「一度重くなると回復しない」の正体。
+
+MAP刷新で柱・チョークポイント・地形障害物を導入したこと、およびMAPサイズ78²→86²→94²・
+敵上限32→40→48がラン中単調増加することが、この高コスト経路の発火率を押し上げていた。
+
+### 38.2 対策
+
+**通行可否の前計算（`systems/dungeon_map.gd`）**
+`DungeonMap.has_navigation_clearance(cell)`を追加した。「自分と周囲8マスがすべて床」を
+生成完了後に1度だけ`PackedByteArray`へ焼き、以降は配列1回参照で答える。初回構築は実測1.4ms。
+床の書き換え（`set_floor`/`mark_terrain_obstacle`）は`DungeonGenerator`と
+`RoomTemplateFactory`の生成時にしか起きないため、実行中に作り直しは走らない。
+書き換え時は`_clearance_cache_valid`を落として次回問い合わせで作り直す。
+
+**再探索条件の修正（`components/ai/chase_strategy.gd`）**
+再探索の判断を経過時間だけに一本化した。`_path.is_empty()`と`goal`変化による
+即時再探索を廃止し、探索失敗時も次の期限まで待つ。使われなくなった`_path_target`は削除。
+
+**1フレームあたりの探索予算**
+`MAX_PATH_BUILDS_PER_FRAME = 4`を導入し、全Agent共有のstatic予算として
+物理フレーム単位で配る。予算切れのAgentは再探索期限を進めないので次フレームに順番が回り、
+前回の経路（無ければ直進）で動き続ける。敵が何体いても経路探索がフレーム時間へ与える
+負荷が頭打ちになるため、38.1の正のフィードバックが構造的に成立しなくなる。
+
+### 38.3 実測（vsyncを切って計測、同一手順で修正前後を比較）
+
+| シナリオ | 修正前 | 修正後 |
+|---|---:|---:|
+| 敵20体 | 0.891 ms | 0.86〜1.32 ms |
+| 敵40体 | 2.987 ms | 0.63〜0.76 ms |
+| 敵60体 | 8.104 ms | 0.80〜1.24 ms |
+| 壁越し40体（視界が遮られた敵32〜34） | **1021.6 ms（1 FPS）** | **0.64〜0.92 ms** |
+| フレーム時間に占めるAIの割合（60体） | 68% | 18〜34% |
+| 経路探索1回 | 15.8 ms | 0.02〜0.73 ms |
+
+壁越し状態を10秒維持しても平均0.70〜0.95ms／最悪19msで悪化しない。同区間で敵→プレイヤーの
+平均距離は552px→202px、視界が遮られた敵は34→17へ減っており、**敵は従来どおり壁を回り込んで
+接近している**（挙動の退行なし）。敵20体の帯が広いのは、この速度域（約1,000fps）では
+レベルアップModalやGCの単発スパイクが平均へ乗るための計測ばらつきで、修正前後で有意差はない。
+
+### 38.7 経路探索コストの上限化（2026年9月5日・38.2の追加修正）
+
+38.2で`MAX_PATH_BUILDS_PER_FRAME = 4`を入れたが、**回数だけを抑えて1回あたりのコストを
+抑えていなかった**。幅優先探索は展開セル数が距離とともに増えるため、遠くの敵ほど1回が高くなる。
+予算を4に決めたときの実測値「1回0.73ms」は、プレイヤーを最も遠い敵の位置へ瞬間移動させた
+直後に測っており、敵とプレイヤーが密集して経路が極端に短いサンプルだった。
+
+#### 対策
+
+1. **通行可否を配列直読みへ**（`DungeonMap.get_navigation_clearance_data()`を追加）。
+   幅優先探索は1セルにつき4回の通行可否判定を行うので、1回1.4usのメソッド呼び出しが
+   支配項になっていた。前計算済み`PackedByteArray`を1回だけ取得し、内側ループでは
+   添字参照だけにする。`_has_clear_floor_line()`も同じ理由で同じ扱いにした。
+2. **`MAX_PATH_SEARCH_CELLS = 900`** を新設。展開セル数が上限に達した探索は経路を諦めて
+   空を返し、その敵は直進する（壁には`move_and_slide()`が沿う）。距離が伸びても
+   1回あたりのコストが頭打ちになる。
+3. **`MAX_PATH_BUILDS_PER_FRAME` を 4 → 2**。
+4. `goal`の算出を予算分岐の内側へ移動（予算切れのフレームで計算して捨てていた）。
+
+#### 実測（同一Harness・修正前後）
+
+床かつ3x3の余裕があるマスの組をgrid距離帯ごとに選び、`_build_floor_path()`を24回ずつ計測。
+
+| grid距離 | 修正前 1回 | 修正後 1回 | 予算込み最悪 前 → 後 |
+|---:|---:|---:|---:|
+| 10 | 610 us | 177 us | 2.44 ms → **0.35 ms** |
+| 20 | 1,040 us | 367 us | 4.16 ms → **0.73 ms** |
+| 30 | 2,142 us | 606 us | 8.57 ms → **1.21 ms** |
+| 45 | 2,739 us | 710 us | 10.96 ms → **1.42 ms** |
+
+1セルあたりのコストは2.5〜2.7us → 0.5〜0.8us。**経路探索がフレーム時間へ与えうる最大の負荷は
+10.96ms → 1.42ms**（60fps予算16.6msの66% → 8.5%）。
+
+挙動は維持されている。壁越し800pxへ敵30体を置いて10秒放置すると、
+敵→プレイヤーの平均距離は800px → 243px、視界が遮られた敵は31体 → 14体へ減る。
+
+#### 計測上の注意（重要）
+
+この検証の途中、敵をリング状に強制配置するHarnessが**敵を壁の中へ埋めてしまい**、
+物理のめり込み解決がフレーム時間を支配して「距離が遠いほど重い」という誤った表を出した
+（610pxで15.5ms等）。配置先を「床かつ`has_navigation_clearance()`が真のマス」に限定し、
+壁の中に入った敵の数を毎回報告するようにして初めて正しい値が出た。
+**敵を強制配置する計測を書くときは、必ず配置先が有効な床かを検証し、報告に含めること。**
+
+#### 残っている課題
+
+この修正は「多数の敵が同時に再探索を要求したときの上限」を下げたものであり、
+**実プレイで報告された「常時カクカク」を再現・解消したことの証明にはなっていない**。
+敵30体を適正配置した状態のフレーム時間は修正前で1.06〜1.53ms、修正後で0.88〜1.41msと
+差が小さい。実症状の再現は未達のまま。
+
+### 38.4 蓄積が原因ではないことの確認
+
+論理900秒を30秒刻みで31点採取した結果、**Orphan Node数は全区間0**、EventBusのシグナル接続数は
+46で一定、Tween数は0〜2、Video Memoryは28→44.8MBで頭打ち。Node増加分（528→1067）は
+クラス別差分集計の結果すべて生存中の敵39体そのもので、リークは存在しない。
+`StatusApplySystem`の`_burning_targets`はinstance_idをキーにしたDictionaryで構造的に
+重複不可、Timer/Tweenの生成も無い。`StateIndicator`のTextureは状態組み合わせ単位の
+staticキャッシュ（上限31件）で、Sprite2D数は敵数と完全一致する。
+
+### 38.5 対象数に比例する毎フレーム処理（既知の残コスト）
+
+38.2の対策後、次に大きいのは以下。現状のフレーム時間では表面化していない。
+
+- `entities/projectiles/projectile.gd`の追尾処理: 弾ごとに全敵走査でO(弾数×敵数)
+- `entities/allies/ally_skeleton.gd`: 味方ごとに全敵走査＋`ChaseStrategy`を共用
+- `components/player_upgrades_component.gd`の`resolve_state_condition_damage()`:
+  被弾1回ごとに`metadata.duplicate(true)`1回と`has_state()`5回。`has_state()`は毎回
+  `get_states()`で新規Arrayを確保して5x6の二重ループを回す
+- `effects/effect_theme_manager.gd`の`_spawn_chain()`: ヒットごとに全敵を`sort_custom`
+
+### 38.6 状態付与接続後の再計測（2026年9月5日・Phase 1のみ）
+
+Godot 4.7.1/Vulkan Mobile、vsync無効・max_fps=0、等速MAP1 300秒の自然戦闘で470撃破。
+180秒では敵29体/燃焼13体、直近30秒平均1.300ms・p95 2.345ms。全区間p95は1.893〜2.814ms。
+持続低下は未再現だが最大123.020msの単発スパイクあり、原因未特定。
+6項目の各60frame A/Bでは180秒の敵全処理OFFが0.631ms（28.39%）、300秒の敵描画OFFが
+0.231ms（18.14%）減と順位が変わり、支配原因は未確定。性能修正は行っていない。
+全計測値・条件・短区間比較の限界は`docs/performance_phase3_measurement.md`に記録。
+一時Harnessは削除し、game.gdは開始時とbyte単位で一致する内容へ復帰。
+
+### 38.7 併せて修正した既知不具合（性能とは別件）
+
+**状態異常が実プレイで一度も付与されていなかった（2026年9月4日に修正済み、詳細は36.3）。**
+900秒の計測中`_burning_targets`は全区間0だった。
+`StatusApplySystem.apply_state()`の呼び出し元は`attack_pattern_base.gd`の
+`apply_direct_damage()`だけだが、各職業の主力攻撃はそこを通らない
+（近接は`spawn_arc_hit`/`spawn_line_hit`→`MeleeHit.on_hit()`、遠隔は`Projectile`→
+`HurtboxComponent`。どちらも付与しない）。`apply_direct_damage()`を通るのは一閃派の処刑や
+homing_bolt Lv4の爆発などの派生効果だけである。属性廃止時に`hurtbox_component.gd`の
+`apply_element_damage`ブロックを撤去した際の取りこぼしで、36章の状態異常・状態カード9枚・
+天賦図の状態トリガーはすべて空振りしていた。`HitboxComponent`に状態IDを持たせ、
+`HurtboxComponent.apply_hitbox_damage()`から付与する形で接続した（36.3参照）。
+
+---
+
+## 39. 通常2D戦闘 Phase 1〜2（2026年9月8日）
+
+HD-2D試作との比較結果を受け、探索性とPixel背景は通常2Dのまま維持し、戦闘の立ち上がり、
+キャラクター体格、ボス戦の読み合いだけを段階移植した。2026年9月11日に正式方針を2Dへ固定し、
+2.5D試作／3周チャレンジはタイトル画面と通常実行経路から撤去した。
+
+### 39.1 Phase 1 — 逃走安全性・敵密度・成長速度
+
+- 全職業の`CharacterData.move_speed`へ共通0.90倍を掛ける。職業間の速度差と装備／状態倍率は維持する。
+- 通常敵の序盤XPは1。初回必要EXPを10にして約10体で最初の成長へ到達させる。
+  Lv10までは10→12→…→28と軽快に増やし、Lv11以降は線形項と緩い二次項で徐々に重くする。
+- 通常敵HP倍率はMAP1/2/3で2.80/3.60/4.50、Boss HP倍率は3.0/4.6/6.8。
+- Spawnは2.80秒・1体から開始し、2.30→1.65→1.05→0.68→0.55秒へ連続的に加速する。
+  同時数はBreakpointで1→1〜2→2〜3→3〜5→5〜8→8〜12へ段階上昇し、
+  MAP1/2/3の生存上限96/144/192体を越えない。
+  既存の侵攻は同時数と間隔へさらに倍率を掛けるため、平常の呼吸と明確なピークを両立する。
+- 代表Buildの実経路は78秒25体、308秒207体、432.3秒424体でMAP1条件420体へ到達した。
+  この値は4倍速・検証用高HPであり、最終的な中央値／難易度は実プレイで再調整する。
+
+### 39.2 Phase 2 — 2D体格とボス戦
+
+- Player表示は1.50→1.65、通常敵は1.25→1.40、Eliteは1.60→1.78。
+- 全Bossは倍率を揃えるのではなく、SpriteSheetBuilderが実際に採用する影付きIdle全コマの
+  不透明範囲を基準に個別補正し、画面上の基準高を約65pxへ統一する。
+
+| Boss | 元の不透明高 | visual_scale | 実表示高 |
+|---|---:|---:|---:|
+| Black Knight A / B / C | 33 / 24 / 31 | 1.97 / 2.71 / 2.10 | 65.01 / 65.04 / 65.10 |
+| Demon A / B / C / D / E | 22 / 21 / 28 / 27 / 25 | 2.95 / 3.10 / 2.32 / 2.41 / 2.60 | 64.90〜65.10 |
+| Flame Golem / Minotaur | 31 / 22 | 2.10 / 2.95 | 65.10 / 64.90 |
+
+  標準剣士の不透明高は22×1.65=36.3pxのため、Bossは約1.79倍。試作Minotaurの
+  3D表示高3.0÷剣士1.68と同じ比率差である。見た目・移動Collision・Hurtbox・攻撃接触判定は
+  同じ個別倍率で拡大する。赤Outlineは拡大後も画面上約2pxに保つ。
+- 通常2D Minotaurへ、試作の「突進→薙ぎ払い→環状衝撃波→3連地割れ」を移植した。
+  予兆寸法と命中判定は同じNode2D値を共有する。薙ぎ払いは半径145px・半角70度・0.18秒で、
+  元画像加工8コマの全身動作、白外縁／氷青の三日月、掃引判定を同じ進行率で同期する。
+  予兆・演技・剣撃はBoss死亡／MAP清掃／攻撃終了時に残さない。他9Bossの既存固有技は維持する。
+
+### 39.3 検証
+
+- `--map-phase2-check`: 移動90%、初回EXP10・Lv10前後の曲線、Spawn序中終盤、通常敵表示／判定、全10Boss実表示高、
+  Minotaur 4攻撃順・全身薙ぎ払い・Transient消去を確認してPASS。
+- `--map-runtime-check`: 侵攻3回×3MAP、Boss、宝箱、MAP遷移、Run ClearまでPASS。
+  MAP2/3遷移最大Frame sliceは19.160/24.183ms。
+- `--map-mass-density-check`: MAP3終盤条件で最大192体を実生成し、192体を180frame維持してPASS。
+  Headless実測は平均7.238ms、p95 21.746ms、最大28.108ms。
+- `--map-combat-check`: 424/420体、論理432.3秒でPASS。
+- 全191 GDScriptの実loadはfailure 0。Windows Sandboxでsystem CA storeを読めない環境警告は
+  ゲームコードとは無関係。長時間実プレイ中央値、全職業の体感、全Bossの自然戦闘時間は未確認。
+
+## 40. UI世界観刷新（2026-09-10）
+
+### 40.1 表現方針
+
+- UIの統一テーマは「朽ちた王国の地下を踏破する、鮮やかな16bit遺跡ファンタジー」。
+- 濃紺／青灰の石材、古金の金具、青緑の封印石を共通語彙とする。危険・鍛造だけ朱赤／橙を使う。
+- 装飾は主画面の紋章枠、区画の石板、選択カードの三段階に分け、同じ菱形を全要素へ反復しない。
+- Level Up、Shop、Boss報酬、完成大技のカードはIcon背面の菱形を廃止する。Icon本体の輪郭を見せ、名称は日本語だけを優先して一行に収める。
+
+### 40.2 画面構成
+
+- TitleとCharacter選択は地下王宮の封印門を背景にする。
+- 戦闘HUDの武装・戦利品・完成大技は、実Icon付きの小型石板を2列で表示する。従来の上限、重複数、Tooltipは維持する。
+- Level Up、Boss報酬、完成大技、Room選択は共通祭壇枠を使う。Shopは金貨色、Talentは青緑、鍛造は橙で役割を区別する。
+- Pause、コンセプト構築、Equipment、Resultを同じ書体・石板・古金枠へ揃える。コンセプト構築は起点／スキル／補助を金／青緑／紫で区別する。
+
+### 40.3 変更しない仕様
+
+- 戦闘方式、敵AI、数値Balance、Upgrade／Item／Roomの抽選、購入価格、Save形式、入力Actionは変更しない。
+- UI変更の詳細、参照作品、生成素材の再現手順は`docs/ui_world_refresh.md`へ記録する。
+
+## 41. 開発ダッシュボード（2026-09-11）
+
+- `dashboard/dist/`を公開可能な静的Webとして保持する。HTML/CSS/JavaScriptだけで構成し、画面内容は`dashboard/dist/data/*.json`から生成する。
+- 全体進捗は、CategoryごとのTask平均に`weight`を掛けた加重平均。Taskの100%は実装完了とTest完了の両方を満たす場合だけ設定する。
+- DashboardはRoadmapだけでなく、3MAP、敵6階級、通常敵22種、Boss10種、職業再編、状態異常、旧Fusionの再定義、完成大技23種、Equipment、UI/VFX/Audio、Performance、Known Bugs、Decision Logを一元表示する。
+- 現行正本では旧属性Lv/欠片/Element Fusionを廃止済みのため、火・氷・雷・光・闇は状態異常/完成大技の語彙として表示し、旧Fusion武器はShopの遺物武器として表示する。廃止前の仕様を現行機能として表示しない。
+- Desktopは左SidebarとTable、Tabletは縮小Sidebar、MobileはHamburger Menu＋Bottom NavigationとCardへ切り替える。Dashboard全体の横Scrollは発生させず、操作Targetは44px以上を基準とする。
+- 主要な機能追加、仕様変更、Bug修正後は`docs/dashboard_update_rules.md`に従い、Task Status、Progress、Bug、Decision Log、更新日を同時に更新する。
+- 公開DataへSecret、Credential、個人情報、PC固有の絶対Pathを含めない。
+- 実装状態を文字だけで誤認しないため、入口、探索、Boss、報酬、完成大技、Shop、天賦、装備、Resultの実画面CaptureをDashboardへ掲載する。画像には判断区分、確認点、関連Systemを必ず付ける。
+- `相関・仕分け`では、1 Runの体験Loop、MAP/敵/Boss階層、職業/攻撃/状態/完成大技、Phase実装順の4図を管理する。
+- 要不要の判断区分は、`維持`、`再設計`、`削除・非採用`、`保留`の4種類。手動攻撃、共通回避、全職天賦は依存先が決まるまで`保留`とする。HD-2D正式移行は2D方針確定により`削除・非採用`とする。
+
+### 41.1 キャラクター・敵・Boss図鑑
+
+- 職業再編台帳10種（正式Player6職・Boss転用4職）、通常敵22種、Boss戦13件は、ゲームが実際に参照するSpriteから代表Frameを切り出し、Dashboardの図鑑カードへ掲載する。
+- 図鑑用画像は`dashboard/dist/assets/portraits/`へ公開用Copyとして置き、ゲーム本体のSpriteや戦闘Dataは変更しない。
+- 職業は青緑、通常敵は古金、Bossは朱赤の額縁で区別し、カード内では名称、ID、登場MAP、状態、主要数値、通常攻撃、役割・報酬を同じ順序で表示する。
+- PCとスマートフォンで同じ42体へ到達でき、横Scrollを発生させない。画像追加・差し替え時はDataの`image`参照と実Fileの両方を検証する。
+
+## 42. 職業再編 — Player6職と職業転用Boss3戦（2026年9月11日）
+
+### 42.1 正式Player職
+
+- 正式Playerはソルジャー、剣士、弓兵、騎士、重装斧兵、魔導士の6職とする。
+- 6職は近接基準、技量、射撃、機動防御、重量、魔法制御の役割へ分け、天賦・Upgrade・能動Skillの重複を減らして個性を強める。
+- 槍兵、聖堂騎士、司祭、死霊術師はPlayer選択とPlayer向け拡張対象から外す。既存Dataは移行完了まで削除せず、Boss転用元として保持する。
+
+### 42.2 職業転用Boss
+
+- 槍兵は単独Bossとし、長距離突進、貫通突き、反転突撃を核に射線と位置取りを問う。
+- 死霊術師は単独Bossとし、Skeleton召喚、死者蘇生、呪い領域を核に召喚数と本体接近の判断を問う。
+- 聖堂騎士と司祭は2体で1つのペアBoss戦にする。聖堂騎士が前衛と主攻撃を担当し、司祭は直接攻撃を抑えて聖堂騎士の強化、回復、聖域展開を優先する。
+- 司祭の支援は予兆、対象、効果時間、再使用間隔を明示し、回復だけで戦闘が膠着しない上限を設ける。撃破順によるPhase変化と数値はPrototype後に確定する。
+
+### 42.3 実装順
+
+1. 職業選択、解放、Save互換を正式6職へ移行する。
+2. 転用4職のPlayer専用Upgrade・天賦・能動Skill参照を整理し、Boss用Dataを独立させる。
+3. 槍兵と死霊術師を単独Boss Prototypeへ接続し、予兆と攻撃間隔を検証する。
+4. 聖堂騎士＋司祭を2体同時戦へ接続し、支援対象、回復上限、撃破順、死亡時の残存挙動を検証する。
+5. 3MAP内の配置、HP・Damage、報酬、登場演出を決め、通常2D回帰と長時間実Playを行う。
+
+現時点で確定したのはRosterとBoss役割であり、ゲーム本体の職業選択、戦闘AI、数値、MAP配置は未実装。Dashboardでは設計中として扱う。
+
+## 43. 2D正式採用と旧属性系宝箱報酬の停止（2026年9月11日）
+
+- 正式な画面表現は通常2Dとする。タイトル画面の「2.5D試作：剣士」「2.5D遠征：剣士三周」を撤去し、通常探索と2D演出確認室だけを残す。
+- 光・闇・火・氷・雷を前提にした旧完成大技は、属性システムを再設計するまで通常Runの獲得候補へ出さない。
+- 通常MAPの`skill`宝箱枠は装備へ置換する。旧`attribute`／`skill`が残る互換Dataを読み込んだ場合も、通常Runでは装備報酬として処理する。
+- Boss宝箱は旧完成大技3択を開かず、Rare／Legendary装備を出した後にShopまたはRun Clearへ進む。
+- `completed_skills.json`と完成大技Runtimeは将来の非属性版再設計と演出確認用に保持するが、通常MAP進行からは接続しない。
+
+
+## 強敵固有技の初回実装 — 2026-09-12
+
+- 重装オークだけにorc_step_slashを接続。既存Attack01の7フレームを使用し、全体の回転・伸縮による攻撃表現は行わない。
+- 開始0.12秒だけ目元を赤く発光。構え0.55秒、刃が走る部分0.12秒、0.61秒時点に前方120度・58pxの単発判定。命中ダメージは通常の1.35倍。1.10秒で終了し、再使用6秒。
+- 狙いは開始時に固定。22pxの踏み込みはmove_and_collideで壁・水晶を尊重。射線が塞がる場合は発動／命中しない。スタン・死亡・部屋停止で中断する。
+- 見せ方確認用の実エンジン等速GIFはartifacts/strong_enemy/orc-step-slash.gif。撮影は専用シーンで拡大表示。通常出現のEnemyDataにも接続済み。
+- 他の強敵、階級順の出現制御、同時発動数制限は今回未実装。全体の自然プレイ調整も今後。
+
+
+## 強敵6体の固有技 — 2026-09-12
+
+- 重装スケルトン=迎撃突き、大剣スケルトン=大薙ぎ払い、ブラッドモンスターB=血槍、エリートオーク=二連斬り、ワーベア=跳びかかり叩きつけを通常EnemyDataへ接続。重装オークと合わせて6体。精鋭化でも同じ技を継承する。
+- systems/strong_enemy_special.gdに実フレームと秒数を指定。赤い合図0.12秒、構え約0.55〜0.79秒、斬る部分約0.12秒。二連斬りは0.56秒と1.17秒に命中窓。既存0.5秒無敵時間を尊重する。
+- 身体全体の回転・伸縮による攻撃表現を追加しない。クマは6pxだけ浮いて34px前進、着地を円で予告。壁を越えず、スタン・死亡・部屋停止で浮き姿勢とロックを解除。血の敵は目のない素材なので口元に赤い合図。
+- 近傍280px以内で同時に固有技を実行できる敵を2体までに制限。密着後も発動可能。向きは開始時に固定。
+- tools/preview_strong_roster.tscnで実エンジンの6体を等速撮影。スマホ用H.264/yuv420p/faststart MP4をダッシュボードstrong-enemies.htmlへ掲載。各動画後半は横回避。全体の自然プレイ検証は未実施、出現順変更は未着手。
+
+## 精鋭能力の視認演出刷新 — 2026-09-12
+
+- 火炎・雷撃・氷結・毒・吸血・堅牢の効果と数値は維持し、戦闘中の視認演出を刷新する。
+- 精鋭本体の足元に、能力ごとに形と色が異なる紋章を常時周回させる。複数能力では全紋章を同時表示する。
+- 火炎・雷撃・毒は床予兆が収束してから発動し、予兆中にはダメージを与えない。火炎は橙の爆炎、雷撃は黄青の雷柱、毒は紫緑の持続渦で区別する。
+- 氷結と吸血は攻撃命中時に対象へ専用VFXを表示する。吸血は精鋭側にも吸収光を表示する。堅牢は展開時の盾VFXに加え、シールド残量がある間は六角障壁を常時表示する。
+- 表示は敵側の特殊能力であり、廃止済みのPlayer属性Lv・欠片・Element Fusionを復活させない。
+- tools/preview_elite_affixes.tscnで、6能力の常時紋章、予兆中無傷、発動後ダメージ、氷結Slow、吸血回復、堅牢Shieldを確認する。スマホ用MP4はdashboard/dist/elite-affixes.htmlへ掲載する。
+
+
+### MAP2・MAP3 建築ランドマーク（2026-09-12）
+
+MAP2: 紫晶採掘場／結晶神殿。MAP3: 古代溶鉱炉／冷却水車。各最大2箇所を通常部屋の北寄りに配置する。開始地点とBoss・精鋭部屋を避け、6x2セルの台座と周囲の通行幅を確保する。床全体の到達性を維持できない場合は配置を省略。台座はTile衝突・経路探索・敵出現候補で共通して通行不可とする。Mapに配置情報を保持しStage再構築時に増殖させない。専用透過Atlasを使用し、MAP1や報酬・戦闘能力は変更しない。
+
+
+### ランドマーク配置改訂（2026-09-13）
+独立した部屋中央の台座配置を廃止。北壁と接する位置のうち、背面4行が壁、前面3行と左右に通行余地がある場所に配置。形状ごとの乱数で点在させ、基本1か所、35%で最大2か所。2つ目は22セル以上離す。安全な候補がなければ省略。鉱山には景観用の採掘作業員を配置し、2.8秒周期で構え・素早い打撃・戻し・休止を行う。戦闘、報酬、会話は追加しない。
+
+
+### MAP2・MAP3 作画統一（2026-09-13）
+ランドマーク基準の石肌・欠け・目地・錆・木材表現へ壁床小物を統一。高密度の素材を32pxの世界セルに直接描き、床・壁正面・岩盤の明暗を分ける。旧記号状装飾は表示を外し、収納・地形柱には新しい小物画像を当てる。物理Tile、経路探索、配置、採掘作業員を保持。MAP1は従来の描画を維持。
+
+## 装備200種 — 2026-09-13
+
+- templates.jsonを25→200種類へ拡充。既存25 ID/名前/能力候補を保持、新規175。武器52、頭31、胴31、腕24、脚24、装飾38。各レア度40。
+- painted_200/に生成8シートと200 AtlasTexture。既存ドロップと合成が同じカタログを読み込み、新規品も取得可能。抽選確率と所持品50枠は維持。系統はアート上の出自で、セット効果/新属性ではない。
+- equipment_catalog_200.tscn: 200生成、全画像書出、6部位装備 PASS。equipment_merge_check PASS。旧テストの25件前提と旧希少度ラベル参照を更新。
+- artifacts/equipment_200/implemented.png は実装画面。Dashboardに全200種の画像と能力候補を掲載。
+
+## MAP2壁・連続鍛造 — 2026-09-13
+- MAP2壁専用masonry_wall.pngを新規生成。全solid描画に石積みを適用、左右側面/天端/下端の陰影で床と区別。既存collision維持、MAP1/3変更なし。
+- 合成完了・演出スキップ後とも鍛造タブ維持。素材枠を空にし、利用可能なら同レア3点セットへfocus。
+- 実描画map2.png更新、equipment_merge_check failures=0（連続2回とskip確認）。Dashboard記録更新、今回の記録は未公開。
+## 成長バランス初回調整 — 2026-09-13
+
+- 実装済み。緑→青3個95%、青→紫5個90%、紫→橙7個85%、橙→赤10個80%。失敗時は選択順の先頭から1/1/2/2個のみ消費し、残りは個体・能力・お気に入り状態を保持。成功時は全素材を消費。最高段階は合成不可。未装備・未ロックの同レア素材のみ。鍛造は最大10枠/2行、確率と損失表示、完了後タブ維持。
+- 装備の新規生成レンジは従来比で攻撃50%、防御30%、最大HP40%、攻撃速度70%、会心率70%、会心ダメージ65%、移動速度85%（整数能力は丸め）。職業の基礎値と経験値曲線は維持。既に所持している個体の数値は書き換えず、新RUNで評価する。
+- 防御の固定減算による軽減は最大60%。他のスキル軽減は別乗算。命喰らい回復を橙2/赤4、無効化を橙4%/赤7%へ。
+- 通常装備抽選の重みは緑70/青25/紫4.5/橙0.5/赤0。Bossはearly65/30/5/0/0、mid30/50/18/2/0、late10/45/35/10/0、final0/25/50/23/2。装備そのものの落下率は維持。
+- ランダム回復ハート通常1.5%、精鋭4%、回復最大HP6%、寿命15秒、地面上限5個。確定回復報酬は別扱い。
+- forge_balance_check: 4段階、強制成功/失敗、部分返却、重複/ロック/消費済み素材拒否、画面維持、ハート上限、防御上限を確認。3MAP通しの体感バランスは未評価。
+- 未完了: 敵の重なりと間合い、局所ヒットストップ、MAP2/3敵構成、200装備の属性/固有役割/レア度の全面再設計。
+
+
+## 打撃感・攻撃間合い — 2026-09-13
+- 確定したPlayer直接HitからEnemyBasic.receive_hit_impactへ接続。通常50ms、会心/ActiveSkill80msの敵個別停止。精鋭0.65倍、Boss0.4倍。再発動間隔220ms/Boss400ms。継続・二次ダメージは停止対象外。通常Hitの全体14ms停止を削除し、Player操作を維持。
+- 既存の被弾姿勢/明滅/命中音を維持して停止に合わせる。停止解除後3/5pxの小さな押し戻し。既存Weapon Knockbackも停止中は予約、解除後に壁Collisionを使って適用。固有攻撃を持つ敵の自動微小押し戻しは抑制。
+- 通常追跡はattack_rangeの70%（上限24px）で停止。中心重なりは敵だけを壁判定付きで外へ戻す。敵同士の大群分離・Boss突進中の重なりは引き続き別調整。
+- impact_check PASS: 実Health経路、停止解除、Player/全体時刻維持、連打制限、DOT除外、間合い、完全重なり、吹き飛ばし待機、停止中死亡解除。大群での長時間体感は未評価。
+- ユーザー方針: 一つの変更に関連するUI・操作・既存機能との接続も合わせて更新する。
+
+## 2026-09-13 コンパクトUI・今後の戦闘方針
+- HUDを左下HP・右下職業技・最下端EXPへ再配置。武装／戦利品は開閉式。C所持品・T天賦図・Space職業技を維持。
+- 所持品画面を中央へ縮小（1600×900時、基準1360×790）。装備比較・フィルタ・ステータス名・最大10素材枠・連続鍛造を維持。開いている間はHUDを隠し、閉じると元の表示状態に復元。
+- 実描画でHUD・50アイテム・10素材鍛造を確認。forge_balance_check成功。Embervilleの配置と情報密度を参考に既存素材を調整した実装。
+- 次回相談：少数の敵を倒し徐々に成長する戦闘へ再設計。従来の大量湧き路線に優先する新方針。今回は敵数、XP、戦闘ロジック、操作を変更していない。
+- 装備の属性と強度の再設計は引き続き未完了タスク。公開サイトは今回未更新。
+
+## 2026-09-13 小型所持品・ホバー詳細
+- 常設の3列目を撤去し装備＋所持品の2列へ。アイテム48px・7列。装備スロット52px。装備絵のアルファ輪郭をシェーダーでレア色に描画し、セル枠は中立色。
+- ホバー詳細はアイコンに隣接し画面内へ補正。クリック固定、矢印選択でも比較。カーソルを詳細へ移動して装備・お気に入り・保護を操作可能。
+- 鍛造は独立した浮動パネル。10素材、失敗返却、連続鍛造を維持。閉じるとHUD復元。
+- capture_compact_hover、forge_balance_check PASS。通常50アイテムとホバー実画像はartifacts/compact_hover。戦闘ロジック変更なし。
+
+## 2026-09-14 打撃感の第一調整
+- Emberville方向への近接命中表現。公開映像の内部数値を複製したものではない。
+- 既存50/80msの敵局所停止を維持、反応後の基本後退3/5→5/9px、潰れ幅8%→2.5%、弾性戻りを滑らかな減速へ。
+- 扇形／刺突命中時に130msの細い白い接触線。1攻撃最大3個、範囲パルスには追加しない。既存命中音は維持。攻撃速度・判定時刻・敵数・成長値は未変更。
+- impact_check PASS。終了時に既存のObjectDB/resource残存警告あり。
+- 未完：単純な小物と宝箱の再生成・配置、装備ドラッグ＆ドロップ。前回は詳細素材生成までで、ユーザーから簡素化指示あり。武器2系統制限は相談中。
+
+
+## 2026-09-14 手動戦闘と少数敵バランス（初期値）
+- WASD移動、J通常攻撃（長押し可）、K回避、L職業技。SpaceからLへ移行。C/T/E維持。I未使用。
+- 近接は移動方向へ振る。対象への自動旋回・踏み込みを撤去し空振り可能。遠距離の標的選択は既存補助を維持。回避／攻撃の同時開始を抑制。
+- 回避80px/0.20秒、再使用0.85秒、最初0.12秒無敵。壁衝突あり、メニュー中停止。攻撃中の回避キャンセルは不可。
+- MAP通常敵上限8/10/12、1体ずつ3.5〜4.5秒。サージによる数倍増を撤去。ボス撃破条件60/80/100（旧420/650/900）。敵HP倍率3.2/4.0/4.8、攻撃倍率1.3/1.6/1.9。ボスHP倍率2.2/3.2/4.2、攻撃0.9/1.05/1.2。
+- EXP初回15、Lv10まで+5/段階、その後増加。剣士初期吸血を撤去。装備・合成ルールは維持。
+- manual_combat_check PASS（自動攻撃なし、J空振り、K再使用制限・無敵終了・メニュー停止、L割当）。impact_check PASS（終了時リソース残存警告あり）。HUD実描画確認。
+- Emberville内部値の複製ではなくVSGAMEの初期調整。3MAP通しの体感バランスは未評価、連携コンボ・武器別アニメーション・装備武器制限は未実装。
+
+## 2026-09-14 探索配置戦闘・低い初期ダメージ
+- 前回の時間湧き／高耐久・高火力調整に優先。MAP通常敵は24/30/36体を生成後に一度だけ配置。開始地点300px内、精鋭部屋・Boss部屋を除外し、通行余裕のある床へ180px以上離して配置。倒しても補充しない。
+- 通常配置敵は200px以内かつ壁越しでない視認、または被弾で反応。380pxを超えて離れると追跡終了。精鋭部屋とBoss専用行動は従来方式を維持。
+- 職業基礎攻撃を半減（剣士14→7）。職業技の基礎ダメージ最低10制約を撤去し、通常攻撃と同じ低い基礎値に追従。装備由来の上乗せは今回は維持（全面再設計は残作業）。
+- 通常敵HP倍率0.9/1.2/1.6、攻撃0.6/0.8/1.0。BossHP0.8/1.2/1.7、攻撃0.5/0.65/0.8。HPも下げ、低火力化による硬すぎる敵を避ける。
+- Boss撃破条件12/16/20へ変更、時間解放は維持。通常襲撃サージと自動報酬を停止。敵種は配置地点の遠さで段階選定し、その場で待っても強い種類が追加されない。
+- exploration_encounter_checkで実MAP配置、床余裕、開始距離、待機、近接発見、追跡解除、非補充、剣士基礎値を確認。3MAP通しの成長・装備込みの体感バランスは未評価。公開Dashboard未反映。
+
+## 2026-09-14 本体衝突・命中反動・ドラッグ装備
+- Player mask=9、Enemy layer=8/mask=9。本体の相互除外を撤去し、敵同士も衝突。死亡時は本体判定を無効化。通常の間合いは両者の実Circle半径合計+2px、攻撃射程はそこから最低6pxを確保。壁越しの通常攻撃／扇・直線近接判定を遮断。
+- 既存50/80ms局所Hitstopを維持。通常敵の微小反動7/12px、復帰待ち80/120ms。押し戻しが終わるまで追跡移動を再開しない。武器ノックバックを瞬間移動から壁衝突付き短時間移動へ。強敵固有姿勢／Bossの無差別な追加反動は抑制。
+- 所持品と装備ButtonにGodot native drag forwarding。アイコンpreviewと対応部位の青緑highlight。正しい部位にdropして装備交換、装備枠から所持品のitem/余白へdropして解除。間違った部位／画面外は変更なし。元itemをdrag開始時に消費しない。drop完了後deferredで再描画。鍛造中は操作拒否。
+- ホバーの装備／解除Buttonを非表示。drag中は詳細popupを隠しdrop先を塞がない。部位フィルタ・50枠・鍛造経路を維持。装備輪郭shaderのbuiltin sampler引数によるコンパイラエラーも修正。
+- impact_check / manual_combat_check成功。contact_drag_checkは実マウスeventで空き装備・不正部位拒否・交換・解除・個数維持を確認、OpenGL実描画でもPASS（stderrなし）。artifacts/contact_drag/drag.png。
+- Emberville開発者実演を再参照。通常攻撃と押し戻し／stun技、武器別comboの役割差を確認。停止時間等の内部数値は公開根拠がなくVSGAME用調整。新combo・新武器アニメ全体の移植を完了したものではない。docs/emberville_contact_research.md参照。
+
+## 2026-09-14 宝箱差替・モーション別命中・歩行押し出し修正
+- TreasureChestの矩形仮描画をchest_simple_v2.pngの透過した閉／開2状態へ接続。通常幅40、Boss幅48。足元StaticBody34×12、E範囲64。開封済み表示と報酬一回制御を保持。artifacts/chest_ingame.pngは実ゲーム描画。
+- 剣士attack1はframe3に1回、attack2はframe3/6/12に3回、attack3はframe5/7/9/11に4回の命中。frame_changedに同期し、モーション全体の旧ダメージ予算を各打へ分配。短い敵iframeで後続打が欠けない専用経路、各Hitbox内の重複防止を保持。一閃派は単発attack1を選択。通常速度1.65倍に攻撃速度補正。J一回でそのモーション一連を再生。
+- 敵が接近距離を維持するため後退する補正を撤去。静止敵に不要なmove_and_slideを呼ばず、接触の復元処理による押し出しも止める。Hitstopでprocess停止してもCollisionObjectはKEEP_ACTIVE、被弾中も本体・Hurtboxを維持。攻撃ノックバックは残す。
+- sword motion中は壁時計のアニメロックを使用せず、実際の再生終了を待つ。モーダル休止後も残る攻撃Frameが再生される。
+- chest_strikes_check: 実ダメージ1/3/4、180physics ticks前進で敵位置不変、本体遮断、開封一回、alpha確認。60fps・20fps・途中menu休止でPASS。manual_combat_checkとimpact_checkもPASS。OpenGL宝箱描画stderrなし。テスト終了時に既存ObjectDB/resource解放警告が残るが、実行中のScript/Physicsエラーなし。
+- Emberville動画25:30付近を再参照。剣112コンボは確認したが、歩行で敵を押せるかの内部仕様は断定できない。今回の「歩行は遮断、押し戻しは攻撃時」はVSGAME側の設計判断。
+
+
+## 2026-09-14 探索型MAP構造・番人の鍵・探索図
+- 公開開発ログと指定動画の26:47/28:01/46:48/47:40を参照。内部アルゴリズム・タイル数は非公開。VSGAME向けの再構成。docs/emberville_map_research.mdに根拠・設計・優先課題を整理。
+- 通常3MAPはExplorationLayoutへ。13/15/17区画、116×94 / 120×97 / 124×100、3〜4タイル通路。役割を決めてから変形部屋と短い接続を生成。seedで寸法、形状、反転、迂回路再接続が変わる。旧ROOM/Test Lab生成は保持。
+- 部屋別15/16/19体（ボス除外、精鋭1体込み）。弱敵／標準敵／固有技強敵を1〜2体ずつ配置。追加湧きと時間巡回精鋭なし。配置精鋭は能力1/1/2個。長すぎる追跡は持ち場へ戻る。
+- 進行は番人を倒す→鍵箱をEで開く→ボス領域で開始。時間・撃破数だけで解放されない。実死亡通知で箱を解放。ボス開始で他室の敵を消さない。M探索図は発見済み範囲のみ、M/Escで閉じる。
+- 移動経路3タイルと目的物周辺を装飾禁止にし、壁面ランドマーク／水晶／収納の衝突を維持。120seedで全床と3×3経路、実3MAPで半径20の実衝突経路・鍵箱・帰還・ボス開始・MAP切替を確認。OpenGL実描画はScriptエラーなし。確認終了時の既存ObjectDB/resource警告は残る。
+- artifacts/exploration_map1〜3.png、exploration_guardian1〜3.png、exploration_discovery.pngは実描画。exploration_routes.pngはseed=913000の実地形から作図。ローカルDashboard同期、公開デプロイなし。
+- 次は敵編成の役割差→装備の属性/強度と武器制限→有限遭遇のEXP/報酬→NPCなどの発見→帰還後の使い道→別の接続テンプレート。装備200種の全面再設計は未実装。
+
+
+## 2026-09-15 60層探索・経済・回避・景観（現行値）
+
+- MAP1/2/3のテーマを各20層、通算60層にする。各層の役割付き地形、部屋の形、反転、分岐は乱数で再生成。部屋数はテーマ基準13/15/17から最大17へ段階拡張。最深部の鍵の番人を倒して鍵箱を開き、各層のボスを解放する。最終ボスは60層目だけ。
+- 通常敵は部屋別の有限遭遇。通算深度で広い戦闘部屋に最大2体ずつ増援を追加し、狭い宝箱部屋では増やさない。敵HPはテーマ基準0.9/1.2/1.6に`1+0.028×(深度-1)`、攻撃は基準0.6/0.8/1.0に`1+0.02×(深度-1)`を掛ける。ボスHPは基準0.8/1.2/1.7に`1+0.035×(深度-1)`、攻撃は基準0.5/0.65/0.8に`1+0.02×(深度-1)`を掛ける。テーマ境界でも難度が低下しない。
+- ボス死亡地点の宝箱と確定床装備を離して配置。宝箱を開けても移動しない。別位置の階段は宝箱開封後に使える。装備を拾い、階段をE/Xで調べるとショップ、閉店後に次の層を生成する。60層では階段からRUN CLEARへ。
+- 少数撃破に合わせ通常敵は初期2G、層ごとに段階加算。精鋭部屋18G、ボスはテーマごと50/65/80Gに層番号ぶん+2G。ショップ初期は回復40/55G、強化60G、武器165G前後から。価格とリロール初期25Gは通算深度で+3.5%/層。強化・武器は同じ商品を1Runで一度だけ購入でき、回復は再購入可。旧3MAP移動時の自動25%回復は60層の階段移動ごとに8%へ抑え、宝箱/ショップ回復の価値を維持する。60層の自然プレイ収支は今後評価する。
+- 合成は緑→青→紫→橙→赤の全段階で同レア装備3個。成功率95/90/85/80%、失敗時の素材損失1/1/2/2個は維持。鍛造画面の素材数・表示も同期。
+- J斬撃中・騎士のJ突進中・L居合中でもK回避へ移れる。中断したモーションの後続命中・非同期移動・騎士の2段目を止める。MAP切替等の攻撃以外の移動ロックは解除しない。敵通常攻撃または強敵固有技の実着弾フレーム直前0.12秒以内、射程内でKを押すと世界を0.65秒の実時間だけ0.35倍速にし、Jの次の一撃を1.35倍にする。反撃受付はスロー後も1秒続く。死亡・新Runでは時刻を1倍へ戻す。剣士L居合は倍率4.8→2.0、距離280→190、幅38→26、クールダウン6→9秒。乱撃/一閃派の連射間隔も延長。
+- 装備は既存ドラッグに加え、所持品ダブルクリックで装着／解除。鍛造中は拒否。炉の炎、冷却水車の落水と水面は原画の切り出し領域だけを時間変化させ、壁面配置と足元Collisionを保持する。
+- `floor_run_check`は45シードの地形到達性、1→2/20→21/40→41/60→クリアの実経路、境界での敵数・HP非低下、宝箱・階段・ショップを確認。`dodge_counter_inventory_check`は遅延命中なし・ヒットストップとの重畳・強敵技の予告窓と実命中・時刻復帰・反撃・装備ダブルクリック、`contact_drag_check`は既存ドラッグ実入力を確認。炉と水はOpenGLで2フレームを撮り、変化領域を原画位置へ合わせた。全60層の長時間通しプレイと購買体感は未評価。
+
+## 2026-09-21 敵階級とMAP別Roster
+
+- 敵の階級は`雑魚 → 標準 → 強敵 → 精鋭 → 中ボス → ボス`の6段階とする。通常敵23種は雑魚・標準・強敵のいずれかを基礎階級とする。精鋭は強敵を基礎個体にAffixを付与したもの、中ボスとボスはBossSpawnerの専用BossDataとする。
+- MAP1（王国・不死）は、雑魚=`slime / bat / fast_enemy`、標準=`basic_enemy / shield_guard / skeleton_archer`、強敵=`armored_skeleton / greatsword_skeleton`。
+- MAP2（血晶・魔性）は、雑魚=`eyeball_monster`、標準=`blood_monster_a / ghostfire / demoness_a / werewolf`、強敵=`blood_monster_b / werebear`。
+- MAP3（溶鉱炉・オーク）は、雑魚=`lava_slime / hellbat`、標準=`demoness_b / hellhound / orc_rider / warlock`、強敵=`armored_orc / elite_orc`。
+- 部屋役割は入口・宝箱=`雑魚`、通常警備=`雑魚+標準`、前室=`標準+強敵`、鍵番=`強敵+標準`、精鋭部屋=`強敵+Affix`。同階級内は部屋番号と各MAP内の層番号で循環し、20層内に担当する全種を出現可能にする。有限遭遇数と深度増援数は従来値を維持する。
+- 現状で実挙動が重複する組は、`slime/lava_slime`、`bat/hellbat`、`fast_enemy/eyeball_monster`、`basic_enemy/blood_monster_a`、`werewolf/hellhound`。今回は削除せずMAP別の外見差として残す。弓兵・魔法系を含む専用行動が未実装の敵は、見た目だけで役割を完了扱いにしない。
+- `tests/enemy_assignment_check.tscn`で23種の重複なし配属、各MAPの基礎3階級、EnemyData実在、20層内の全種到達、6階級順を検証する。
+
+### 2026-09-16 宝箱・盾兵・短い発光素材
+
+- 通常/ボス宝箱は新規入手した5列×6行の32px素材を使用する。通常は上段、ボスは下段の閉/開ペアを選び、レアリティで列を切り替える。E/X操作、足元Collision、報酬の一回限りの付与は変更しない。
+- 盾兵(`shield_guard`)はMAP1・2の一部警備部屋の標準敵。HP86、移動48、接触ではなく予備動作後の近接攻撃5、EXP2。被ダメージを20%軽減し、被弾時に盾防御アニメを見せる。既存の敵1体との置換なので有限遭遇の総数は増やさない。
+- Holy VFX 01/02は属性システムへ接続せず、ジャスト回避成功とボス宝箱の開封に使う短い装飾演出。現在のジャスト回避の時間制御や反撃倍率は変更しない。
+- 新地形セットはMAP2・3の石材と色味だけでなく陰影と描線の密度が異なり、色替えだけでは自然に混ざらないため導入を保留する。既存の地形、当たり判定、生成ルールを維持する。
+
+### 2026-09-16 ジャスト回避J反撃と剣士の表示
+- 攻撃予兆の命中直前0.12秒にKを押すとジャスト回避。成功時に1.5秒のJ受付窓を設ける。成功だけでは自動復帰せず、最初のJで敵の左右側面の近い方へ最大0.14秒・壁/敵衝突を守って移動し、影を残してJ攻撃を開始する。敵が死亡・遠方なら移動せずJを開始する。
+- J開始後1秒間の近接攻撃間隔は0.82倍、最初の命中は既存の1.35倍。Lのクールダウンは変更しない。ジャスト回避の全体スローは撤去し、通常の命中ヒットストップだけ既存経路で維持する。
+- 剣士の上下向き専用素材は作画の違和感により撤回。待機・歩行・斬撃は元の横向き原画を使用し、J反撃時の位置復帰と命中判定は維持する。
+- MAP1の柱フィールドの青い球体と細い台座は撤去。2×2の通行不能な障害物は、同じ石壁材のタイルとして描画する。
+
+
+## 2026-09-22 予兆と反撃機会の統一・旧モード撤去
+- JEV推奨実装順2。強敵6種の赤い目（血の敵は口元）を0.12秒→0.40秒、寸法1.6倍へ。最初の0.28秒は明るさを維持。二連斬り二発目にも予告を表示。構え・振り抜き・既存命中時刻は維持。
+- 強敵の床予兆は実判定と同じ射線幅／扇角／半径、攻撃方向は構え開始時に固定。精鋭の周期能力は一度に1つ、最低0.75秒の予告＋発動＋0.45秒の回復待ち。強敵固有技と重複させない。未発見・帰還中・死亡後の能力を止める。
+- 既存中Boss/Bossの突進は1秒の直線、叩きつけは0.9秒の円、Novaは0.85秒の放射、召喚は0.75秒の紫の円で予告。攻撃後の硬直1.25〜1.5秒を維持し、通常攻撃を差し込ませない。死亡時は予告と遅延命中を破棄。Minotaur専用4攻撃の予兆同期は維持。
+- 旧ROOMのController／Select／Factory／データ／専用テスト、LabのROOMタブ・操作、HD-2D専用Scene／Script／Shader／素材／生成ツール／テストを削除。共有Minotaur斬撃素材は通常2D本編に必要なため保持。過去章のROOM／HD-2D記述は履歴であり現行機能ではない。
+- 検証：強敵6種の実描画・命中回数・回避・中断・死亡取消、精鋭直列化、Boss警告と反撃猶予を確認。通常タイトル→MAP1、Lab（保存無効）、45seedと階段1→2／20→21／40→41／60→Clear、Kキャンセル・J反撃・装備操作を確認。
+- Dashboardの図鑑・判断・進捗と強敵6種のMP4をローカル更新。公開デプロイは未実施。次の大項目は装備属性・強度の再設計で、今回数値変更はしていない。
+
+
+## 2026-09-22 ボス領域：紋章・壁内装備・地下4層の進行停止
+- BossSpawnerの候補3体の一巡後に空文字を返していた箇所を修正。候補プールだけ履歴をリセットし、候補が複数なら直前の連続出現も避ける。空候補／候補1体にも対応。鍵条件は維持。生成に失敗した場合は同じ場所でEを押し直せるようMapLandmarkを再登録する。
+- ボス床紋章を暗い青灰寄りの乗算色・不透明度28%へ。待機中だけ表示し、戦闘中と撃破後は消す。生成失敗時は再表示、次層生成時は待機表示へ戻す。
+- ボス死亡時の装備に使っていた右160px固定オフセットと壁座標へのfallbackを撤去。宝箱／階段生成後に配置を決める。部屋内の3×3床余裕＋半径20pxの実衝突を確認し、ボス宝箱／階段から112px、他の装備から原則56px離す。通常の開封済み宝箱は48px、未開封は96px離す。安全な床が一杯の場合だけ装備同士は同じ床を共有する。
+- Boss宝箱を壁から余裕のある床へ寄せる。宝箱の装備報酬は遠い部屋角ではなく、箱に近い分離位置を選ぶ。抽選率・レアリティ・装備数・合成・敵能力値は変更していない。
+- boss_room_regression_check：3テーマ各20回の実Boss生成、地下4層で通常敵を死亡させ鍵を開封→領域で開始、生成失敗→その場再試行、壁際での死亡ドロップの実E回収、宝箱報酬の衝突・間隔を確認。floor_run_check：45seed／1→2、20→21、40→41、60→Clearが成功。script_load_check：185件成功。
+- 実描画はartifacts/boss_room_fixed_before.png／fight.png／loot.png。DashboardのBug・進捗・仕様・判断・実画面をローカル同期、公開デプロイ未実施。描画キャッシュの保存権限／証明書ストア警告は環境由来で、実行中のScript/Physicsエラーなし。
+
+## 2026-09-23 大群・自動攻撃と広いダンジョンへの復帰（現行）
+
+この節は過去の少数有限遭遇・J必須・番人の鍵の記述に優先する。
+
+- 通常攻撃は全6職業で自動。射程内かつ壁で遮られない敵へ攻撃開始時に旋回し、命中コマごとの判定を維持する。攻撃中も移動できる（騎士の固有突進などを除く）。WASD/矢印で移動、Kで回避・攻撃キャンセル、Lで職業技、ジャスト回避後のJ反撃、C/T/Eは維持。Jで任意の空振りも可能だが通常攻撃に押下は不要。
+- 旧DungeonGeneratorのランダム矩形・連結通路・追加接続を本編へ再接続。テーマ別100/108/116四方、部屋候補8/9/10、部屋18〜26セル・ボス部屋26セル。通路幅パラメータ8（実際に彫る幅は9セル）。柱密集・中央狭窄を本編で使わず、通路・部屋の中央5セルの十字レーンを固体装飾から予約。壁面素材・ランドマーク・装飾の衝突は維持。3テーマ各20層、各層再生成・各層ボス・階段・ショップを維持。
+- 有限の部屋別配置・視認開始・持ち場帰還・鍵箱の導線を本編から外す。通常波はプレイヤーへ常時追跡。最初から3〜5体/1.15秒、45秒で4〜6体/0.95秒、90秒で5〜8体/0.8秒、150秒で7〜10体/0.65秒へ。間隔は線形補間。各テーマ基準cap64/80/96に通算深度の0.7倍を加算、上限128。遠方1200px超の通常波だけを無報酬で整理し補充する。
+- 0〜20秒は雑魚のみ、20秒以降は標準敵を30%混ぜ、60秒以降は雑魚70%/標準22%/強敵8%。各MAP専属Rosterを使用。巡回精鋭は90〜105秒後から、以降60〜90秒。各MAP専属強敵へAffix1/1/2個と深度HP/攻撃補正を付与。通常capに従う。敵同士・主人公との本体衝突、ノックバック、局所Hitstop、強敵予告・精鋭直列化は維持。
+- 出現は220〜480pxの近傍に限定。3×3床余裕に加え半径26pxの実物理判定で壁・固体装飾・既存Enemy本体を検査。安全地点がなければ次の波で再試行する。壁内や遠い別室へ無理に生成しない。
+- ボス解放はテーマ基準120/160/200体＋テーマ内の層ごとに3体。240/270/300秒の時間救済も有効。鍵と全滅は不要。40%/80%の撃破、または75/150秒で40秒の侵攻を開始し、間隔0.8倍・同時数1.25倍、報酬は回復→装備。ボス開始時は通常波を整理して追加湧きを停止。撃破後〜宝箱・装備回収〜階段でも停止し、次層で再開。
+- 通常敵HP基準倍率0.38/0.50/0.65、攻撃0.70/0.85/1.0。従来の通算深度HP+2.8%/攻撃+2.0%を乗算。Player基礎火力、装備個体の能力、Boss能力・深度補正は維持。
+- EXP必要量は従来曲線の2倍（初回30、Lv10まで段階+10）。通常敵4体で1G。Elite加算10G、侵攻完了20G、Boss基準50/65/80G＋テーマ内層ごと2Gを維持。ショップ初回強化60G、回復40/55G、リロール25Gと段階価格・同一商品一回制限を維持。通常装備抽選0.6%、Eliteは確定。高レア抽選と3個合成を維持。通常ハート0.8%、Elite4%、回復6%、寿命15秒、地面上限3個。
+- 普通の敵のHPバーは被弾後のみ、幅24px。強敵・精鋭は幅32pxで常時表示、Bossは専用HUD。M地図は全体の通路・現在地・ボス位置・現時点の目的を表示。操作説明とBoss戦/報酬回収中の目的HUDを同期。
+- 自動検証: 実game.tscnの起動経路、6職の実Sprite/自動命中、自然増援・cap・安全出現・K取消・メニュー停止、敵4体1G、EXP/回復設定、時間/撃破解放、Boss戦と回収時の停止、テーマ境界。30seedの幅・全床/3×3経路、別途45seedと階段1→2/20→21/40→41/60→clear、Boss60回抽選と壁際報酬を確認。全60層の人による遊び心地と職業ごとの難度比較は未完了。
+
+## 2026-09-24 区画選択とスマホ横画面（旧仕様：行き先選択を撤去）
+
+この節は2026-09-23の「常時追跡・継続湧き・撃破数/時間でボス解放」に優先する。広いランダム広間、3テーマ×20層、各層のボス・宝箱・階段・ショップと職業の自動攻撃は維持する。
+
+- 各層を4戦闘区画の有限Waveに分ける。1区画目は雑魚編成、制圧後は2.5秒の安全時間を置き、回復区画（HP25%）、装備区画（装備箱と戦技）、強敵区画（増量・高火力の敵と希少装備）から次を選ぶ。4区画目制圧後、ボス領域を選択してボスに進む。区画中は自然増援と時間巡回精鋭を止め、区画の制圧判定に残敵を含める。
+- 1区画目11体を基準に深度と区画番号で敵数を増やす。敵HP/攻撃の既存深度倍率を継承し、強敵区画は追加倍率1.18。スマホの同時敵数上限は28、PCは42。出現地点は選択した部屋の歩行可能な床・実衝突・主人公との距離を確認する。
+- 自動攻撃を実行する既存職業武器と、装備中の武器アイコンを主人公の近くに浮遊表示する。射撃は浮遊位置から発射し、攻撃時に武器が短く動く。この時点では装備武器は能力値と表示のみ。2026-10-01に後述の独立した装備自動攻撃へ更新。
+- 装備区画で得る戦技は近接の斬幅/追撃、遠隔の貫通/連鎖/追撃を段階強化する。5層ごとにゴールドとHP回復を与え、最深踏破層を保存する。階段前のボス報酬とショップは従来の進行を維持する。
+- スマホは横画面で、左に仮想スティック、右に回避・技・反撃・拾う・装備、上に地図・停止を置く。分岐は画面中央の大きなタッチ選択肢で危険度と報酬を示す。装備詳細/鍛造はタッチ時に画面中央へ置き、閉じる・装備/解除の直接ボタンを表示する。メニュー中は戦闘ボタンを隠す。Android/iOS実機の安全領域・発熱・長時間操作は正式リリース前に検証する。
+
+## 2026-09-24 部屋ごとの殲滅と宝箱を確認して進む方式（MAP2/3・共通進行）
+
+- 2026-09-27：MAP1の地形生成と読み込みは後述の個別部屋方式へ変更。以下の面積・連結通路はMAP2/3に適用。殲滅・宝箱・手動退出・ボス後の回収は共通仕様として維持する。
+
+- 3テーマ×各20層、職業の自動攻撃、各層ボス・階段・ショップを維持。生成面積はMAP1/2/3それぞれ92×92、96×96、104×104セル。各階の部屋生成目標は5。通常広間16〜23セル、ボス部屋26セル、通路実幅7セル。全室を生成できない場合も実在する部屋から進行数を決め、少なくとも3戦闘室の後にボス室へ進む。
+- 各室の敵は有限Wave。生存敵と未出現の残数がともに0になるまで出口を封鎖する。部屋の通路開口には見える封印と実衝突を置き、横道から次室へ抜けられない。全滅後も自動選択画面や時間制限は出ない。E/Xで出口を調べて初めて次室へ移る。
+- 戦闘室の約半数には宝箱をランダム配置し、残りは宝箱なし。同じ階に両方の部屋を含める。宝箱は全滅後に開封可能で、宝箱のある部屋の出口は開封まで開かない。通常宝箱の装備と戦技は開封時に付与。ボス撃破後は宝箱を開けても階層移動せず、装備を回収して別位置の階段をE/Xで調べた時だけ次層へ進む。
+- スマホ横画面の仮想スティックと操作ボタン、装備詳細/鍛造の画面内配置は維持。中央の行き先選択画面は削除。敵HP/攻撃や武器の能力値は今回変更しない。Android/iOS実機の安全領域・発熱・長時間操作は今後確認する。
+
+## 2026-09-25 NEW素材の戦闘・音・小物（現行追記）
+
+- 魔導士の自動追尾弾は`Pixel_Magic_Effects_Animations.png`の紫渦5コマを12fpsで繰り返し、汎用の矢絵を隠す。追尾・判定・状態異常の処理はそのまま使う。
+- `AudioManager`の既存SE読み込みへ魔導士詠唱、近接素振り、敵への命中、宝箱開封、装備取得、ハート取得、部屋扉の7音を追加。命中音は80msの重複制限で密集戦中の過剰再生を防ぐ。
+- `Objects.png`と同梱の個別画像から岩・骨・廃墟の6種類を選び、通常室の端寄りに最大2個ずつ配置する。MAPごとの床色に合わせて調色し、岩・廃墟は足元に物理衝突を持つ。戦闘通路・予約地点・既存装飾の重なりを避ける。ボス室には配置しない。
+- 実ゲームで3MAPの配置・衝突・部屋進行、魔導士弾表示、音声IDを確認。OpenGL 1280×720の描画も確認した。端末実機での音量と長時間性能は今後確認する。
+
+## 2026-09-27 MAP1の個別部屋読み込みと従来石床（現行）
+
+- MAP1の20層は、入口の広間・崩れた回廊・石柱の広間・強敵の前室・ボスの祭室の5室構成。通常室22/24×16、ボス室24×18セルで、同時に存在する地形は1室だけ。室幅と障害物の左右をseedで変え、敵・小物・宝箱位置も抽選する。中央5セルの導線と、3×3移動余裕のある床の連結を確保する。MAP2/3は既存の連結広間を継続する。
+- ユーザー指定でMAP1の床は従来のRoyal石床へ復元。既存の立体壁・松明と岩/骨/廃墟を合わせる。新地形セットは新MAP専用の候補素材として保管し、既存3MAPの床へ適用しない。壁・柱・固体小物の衝突、入口・出口・中央レーンの予約は維持。
+- 全滅と宝箱開封が退出条件。4戦闘室中2室に宝箱を抽選配置。時間で選択画面を出さず、E/Xまたはスマホの操作ボタンで扉を調べると次室を読み込む。未回収の装備は次室の入口付近の通行余裕と実衝突を確認した床へ引き継ぎ、切替で消さない。主人公の装備・HP・成長は室間で継続し、室移動だけで回復しない。
+- MAP1の同時敵数は16まで。室番号・深度によるWave総数と敵能力倍率、全職自動攻撃、浮遊武器、回避/反撃を継承。4室後にボス室を読み込み、領域の操作で戦闘開始。ボス宝箱・装備・階段・ショップ・次層の既存順序は維持する。
+- 個別部屋はカメラ1.15倍。HUDはMAP1/3と地下層・室番号/役割・未出現を含む残敵を表示し、M地図も現在の部屋を表示。生成範囲と残敵処理は室切替時に更新する。
+- 公式GunzTowerの公開説明と画像から戦闘/回収の区切りと空間の役割を学び、独自の室テンプレートに落とし込んだ。相手の正確な生成コードや寸法の複製とは扱わない。調査・判断・未実施項目はdocs/gunztower_room_design.md。300生成室、実ゲームの退出/装備引継ぎ/ボス/テーマ切替と60層境界を検証。Android/iOS実機と自然プレイの難度は未評価。
+
+
+## 2026-09-27 現行キャラクターに合わせたMAP2/3床・壁の再生成
+
+- MAP1のRoyal石床は現行キャラと整合するため維持。MAP2/3は写真状の石肌と線形補間がキャラのドット密度と異なったため、ローカルComfyUI（SDXL + pixel-art-xl）で床・壁正面・岩盤を個別に再生成。
+- `pixel_materials_v2.png`は272×272、各象限136×136の内側128×128を8×8セルへ分割。16pxの素材を32pxセルへNearestで2倍表示。MAP2の`pixel_masonry_wall_v2.png`は128×128。各生成面は20色以内。
+- `detailed_map_surfaces.gd`が新素材を参照。旧原画は保持。紫灰の鉱山と茶灰の炉心のテーマ、部屋生成・当たり判定・敵配置は維持。
+- Soldier/Swordsman/Wizardの現行Idleを1.65倍で並べる`tools/map_style_capture.tscn`で比較。これは製品のStageEnvironmentを使う作画比較用Sceneで、実プレイの操作確認とは区別する。
+- MAP_THEME_CHECKで3MAPの素材参照・到達性・壁と障害物の衝突、新PNG寸法とNearestを検証。ランドマークや小物の全面再作画は今回の変更に含めない。
+
+## 2026-09-27 3MAPオブジェクトとゲームUIの精査・修正
+
+- MAP2/3の小物4種ずつ、景観4種、作業員4姿勢、岩・骨・廃墟6種、封鎖/開放扉と階段を2倍Nearestへ統一。配置は全小物の外形、衝突は表示フレームの外形を使う。松明のアニメーションを復元。
+- 装備200点の24px版は後続の可読性修正で48px版へ置き換え。共通枠を整数倍率へ更新。HUD・装備・天賦図の小文字、装備数値の切れ、地図の古い目的表示、操作案内、タッチの「調べる」とモーダル後のスティック状態を修正。
+- 炉・水車はAtlasの解像度依存を撤去し、色の二重乗算も修正。時間による画素変化と静止部分の原色保持を実描画で検査。
+- 3テーマの描画/到達性/衝突、景観60seed、実ゲームの宝箱/手動退出/ボス/MAP2・3/タッチ入力、1600×900装備画面、天賦/報酬/タイトルの文字とキーボード操作、炉/水車の色・アニメーションを確認。
+- 旧secondary UI検査は廃止済みのスクロール天賦タブを参照していたため現行の天賦図へ更新。タイトルの説明は実画面範囲で検査する。
+- 旧shop_runtime_checkは改定前の武器450〜550G/リロール100G等を要求し失敗。forge_balance_checkは鍛造全段階の検査後、現行ハート上限3個に対する旧5個固定assertで失敗。chest_strikes_checkは従来の「歩行で敵を押さない」のassertで失敗。これら全体を成功扱いせず、宝箱・UI・進行は専用実経路で確認。敵やショップの能力/価格は今回変更しない。
+- 元素材と変更前バックアップを保持。Dashboardはローカル同期。Android/iOS実機、長時間の自然プレイ、公開デプロイは未実施。
+
+## 2026-09-27 壁内の門・入場動作・装備アイコン再生成（現行）
+- 3MAPの部屋出口を北壁の開口へ接続。中央へ歩く→門の内側へ入る→次室へ遷移。枠を主人公の手前へ描き、封鎖・宝箱条件を維持。MAP1カメラは上側に64pxの余白を確保。
+- 装備200点を48px・透過ドット絵へ再生成。剣・弓・鎌・斧槍・兜・冠・鎧・手袋・ブーツ・装飾の輪郭を優先し、所持品・詳細・鍛冶・床Drop・浮遊装備へ接続。無料ローカルComfyUIで既存の明瞭な形を参照して再描画。 種類別の形を共有する色違いを含む。生成参照とAPI Workflowはtools/source_art/readable_iconsへ保存。
+- 3MAPの門・入場・遷移後の操作復帰、200実画像の読み込み、1600×900装備配置、部屋進行/タッチ操作を確認。Android/iOS実機は未確認。 通常敵/ボス/報酬/装備の能力値は変更しない。
+
+### 同日追修正：門の壁面統合（現行）
+- 3MAP共通の青緑ポータルと台座を撤去。既存の壁面と石積みを保持し、各MAPの石材・床素材で掘り込み、敷居、暗い奥行き、閉じた鉄格子を描画。門だけ別の石板に見える外周をなくした。中央入場と遷移条件は維持。
+- 壁のTextureを消す方式を廃止。入口セルは非衝突Alternativeへ切り替え、MAP2/3の壁面上書き描画も保持。描画は既存素材を使うGodot Canvas。前景の狭い石縁が主人公を覆い、入場後に遷移。操作Promptは入口の下。
+- gate_entry_checkで3MAPの非衝突壁面、中央入場、前景/遷移/操作復帰を確認。sector-mobile-checkの既存進行回帰成功。
+
+## 2026-10-01 浮遊装備武器の実攻撃（現行）
+
+- 装備52武器の`attack_kind`を明記。軽刃・斬撃・重斬・刺突・弓・魔法の6系統を`equipment_auto_attack.gd`から実行する。職業の通常攻撃とL技は維持する。
+- 主人公中心の円内を全方向に索敵。最寄りの生存敵で壁越しでないものを選ぶ。半径は軽刃96/斬撃112/重斬124/刺突140/弓232/魔法216px。既存の射程強化を反映し、同じ半径を薄い円で表示する。
+- 剣はSprite本体が敵へ飛び、接触時に局所の斬撃判定を出し、元の位置へ戻る。弾は発射しない。短剣は素早く狭い斬撃、大剣は長めの飛行・広い斬り幅、槍・刺剣は突き。主人公の位置は動かさない。飛行中に対象が射程外へ出る・死ぬ・壁に隠れると攻撃を中止する。
+- 弓/杖は浮遊位置から矢/魔法弾を発射。弾も主人公中心の範囲外と壁で消え、壁越しや範囲外の敵へ命中しない。職業固有の魔法や矢は装備剣を発射元に使わない。
+- 基本間隔は軽刃0.72/斬撃0.95/重斬1.25/刺突1.05/弓1.00/魔法1.15秒。装備攻撃速度・射程・会心など既存強化を反映。基礎ダメージ3＋既存の加算/倍率計算。装備交換で残りクールダウンを消さない。解除・回避・メニュー・死亡時の発動を停止する。
+- ComfyUI（SDXL＋pixel-art-xl）で軽刃/斬撃/重斬/刺突/発射/魔法の6種を生成。ガイドでフレーム位置を固定し、64px×6コマの透過素材へ整形。原画像・API Workflow・入力ガイド・生成履歴は`tools/source_art/equipment_attacks`、採用素材は`assets/vfx/equipment_comfy`。
+- レアリティは緑→青→紫→橙→赤の斬撃色。高レアほど残光が長く火花が多い。火花は装飾で、追加ヒットや無料の火力倍率は付けない。
+- `tests/equipment_auto_attack_check.tscn`で実ゲーム経由の装備/攻撃、6系統のHP減少、剣の接近と非射撃、射程、壁、回避/メニュー、射程離脱、飛行中解除、360度、5レア度、解除後の職業攻撃を検査。既存sector-mobile-checkもPASS。実機と深層での長時間難度評価は未実施。
+
+## 2026-10-04 ComfyUI武器素材24種（生成候補）
+
+- 現行の48pxドット密度に合わせ、曲刀・細剣・波刃剣・三叉槍・大鎌・斧槍・双刃斧・戦棍・弓/弩・杖/王笏/魔導書・鉤爪など24種をローカルComfyUI（SDXL＋pixel-art-xl）で生成。形状ガイドには既存Shikashi素材と新たに作った輪郭を用いた。
+- `assets/items/comfy_variety_24`に48×48透過PNGと候補manifest、`tools/source_art/weapon_variety_20261004`に768px原画、96px切り抜き、参照、API、seed、prompt_idを保存。24画像の重複・透過・外縁余白を検証し、濃色/淡色の背景で作画を確認する。
+- 緑5/青5/紫5/橙5/赤4と9攻撃系統は採用候補。現行templatesは200種、武器は52種のまま。新素材はドロップ・合成・自動攻撃へ未追加。素材の完成とゲームへの実装を区別する。
+- Dashboardのアイテム画面へ素材一覧を追加。次の段階は素材選定と能力予算を決めて実装する。
+
+## 2026-10-04 武器ごとの自動攻撃の特色（現行）
+
+52武器を9系統に分類。大剣は広い斬撃、細剣・槍は速く細い突き、弓は矢、斧は1.8秒間隔の重い一撃。鎚・棍と大鎌も専用モーション・ComfyUI素材へ接続。威力倍率は装備・成長を含む命中値へ適用。装備詳細へ特色・基準間隔・一撃倍率を表示。実ゲームの同能力比較、横の巻き込み、9系統の命中、壁・射程・解除・回避/メニュー、スマホ操作・4室進行を検証。
+
+| 系統 | 基準間隔 | 一撃倍率 | 特色 |
+|---|---:|---:|---|
+| 短剣・爪 | 0.62秒 | ×0.72 | 小さく素早い連撃 |
+| 片手剣 | 0.95秒 | ×1.00 | 扱いやすい斬撃 |
+| 大剣 | 1.25秒 | ×1.20 | 幅広く敵を薙ぎ払う |
+| 細剣・槍 | 0.78秒 | ×0.85 | 細い直線を素早く貫く |
+| 斧 | 1.80秒 | ×2.00 | 間隔は長く、一撃が重い |
+| 鎚・棍 | 2.10秒 | ×2.25 | 溜めて叩き、強く押し返す |
+| 大鎌 | 1.38秒 | ×1.05 | 長い弧で広く刈り取る |
+| 弓・弩 | 1.00秒 | ×0.90 | 遠くへ速い矢を放つ |
+| 杖・魔導書 | 1.15秒 | ×1.10 | 魔法弾で遠距離を攻撃 |
+
+- 52武器の内訳は片手剣9、短剣/爪3、大剣2、細剣/槍8、斧3、鎚/棍8、大鎌1、弓/弩9、魔法9。既存アイコンとレア度は維持。新規24種の生成候補はドロップへ未追加。
+- 倍率は既存の装備・成長・会心を含むダメージ計算の結果へ適用。攻撃速度を反映した間隔にも動作全体の時間を下限として設け、空中の武器が動作途中で次の攻撃へ飛ばない。
+- 斧・鎚/棍・大鎌の6コマ素材をComfyUIで生成して装備の接触へ同期。細剣は半幅7pxの直線、大剣は半角82度・接触半径52px。主人公の索敵円と壁で全ての命中を制限。弓は390px/sの矢、魔法は280px/sの魔法弾。
+- 装備詳細は武器の特色・基準間隔・一撃倍率を先頭表示。Projectileの装備用Sceneは発射時に読み込み、通常起動時の循環preloadを解消。
+- equipment_auto_attack_checkは9系統の実命中・解除・壁・円・回避/メニューと、同能力での威力/間隔比較、横の敵を巻く大剣と巻かない細剣をPASS。実測は細剣11.05/47F、大剣15.6/75F、斧26/109F、鎚29.25/127F（60Hz、装備攻撃力10、会心なし）。sector_mobile_runtime_checkもタッチ操作、4室、宝箱待ち、手動退出、ボス、MAP2/3をPASS。9種の実ゲームGIFと詳細画面を保存。深層の長時間難度・実機評価は未実施。
+
+
+## 2026-10-04：Embervilleを参考にした全体ビジュアル刷新
+
+本節の見た目が旧48px装備・紺金の厚い枠・常設の本背景・旧床画像を置き換える。今回のユーザー指示はゲーム全体の刷新であり、Ponytailは使用しない。既存キャラクターの元絵、200装備の能力値、9武器の自動攻撃系統、3テーマ×20層、部屋・Wave・手動退出の進行は維持する。
+
+- ローカルComfyUI（SDXL base＋pixel-art-xl、img2img）で241生成を完了。平坦な床の試作3枚は採用せずv2へ、部位が分かりづらい帽子・胸当て等18点は再生成。238出力を素材元として採用し、実装中の装備画像は200点。API JSON、guide、seed、prompt_id、原画を`tools/source_art/ember_v5/`へ保管。
+- 実装画像は`assets/visuals/ember_v5/`。装備200点は64×64、Nearest、二値Alpha、余白と表示Boundsを検証。所持品・詳細・地面Drop・浮遊武器へ同一画像を接続。レア度は緑/青/紫/橙/赤の1px輪郭。GPUからの毎回画像読取は避け、全画像のBoundsを`EquipmentIconMetrics`へ登録。
+- UIは暗いプラム/石灰色、抑えた金属色、青緑の選択色。ComfyUI製96×64の枠を3px nine-sliceで全メニューへ共有。大きな金の紋章を撤去。HPは連続ProgressBar。深度表示は60層で統一。装備取得通知は短い一つのToastにまとめ、Room目的に重ねない。
+- 装備は2パネル・小型7列/50枠。PCホバーは薄い半透明の比較カード、タッチでは中央の詳細カード。ドラッグとダブルクリックの着脱を維持。鍛造はScrollContainerで合成ボタンまで収め、完了後も鍛造に留まる。
+- 天賦図の本は2026-10-05のユーザー指示に従い、大きな見開きを保持する仕様へ更新（下節）。演出後に本を消して別の2パネルへ切り替える方式を撤回。
+- 3テーマの床/壁は128×128・低色数のComfyUI素材を実描画へ接続。床セル・壁衝突・通行導線は変更しない。景観4種のAtlas位置とAlphaは従来の位置を維持して炎/水/作業員の動きを継承。MAP2/3の4種小物は既存24pxフレームの外形へ合わせ、サイズ拡張で配置がすべて拒否されることを防ぐ。岩・骨・廃墟とキャラは元の素材を継承。
+- タイトル・職業選択背景、HUD、レベルアップ三択、ショップ、装備/比較/鍛造、天賦図に実ゲームの画面を保存。Dashboardも同じ細い枠・最新200画像・本の実動画へ同期。
+
+検証：`ember_visual_polish_check`はPC1600×900／横画面1280×720タッチプレビューの両方でfailures=0、200実画像、ダブルクリック着脱、2回の実鍛造、Popup範囲、天賦図の順序/中断/再開、Modal解除、MAP2/3遷移を確認。`equipment_auto_attack_check`は9系統/52武器/壁/射程/解除/回避でfailures=0。`map_theme_check`は3テーマの到達性・衝突と小物生成、`landmark_check`は60seed、`landmark_flow_capture`は炎と水の実描画変化がPASS。部屋進行とタッチ入力は`sector_mobile_runtime_check`がPASS。
+
+全Godot検証に`--audio-driver Dummy`と`-- --mute-audio`を付ける。保存音量は変えない。PC/スマホ幅Dashboardは画像と横はみ出しを確認。Android/iOS実機、深層の長時間難度は未評価。Windowsのルート証明書・Shader cache書込み警告は検証環境由来。既知の旧固定値Test不一致は別件として維持。
+
+
+## 2026-10-05：本の見開きと天賦図の統合
+
+「本を大きくし、開いた2ページへ天賦図と刻印の記録を載せる」という指示を現行仕様とする。
+旧「本を消して背景なし天賦図へ」は履歴。今回は天賦図の表示と操作、その関連記録のみを変更し、戦闘・装備・MAP・天賦取得の効果は変更しない。
+
+- `BookArt`を基準1600×900の画面内に1200×720で配置。紙面の合計幅は1155px、高さ675px。画面幅の約72%を使い、Viewportに合わせて一様に縮尺を合わせる。
+- 背表紙を固定し、表紙と3枚の紙を右から左へ連続描画。ComfyUI製`book_motion_v2/cover.png`と`paper.png`を継続使用。紙の持ち上がりを大判に合わせ、途中の紙も画面内へ収める。
+- 登場0.16秒、表紙/紙めくり1.48秒。表紙0.62秒、紙は0.64／0.79／0.94秒から0.28／0.28／0.44秒でめくる。最後の紙の裏に天賦図、下の右ページに記録を描画し、紙が動くことで内容が見える。後出しの文字フェードと静止待ちを撤去。開いた本は残す。
+- 左ページに起点・2流派・各4段階の天賦、右ページに職業肖像、流派、熟練、選択した天賦の効果・習得条件。旧2枚の暗い大枠を撤去し、紙に合う濃いインク、茶色の接続線、青緑の選択を使用。
+- 本の絵は入力を通す層に置き、天賦のボタンはその上で操作する。全9ノードのクリック、矢印Focus、途中閉じる/再開、閉じた後のPause解除を維持。
+- `talent_book_pages_check`は実ゲームでPC1600×900／横画面1280×720の両方がfailures=0。左右の内容と表紙の軌道が画面内に収まることを検査。`ember_visual_polish_check`の装備200点・着脱・2回鍛造・MAP遷移も新しい本と合わせてPASS。すべてDummy audio＋mute。スマホ実機は未検証。
+- 最新CaptureとGIFは`artifacts/talent_book_pages_v3/`。Dashboardの天賦画面、進捗、Bug、Decisionを同じ見開きへ更新。
+
+
+## 2026-10-05：文字も紙と一緒にめくる
+
+- Scope：天賦図の紙めくり・内容の投影・操作への接続と関連Dashboard。Out of Scope：天賦取得／効果、戦闘、装備、MAP。
+- `talent_grimoire.gd`は同じ実操作Controlを開く間だけ1600×900の透明SubViewportへ移す。紙面の領域を使って右記録と左天賦図を描画。複製や固定スクリーンショットではなく、選択状態・職業・熟練・条件がそのまま反映される。
+- `book_opening_art.gd`の最後の紙の裏面へ36分割の同じ曲面座標で文字を投影。背表紙が左ページの右端になるUVを使い、文字を鏡像にしない。右の記録は最後の紙に覆われ、めくりに沿って見える。
+- 着地したら同じControlを元の親へ戻す。Alphaは常時1。紙面はPC／横画面プレビューとも切替前後のキャプチャでピクセル差0。操作開始後のSubViewport更新を停止し、毎フレームのGPU画像読み戻しも行わない。
+- `talent_book_ink_check`はPC1600×900と横画面1280×720でfailures=0。文字を載せたままの裏面が13フレーム描画されること、9ノードの入力・右ページBounds・中断3時点・再開・Pause解除を確認。`ember_visual_polish_check`も200画像・着脱・2回鍛造・本・MAP遷移がPASS。すべて無音。実機は別途。
+- 最新実画面・GIF・ピクセル比較は`artifacts/talent_book_ink_v4/`、コード控えと手順は`tools/source_art/talent_book_ink_v4/`。Dashboard1.6.15の天賦へ同期。
+
+
+## 2026-10-09：見えない壁と浮遊武器の仕上げ
+
+- Scope：地形描画と当たり判定の一致、浮遊武器のサイズ・輪郭・オーラ・透過、その入力/攻撃経路と関連記録。Out of Scope：攻撃性能、進行、装備数値、保存データ、新規生成素材。
+- `detailed_map_surfaces.gd`は通常の通行可能床と、目に見えるランドマークが覆う足元だけを床として扱う。石柱・短壁のterrain_obstacleセルを普通の床へ塗り潰さない。同じ関数を小部屋・同期生成・分割生成で使う。地形の衝突は削除しない。
+- `floating_weapons.gd`は装備IDの現行Emberアイコンを優先し、既存Boundsで絵の長辺を48pxへ。画像全体の透明余白で武器が縮まらない。副武器がある場合は36px。待機中心は±38px、y=-9、帰還先と残像の中心を同じ位置へ合わせる。
+- `weapon_aura.gdshader`は0.5未満のAlphaを描かず、シルエットへ1pxのレア度輪郭、輪郭の外へ揺らぐ炎を付ける。アンコモン→ミシックで強度0.30/0.42/0.54/0.66/0.78。緑・青・紫・橙・赤、ミシックの輪郭は#ff4659。周囲の四角や画像全体を光らせず、武器本来の色を保持する。形状の余白は頂点で10px拡張。追加ParticleやCPU画像再生成なし。
+- `weapon_aura_walls_check`は実ゲームでPC1600×900/OpenGLと横画面1280×720/Vulkan Mobileがfailures=0。3テーマ12地形、11,237壁/21,535床の表示分類と衝突、実主人公の中央通行/石柱遮断、52武器の48px・二値Alpha、5レア度、旧参照、Alpha0.08の背景除去、原色保持、揺らぎと透明な四隅を確認。
+- `equipment_auto_attack_check`で9攻撃系統・命中/間隔/射程/壁/装備解除/回避/モーダルの回帰がPASS。`map_theme_check`の3テーマ・小物衝突・ランドマークもPASS。音はすべてDummy+mute。Android/iOS実機と多数武器時の負荷は未検証。
+- Capture/比較GIF/レポートは`artifacts/weapon_aura_walls/`。Dashboard1.6.16の戦闘・アイテム・MAP・進捗/Bug/Decisionへ同期。既存ComfyUIの絵を再利用。
+
+
+## 2026-10-12 5分サバイバル（旧タイムクリア仕様）
+
+3テーマから出撃先を選び、36×28セルの1アリーナで5分間生き残る。敵は時間帯で密度と階級が増え、浮遊武器が自動攻撃。120秒・240秒にボス（前のボスが生存中なら延期）。300秒で敵を退去させ、経験値は付与しない。終了後は時間制限なく宝箱・装備を回収し、階段を手動で調べて結果へ。
+
+途中のボス宝箱を自分で開けると装備・戦技と補給ショップ。ショップと強化選択中は時間停止。残金は1G=1欠片、回収装備は1点=5欠片として、撃破数に加えて継承報酬へ反映。装備自体は従来どおりRun内専用。
+
+- 36×28セル、外周込み44×36。PC80体／タッチ48体。ボス召喚も上限を確認。出現間隔・Batchはdata/difficulty/five_minute_survival.json。通常敵は最大HP+60%、攻撃+25%。
+- Boss死亡からの宝箱生成は物理通知後に行う。待機中にBossが退去しても解放済み参照へアクセスしない。
+- 回収中は時計が05:00で停止。残敵を消す際のEXP・ドロップなし。宝箱・装備・階段を離し、自動選択画面は表示しない。手動帰還後に結果。旧下降ショップは使わない。
+- 保存済み解放・音量・最高記録を削除しない。Run装備を永続装備へ変更する範囲ではない。所持品・鍛造・天賦の既存導線は保持。
+- 調査・適用・検査と限界：docs/crazy_gunner_survival.md。Android/iOS実機、無敵を使わない全職の難度比較、最終的な成長・価格調整は未検証。相手の内部数値を複製したとは扱わない。
+
+
+## 2026-10-13 床のみの広い戦場と終盤Boss（現行進行）
+
+3テーマ共通で、壁・柱・地形小物のない広い床へ。床とカメラが現在地へ追従し、表示基準96×96セルの外でも歩行・出現・回収が続く。約4分の大群戦の後、従来の強敵から1体を終盤ボスとして出す。撃破してクリア、5分を過ぎても生存ボスを消さない。
+
+序盤3〜4体/1.0秒→終盤8〜10体/0.45秒。45秒から標準敵を混ぜ、150秒から45%。PC128体・タッチ96体。通常敵は序盤比で、終盤にHP約+72%、攻撃約+32%、EXP必要量は2.1倍。画面外の周囲から出現する。
+
+75秒に60%の装備箱、150秒に確定の補給箱。補給箱を自分で開けるとショップ、閉じると戦闘へ。ボス撃破後は装備・討伐宝箱・帰還階段を離して配置し、開封しても自動帰還しない。残金・回収装備は従来どおり継承報酬へ。
+
+- 96×96はデータの表示基準。床は現在地のカメラへ追従して描画。遠方でも歩行、AI、出現、装備回収が継続する。元の床素材・作画は維持。
+- 通常4分＋Boss約1分を目指す。240秒後は増援停止、元の強敵6種をテーマごと2候補から1体生成。300秒の自動撤退・生存だけでの成功を撤去。時計とBoss HPを保ち、実撃破後にのみ回収へ。
+- 6BossはData Loaderの特技IDを通常敵と共用し、元絵/アニメーション/予兆を保持。通常データは変更しない。実HP11700〜17550、倍率1.7。
+- 無敵の検査キャラ・自動強化の通し例：全体約4分51秒、Boss約51秒。実機と全職の難度は別評価。調査・数値・検査の範囲はdocs/crazy_gunner_survival.md。
+
+
+## 2026-10-13 成長と視覚的な強化（現行）
+
+敵の歩行を35%減速し、主人公の通常歩行速度の75%以内へ。経験値倍率を2.1から0.6へ、初回必要EXPは32→9。5分の中で強化を試しやすくした。
+
+大きなアイコン・現在→強化後の動く比較・選択チェック・独立した取得ボタン。タップだけでは取得せず、選択中は戦闘時間を止める。上限に達した強化と、使えない遠距離強化は候補に出さない。
+
+広域攻撃・高速攻撃・残影追撃・雷光連鎖・再生結界・強撃・多重射撃・貫通射撃。旧数値/状態カードを現行レベルアップから外し、職業技と流派は維持。通常攻撃と浮遊装備の実命中・弾数・貫通へ接続。
+
+PC/OpenGLとタッチ操作を含む横画面/Vulkanプレビューで6職を確認。連鎖/追撃の再帰防止、上限、連続レベルアップ、実シールド、装備の追加弾と実貫通も検査。スマホ実機と無敵なしの全職難度は未確認。
+
+無敵・自動選択の通し例：初回17.4秒、Lv5は32.9秒、Lv10は68.6秒、終盤Lv25。全体293.0秒、Boss52.9秒。勝率の証明ではない。
+
+- 共通6系統と、矢/魔法を使う職業か装備がある時の2系統。強撃を除き最大3段階（多重/貫通は2）。既存の職業強化と剣士の流派条件を保持。旧カードはShop/Labのためデータを保持。
+- 追撃は0.18秒後・0.6秒に1回・元命中の30/35/40%。連鎖は近傍120px・0.7秒に1回・35%。副次イベントはis_direct=falseで再帰させず、射程と壁も確認。結界は8秒ごとに8×段階。
+- 既存effect_paramsとPlayerUpgradesへ接続。ComfyUI slash_6fと既存アイコン・キャラクター/敵を再利用。攻撃の固有テンポと終盤Boss HPは維持。
+- 公開資料は公式Google Play（https://play.google.com/store/apps/details?id=com.leguas.gunstorm&hl=ja）の「Choose Your Evolution」画像と説明。実アプリの全スキル値は確認できず、倍率と能力はVSGAME用に設計。
+- artifacts/survival_growth/check.json・mobile/check.json・soak.json、tests/survival_growth_checkが実入力/実攻撃の根拠。tests/runtime_exit_cleanupは高速終了時も音声停止をMixerに渡してから終了。
+
+
+## 2026-10-25 レベルアップ画面のブラッシュアップ（現行）
+
+本節の見た目が、2026-10-13節のレベルアップ画面の表示部分と§35.4のLevelUpカード寸法を置き換える。2段階の取得（カードを選ぶ→取得ボタン）、選択中は戦闘時間を止めること、候補の抽選・重み・上限・付与効果は変えていない（`_open`〜`_get_current_school`は元と同一）。
+
+### 画面の枠と配色を共通部品へ統一
+
+- レベルアップだけが独自の平板な枠（1pxの`StyleBoxFlat`）だったため、ショップと同じ構成へ揃えた。外枠は`PixelUIStyle.apply_major_panel`、上部の装飾線は`add_ornament(…, "emblem")`、カードの地は`FrameArt.box`の石枠。
+- 見出しは古金の「レベルアップ」（34px）。その上に「Lv.N に到達・戦闘時間は停止中」（18px）、下に「強化を1つ選び、下のボタンで取得する」（20px）。旧黄緑の`LEVEL UP!`と、タッチ前提だった「タップして選択」は撤去した。
+- 色は強化の**種類だけ**を表す（ショップの分類色と同じ）。戦闘強化＝青`#79d7e8`、職業技／流派の選択＝金`#f2c14e`。この色は種類名・段階ピップ・説明文中の数値にだけ使い、カードの枠には使わない。
+- 選択中のカードだけを青緑`#8fe0d6`の2px枠と光で示す。以前は説明文の単語から色を機械的に決めていたため、選んでいないカードの黄色い枠が選択中のカードと同じくらい目立っていた。
+- キーボード操作中のカードにはショップと同じ`▶`カーソルを出す。
+
+### カードの情報整理
+
+- 上から、アイコン（64px）・種類名・名前（26px、1行）／段階ピップと段階表記／比較プレビュー／説明文。カードは362×450px。
+- 段階ピップは最大段階までの枠を並べ、取得済みは灰、今回増える1段だけ種類の色、未到達は空枠。表記は「新規 Lv.1 / 3」「Lv.1 → Lv.2 / 3」、職業技は「段階 1 → 2 / 5」（`AttackPatternBase.MAX_ABILITY_LEVEL`）。上限のない強撃はピップを出さない。
+- 3枚とも同じだった「NEW / 戦闘強化」と、意味が重複していた「未取得 → Lv.1」をこの段階表記へまとめた。
+- 説明文はRichTextLabelにし、数値（18%・0.18秒・1体など）だけを種類の色で強調する。
+- 全Labelは18px以上（旧タグは16pxで可読性検査の基準を割っていた）。
+
+### 比較プレビューを実際の効果に合わせて作り直し
+
+旧プレビューは各強化の実処理と食い違っていた（雷光連鎖の「現在」で攻撃自体が描かれない、広域攻撃の扇の角度が変わらない、貫通が飛距離の延長として描かれる、等）。職業技カードは説明文の単語から描画を推測していたため、内容と無関係な動きが出ていた。
+
+新しいプレビュー（`ui/level_up_select/upgrade_preview.gd`、190px）は次の原則で描く。
+
+- 左右は**同じ敵配置**で、変わるのは強化段階だけ。命中した敵だけが白く光ってHPが減るので、何体に当たるか・何が増えるかをそのまま数えられる。
+- 上段の見出しは実数値（段階ごとの加算はゲーム側と同じ式）。
+- 追撃・連鎖・結界・火花はゲーム内描画と同じ色（`survival_upgrade_effects.gd`の`#90ddff`／`#ffdf64`／シールド色）。
+- 職業の通常攻撃の形（扇／突き／全周／弾）に合わせて「現在」の攻撃を描く。
+- キャラは整数倍に丸めて拡大し、横長の敵は長辺基準で揃える。
+
+| 強化 | 描く内容（実処理） | 見出し |
+|---|---|---|
+| 広域攻撃 | 射程×(1+0.18×段)・扇の半角+12°/段。現在の範囲のすぐ外（横と奥）の敵を強化後だけ巻き込む。範囲の境界線を常時うっすら表示 | 範囲（弾職は射程）100%→118% |
+| 高速攻撃 | 攻撃間隔×(1−0.1×段)。現在の間隔4回分の時間軸に攻撃を刻む（現在4回→強化後5回） | 間隔 100%→90% |
+| 残影追撃 | 直撃の0.18秒後、同じ敵へ影の斬撃（25%+5%×段） | 追撃なし→追撃30% |
+| 雷光連鎖 | 命中点から近い敵へ段数ぶん雷が渡る（35%） | 連鎖なし→連鎖1体 |
+| 再生結界 | 敵の一撃を、現在は主人公が受けてHPが減り、強化後は結界が受けてシールドだけが減る | シールドなし→シールド8 |
+| 多重射撃 | 一度の発射が+1本/段。縦に並んだ敵へ1本ずつ当たる | 弾数 |
+| 貫通射撃 | 弾は「段+1」体に当たってから消える（`pierce_remaining`） | 命中 1体→2体 |
+| 強撃 | 攻撃力+8%/段、命中の火花の半径10+2.5×段（段0では火花なし） | 攻撃力 100%→108% |
+
+職業技・流派の選択は段階ごとの効果が職業で異なるため、動く場面を作らず、職業と技の図柄を段階付きで並べる（実際と異なる動きを見せないため）。
+
+### 検証
+
+- `survival_growth_check`：PC（OpenGL）・タッチ横画面プレビューの両方でPASS（6職、選択と確定の2段階、画面内と文字収まり、プレビュー高さ、範囲の実効果）。
+- `tests/script_load_check.gd`：全210 Scriptの実loadで失敗0。
+- 一時Harnessで全8強化＋職業技カードを近接（soldier）・遠隔（archer）・2段目で撮影し、時刻を固定して各効果の決定的瞬間を確認。可読性検査と同じ基準（18px以上・カード内・切れなし・画面内）で全5パターン問題0件。
+- `pixel_visual_check`はFAIL（HUDの「label outside flow」17件）、`secondary_ui_readability_check`は天賦図の検査（114行目）で停止する。**どちらも元のレベルアップ画面に戻して実行しても同一の結果**で、今回の変更とは無関係の既存の失敗。レベルアップ部分の検査はいずれも通過または上記の代替検査で確認した。
+- 報告用の実画面は`artifacts/level_up_brushup/`（`before_after.png`、`previews_all.png`、`class_card.png`、`rank2.png`）。
+
+### 未対応
+
+- カードの登場演出と、入力機器（キーボード／タッチ）に応じた操作案内の切り替えは今回の範囲外。
+- 職業技カードの比較は静止表示。職業ごとの段階効果を正確に動かすには、各職業の強化内容の個別設計が必要。

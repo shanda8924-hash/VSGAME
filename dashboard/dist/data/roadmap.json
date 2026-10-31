@@ -1,0 +1,1054 @@
+{
+  "laneLabels": {
+    "now": "現在",
+    "next": "次",
+    "future": "将来"
+  },
+  "categories": [
+    {
+      "id": "map",
+      "name": "MAP",
+      "weight": 1.4,
+      "tasks": [
+        {
+          "id": "wall_gate_entry",
+          "name": "壁内の門と中央からの入場動作",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "3MAP共通の青緑ポータルと台座を撤去。既存の壁面と石積みを保持し、各MAPの石材・床素材で掘り込み、敷居、暗い奥行き、閉じた鉄格子を描画。門だけ別の石板に見える外周をなくした。中央入場と遷移条件は維持。 3MAPの開口・壁衝突・入場・操作復帰、部屋進行、スクリプト194件を確認。"
+        },
+        {
+          "id": "map_object_pixel_alignment",
+          "name": "3MAPオブジェクトの作画・表示・衝突の整合",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "MAP2/3の小物4種ずつ、景観4種、作業員4姿勢、岩・骨・廃墟6種、封鎖/開放扉と階段を2倍Nearestへ統一。配置は全小物の外形、衝突は表示フレームの外形を使う。松明のアニメーションを復元。 3テーマの描画/到達性/衝突、景観60seed、実ゲームの宝箱/手動退出/ボス/MAP2・3/タッチ入力、1600×900装備画面、天賦/報酬/タイトルの文字とキーボード操作、炉/水車の色・アニメーションを確認。 端末実機は未検証。"
+        },
+        {
+          "id": "map_pixel_style_alignment",
+          "name": "MAP2/3：現行キャラに合わせた床・壁の再生成",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "低色数の生成素材を実描画へ接続。3MAPの素材・到達性・壁衝突の検査と現行キャラ3種の比較描画が成功。小物と景観は後続のオブジェクト精査で更新済み。"
+        },
+        {
+          "id": "isolated_map1_rooms",
+          "name": "MAP1：1室読み込み・従来の石床・部屋の立ち回り",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "公式ストアの設計と画像を調査。4戦闘室＋ボス室を実ゲームへ接続。300生成室の通行・退出、実ゲームの宝箱/装備引継ぎ/ボス/階段/ショップと60層境界を検証。MAP2/3への展開と端末実機評価は今後。 ユーザー指定で床は従来素材に復元。新地形セットは新MAP用に保管。"
+        },
+        {
+          "id": "sector_route_run",
+          "name": "部屋制圧・手動退出・ランダム宝箱",
+          "status": "testing",
+          "progress": 95,
+          "priority": "high",
+          "lane": "now",
+          "notes": "各層3〜4戦闘室の有限Wave。全滅と宝箱開封後に出口をE/Xで調べて次室へ。時間経過の行き先選択UIは撤去。PC/スマホプレビューで実経路確認済み。実機評価は継続。"
+        },
+        {
+          "id": "survival_return",
+          "name": "大群・自動攻撃・部屋型ダンジョン",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "自動攻撃と有限Waveを維持。現行は縮小した部屋を殲滅し、宝箱を確認してから手動で出口へ進む。"
+        },
+        {
+          "id": "topology_variants",
+          "name": "優先6：役割の異なるMAP構造",
+          "notes": "二方向侵入、回り込み、片側開通の扉、隠し道など別の接続テンプレートを追加。現状は基本の役割配置を共有。",
+          "status": "design",
+          "progress": 20,
+          "priority": "medium",
+          "lane": "future",
+          "impactOrder": 6
+        },
+        {
+          "id": "return_and_reinvest",
+          "name": "優先5：帰還して成果を使う流れ",
+          "notes": "帰還・保管・補給・次の目的選択を設計。町づくり全体の実装を先に膨らませない。",
+          "status": "design",
+          "progress": 20,
+          "priority": "medium",
+          "lane": "future",
+          "impactOrder": 5
+        },
+        {
+          "id": "exploration_discoveries",
+          "name": "優先4：探索で見つけるものを増やす",
+          "notes": "NPC救出、素材、依頼、次回に使う解放など、装備と補給以外の寄り道報酬。鉱山の作業員に関わる理由も検討。",
+          "status": "design",
+          "progress": 20,
+          "priority": "high",
+          "lane": "next",
+          "impactOrder": 4
+        },
+        {
+          "id": "exploration_topology",
+          "name": "旧役割配置・番人の鍵（撤回）",
+          "notes": "2026-09-23に広いランダム広間・継続湧き・撃破解放へ置換。",
+          "status": "hold",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now"
+        },
+        {
+          "id": "map_exploration_loop",
+          "name": "60層の部屋戦・宝箱・ボス・階段進行",
+          "status": "testing",
+          "progress": 95,
+          "priority": "high",
+          "lane": "now",
+          "notes": "生成目標5室。3〜4戦闘室を全滅で進み、約半数の室に宝箱。未開封の室は退出不可。ボス宝箱と階段は分離。1→2、20→21、40→41、60→CLEARを確認。"
+        },
+        {
+          "id": "map_theme_families",
+          "name": "敵テーマごとのMAP分離",
+          "status": "testing",
+          "progress": 97,
+          "priority": "high",
+          "lane": "now",
+          "notes": "MAP2/3の連続床に加え、床8近傍256形状×壁4種、専用旗・Boss壁柱・檻・Pillar Fieldへ刷新。敵Familyと専用BGMは引き続き調整する。 MAP2/3に専用ランドマーク4種を追加。 壁際の点在配置へ変更し、鉱山に採掘作業員を追加。 周辺マップの壁床小物もランドマーク基準の作画へ刷新。"
+        },
+        {
+          "id": "imported_ruin_props",
+          "name": "岩・骨・廃墟の小物を3MAPへ追加",
+          "status": "testing",
+          "progress": 95,
+          "priority": "medium",
+          "lane": "now",
+          "notes": "通常室の端寄りへ6種を少数配置。MAP別調色、岩と廃墟の足元衝突、既存装飾との重なり回避を実ゲーム3MAPで確認。実機の長時間性能は未確認。"
+        },
+        {
+          "id": "map_count_expansion",
+          "name": "3テーマ×20層（計60層）",
+          "status": "testing",
+          "progress": 95,
+          "priority": "medium",
+          "lane": "now",
+          "notes": "各層をランダム生成。1→2、20→21、40→41、60層クリアの実遷移を確認。全60層の体感・所要時間は継続評価。"
+        },
+        {
+          "id": "map_hd2d_lab",
+          "name": "HD-2D試作を削除",
+          "status": "completed",
+          "progress": 100,
+          "priority": "low",
+          "lane": "now",
+          "notes": "専用Scene・Script・Shader・素材・生成ツール・専用テストを削除。本編Minotaurが使う共通斬撃素材は維持。"
+        },
+        {
+          "id": "prop_collision",
+          "name": "水晶・樽・壺の衝突",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "MAP1の水晶と収納、MAP2の紫晶系4種、MAP3の炉設備4種に足元Collisionを設定。3MAP専用生成チェックPASS。"
+        },
+        {
+          "id": "remove_life_altar",
+          "name": "生命の祭壇の生成停止",
+          "status": "testing",
+          "progress": 80,
+          "priority": "high",
+          "lane": "now",
+          "notes": "宝箱の下に重なった赤い生命の祭壇を生成停止。宝箱と回復ドロップは維持。"
+        },
+        {
+          "id": "chest_strokes_contact",
+          "name": "宝箱差替・連続突き命中・歩行接触",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "新宝箱シートの閉／開を実マップへ接続。既存の衝突、モーション別1/3/4命中、押し出し防止を維持。宝箱開封を確認。"
+        }
+      ]
+    },
+    {
+      "id": "enemy",
+      "name": "Enemy",
+      "weight": 1.4,
+      "tasks": [
+        {
+          "id": "enemy_roster",
+          "name": "通常敵23種Roster",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "通常23種を3MAPへ配属。担当MAPの雑魚/標準/強敵を時間と確率で波へ混ぜる。"
+        },
+        {
+          "id": "enemy_hierarchy",
+          "name": "敵ヒエラルキー再設計",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "雑魚→標準→強敵→精鋭→中ボス→ボスを正式化。通常23種は基礎3階級、精鋭は強敵へのAffix、中ボス・ボスはBossSpawnerが担当。"
+        },
+        {
+          "id": "enemy_map_assignment",
+          "name": "MAPごとの敵Family分類",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "MAP1=王国・不死、MAP2=血晶・魔性、MAP3=溶鉱炉・オークへ分離。部屋役割と層番号で同階級内を循環選択する。"
+        },
+        {
+          "id": "strong_enemy_skills",
+          "name": "強敵の小技実装",
+          "status": "completed",
+          "progress": 100,
+          "priority": "medium",
+          "lane": "now",
+          "notes": "強敵6種の目・口元の赤い合図を0.12秒から0.40秒、描画寸法を1.6倍へ。方向固定、床の射線・扇・円、空振り後の隙を統一。二連斬りは二発目も再予告。実エンジンで命中・回避・死亡取消を確認。"
+        },
+        {
+          "id": "elite_affix",
+          "name": "精鋭ランダム属性",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "6能力を維持。周期能力は最低0.75秒の予兆、範囲固定、一度に1能力、発動後0.45秒の回復待ちを設けた。強敵固有技との同時発動、死亡・帰還後の残留攻撃を防止。"
+        },
+        {
+          "id": "late_enemy_density",
+          "name": "時間経過による大群の敵密度",
+          "status": "testing",
+          "progress": 90,
+          "priority": "low",
+          "lane": "now",
+          "notes": "床だけの戦場で3〜4体/1秒から8〜10体/0.45秒へ。PC同時128・タッチ96、通常HPは序盤比で終盤約+72%/攻撃約+32%。約4分で増援を止め終盤Bossへ。端末実機と無敵なし難度は未評価。"
+        }
+      ]
+    },
+    {
+      "id": "boss",
+      "name": "Boss",
+      "weight": 1.5,
+      "tasks": [
+        {
+          "id": "boss_room_progress_loot_fix",
+          "name": "ボス領域の視認性・安全な報酬配置・4層停止を修正",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "候補一巡後も再登場可能。待機時の紋章を薄くし、戦闘中と撃破後は非表示。ドロップは同じ部屋の衝突のない床へ置き、宝箱・階段から分離。60回のボス生成、地下4層の実操作、壁際装備回収を確認。"
+        },
+        {
+          "id": "boss_current_roster",
+          "name": "現行Boss 10種＋転用Boss 3戦",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "既存10体は接続済み。職業転用の槍兵、死霊術師、聖堂騎士＋司祭は設計段階。"
+        },
+        {
+          "id": "boss_midboss_conversion",
+          "name": "現行Bossの中Boss転用",
+          "status": "design",
+          "progress": 25,
+          "priority": "high",
+          "lane": "next",
+          "notes": "現行10体の役割を中Bossへ整理する。"
+        },
+        {
+          "id": "boss_intro",
+          "name": "新Boss登場演出",
+          "status": "design",
+          "progress": 20,
+          "priority": "medium",
+          "lane": "next",
+          "notes": "操作を奪いすぎない短い登場演出を設計。"
+        },
+        {
+          "id": "boss_reward_shower",
+          "name": "Boss大量装備Drop",
+          "status": "implementing",
+          "progress": 55,
+          "priority": "high",
+          "lane": "next",
+          "notes": "本編への複数装備配分は再設計待ち。HD-2D専用の5品散布試作は削除済み。"
+        },
+        {
+          "id": "boss_new_final",
+          "name": "新規Boss / Final Boss",
+          "status": "not_started",
+          "progress": 0,
+          "priority": "medium",
+          "lane": "future",
+          "notes": "MAP固有の見た目、専用技、Treasureを設計する。"
+        },
+        {
+          "id": "boss_class_conversion",
+          "name": "槍兵・死霊術師の単独Boss化",
+          "status": "design",
+          "progress": 20,
+          "priority": "high",
+          "lane": "next",
+          "notes": "槍兵は突進と射線管理、死霊術師は召喚と戦場管理を核に固有Patternを設計する。"
+        },
+        {
+          "id": "boss_templar_priest_pair",
+          "name": "聖堂騎士＋司祭のペアBoss",
+          "status": "design",
+          "progress": 30,
+          "priority": "high",
+          "lane": "next",
+          "notes": "聖堂騎士が前衛、司祭が低攻撃の支援役。強化・回復の予兆、射程、再使用間隔、撃破順によるPhase変化を設計する。"
+        }
+      ]
+    },
+    {
+      "id": "classes",
+      "name": "Player / Classes",
+      "weight": 1.2,
+      "tasks": [
+        {
+          "id": "classes_ten",
+          "name": "旧10職の戦闘接続（再編前）",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "旧Rosterは通常攻撃・能動Skillまで接続済み。正式版はPlayer6職へ移行する。"
+        },
+        {
+          "id": "class_reorganization",
+          "name": "Player6職の選択画面",
+          "status": "testing",
+          "progress": 80,
+          "priority": "high",
+          "lane": "now",
+          "notes": "3列×2段へ接続済み。旧ボス転用ID選択はソルジャーへ戻す。4職のボスAIは別タスク。"
+        },
+        {
+          "id": "class_boss_conversion",
+          "name": "4職のBoss転用",
+          "status": "design",
+          "progress": 30,
+          "priority": "high",
+          "lane": "next",
+          "notes": "槍兵、死霊術師、聖堂騎士、司祭をPlayerから外し、3つのBoss戦へ転用する方針を確定。"
+        }
+      ]
+    },
+    {
+      "id": "combat",
+      "name": "Combat",
+      "weight": 2,
+      "tasks": [
+        {
+          "id": "visual_survival_growth",
+          "name": "敵を減速・5分の成長・視覚的な強化三択",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "敵の歩行を35%減速し、主人公の通常歩行速度の75%以内へ。経験値倍率を2.1から0.6へ、初回必要EXPは32→9。5分の中で強化を試しやすくした。 大きなアイコン・現在→強化後の動く比較・選択チェック・独立した取得ボタン。タップだけでは取得せず、選択中は戦闘時間を止める。上限に達した強化と、使えない遠距離強化は候補に出さない。 広域攻撃・高速攻撃・残影追撃・雷光連鎖・再生結界・強撃・多重射撃・貫通射撃。旧数値/状態カードを現行レベルアップから外し、職業技と流派は維持。通常攻撃と浮遊装備の実命中・弾数・貫通へ接続。 PC/OpenGLとタッチ操作を含む横画面/Vulkanプレビューで6職を確認。連鎖/追撃の再帰防止、上限、連続レベルアップ、実シールド、装備の追加弾と実貫通も検査。スマホ実機と無敵なしの全職難度は未確認。"
+        },
+        {
+          "id": "open_field_final_boss",
+          "name": "広い床だけの戦場・強敵の終盤Boss・約5分ステージ",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "3テーマ共通で、壁・柱・地形小物のない広い床へ。床とカメラが現在地へ追従し、表示基準96×96セルの外でも歩行・出現・回収が続く。約4分の大群戦の後、従来の強敵から1体を終盤ボスとして出す。撃破してクリア、5分を過ぎても生存ボスを消さない。 序盤3〜4体/1.0秒→終盤8〜10体/0.45秒。45秒から標準敵を混ぜ、150秒から45%。PC128体・タッチ96体。通常敵は序盤比で、終盤にHP約+72%、攻撃約+32%、EXP必要量は0.6倍。画面外の周囲から出現する。 6ボスの実動作、遠方歩行/カメラ/出現/回収、240秒からの戦闘、305秒後の生存Boss保持、手動回収を検査。無敵・自動強化の検査は勝率の証明ではない。Android/iOS実機と無敵なしの全職難度は未確認。Crazy Gunnerの正確な出現数・HPは公開資料から確定できず、数値はVSGAME向けの独自調整。"
+        },
+        {
+          "id": "five_minute_survival",
+          "name": "Crazy Gunnerを参考に5分サバイバルへ変更",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "2026-10-12の生存タイマー方式の履歴。10-13は床だけの連続戦場・終盤Boss撃破でクリアへ改定。"
+        },
+        {
+          "id": "five_minute_survival_balance",
+          "name": "全職の5分難度と装備・成長予算を実プレイで調整",
+          "status": "not_started",
+          "progress": 0,
+          "priority": "high",
+          "lane": "next",
+          "notes": "自動検査は無敵の主人公・強化自動選択を使うため、勝率と操作の面白さの証明にはしない。実機の敵上限・発熱、既存の装備属性/強度の再設計と合わせて評価。"
+        },
+        {
+          "id": "floating_weapons",
+          "name": "浮遊武器の実攻撃・飛行斬撃・レア度演出",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "52武器を9系統に分類。大剣は広い斬撃、細剣・槍は速く細い突き、弓は矢、斧は1.8秒間隔の重い一撃。鎚・棍と大鎌も専用モーション・ComfyUI素材へ接続。威力倍率は装備・成長を含む命中値へ適用。装備詳細へ特色・基準間隔・一撃倍率を表示。実ゲームの同能力比較、横の巻き込み、9系統の命中、壁・射程・解除・回避/メニュー、スマホ操作・4室進行を検証。 2026-10-09：浮遊武器の絵の長辺を48pxへ統一。緑・青・紫・橙・赤の細い輪郭と、輪郭から立ち上るオーラを追加。高レアほど強く揺らぎ、ミシックは鮮明な赤。旧画像参照は現在の透過素材へ解決し、薄いAlphaの四角い背景を描かない。待機位置と帰還位置、残像の中心も拡大に合わせた。 52武器と9攻撃系統、PC/OpenGL・横画面/Vulkan MobileがPASS。"
+        },
+        {
+          "id": "encounter_roles",
+          "name": "群れの中の敵役割",
+          "notes": "現行は雑魚から標準敵へ時間で混ぜる。45秒から25%、150秒から45%。従来の強敵6種は終盤Boss候補へ移し、通常の群れには出さない。射撃と前衛の圧は実プレイで継続調整。",
+          "status": "testing",
+          "progress": 85,
+          "priority": "high",
+          "lane": "now",
+          "impactOrder": 1
+        },
+        {
+          "id": "sparse_encounter_redesign",
+          "name": "少数有限遭遇（撤回）",
+          "status": "hold",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "大群・自動攻撃へ復帰。本体衝突/予兆/打撃感は維持。"
+        },
+        {
+          "id": "local_hit_impact",
+          "name": "敵個別の打撃感と近接間合い",
+          "status": "testing",
+          "progress": 85,
+          "priority": "high",
+          "lane": "now",
+          "notes": "通常50ms/会心・大技80ms。精鋭・Boss耐性、連打制限、DOT除外、吹き飛ばし連携と死亡解除を確認。大群での体感は未評価。"
+        },
+        {
+          "id": "auto_combat",
+          "name": "自動通常攻撃",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "現行正式仕様。職業ごとに攻撃Patternを分離。"
+        },
+        {
+          "id": "combat_phase12",
+          "name": "通常2D戦闘 Phase 1〜2",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "敵密度、成長速度、体格、Minotaur 4攻撃を移植。"
+        },
+        {
+          "id": "manual_attack_decision",
+          "name": "自動攻撃への復帰",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "全6職の自動攻撃・自動旋回、K/L/J反撃の共存を確認。"
+        },
+        {
+          "id": "common_dodge",
+          "name": "K回避・攻撃キャンセル・ジャスト反撃",
+          "status": "completed",
+          "progress": 100,
+          "priority": "medium",
+          "lane": "now",
+          "notes": "J斬撃とL居合をKで中断。攻撃直前0.12秒のジャスト回避後、最初のJで敵の側面へ影移動し1秒間は近接攻撃間隔0.82倍。全体スローを撤去。"
+        },
+        {
+          "id": "combat_phase35",
+          "name": "通常2D戦闘 Phase 3〜5",
+          "status": "hold",
+          "progress": 10,
+          "priority": "medium",
+          "lane": "future",
+          "notes": "旧戦闘移植計画の保留。現行は自動攻撃と約5分のステージに合わせ、必要な項目だけ再評価する。"
+        },
+        {
+          "id": "enemy_telegraph_unification",
+          "name": "強敵・精鋭・中Bossの予兆と反撃機会",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "JEV推奨順2。攻撃範囲を床に固定して示し、予兆後だけ命中、空振り後は反撃可能。突進は直線、叩きつけは円、Novaは放射方向を表示。死亡で予兆と遅延攻撃を取り消す。"
+        }
+      ]
+    },
+    {
+      "id": "attribute",
+      "name": "Attribute / Status",
+      "weight": 0.8,
+      "tasks": [
+        {
+          "id": "legacy_attribute_remove",
+          "name": "旧属性Lvシステム撤去",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "火・氷・雷・光・闇のLv/欠片/熟練度を廃止。"
+        },
+        {
+          "id": "status_layer",
+          "name": "状態異常Layerの再接続",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "burning/frozen/charged/marked/cursedを攻撃経路へ接続。"
+        },
+        {
+          "id": "status_balance",
+          "name": "状態異常の実プレイBalance",
+          "status": "testing",
+          "progress": 65,
+          "priority": "medium",
+          "lane": "next",
+          "notes": "全職業の自然Play中央値を追加確認する。"
+        },
+        {
+          "id": "stop_element_chest",
+          "name": "旧属性系の宝箱報酬を停止",
+          "status": "testing",
+          "progress": 80,
+          "priority": "high",
+          "lane": "now",
+          "notes": "通常MAPのskill／attribute宝箱を装備へ置換。現行は150秒の補給箱から手動Shopへ。終盤Boss宝箱の開封で自動遷移せず、報酬回収後に自分で帰還する。"
+        }
+      ]
+    },
+    {
+      "id": "fusion",
+      "name": "Fusion",
+      "weight": 0.6,
+      "tasks": [
+        {
+          "id": "legacy_fusion_remove",
+          "name": "旧Element Fusion撤去",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "成立負荷と調整規模から正式系統を廃止。"
+        },
+        {
+          "id": "relic_conversion",
+          "name": "旧融合武器15種の遺物化",
+          "status": "completed",
+          "progress": 100,
+          "priority": "medium",
+          "lane": "now",
+          "notes": "属性条件を外しShop専用遺物武器として再定義。"
+        },
+        {
+          "id": "skill_fusion_future",
+          "name": "完成大技の組合せ拡張",
+          "status": "hold",
+          "progress": 10,
+          "priority": "low",
+          "lane": "future",
+          "notes": "旧属性Fusionを復活させず、状態Synergyとして検討。"
+        }
+      ]
+    },
+    {
+      "id": "skill",
+      "name": "Skill",
+      "weight": 1.1,
+      "tasks": [
+        {
+          "id": "completed_skills",
+          "name": "旧完成大技23種・通常宝箱から非接続",
+          "status": "hold",
+          "progress": 80,
+          "priority": "high",
+          "lane": "future",
+          "notes": "データ・演出は保存。通常MAPの旧skill／attribute報酬は装備へ置換し、属性三択を停止。"
+        },
+        {
+          "id": "skill_icons",
+          "name": "Skill個別Pixel Icon",
+          "status": "completed",
+          "progress": 100,
+          "priority": "medium",
+          "lane": "now",
+          "notes": "完成大技23件とLevel Up候補へ意味別に割り当て。"
+        },
+        {
+          "id": "swordsman_talent",
+          "name": "剣士の天賦図：開いた本の左右ページ",
+          "status": "completed",
+          "progress": 100,
+          "priority": "medium",
+          "lane": "now",
+          "notes": "最後にめくる紙の裏面に天賦図を載せ、その下から刻印の記録が現れる。文字も紙と一緒に曲がり、着地後は同じ9つの操作ノードへ切り替わる。文字の後出しフェードを撤去。既存のComfyUI表紙・紙素材を使用。PC／横画面タッチプレビューの実描画、全9天賦、途中閉じる・再開、Pause解除を無音で確認。 全職の分岐と実機確認は別タスク。"
+        },
+        {
+          "id": "all_class_talents",
+          "name": "全職業の天賦図拡張",
+          "status": "not_started",
+          "progress": 0,
+          "priority": "low",
+          "lane": "future",
+          "notes": "職業削減後の確定Rosterへ合わせて設計する。"
+        }
+      ]
+    },
+    {
+      "id": "equipment",
+      "name": "Equipment",
+      "weight": 1.1,
+      "tasks": [
+        {
+          "id": "weapon_attack_traits",
+          "name": "武器種別の攻撃・威力・間隔",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "done",
+          "notes": "52武器を9系統に分類。大剣は広い斬撃、細剣・槍は速く細い突き、弓は矢、斧は1.8秒間隔の重い一撃。鎚・棍と大鎌も専用モーション・ComfyUI素材へ接続。威力倍率は装備・成長を含む命中値へ適用。装備詳細へ特色・基準間隔・一撃倍率を表示。実ゲームの同能力比較、横の巻き込み、9系統の命中、壁・射程・解除・回避/メニュー、スマホ操作・4室進行を検証。"
+        },
+        {
+          "id": "weapon_variety_24_integration",
+          "name": "新武器24種の採用・装備への接続",
+          "status": "design",
+          "progress": 20,
+          "priority": "medium",
+          "lane": "next",
+          "notes": "ComfyUIで形の違う24種を生成。48px透過PNG・原画・API・seed・一覧を保存。レア度は5/5/5/5/4の候補。現行200装備の抽選・能力値は維持し、ゲームへの追加は次の実装段階。"
+        },
+        {
+          "id": "equipment_attributes_strength_redesign",
+          "name": "優先2：装備の属性・強度を再設計",
+          "notes": "全200装備の能力予算、職業ごとの使用武器、MAP段階、合成コストと失敗損失を統合。低い基礎攻撃を装備加算が無効化しないようにする。",
+          "status": "design",
+          "progress": 20,
+          "priority": "high",
+          "lane": "next",
+          "impactOrder": 2
+        },
+        {
+          "id": "growth_balance_v1",
+          "name": "成長・合成・回復の再調整",
+          "status": "testing",
+          "progress": 92,
+          "priority": "high",
+          "lane": "now",
+          "notes": "少数Dropに合わせ緑→青→紫→橙→赤の全段階を同レア3個に変更。失敗率と部分消費は維持。約5分ステージの成長と装備予算は実機で再評価する。"
+        },
+        {
+          "id": "continuous_forge",
+          "name": "合成後も鍛造画面を維持",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "完了時の強制詳細タブ切替を廃止。通常完了とスキップ後の連続合成PASS。"
+        },
+        {
+          "id": "equipment_catalog_200",
+          "name": "装備200種と全アイコン刷新",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "現行200種・52武器を維持し、2026-10-04に64pxの透過アイコンへ再生成。1pxのレア度輪郭。200画像の一意性・透過・余白・実画像読込・表示範囲を確認。所持品・床Drop・浮遊武器へ接続。実機評価は未実施。"
+        },
+        {
+          "id": "equipment_drop",
+          "name": "装備Drop / Rarity",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "現行200テンプレート・5レア度の地面Itemへ接続。装備画像はComfyUI製64px版へ刷新。"
+        },
+        {
+          "id": "equipment_inventory",
+          "name": "ドラッグとダブルクリック装備",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "装備枠へのドラッグに加えて、所持品のダブルクリックで装着／解除。既存ドラッグの実マウス回帰PASS。"
+        },
+        {
+          "id": "equipment_merge",
+          "name": "装備の全段階3個合成",
+          "status": "completed",
+          "progress": 100,
+          "priority": "medium",
+          "lane": "now",
+          "notes": "緑・青・紫・橙の各3個で一段上へ。鍛造画面、必要数表示、判定ロジックを同期。"
+        },
+        {
+          "id": "equipment_boss_mass_drop",
+          "name": "通常2D Boss大量Drop",
+          "status": "design",
+          "progress": 30,
+          "priority": "high",
+          "lane": "next",
+          "notes": "既存の確定1品から大量Dropへ再設計する。"
+        }
+      ]
+    },
+    {
+      "id": "ui",
+      "name": "UI",
+      "weight": 0.9,
+      "tasks": [
+        {
+          "id": "weapon_aura_wall_visibility",
+          "name": "見えない壁修正・浮遊武器拡大とオーラ",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "石柱・短壁の当たり判定が残るマスを床として描いていた原因を修正。壁・床の分類を物理データへ合わせ、ランドマークに覆われる足元だけ床を継続。同期／分割生成とMAP1の小部屋に共通適用。3テーマ12地形で11,237の壁と21,535の床、実主人公の通行・遮断を検査。 浮遊武器の絵の長辺を48pxへ統一。緑・青・紫・橙・赤の細い輪郭と、輪郭から立ち上るオーラを追加。高レアほど強く揺らぎ、ミシックは鮮明な赤。旧画像参照は現在の透過素材へ解決し、薄いAlphaの四角い背景を描かない。待機位置と帰還位置、残像の中心も拡大に合わせた。 スマホ実機は未確認。"
+        },
+        {
+          "id": "talent_book_ink_v4",
+          "name": "天賦図と記録を紙めくりの中で出す",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "最後にめくる紙の裏面に天賦図を載せ、その下から刻印の記録が現れる。文字も紙と一緒に曲がり、着地後は同じ9つの操作ノードへ切り替わる。文字の後出しフェードを撤去。既存のComfyUI表紙・紙素材を使用。PC／横画面タッチプレビューの実描画、全9天賦、途中閉じる・再開、Pause解除を無音で確認。 PC／横画面とも着地前後の紙面ピクセル差0。スマホ実機は未確認。"
+        },
+        {
+          "id": "talent_book_pages_v3",
+          "name": "大きな本の見開きへ天賦図と記録を統合",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "大きな本を開いたまま残し、左ページに剣士の2流派の天賦図、右ページに職業・流派・熟練と選択した天賦の効果・条件を表示。紙に合う濃いインクと綴じ目に統一。約1.75秒の表紙/3枚の紙めくりから同じ見開きへつながる。PC／横画面タッチプレビューで9天賦の選択、左右ページ内の配置、途中閉じる・再開・Pause解除を無音で確認。 スマホ実機は未確認。"
+        },
+        {
+          "id": "talent_book_motion_v2",
+          "name": "本の開く方向とページめくりを再制作",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "背表紙固定と右→左の表紙・3枚の紙めくりを制作。2026-10-05に拡大し、開いた本を残して左に図・右に記録を載せる仕様へ更新。"
+        },
+        {
+          "id": "ember_visual_v5",
+          "name": "ComfyUI：細いUI・200装備・3MAP・本の演出",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "64px透過アイコン200点を実ゲームへ接続。共通枠・HUD・装備・鍛造・三択・ショップ・タイトル・3テーマの床壁と景観を刷新。PC／横画面タッチプレビュー、連続鍛造、天賦図の途中終了・再開、壁と小物の衝突、9武器系統を無音で確認。実機は未検証。"
+        },
+        {
+          "id": "ui_pixel_readability_review",
+          "name": "ゲームUIの作画・読みやすさ・操作の精査",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "2026-10-04の全体刷新へ更新。共通の細い枠・64pxの200アイコン・HUD・本の左右ページの天賦図・本の演出。PCと横画面タッチプレビューで文字・装備比較・連続鍛造・開閉を確認。実機評価は別タスク。"
+        },
+        {
+          "id": "mobile_landscape_controls",
+          "name": "スマホ横画面の戦闘・操作・装備UI",
+          "status": "testing",
+          "progress": 85,
+          "priority": "high",
+          "lane": "now",
+          "notes": "仮想スティック、回避・技・反撃・操作・装備・地図・停止。行き先選択UIを撤去し、出口のE/X操作に統一。装備詳細/鍛造の画面内配置を実描画。Android/iOS実機は未確認。"
+        },
+        {
+          "id": "compact_hud_inventory",
+          "name": "HUDと所持品画面のコンパクト化",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "下端HUD・開閉式戦利品・中央所持品。50品表示と10素材鍛造を確認。既存操作維持。"
+        },
+        {
+          "id": "ui_world_refresh",
+          "name": "炉の炎と水流の景観アニメ",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "原画の火口・落水・水面に限定した描画。GPUで異なる2フレームと位置を確認、壁面配置・衝突も維持。"
+        },
+        {
+          "id": "ui_icon_alignment",
+          "name": "日本語名・能力名・白黒部位アイコン",
+          "status": "testing",
+          "progress": 80,
+          "priority": "medium",
+          "lane": "now",
+          "notes": "装備欄に能力名を追加。部位フィルタは専用白黒素材。改行と余白を調整。"
+        },
+        {
+          "id": "ui_boss_presentation",
+          "name": "Boss専用演出UIの強化",
+          "status": "design",
+          "progress": 35,
+          "priority": "medium",
+          "lane": "next",
+          "notes": "登場演出・HP Bar・報酬の一連体験を磨く。"
+        }
+      ]
+    },
+    {
+      "id": "vfx",
+      "name": "VFX",
+      "weight": 0.8,
+      "tasks": [
+        {
+          "id": "pixel_vfx",
+          "name": "Pixel VFX統一",
+          "status": "testing",
+          "progress": 90,
+          "priority": "medium",
+          "lane": "now",
+          "notes": "通常Hit、状態、完成大技、Boss攻撃をPixel文法へ整理。魔導士の追尾弾は新しい紫渦5コマへ差替え、実ゲーム描画を確認。"
+        },
+        {
+          "id": "minotaur_vfx",
+          "name": "Minotaur 4攻撃予兆同期",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "表示と判定を同一Node値で同期し回帰PASS。"
+        },
+        {
+          "id": "vfx_lifecycle",
+          "name": "Effect Lifecycle監視",
+          "status": "testing",
+          "progress": 80,
+          "priority": "high",
+          "lane": "now",
+          "notes": "画面外停止、Pool、死亡時Transient清掃を継続検証。"
+        }
+      ]
+    },
+    {
+      "id": "audio",
+      "name": "Audio",
+      "weight": 0.5,
+      "tasks": [
+        {
+          "id": "audio_runtime",
+          "name": "BGM / SE状態遷移",
+          "status": "testing",
+          "progress": 85,
+          "priority": "low",
+          "lane": "now",
+          "notes": "魔導士詠唱・近接素振り・命中・宝箱・装備・ハート・部屋扉に新しい7効果音を接続。密集時の命中音に80ms制限。MAP別BGMと実機音量は今後確認。"
+        },
+        {
+          "id": "audio_map_identity",
+          "name": "MAP別Audio Identity",
+          "status": "design",
+          "progress": 20,
+          "priority": "low",
+          "lane": "future",
+          "notes": "MAP Theme確定後にBGM/環境音を分離する。"
+        }
+      ]
+    },
+    {
+      "id": "balance",
+      "name": "Balance",
+      "weight": 1.3,
+      "tasks": [
+        {
+          "id": "finite_encounter_rewards",
+          "name": "大群向けEXP・報酬配分",
+          "notes": "必要EXP2倍、通常4体1G、装備0.6%、ハート0.8%/地面3個。全60層体感は継続評価。",
+          "status": "testing",
+          "progress": 90,
+          "priority": "high",
+          "lane": "now",
+          "impactOrder": 3
+        },
+        {
+          "id": "balance_combat_curve",
+          "name": "3MAP戦闘曲線",
+          "status": "testing",
+          "progress": 75,
+          "priority": "high",
+          "lane": "now",
+          "notes": "HP/Spawn/EXP曲線の自動検証PASS。自然Play中央値は未確認。"
+        },
+        {
+          "id": "balance_all_classes",
+          "name": "正式Player6職の実Play評価",
+          "status": "not_started",
+          "progress": 10,
+          "priority": "high",
+          "lane": "next",
+          "notes": "6職の役割差、生存性、爽快感、Boss時間を同条件で比較する。"
+        },
+        {
+          "id": "balance_economy",
+          "name": "大群向けゴールド・ショップ",
+          "status": "testing",
+          "progress": 90,
+          "priority": "medium",
+          "lane": "now",
+          "notes": "通常4体1Gで収入を抑え、序盤強化60G/回復40・55G/再抽選25Gを維持。Boss・精鋭報酬維持。"
+        },
+        {
+          "id": "early_xp_curve",
+          "name": "大群向けEXP曲線",
+          "status": "testing",
+          "progress": 90,
+          "priority": "high",
+          "lane": "now",
+          "notes": "初回30EXP、Lv10まで段階+10。成長を止めず、旧少数敵向けの必要量を2倍へ。"
+        }
+      ]
+    },
+    {
+      "id": "performance",
+      "name": "Performance",
+      "weight": 1.4,
+      "tasks": [
+        {
+          "id": "pathfinding_budget",
+          "name": "敵AI経路探索の上限化",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "最悪10.96ms→1.42ms。1frame 2探索・900cell上限。"
+        },
+        {
+          "id": "stutter_reproduction",
+          "name": "常時カクつきの自然Play再現",
+          "status": "testing",
+          "progress": 55,
+          "priority": "high",
+          "lane": "next",
+          "notes": "持続低下は未再現。単発123ms Spikeの原因を追う。"
+        },
+        {
+          "id": "hotspot_cleanup",
+          "name": "O(n) Hotspot整理",
+          "status": "design",
+          "progress": 25,
+          "priority": "medium",
+          "lane": "future",
+          "notes": "追尾弾、Skeleton、状態照会、Chain Sortを計測順に処理。"
+        },
+        {
+          "id": "map_transition_budget",
+          "name": "MAP遷移Frame Budget",
+          "status": "testing",
+          "progress": 90,
+          "priority": "medium",
+          "lane": "now",
+          "notes": "MAP2/3最大19.160/24.183ms。実機で継続監視。"
+        }
+      ]
+    },
+    {
+      "id": "bugfix",
+      "name": "Bug Fix",
+      "weight": 1.5,
+      "tasks": [
+        {
+          "id": "plasma_blackout",
+          "name": "Plasma Blackout修正",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "全画面Flash経路を廃止し回帰検証済み。"
+        },
+        {
+          "id": "state_apply_gap",
+          "name": "状態異常が付与されない不具合",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "Hitbox/Hurtbox経路へ付与処理を接続。"
+        },
+        {
+          "id": "frame_spike",
+          "name": "単発Frame Spike原因調査",
+          "status": "testing",
+          "progress": 35,
+          "priority": "high",
+          "lane": "next",
+          "notes": "300秒自然戦闘で最大123.020ms。原因未特定。"
+        }
+      ]
+    },
+    {
+      "id": "testmode",
+      "name": "Test Mode",
+      "weight": 0.8,
+      "tasks": [
+        {
+          "id": "developer_lab",
+          "name": "Developer Test Lab",
+          "status": "completed",
+          "progress": 100,
+          "priority": "medium",
+          "lane": "now",
+          "notes": "敵・Boss・装備・完成大技の確認経路を維持。"
+        },
+        {
+          "id": "script_load",
+          "name": "全Script Load Check",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "191 GDScript、failure 0。"
+        },
+        {
+          "id": "runtime_regression",
+          "name": "3MAP Runtime回帰",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "侵攻、Boss、宝箱、Shop、遷移、Run ClearまでPASS。"
+        },
+        {
+          "id": "manual_controller_test",
+          "name": "実機Gamepad長時間Play",
+          "status": "not_started",
+          "progress": 10,
+          "priority": "medium",
+          "lane": "next",
+          "notes": "全職業と全Bossの操作感を人手で確認する。"
+        },
+        {
+          "id": "legacy_room_removed",
+          "name": "旧ROOMモードを削除",
+          "status": "completed",
+          "progress": 100,
+          "priority": "medium",
+          "lane": "now",
+          "notes": "進行Controller、部屋選択、ROOM用生成・データ・専用テスト、LabのROOM操作を削除。本編60層探索と他のLab機能の起動を確認。"
+        }
+      ]
+    }
+  ]
+}

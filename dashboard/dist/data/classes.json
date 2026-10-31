@@ -1,0 +1,118 @@
+{
+  "classes": [
+    {
+      "id": "soldier",
+      "name": "ソルジャー",
+      "hp": 100,
+      "speed": 140,
+      "attack": "円弧近接",
+      "activeSkill": "ウォークライ",
+      "disposition": "player",
+      "notes": "正式Player職。基準となる近接万能型として、扱いやすさと耐久を担う。",
+      "image": "assets/portraits/classes/soldier.png"
+    },
+    {
+      "id": "swordsman",
+      "name": "剣士",
+      "hp": 110,
+      "speed": 147,
+      "attack": "円弧近接",
+      "activeSkill": "居合",
+      "disposition": "player",
+      "notes": "正式Player職。居合と一閃/連撃の天賦を持つ。横向きの原画を維持し、Jの命中コマとジャスト回避後の反撃を使用できる。",
+      "image": "assets/portraits/classes/swordsman.png"
+    },
+    {
+      "id": "archer",
+      "name": "弓兵",
+      "hp": 85,
+      "speed": 168,
+      "attack": "拡散射撃",
+      "activeSkill": "アローレイン",
+      "disposition": "player",
+      "notes": "正式Player職。拡散射撃とアローレインで、遠距離・範囲制圧を担う。",
+      "image": "assets/portraits/classes/archer.png"
+    },
+    {
+      "id": "lancer",
+      "name": "槍兵",
+      "hp": 105,
+      "speed": 161,
+      "attack": "貫通突き",
+      "activeSkill": "ランスチャージ",
+      "disposition": "boss",
+      "notes": "単独Bossへ転用決定。長距離突進と貫通攻撃で直線の安全地帯を崩す。",
+      "image": "assets/portraits/bosses/boss_lancer.png",
+      "bossEncounter": "boss_lancer"
+    },
+    {
+      "id": "knight",
+      "name": "騎士",
+      "hp": 100,
+      "speed": 182,
+      "attack": "突進斬り",
+      "activeSkill": "完全防御",
+      "disposition": "player",
+      "notes": "正式Player職。突進斬りと完全防御で、機動防御型として独自性を強める。",
+      "image": "assets/portraits/classes/knight.png"
+    },
+    {
+      "id": "knight_templar",
+      "name": "聖堂騎士",
+      "hp": 140,
+      "speed": 119,
+      "attack": "自己中心Pulse",
+      "activeSkill": "聖なる鎖",
+      "disposition": "boss",
+      "notes": "司祭とのペアBossへ転用決定。前衛としてPlayerを拘束し、司祭の強化・回復を受ける。",
+      "image": "assets/portraits/bosses/boss_knight_templar.png",
+      "bossEncounter": "boss_templar_priest_duo"
+    },
+    {
+      "id": "armored_axeman",
+      "name": "重装斧兵",
+      "hp": 150,
+      "speed": 105,
+      "attack": "広範囲薙ぎ払い",
+      "activeSkill": "処刑",
+      "disposition": "player",
+      "notes": "正式Player職。高耐久・広範囲薙ぎ払い・処刑を担う重量近接型。",
+      "image": "assets/portraits/classes/armored_axeman.png"
+    },
+    {
+      "id": "wizard",
+      "name": "魔導士",
+      "hp": 75,
+      "speed": 140,
+      "attack": "追尾弾",
+      "activeSkill": "タイムフリーズ",
+      "disposition": "player",
+      "notes": "正式Player職。追尾弾と時間停止で、魔法・制御型の代表とする。",
+      "image": "assets/portraits/classes/wizard.png"
+    },
+    {
+      "id": "priest",
+      "name": "司祭",
+      "hp": 100,
+      "speed": 140,
+      "attack": "聖Pulse＋回復",
+      "activeSkill": "聖域",
+      "disposition": "boss",
+      "notes": "聖堂騎士とのペアBossへ転用決定。直接攻撃は控え、強化・回復・聖域で聖堂騎士を支援する。",
+      "image": "assets/portraits/bosses/boss_priest.png",
+      "bossEncounter": "boss_templar_priest_duo"
+    },
+    {
+      "id": "necromancer",
+      "name": "死霊術師",
+      "hp": 80,
+      "speed": 140,
+      "attack": "Skeleton召喚",
+      "activeSkill": "死者蘇生",
+      "disposition": "boss",
+      "notes": "単独Bossへ転用決定。召喚、死者蘇生、呪い領域で戦場管理を担う。",
+      "image": "assets/portraits/bosses/boss_necromancer.png",
+      "bossEncounter": "boss_necromancer"
+    }
+  ]
+}

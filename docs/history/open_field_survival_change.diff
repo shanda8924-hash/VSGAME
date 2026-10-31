@@ -1,0 +1,3387 @@
+--- before/autoload/data_loader.gd
++++ after/autoload/data_loader.gd
+@@ -251,6 +251,7 @@
+ 		data.attack_windup = float(entry.get("attack_windup", 0.55))
+ 		data.visual_scale = float(entry.get("visual_scale", 2.2))
+ 		data.attack_pattern_id = entry.get("attack_pattern_id", "")
++		data.special_attack_id = entry.get("special_attack_id", "")
+ 		bosses[data.id] = data
+ 
+ func _read_json_file(path: String) -> Dictionary:
+--- before/autoload/game_manager.gd
++++ after/autoload/game_manager.gd
+@@ -204,8 +204,7 @@
+ func _process(delta: float) -> void:
+ 	if run_state == RunState.PLAYING and not survival_completed:
+ 		elapsed_seconds += delta
+-		if survival_mode_active:
+-			elapsed_seconds = minf(elapsed_seconds, survival_duration_seconds)
++
+ 
+ ## game.tscn rootを返す。祖先が見つからない既存Testだけcurrent_sceneへfallbackする。
+ func get_runtime_world(context: Node = null) -> Node:
+--- before/components/ai/chase_strategy.gd
++++ after/components/ai/chase_strategy.gd
+@@ -39,7 +39,7 @@
+ func compute_direction(self_position: Vector2, target_position: Vector2) -> Vector2:
+ 	var direct := target_position - self_position
+ 	var map := GameManager.dungeon_map
+-	if map == null or _has_clear_floor_line(map, self_position, target_position):
++	if map == null or map.get_meta("floor_only", false) or _has_clear_floor_line(map, self_position, target_position):
+ 		_path.clear()
+ 		return direct.normalized()
+ 	# 再探索の判断は経過時間だけで行う。以前は「_pathが空」「goalセルが変わった」でも
+--- before/dashboard/dist/app.js
++++ after/dashboard/dist/app.js
+@@ -338,12 +338,12 @@
+ 
+     <section class="metrics-grid" style="margin-bottom:18px">
+       <article class="metric-card slab"><div class="metric-label">登録敵</div><div class="metric-value">${array(state.data.enemies.enemies).length}体</div><div class="metric-detail">6階級の通常Roster</div></article>
+-      <article class="metric-card slab"><div class="metric-label">ボス戦</div><div class="metric-value">${array(state.data.bosses.bosses).length}戦</div><div class="metric-detail">現行10戦＋職業転用3戦</div></article>
++      <article class="metric-card slab"><div class="metric-label">ボス戦</div><div class="metric-value">${array(state.data.bosses.bosses).length}戦</div><div class="metric-detail">終盤6種＋旧Boss・設計履歴</div></article>
+       <article class="metric-card slab"><div class="metric-label">正式Player職</div><div class="metric-value">${array(state.data.classes.classes).filter(item => item.disposition === "player").length}職</div><div class="metric-detail">6職の選択画面へ反映済み</div></article>
+       <article class="metric-card slab ${critical.length ? "danger" : ""}"><div class="metric-label">Critical Bug</div><div class="metric-value">${critical.length}件</div><div class="metric-detail">${critical.length ? "即時対応が必要" : "現在なし"}</div></article>
+     </section>
+ 
+-    ${visualSection("実画面で見る現在地", "入口、探索、決戦、成長の現状です。画像を押すと拡大できます。", galleryByIds(["five-minute-home", "five-minute-horde", "five-minute-recovery", "level-up"]), "overview-visuals")}
++    ${visualSection("実画面で見る現在地", "入口、探索、決戦、成長の現状です。画像を押すと拡大できます。", galleryByIds(["open-field", "open-field-boss", "open-field-recovery", "level-up"]), "overview-visuals")}
+ 
+     <div class="panel-grid" style="margin-top:18px">
+       <section class="panel slab ornate span-7">${blockTitle("カテゴリ進捗", "", `${categories.length}カテゴリ`)}<div class="progress-list">${categories.map(category => progressRow(category.name, categoryProgress(category), `重要度 ${category.weight}`)).join("")}</div></section>
+@@ -535,35 +535,33 @@
+ function renderBosses() {
+   const bosses = array(state.data.bosses.bosses);
+   const converted = bosses.filter(boss => boss.sourceClass);
+-  const existing = bosses.filter(boss => !boss.sourceClass);
++  const current = bosses.filter(boss => boss.stageUse === "final");
++  const historical = bosses.filter(boss => !boss.sourceClass && boss.stageUse !== "final");
+   const mapGroups = [["map1", "MAP 1"], ["map2", "MAP 2"], ["map3", "MAP 3"]]
+-    .map(([id, label]) => [label, existing.filter(boss => array(boss.maps).includes(id))]);
+-  const unplaced = existing.filter(boss => !array(boss.maps).length);
+-
+-  return `${intro("ボス図鑑", "現行10戦に職業転用3戦を加えます。槍兵と死霊術師は単独戦、聖堂騎士と司祭は同時出現するペア戦です。")}
++    .map(([id, label]) => [label, current.filter(boss => array(boss.maps).includes(id))]);
++
++  return `${intro("ボス図鑑", "現行ステージの終盤ボスは従来の強敵から6種類。旧ボスと職業転用の設計も履歴として保持しています。")}
+     <section class="metrics-grid" style="margin-bottom:18px">
+-      <article class="metric-card slab"><div class="metric-label">現行ボス</div><div class="metric-value">${existing.length}戦</div><div class="metric-detail">中ボスへ転用予定</div></article>
+-      <article class="metric-card slab"><div class="metric-label">職業転用</div><div class="metric-value">${converted.length}戦</div><div class="metric-detail">4職を3つのボス戦へ</div></article>
+-      <article class="metric-card slab"><div class="metric-label">ペアボス</div><div class="metric-value">1戦</div><div class="metric-detail">聖堂騎士＋司祭</div></article>
+-      <article class="metric-card slab"><div class="metric-label">登録ボス</div><div class="metric-value">${bosses.length}戦</div><div class="metric-detail">記録庫の総数</div></article>
+-    </section>
+-
++      <article class="metric-card slab"><div class="metric-label">現行の終盤ボス</div><div class="metric-value">${current.length}種</div><div class="metric-detail">各ステージ2候補から1体</div></article>
++      <article class="metric-card slab"><div class="metric-label">旧ボス</div><div class="metric-value">${historical.length}種</div><div class="metric-detail">現在のステージには出現しない</div></article>
++      <article class="metric-card slab"><div class="metric-label">職業転用の設計</div><div class="metric-value">${converted.length}戦</div><div class="metric-detail">未実装・ペア戦を含む</div></article>
++      <article class="metric-card slab"><div class="metric-label">登録ボス</div><div class="metric-value">${bosses.length}件</div><div class="metric-detail">記録庫の総数</div></article>
++    </section>
+     <section class="codex-section">
+-      <div class="codex-band rank-boss">${crest("boss", true)}<div class="band-copy"><h3>職業転用ボス</h3><p>Player職から外した4職を、ボス固有の読み合いへ作り替えます。</p></div><span class="block-count">${converted.length}戦</span></div>
++      <div class="codex-band rank-boss">${crest("boss", true)}<div class="band-copy"><h3>現行ステージの終盤ボス</h3><p>約4分後に1体出現。5分を過ぎても戦闘は続き、撃破してクリアします。</p></div><span class="block-count">${current.length}種</span></div>
++      ${mapGroups.map(([label, list]) => list.length ? `
++        <div class="block-title" style="margin-top:18px"><div><h3>${esc(label)}</h3></div><span class="block-count">${list.length}候補から1体</span></div>
++        <div class="codex-grid size-xl">${list.map(bossCard).join("")}</div>` : "").join("")}
++    </section>
++    ${visualSection("終盤ボスと討伐報酬", "元の強敵の技を保持。討伐後は装備と宝箱を回収し、自分で帰還できます。", galleryByIds(["open-field-boss", "open-field-recovery"]), "boss-visuals")}
++    <section class="codex-section">
++      <div class="codex-band rank-midboss">${crest("midboss", true)}<div class="band-copy"><h3>旧ボスの記録</h3><p>以前の戦闘・Test Labの記録。現在のステージには出現しません。</p></div><span class="block-count">${historical.length}種</span></div>
++      <div class="codex-grid size-xl">${historical.map(bossCard).join("")}</div>
++    </section>
++    <section class="codex-section">
++      <div class="codex-band rank-boss">${crest("boss", true)}<div class="band-copy"><h3>職業転用ボスの設計</h3><p>Player職から外した4職の転用案。現行ステージへの導入は未決定です。</p></div><span class="block-count">${converted.length}戦</span></div>
+       <div class="boss-feature-grid">${converted.map(boss => boss.members ? duoBossCard(boss) : featureBossCard(boss)).join("")}</div>
+-    </section>
+-
+-    <section class="codex-section">
+-      <div class="codex-band rank-midboss">${crest("midboss", true)}<div class="band-copy"><h3>現行ボス / 中ボス転用予定</h3><p>登場MAPごとに配置します。ミノタウロスは戦闘品質の基準です。</p></div><span class="block-count">${existing.length}戦</span></div>
+-      ${mapGroups.map(([label, list]) => list.length ? `
+-        <div class="block-title" style="margin-top:18px"><div><h3>${esc(label)}</h3></div><span class="block-count">${list.length}戦</span></div>
+-        <div class="codex-grid size-xl">${list.map(bossCard).join("")}</div>` : "").join("")}
+-      ${unplaced.length ? `
+-        <div class="block-title" style="margin-top:18px"><div><h3>未配置</h3><small>再配置待ち</small></div><span class="block-count">${unplaced.length}戦</span></div>
+-        <div class="codex-grid size-xl">${unplaced.map(bossCard).join("")}</div>` : ""}
+-    </section>
+-
+-    ${visualSection("決戦と撃破後の選択", "通常MAPのボス宝箱は装備報酬。髑髏の三択画像はUIの表示用撮影です。", galleryByIds(["boss-chamber", "boss-minotaur", "boss-reward"]), "boss-visuals")}`;
++    </section>`;
+ }
+ 
+ function featureBossCard(boss) {
+@@ -633,9 +631,9 @@
+ 
+ function bossCard(boss) {
+   const maps = array(boss.maps).map(mapLabel);
+-  return `<article class="codex-card rank-midboss">
++  return `<article class="codex-card rank-${boss.stageUse === "final" ? "boss" : "midboss"}">
+     <div class="codex-portrait">
+-      ${crest("midboss")}
++      ${crest(boss.stageUse === "final" ? "boss" : "midboss")}
+       <span class="portrait-rank">${esc(boss.role.split("/")[0].trim())}</span>
+       <img src="${esc(boss.image)}" alt="${esc(boss.name)}のSprite" width="256" height="256" loading="lazy" decoding="async">
+       <span class="portrait-maps">${maps.map(label => `<span class="tag">${esc(label)}</span>`).join("")}</span>
+@@ -659,9 +657,9 @@
+ 
+ function renderMaps() {
+   const maps = array(state.data.maps.maps);
+-  return `${intro("マップ", "3つのテーマから出撃先を選ぶ5分サバイバル。従来の床と壁を保持し、36×28セルのアリーナで自動攻撃と時間増援を使います。")}
++  return `${intro("マップ", "3テーマの床だけが続く広い戦場。壁・柱・地形小物なし。約4分の大群戦の後に強敵由来のBossを倒し、約5分のステージを目指します。")}
+     ${maps.map(mapSlab).join("")}
+-    <div style="margin-top:18px">${visualSection("探索空間と最深部", "最新のMAP1個別部屋と、紫晶層・古代炉心の景観を記録しています。旧仕様の画像は比較用の履歴です。", galleryByCategory("exploration"), "map-visuals")}</div>`;
++    <div style="margin-top:18px">${visualSection("現行の戦場と地形の履歴", "現在の床だけの戦場を先頭に表示。以前の部屋・壁・ランドマークは比較用の履歴です。", galleryByCategory("exploration"), "map-visuals")}</div>`;
+ }
+ 
+ function mapSlab(map) {
+@@ -676,10 +674,10 @@
+     ${map.image ? `<button class="map-preview" type="button" data-image-id="${esc(map.imageId || (map.id === "map2" ? "map2-amethyst-depths" : map.id === "map3" ? "map3-ruin-forge" : "map-exploration"))}" aria-label="${esc(map.name)}の実ゲーム画面を拡大"><img src="${esc(map.image)}" alt="${esc(map.name)}の実ゲーム画面" loading="lazy" decoding="async"><span>実ゲーム画面を拡大</span></button>` : ""}
+     <div class="map-body">
+       <dl class="map-facts">
+-        <div><dt>規模</dt><dd>${map.width}×${map.height}</dd></div>
++        <div><dt>規模</dt><dd>${map.openField ? "壁なし・床が連続" : `${map.width}×${map.height}`}</dd></div>
+         <div><dt>ボス解放</dt><dd>${esc(map.bossUnlock || `${map.bossKillRequirement}体`)}</dd></div>
+         <div><dt>同時出現上限</dt><dd>PC ${map.enemyCap}体・スマホ ${map.mobileEnemyCap}体（時間による連続増援）</dd></div>
+-        <div><dt>強敵</dt><dd>${esc(map.strongEnemy)}</dd></div>
++        <div><dt>${map.openField ? "終盤ボス候補" : "強敵"}</dt><dd>${esc(map.strongEnemy)}</dd></div>
+         <div><dt>精鋭</dt><dd>${esc(map.elite)}</dd></div>
+         <div><dt>中ボス</dt><dd>${esc(map.midBoss)}</dd></div>
+         <div><dt>宝箱</dt><dd>${esc(map.treasure)}</dd></div>
+@@ -688,7 +686,7 @@
+       </dl>
+       <div class="map-roster">
+         <div class="roster-block">
+-          <h4>登場ボス <em>${bossUnits.length}戦</em></h4>
++          <h4>${map.openField ? "終盤ボス候補" : "登場ボス"} <em>${bossUnits.length}${map.openField ? "体から1体" : "戦"}</em></h4>
+           <div class="mini-roster">${bossUnits.map(unit => unit.boss
+             ? `<span class="mini-unit is-boss"><figure><img src="${esc(unit.boss.image)}" alt="${esc(unit.name)}のSprite" loading="lazy" decoding="async"></figure><span class="mini-copy"><strong>${esc(unit.name)}</strong><small>${esc(unit.boss.role)}</small></span></span>`
+             : `<span class="tag tag-blood">${esc(unit.name)}</span>`).join("")}</div>
+@@ -716,11 +714,11 @@
+   const tasks = tasksOfCategories(["combat", "attribute", "fusion"]);
+   return `${intro("戦闘システム", "状態異常、Fusionの再定義、UI・VFX・音の表現品質を、現行仕様と廃止履歴ごとに管理します。")}
+     <section class="panel slab ornate" style="margin-bottom:18px">
+-      ${blockTitle("5分サバイバル", "Crazy Gunnerを参考に、部屋進行から短い生存戦へ変更しました。", "05:00")}
++      ${blockTitle("約5分のステージ", "壁のない大群戦から、強敵を使う最後のBoss戦へ。撃破して初めてステージをクリアします。", "05:00")}
+       <p>${esc(systems.survival.finish)}</p><p>${esc(systems.survival.spawn)}</p><p>${esc(systems.survival.rewards)}</p>
+     </section>
+-    ${visualSection("戦闘の実画面", "予兆から判定までを同期した現行の戦闘基準と、探索中のHUDです。", galleryByIds(["five-minute-horde", "five-minute-recovery", "five-minute-arena2"]), "combat-visuals")}
+-    ${visualSection("飛行する装備武器", "52武器に自動攻撃を接続。浮遊する武器は絵の長辺48px、5色の輪郭と揺らぐオーラでレア度を示します。薄い円が索敵範囲です。斬撃は剣本体の接触と同期し、弓・魔法は武器から発射します。", galleryByIds(["floating-weapon-aura", "dungeon-solid-surfaces", "equipment-attack-wanderer_iron_sword", "equipment-attack-rune_greatsword", "equipment-attack-star_sorcerer_staff"]), "auto-weapon-visuals")}
++    ${visualSection("戦闘の実画面", "予兆から判定までを同期した現行の戦闘基準と、探索中のHUDです。", galleryByIds(["open-field-horde", "open-field-boss", "open-field-recovery"]), "combat-visuals")}
++    ${visualSection("飛行する装備武器", "52武器に自動攻撃を接続。浮遊する武器は絵の長辺48px、5色の輪郭と揺らぐオーラでレア度を示します。薄い円が索敵範囲です。斬撃は剣本体の接触と同期し、弓・魔法は武器から発射します。", galleryByIds(["floating-weapon-aura", "equipment-attack-wanderer_iron_sword", "equipment-attack-rune_greatsword", "equipment-attack-star_sorcerer_staff"]), "auto-weapon-visuals")}
+     <div class="panel-grid" style="margin-top:18px">
+       <section class="panel slab ornate span-6">
+         ${blockTitle("状態異常 / 旧属性", "旧属性レベルとElement Fusionは廃止済み。名称は状態異常・完成大技・演出テーマの文脈に限定します。", `${systems.attributes.length}項目`)}
+--- before/dashboard/dist/data/bosses.json
++++ after/dashboard/dist/data/bosses.json
+@@ -1,5 +1,137 @@
+ {
+   "bosses": [
++    {
++      "id": "elite_orc",
++      "name": "エリートオーク",
++      "appearance": "enemy/Elite Orc",
++      "maps": [
++        "map3"
++      ],
++      "role": "現行ステージの終盤Boss・強敵から転用",
++      "stageUse": "final",
++      "hp": 17550.0,
++      "damage": 18.75,
++      "attackPattern": "二連斬り",
++      "intro": true,
++      "hpBar": true,
++      "drop": "確定装備＋討伐宝箱、回収後に手動帰還",
++      "treasure": true,
++      "status": "completed",
++      "progress": 100,
++      "visualScale": 1.7,
++      "notes": "240秒に候補2種から1体。元のSpriteと自然な固有動作・赤い目の予告を保持。固定HP、5分後も生存中は消えず、撃破を必須とする。全6種の固有動作を実ゲームで確認。",
++      "image": "assets/portraits/bosses/elite_orc.png"
++    },
++    {
++      "id": "armored_orc",
++      "name": "重装オーク",
++      "appearance": "enemy/Armored Orc",
++      "maps": [
++        "map3"
++      ],
++      "role": "現行ステージの終盤Boss・強敵から転用",
++      "stageUse": "final",
++      "hp": 15210.0,
++      "damage": 15.0,
++      "attackPattern": "踏み込み斬り",
++      "intro": true,
++      "hpBar": true,
++      "drop": "確定装備＋討伐宝箱、回収後に手動帰還",
++      "treasure": true,
++      "status": "completed",
++      "progress": 100,
++      "visualScale": 1.7,
++      "notes": "240秒に候補2種から1体。元のSpriteと自然な固有動作・赤い目の予告を保持。固定HP、5分後も生存中は消えず、撃破を必須とする。全6種の固有動作を実ゲームで確認。",
++      "image": "assets/portraits/bosses/armored_orc.png"
++    },
++    {
++      "id": "werebear",
++      "name": "ワーベア",
++      "appearance": "enemy/Werebear",
++      "maps": [
++        "map2"
++      ],
++      "role": "現行ステージの終盤Boss・強敵から転用",
++      "stageUse": "final",
++      "hp": 15525.0,
++      "damage": 18.75,
++      "attackPattern": "跳びかかり叩きつけ",
++      "intro": true,
++      "hpBar": true,
++      "drop": "確定装備＋討伐宝箱、回収後に手動帰還",
++      "treasure": true,
++      "status": "completed",
++      "progress": 100,
++      "visualScale": 1.7,
++      "notes": "240秒に候補2種から1体。元のSpriteと自然な固有動作・赤い目の予告を保持。固定HP、5分後も生存中は消えず、撃破を必須とする。全6種の固有動作を実ゲームで確認。",
++      "image": "assets/portraits/bosses/werebear.png"
++    },
++    {
++      "id": "blood_monster_b",
++      "name": "ブラッドモンスターB",
++      "appearance": "enemy/Blood Monster_B/Blood Monster_B",
++      "maps": [
++        "map2"
++      ],
++      "role": "現行ステージの終盤Boss・強敵から転用",
++      "stageUse": "final",
++      "hp": 13455.0,
++      "damage": 15.0,
++      "attackPattern": "血槍",
++      "intro": true,
++      "hpBar": true,
++      "drop": "確定装備＋討伐宝箱、回収後に手動帰還",
++      "treasure": true,
++      "status": "completed",
++      "progress": 100,
++      "visualScale": 1.7,
++      "notes": "240秒に候補2種から1体。元のSpriteと自然な固有動作・赤い目の予告を保持。固定HP、5分後も生存中は消えず、撃破を必須とする。全6種の固有動作を実ゲームで確認。",
++      "image": "assets/portraits/bosses/blood_monster_b.png"
++    },
++    {
++      "id": "greatsword_skeleton",
++      "name": "大剣スケルトン",
++      "appearance": "enemy/Greatsword Skeleton",
++      "maps": [
++        "map1"
++      ],
++      "role": "現行ステージの終盤Boss・強敵から転用",
++      "stageUse": "final",
++      "hp": 13500.0,
++      "damage": 18.75,
++      "attackPattern": "赤い目の予告→大薙ぎ払い",
++      "intro": true,
++      "hpBar": true,
++      "drop": "確定装備＋討伐宝箱、回収後に手動帰還",
++      "treasure": true,
++      "status": "completed",
++      "progress": 100,
++      "visualScale": 1.7,
++      "notes": "240秒に候補2種から1体。元のSpriteと自然な固有動作・赤い目の予告を保持。固定HP、5分後も生存中は消えず、撃破を必須とする。全6種の固有動作を実ゲームで確認。",
++      "image": "assets/portraits/bosses/greatsword_skeleton.png"
++    },
++    {
++      "id": "armored_skeleton",
++      "name": "重装スケルトン",
++      "appearance": "enemy/Armored Skeleton",
++      "maps": [
++        "map1"
++      ],
++      "role": "現行ステージの終盤Boss・強敵から転用",
++      "stageUse": "final",
++      "hp": 11700.0,
++      "damage": 15.0,
++      "attackPattern": "赤い目の予告→迎撃突き",
++      "intro": true,
++      "hpBar": true,
++      "drop": "確定装備＋討伐宝箱、回収後に手動帰還",
++      "treasure": true,
++      "status": "completed",
++      "progress": 100,
++      "visualScale": 1.7,
++      "notes": "240秒に候補2種から1体。元のSpriteと自然な固有動作・赤い目の予告を保持。固定HP、5分後も生存中は消えず、撃破を必須とする。全6種の固有動作を実ゲームで確認。",
++      "image": "assets/portraits/bosses/armored_skeleton.png"
++    },
+     {
+       "id": "boss_lancer",
+       "name": "槍兵",
+@@ -20,7 +152,8 @@
+       "image": "assets/portraits/bosses/boss_lancer.png",
+       "sourceClass": [
+         "lancer"
+-      ]
++      ],
++      "stageUse": "legacy_or_design"
+     },
+     {
+       "id": "boss_necromancer",
+@@ -42,7 +175,8 @@
+       "image": "assets/portraits/bosses/boss_necromancer.png",
+       "sourceClass": [
+         "necromancer"
+-      ]
++      ],
++      "stageUse": "legacy_or_design"
+     },
+     {
+       "id": "boss_templar_priest_duo",
+@@ -77,15 +211,14 @@
+           "role": "後衛・支援",
+           "behavior": "攻撃を抑え、聖堂騎士の強化・回復・聖域展開を優先する。"
+         }
+-      ]
++      ],
++      "stageUse": "legacy_or_design"
+     },
+     {
+       "id": "black_knight_a",
+       "name": "黒騎士A",
+       "appearance": "boss/Black Knight_A",
+-      "maps": [
+-        "map1"
+-      ],
++      "maps": [],
+       "role": "中Boss転用予定",
+       "hp": 320,
+       "damage": 39.6,
+@@ -97,16 +230,15 @@
+       "status": "testing",
+       "progress": 90,
+       "visualScale": 1.97,
+-      "notes": "表示高約65pxへ補正。 1秒の固定直線予告。横へ回避し、突進後1.4秒に反撃。 予兆中の死亡で発動取消。",
+-      "image": "assets/portraits/bosses/black_knight_a.png"
++      "notes": "現行の5分ステージには出現しない。旧戦闘・Test Lab用の履歴。 表示高約65pxへ補正。 1秒の固定直線予告。横へ回避し、突進後1.4秒に反撃。 予兆中の死亡で発動取消。",
++      "image": "assets/portraits/bosses/black_knight_a.png",
++      "stageUse": "legacy_or_design"
+     },
+     {
+       "id": "black_knight_b",
+       "name": "黒騎士B",
+       "appearance": "boss/Black Knight_B",
+-      "maps": [
+-        "map2"
+-      ],
++      "maps": [],
+       "role": "中Boss転用予定",
+       "hp": 350,
+       "damage": 42.2,
+@@ -118,16 +250,15 @@
+       "status": "testing",
+       "progress": 90,
+       "visualScale": 2.71,
+-      "notes": "表示高約65pxへ補正。 0.9秒の固定円予告。範囲外へ出て、発動後1.5秒に反撃。 予兆中の死亡で発動取消。",
+-      "image": "assets/portraits/bosses/black_knight_b.png"
++      "notes": "現行の5分ステージには出現しない。旧戦闘・Test Lab用の履歴。 表示高約65pxへ補正。 0.9秒の固定円予告。範囲外へ出て、発動後1.5秒に反撃。 予兆中の死亡で発動取消。",
++      "image": "assets/portraits/bosses/black_knight_b.png",
++      "stageUse": "legacy_or_design"
+     },
+     {
+       "id": "black_knight_c",
+       "name": "黒騎士C",
+       "appearance": "boss/Black Knight_C",
+-      "maps": [
+-        "map3"
+-      ],
++      "maps": [],
+       "role": "中Boss転用予定",
+       "hp": 380,
+       "damage": 44,
+@@ -139,16 +270,15 @@
+       "status": "testing",
+       "progress": 90,
+       "visualScale": 2.1,
+-      "notes": "表示高約65pxへ補正。 0.85秒の放射予告。矢印方向に広がる弾を避け、発動後1.35秒に反撃。 予兆中の死亡で発動取消。",
+-      "image": "assets/portraits/bosses/black_knight_c.png"
++      "notes": "現行の5分ステージには出現しない。旧戦闘・Test Lab用の履歴。 表示高約65pxへ補正。 0.85秒の放射予告。矢印方向に広がる弾を避け、発動後1.35秒に反撃。 予兆中の死亡で発動取消。",
++      "image": "assets/portraits/bosses/black_knight_c.png",
++      "stageUse": "legacy_or_design"
+     },
+     {
+       "id": "demon_a",
+       "name": "デーモンA",
+       "appearance": "boss/Demon_A",
+-      "maps": [
+-        "map1"
+-      ],
++      "maps": [],
+       "role": "中Boss転用予定",
+       "hp": 300,
+       "damage": 37,
+@@ -160,8 +290,9 @@
+       "status": "testing",
+       "progress": 90,
+       "visualScale": 2.95,
+-      "notes": "表示高約65pxへ補正。 0.75秒の紫の召喚予告。召喚後1.25秒は本体に隙。 予兆中の死亡で発動取消。",
+-      "image": "assets/portraits/bosses/demon_a.png"
++      "notes": "現行の5分ステージには出現しない。旧戦闘・Test Lab用の履歴。 表示高約65pxへ補正。 0.75秒の紫の召喚予告。召喚後1.25秒は本体に隙。 予兆中の死亡で発動取消。",
++      "image": "assets/portraits/bosses/demon_a.png",
++      "stageUse": "legacy_or_design"
+     },
+     {
+       "id": "demon_b",
+@@ -180,15 +311,14 @@
+       "progress": 80,
+       "visualScale": 3.1,
+       "notes": "現行3MAPの通常候補には未配置。 0.85秒の放射予告。矢印方向に広がる弾を避け、発動後1.35秒に反撃。 予兆中の死亡で発動取消。",
+-      "image": "assets/portraits/bosses/demon_b.png"
++      "image": "assets/portraits/bosses/demon_b.png",
++      "stageUse": "legacy_or_design"
+     },
+     {
+       "id": "demon_c",
+       "name": "デーモンC",
+       "appearance": "boss/Demon_C",
+-      "maps": [
+-        "map2"
+-      ],
++      "maps": [],
+       "role": "中Boss転用予定",
+       "hp": 360,
+       "damage": 40.5,
+@@ -200,16 +330,15 @@
+       "status": "testing",
+       "progress": 90,
+       "visualScale": 2.32,
+-      "notes": "表示高約65pxへ補正。 1秒の固定直線予告。横へ回避し、突進後1.4秒に反撃。 予兆中の死亡で発動取消。",
+-      "image": "assets/portraits/bosses/demon_c.png"
++      "notes": "現行の5分ステージには出現しない。旧戦闘・Test Lab用の履歴。 表示高約65pxへ補正。 1秒の固定直線予告。横へ回避し、突進後1.4秒に反撃。 予兆中の死亡で発動取消。",
++      "image": "assets/portraits/bosses/demon_c.png",
++      "stageUse": "legacy_or_design"
+     },
+     {
+       "id": "demon_d",
+       "name": "デーモンD",
+       "appearance": "boss/Demon_D",
+-      "maps": [
+-        "map2"
+-      ],
++      "maps": [],
+       "role": "中Boss転用予定",
+       "hp": 390,
+       "damage": 42.2,
+@@ -221,16 +350,15 @@
+       "status": "testing",
+       "progress": 90,
+       "visualScale": 2.41,
+-      "notes": "表示高約65pxへ補正。 0.9秒の固定円予告。範囲外へ出て、発動後1.5秒に反撃。 予兆中の死亡で発動取消。",
+-      "image": "assets/portraits/bosses/demon_d.png"
++      "notes": "現行の5分ステージには出現しない。旧戦闘・Test Lab用の履歴。 表示高約65pxへ補正。 0.9秒の固定円予告。範囲外へ出て、発動後1.5秒に反撃。 予兆中の死亡で発動取消。",
++      "image": "assets/portraits/bosses/demon_d.png",
++      "stageUse": "legacy_or_design"
+     },
+     {
+       "id": "demon_e",
+       "name": "デーモンE",
+       "appearance": "boss/Demon_E",
+-      "maps": [
+-        "map3"
+-      ],
++      "maps": [],
+       "role": "中Boss転用予定",
+       "hp": 420,
+       "damage": 44,
+@@ -242,16 +370,15 @@
+       "status": "testing",
+       "progress": 90,
+       "visualScale": 2.6,
+-      "notes": "表示高約65pxへ補正。 0.75秒の紫の召喚予告。召喚後1.25秒は本体に隙。 予兆中の死亡で発動取消。",
+-      "image": "assets/portraits/bosses/demon_e.png"
++      "notes": "現行の5分ステージには出現しない。旧戦闘・Test Lab用の履歴。 表示高約65pxへ補正。 0.75秒の紫の召喚予告。召喚後1.25秒は本体に隙。 予兆中の死亡で発動取消。",
++      "image": "assets/portraits/bosses/demon_e.png",
++      "stageUse": "legacy_or_design"
+     },
+     {
+       "id": "flame_golem",
+       "name": "フレイムゴーレム",
+       "appearance": "boss/Flame Golem",
+-      "maps": [
+-        "map3"
+-      ],
++      "maps": [],
+       "role": "中Boss転用予定",
+       "hp": 500,
+       "damage": 48.4,
+@@ -263,16 +390,15 @@
+       "status": "testing",
+       "progress": 90,
+       "visualScale": 2.1,
+-      "notes": "現行で最も高い基礎HP。 0.9秒の固定円予告。範囲外へ出て、発動後1.5秒に反撃。 予兆中の死亡で発動取消。",
+-      "image": "assets/portraits/bosses/flame_golem.png"
++      "notes": "現行の5分ステージには出現しない。旧戦闘・Test Lab用の履歴。 現行で最も高い基礎HP。 0.9秒の固定円予告。範囲外へ出て、発動後1.5秒に反撃。 予兆中の死亡で発動取消。",
++      "image": "assets/portraits/bosses/flame_golem.png",
++      "stageUse": "legacy_or_design"
+     },
+     {
+       "id": "minotaur",
+       "name": "ミノタウロス",
+       "appearance": "boss/Minotaur",
+-      "maps": [
+-        "map1"
+-      ],
++      "maps": [],
+       "role": "中Boss転用予定 / 戦闘基準",
+       "hp": 340,
+       "damage": 40.5,
+@@ -284,8 +410,9 @@
+       "status": "completed",
+       "progress": 100,
+       "visualScale": 2.95,
+-      "notes": "通常2D Phase 2で4攻撃と予兆同期を検証済み。",
+-      "image": "assets/portraits/bosses/minotaur.png"
++      "notes": "現行の5分ステージには出現しない。旧戦闘・Test Lab用の履歴。 通常2D Phase 2で4攻撃と予兆同期を検証済み。",
++      "image": "assets/portraits/bosses/minotaur.png",
++      "stageUse": "legacy_or_design"
+     }
+   ]
+ }
+--- before/dashboard/dist/data/bugs.json
++++ after/dashboard/dist/data/bugs.json
+@@ -8,6 +8,17 @@
+   },
+   "bugs": [
+     {
++      "id": "BUG-BOSS-TIMEOUT-20261013",
++      "name": "5分で生存Bossが消え、未撃破でもクリアになる",
++      "severity": "high",
++      "status": "fixed",
++      "trigger": "終盤Bossが生存したまま5分を超える",
++      "cause": "以前の生存タイマーが300秒で全敵を退去させていた。",
++      "fix": "240秒のBoss開始と撃破の完了を分離。経過時間は300秒に固定せず、実撃破後だけ回収へ。",
++      "relatedSystem": "Survival / Boss",
++      "nextCheck": "305秒後も同じBossとHPが保持され、撃破後に討伐報酬・手動帰還。PCとタッチプレビューで確認。"
++    },
++    {
+       "id": "BUG-SURVIVAL-LOOT-EXPIRY-20261012",
+       "name": "生存後の回収中も装備が消える",
+       "severity": "medium",
+--- before/dashboard/dist/data/decisions.json
++++ after/dashboard/dist/data/decisions.json
+@@ -1,5 +1,12 @@
+ {
+   "decisions": [
++    {
++      "date": "2026-10-13",
++      "title": "床だけの開けた戦場と、強敵を使う最後のBoss",
++      "decision": "3テーマ共通で、壁・柱・地形小物のない広い床へ。床とカメラが現在地へ追従し、表示基準96×96セルの外でも歩行・出現・回収が続く。約4分の大群戦の後、従来の強敵から1体を終盤ボスとして出す。撃破してクリア、5分を過ぎても生存ボスを消さない。 序盤3〜4体/1.0秒→終盤8〜10体/0.45秒。45秒から標準敵を混ぜ、150秒から45%。PC128体・タッチ96体。通常敵は序盤比で、終盤にHP約+72%、攻撃約+32%、EXP必要量は2.1倍。画面外の周囲から出現する。",
++      "reason": "ユーザーがCrazy Gunnerの広い空間・出現テンポと、強敵を時間をかけて倒すステージ終盤を希望。",
++      "impact": "地形、カメラ、出現、経路、回収、6Boss Data、HUD、勝利条件、ショップ、図鑑と記録庫を同期。元絵と固有動作、セーブデータを維持。"
++    },
+     {
+       "date": "2026-10-12",
+       "title": "部屋攻略から5分サバイバルへ",
+--- before/dashboard/dist/data/enemies.json
++++ after/dashboard/dist/data/enemies.json
+@@ -230,9 +230,10 @@
+       "drop": "XP 2 / 装備4%候補",
+       "status": "completed",
+       "progress": 100,
+-      "notes": "60秒以降の波へ8%で混成。赤い合図0.40秒・寸法1.6倍。赤い扇から横へ抜け、振り抜いた後に反撃。",
++      "notes": "60秒以降の波へ8%で混成。赤い合図0.40秒・寸法1.6倍。赤い扇から横へ抜け、振り抜いた後に反撃。 現行ステージでは通常群れに混ぜず、終盤Bossへ転用。",
+       "image": "assets/portraits/enemies/armored_orc.png",
+-      "combatRole": "step_slash"
++      "combatRole": "step_slash",
++      "stageUse": "final_boss"
+     },
+     {
+       "id": "armored_skeleton",
+@@ -249,9 +250,10 @@
+       "drop": "XP 2 / 装備4%候補",
+       "status": "completed",
+       "progress": 100,
+-      "notes": "60秒以降の波へ8%で混成。赤い合図0.40秒・寸法1.6倍。細い直線の射線から横へ避ける。",
++      "notes": "60秒以降の波へ8%で混成。赤い合図0.40秒・寸法1.6倍。細い直線の射線から横へ避ける。 現行ステージでは通常群れに混ぜず、終盤Bossへ転用。",
+       "image": "assets/portraits/enemies/armored_skeleton.png",
+-      "combatRole": "counter_thrust"
++      "combatRole": "counter_thrust",
++      "stageUse": "final_boss"
+     },
+     {
+       "id": "blood_monster_b",
+@@ -268,9 +270,10 @@
+       "drop": "XP 2 / 装備4%候補",
+       "status": "completed",
+       "progress": 100,
+-      "notes": "60秒以降の波へ8%で混成。赤い合図0.40秒・寸法1.6倍。口元の赤い発光を見て、固定した射線から横へ避ける。",
++      "notes": "60秒以降の波へ8%で混成。赤い合図0.40秒・寸法1.6倍。口元の赤い発光を見て、固定した射線から横へ避ける。 現行ステージでは通常群れに混ぜず、終盤Bossへ転用。",
+       "image": "assets/portraits/enemies/blood_monster_b.png",
+-      "combatRole": "blood_spear"
++      "combatRole": "blood_spear",
++      "stageUse": "final_boss"
+     },
+     {
+       "id": "demoness_a",
+@@ -363,9 +366,10 @@
+       "drop": "XP 3 / 装備4%候補",
+       "status": "completed",
+       "progress": 100,
+-      "notes": "60秒以降の波へ8%で混成。赤い合図0.40秒・寸法1.6倍。二発目にも発光。二振りを避けてから接近する。精鋭Affixとは別の強敵種。",
++      "notes": "60秒以降の波へ8%で混成。赤い合図0.40秒・寸法1.6倍。二発目にも発光。二振りを避けてから接近する。精鋭Affixとは別の強敵種。 現行ステージでは通常群れに混ぜず、終盤Bossへ転用。",
+       "image": "assets/portraits/enemies/elite_orc.png",
+-      "combatRole": "double_slash"
++      "combatRole": "double_slash",
++      "stageUse": "final_boss"
+     },
+     {
+       "id": "greatsword_skeleton",
+@@ -382,9 +386,10 @@
+       "drop": "XP 3 / 装備4%候補",
+       "status": "completed",
+       "progress": 100,
+-      "notes": "60秒以降の波へ8%で混成。赤い合図0.40秒・寸法1.6倍。前方半円から背後へ回り、振り抜いた後に反撃。",
++      "notes": "60秒以降の波へ8%で混成。赤い合図0.40秒・寸法1.6倍。前方半円から背後へ回り、振り抜いた後に反撃。 現行ステージでは通常群れに混ぜず、終盤Bossへ転用。",
+       "image": "assets/portraits/enemies/greatsword_skeleton.png",
+-      "combatRole": "wide_sweep"
++      "combatRole": "wide_sweep",
++      "stageUse": "final_boss"
+     },
+     {
+       "id": "hellhound",
+@@ -458,9 +463,10 @@
+       "drop": "XP 3 / 装備4%候補",
+       "status": "completed",
+       "progress": 100,
+-      "notes": "60秒以降の波へ8%で混成。赤い合図0.40秒・寸法1.6倍。接近してくる円の範囲から離れ、着地後に反撃。",
++      "notes": "60秒以降の波へ8%で混成。赤い合図0.40秒・寸法1.6倍。接近してくる円の範囲から離れ、着地後に反撃。 現行ステージでは通常群れに混ぜず、終盤Bossへ転用。",
+       "image": "assets/portraits/enemies/werebear.png",
+-      "combatRole": "pounce"
++      "combatRole": "pounce",
++      "stageUse": "final_boss"
+     },
+     {
+       "id": "werewolf",
+--- before/dashboard/dist/data/gallery.json
++++ after/dashboard/dist/data/gallery.json
+@@ -9,6 +9,104 @@
+   },
+   "items": [
+     {
++      "id": "open-field",
++      "title": "床だけが続く広い戦場",
++      "image": "assets/images/open_field.png",
++      "category": "exploration",
++      "caption": "3テーマ共通で、壁・柱・地形小物のない広い床へ。床とカメラが現在地へ追従し、表示基準96×96セルの外でも歩行・出現・回収が続く。約4分の大群戦の後、従来の強敵から1体を終盤ボスとして出す。撃破してクリア、5分を過ぎても生存ボスを消さない。",
++      "decision": "keep",
++      "related": [
++        "サバイバル",
++        "床のみ",
++        "終盤Boss"
++      ],
++      "capturedAt": "2026-10-13"
++    },
++    {
++      "id": "open-field-boss",
++      "title": "既存の強敵を終盤Bossへ",
++      "image": "assets/images/open_field_boss.png",
++      "category": "combat",
++      "caption": "大きさと固定HPをBoss用に調整し、元の絵・攻撃・赤い予兆は保持。5分を超えても撃破まで継続。",
++      "decision": "keep",
++      "related": [
++        "サバイバル",
++        "床のみ",
++        "終盤Boss"
++      ],
++      "capturedAt": "2026-10-13"
++    },
++    {
++      "id": "open-field-horde",
++      "title": "4分の大群戦と成長",
++      "image": "assets/images/open_field_horde.png",
++      "category": "combat",
++      "caption": "序盤3〜4体/1.0秒→終盤8〜10体/0.45秒。45秒から標準敵を混ぜ、150秒から45%。PC128体・タッチ96体。通常敵は序盤比で、終盤にHP約+72%、攻撃約+32%、EXP必要量は2.1倍。画面外の周囲から出現する。",
++      "decision": "keep",
++      "related": [
++        "サバイバル",
++        "床のみ",
++        "終盤Boss"
++      ],
++      "capturedAt": "2026-10-13"
++    },
++    {
++      "id": "open-field-recovery",
++      "title": "討伐後、現在地で報酬を回収",
++      "image": "assets/images/open_field_recovery.png",
++      "category": "result",
++      "caption": "75秒に60%の装備箱、150秒に確定の補給箱。補給箱を自分で開けるとショップ、閉じると戦闘へ。ボス撃破後は装備・討伐宝箱・帰還階段を離して配置し、開封しても自動帰還しない。残金・回収装備は従来どおり継承報酬へ。",
++      "decision": "keep",
++      "related": [
++        "サバイバル",
++        "床のみ",
++        "終盤Boss"
++      ],
++      "capturedAt": "2026-10-13"
++    },
++    {
++      "id": "open-field-arena1",
++      "title": "床だけの戦場：忘却の地下回廊",
++      "image": "assets/images/open_field_arena1.png",
++      "category": "exploration",
++      "caption": "現在の床の作画を保持。遠くへ移動しても同じ模様が続く。",
++      "decision": "keep",
++      "related": [
++        "サバイバル",
++        "床のみ",
++        "終盤Boss"
++      ],
++      "capturedAt": "2026-10-13"
++    },
++    {
++      "id": "open-field-arena2",
++      "title": "床だけの戦場：紫晶の深層",
++      "image": "assets/images/open_field_arena2.png",
++      "category": "exploration",
++      "caption": "現在の床の作画を保持。遠くへ移動しても同じ模様が続く。",
++      "decision": "keep",
++      "related": [
++        "サバイバル",
++        "床のみ",
++        "終盤Boss"
++      ],
++      "capturedAt": "2026-10-13"
++    },
++    {
++      "id": "open-field-arena3",
++      "title": "床だけの戦場：終焉の炉心",
++      "image": "assets/images/open_field_arena3.png",
++      "category": "exploration",
++      "caption": "現在の床の作画を保持。遠くへ移動しても同じ模様が続く。",
++      "decision": "keep",
++      "related": [
++        "サバイバル",
++        "床のみ",
++        "終盤Boss"
++      ],
++      "capturedAt": "2026-10-13"
++    },
++    {
+       "id": "five-minute-home",
+       "title": "出撃前に3テーマを選ぶ",
+       "image": "assets/images/survival_home.png",
+@@ -52,45 +150,48 @@
+     },
+     {
+       "id": "five-minute-arena1",
+-      "title": "5分アリーナ：忘却の地下回廊",
++      "title": "旧仕様：5分アリーナ：忘却の地下回廊",
+       "image": "assets/images/survival_arena1.png",
+       "category": "exploration",
+-      "caption": "3テーマ共通36×28セルの戦闘空間。既存の床・壁の作画を保持。",
+-      "decision": "keep",
++      "caption": "3テーマ共通36×28セルの戦闘空間。既存の床・壁の作画を保持。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "サバイバル",
+         "自動攻撃",
+         "報酬回収"
+       ],
+-      "capturedAt": "2026-10-12"
++      "capturedAt": "2026-10-12",
++      "historical": true
+     },
+     {
+       "id": "five-minute-arena2",
+-      "title": "5分アリーナ：紫晶の深層",
++      "title": "旧仕様：5分アリーナ：紫晶の深層",
+       "image": "assets/images/survival_arena2.png",
+       "category": "exploration",
+-      "caption": "3テーマ共通36×28セルの戦闘空間。既存の床・壁の作画を保持。",
+-      "decision": "keep",
++      "caption": "3テーマ共通36×28セルの戦闘空間。既存の床・壁の作画を保持。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "サバイバル",
+         "自動攻撃",
+         "報酬回収"
+       ],
+-      "capturedAt": "2026-10-12"
++      "capturedAt": "2026-10-12",
++      "historical": true
+     },
+     {
+       "id": "five-minute-arena3",
+-      "title": "5分アリーナ：終焉の炉心",
++      "title": "旧仕様：5分アリーナ：終焉の炉心",
+       "image": "assets/images/survival_arena3.png",
+       "category": "exploration",
+-      "caption": "3テーマ共通36×28セルの戦闘空間。既存の床・壁の作画を保持。",
+-      "decision": "keep",
++      "caption": "3テーマ共通36×28セルの戦闘空間。既存の床・壁の作画を保持。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "サバイバル",
+         "自動攻撃",
+         "報酬回収"
+       ],
+-      "capturedAt": "2026-10-12"
++      "capturedAt": "2026-10-12",
++      "historical": true
+     },
+     {
+       "id": "floating-weapon-aura",
+@@ -108,16 +209,17 @@
+     },
+     {
+       "id": "dungeon-solid-surfaces",
+-      "title": "通れない石柱を、壁として見せる",
++      "title": "旧部屋制：見えない壁の修正記録",
+       "category": "exploration",
+       "image": "assets/images/dungeon_visible_walls.png",
+-      "caption": "実ゲームの石柱の広間。中央の石柱は輪郭と陰影が見え、中央通路は歩ける。石柱・短壁の当たり判定が残るマスを床として描いていた原因を修正。壁・床の分類を物理データへ合わせ、ランドマークに覆われる足元だけ床を継続。同期／分割生成とMAP1の小部屋に共通適用。3テーマ12地形で11,237の壁と21,535の床、実主人公の通行・遮断を検査。",
+-      "decision": "keep",
++      "caption": "実ゲームの石柱の広間。中央の石柱は輪郭と陰影が見え、中央通路は歩ける。石柱・短壁の当たり判定が残るマスを床として描いていた原因を修正。壁・床の分類を物理データへ合わせ、ランドマークに覆われる足元だけ床を継続。同期／分割生成とMAP1の小部屋に共通適用。3テーマ12地形で11,237の壁と21,535の床、実主人公の通行・遮断を検査。 2026-10-13以降のステージは床のみで、この柱・壁は生成しない。以前の部屋制の検証画像として保存。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "MAP",
+         "衝突判定"
+       ],
+-      "capturedAt": "2026-10-09"
++      "capturedAt": "2026-10-09",
++      "historical": true
+     },
+     {
+       "id": "ember-book-opening",
+@@ -316,120 +418,129 @@
+     },
+     {
+       "id": "gate-masonry-1",
+-      "title": "MAP1：壁材を使った門の拡大確認",
++      "title": "旧仕様：MAP1：壁材を使った門の拡大確認",
+       "category": "exploration",
+       "image": "assets/images/gate-masonry-1.png",
+-      "caption": "3MAP共通の青緑ポータルと台座を撤去。既存の壁面と石積みを保持し、各MAPの石材・床素材で掘り込み、敷居、暗い奥行き、閉じた鉄格子を描画。門だけ別の石板に見える外周をなくした。中央入場と遷移条件は維持。 確認用Sceneでカメラだけ拡大。通常ゲームのズームは変更していない。",
+-      "decision": "keep",
++      "caption": "3MAP共通の青緑ポータルと台座を撤去。既存の壁面と石積みを保持し、各MAPの石材・床素材で掘り込み、敷居、暗い奥行き、閉じた鉄格子を描画。門だけ別の石板に見える外周をなくした。中央入場と遷移条件は維持。 確認用Sceneでカメラだけ拡大。通常ゲームのズームは変更していない。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "門の壁面統合",
+         "作画"
+       ],
+-      "capturedAt": "2026-09-27"
++      "capturedAt": "2026-09-27",
++      "historical": true
+     },
+     {
+       "id": "gate-masonry-2",
+-      "title": "MAP2：壁材を使った門の拡大確認",
++      "title": "旧仕様：MAP2：壁材を使った門の拡大確認",
+       "category": "exploration",
+       "image": "assets/images/gate-masonry-2.png",
+-      "caption": "3MAP共通の青緑ポータルと台座を撤去。既存の壁面と石積みを保持し、各MAPの石材・床素材で掘り込み、敷居、暗い奥行き、閉じた鉄格子を描画。門だけ別の石板に見える外周をなくした。中央入場と遷移条件は維持。 確認用Sceneでカメラだけ拡大。通常ゲームのズームは変更していない。",
+-      "decision": "keep",
++      "caption": "3MAP共通の青緑ポータルと台座を撤去。既存の壁面と石積みを保持し、各MAPの石材・床素材で掘り込み、敷居、暗い奥行き、閉じた鉄格子を描画。門だけ別の石板に見える外周をなくした。中央入場と遷移条件は維持。 確認用Sceneでカメラだけ拡大。通常ゲームのズームは変更していない。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "門の壁面統合",
+         "作画"
+       ],
+-      "capturedAt": "2026-09-27"
++      "capturedAt": "2026-09-27",
++      "historical": true
+     },
+     {
+       "id": "gate-masonry-3",
+-      "title": "MAP3：壁材を使った門の拡大確認",
++      "title": "旧仕様：MAP3：壁材を使った門の拡大確認",
+       "category": "exploration",
+       "image": "assets/images/gate-masonry-3.png",
+-      "caption": "3MAP共通の青緑ポータルと台座を撤去。既存の壁面と石積みを保持し、各MAPの石材・床素材で掘り込み、敷居、暗い奥行き、閉じた鉄格子を描画。門だけ別の石板に見える外周をなくした。中央入場と遷移条件は維持。 確認用Sceneでカメラだけ拡大。通常ゲームのズームは変更していない。",
+-      "decision": "keep",
++      "caption": "3MAP共通の青緑ポータルと台座を撤去。既存の壁面と石積みを保持し、各MAPの石材・床素材で掘り込み、敷居、暗い奥行き、閉じた鉄格子を描画。門だけ別の石板に見える外周をなくした。中央入場と遷移条件は維持。 確認用Sceneでカメラだけ拡大。通常ゲームのズームは変更していない。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "門の壁面統合",
+         "作画"
+       ],
+-      "capturedAt": "2026-09-27"
++      "capturedAt": "2026-09-27",
++      "historical": true
+     },
+     {
+       "id": "gate-map1-open",
+-      "title": "MAP1：壁内の門と中央の入口",
++      "title": "旧仕様：MAP1：壁内の門と中央の入口",
+       "category": "exploration",
+       "image": "assets/images/gate-map1-open.png",
+-      "caption": "3MAP共通の青緑ポータルと台座を撤去。既存の壁面と石積みを保持し、各MAPの石材・床素材で掘り込み、敷居、暗い奥行き、閉じた鉄格子を描画。門だけ別の石板に見える外周をなくした。中央入場と遷移条件は維持。 製品Sceneへ敵/宝箱状態を設定した確認用Capture。",
+-      "decision": "keep",
++      "caption": "3MAP共通の青緑ポータルと台座を撤去。既存の壁面と石積みを保持し、各MAPの石材・床素材で掘り込み、敷居、暗い奥行き、閉じた鉄格子を描画。門だけ別の石板に見える外周をなくした。中央入場と遷移条件は維持。 製品Sceneへ敵/宝箱状態を設定した確認用Capture。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "門",
+         "MAP進行"
+       ],
+-      "capturedAt": "2026-09-27"
++      "capturedAt": "2026-09-27",
++      "historical": true
+     },
+     {
+       "id": "gate-map1-entering",
+-      "title": "MAP1：壁内の門へ入場",
++      "title": "旧仕様：MAP1：壁内の門へ入場",
+       "category": "exploration",
+       "image": "assets/images/gate-map1-entering.png",
+-      "caption": "3MAP共通の青緑ポータルと台座を撤去。既存の壁面と石積みを保持し、各MAPの石材・床素材で掘り込み、敷居、暗い奥行き、閉じた鉄格子を描画。門だけ別の石板に見える外周をなくした。中央入場と遷移条件は維持。 製品Sceneへ敵/宝箱状態を設定した確認用Capture。",
+-      "decision": "keep",
++      "caption": "3MAP共通の青緑ポータルと台座を撤去。既存の壁面と石積みを保持し、各MAPの石材・床素材で掘り込み、敷居、暗い奥行き、閉じた鉄格子を描画。門だけ別の石板に見える外周をなくした。中央入場と遷移条件は維持。 製品Sceneへ敵/宝箱状態を設定した確認用Capture。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "門",
+         "MAP進行"
+       ],
+-      "capturedAt": "2026-09-27"
++      "capturedAt": "2026-09-27",
++      "historical": true
+     },
+     {
+       "id": "gate-map2-open",
+-      "title": "MAP2：壁内の門と中央の入口",
++      "title": "旧仕様：MAP2：壁内の門と中央の入口",
+       "category": "exploration",
+       "image": "assets/images/gate-map2-open.png",
+-      "caption": "3MAP共通の青緑ポータルと台座を撤去。既存の壁面と石積みを保持し、各MAPの石材・床素材で掘り込み、敷居、暗い奥行き、閉じた鉄格子を描画。門だけ別の石板に見える外周をなくした。中央入場と遷移条件は維持。 製品Sceneへ敵/宝箱状態を設定した確認用Capture。",
+-      "decision": "keep",
++      "caption": "3MAP共通の青緑ポータルと台座を撤去。既存の壁面と石積みを保持し、各MAPの石材・床素材で掘り込み、敷居、暗い奥行き、閉じた鉄格子を描画。門だけ別の石板に見える外周をなくした。中央入場と遷移条件は維持。 製品Sceneへ敵/宝箱状態を設定した確認用Capture。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "門",
+         "MAP進行"
+       ],
+-      "capturedAt": "2026-09-27"
++      "capturedAt": "2026-09-27",
++      "historical": true
+     },
+     {
+       "id": "gate-map2-entering",
+-      "title": "MAP2：壁内の門へ入場",
++      "title": "旧仕様：MAP2：壁内の門へ入場",
+       "category": "exploration",
+       "image": "assets/images/gate-map2-entering.png",
+-      "caption": "3MAP共通の青緑ポータルと台座を撤去。既存の壁面と石積みを保持し、各MAPの石材・床素材で掘り込み、敷居、暗い奥行き、閉じた鉄格子を描画。門だけ別の石板に見える外周をなくした。中央入場と遷移条件は維持。 製品Sceneへ敵/宝箱状態を設定した確認用Capture。",
+-      "decision": "keep",
++      "caption": "3MAP共通の青緑ポータルと台座を撤去。既存の壁面と石積みを保持し、各MAPの石材・床素材で掘り込み、敷居、暗い奥行き、閉じた鉄格子を描画。門だけ別の石板に見える外周をなくした。中央入場と遷移条件は維持。 製品Sceneへ敵/宝箱状態を設定した確認用Capture。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "門",
+         "MAP進行"
+       ],
+-      "capturedAt": "2026-09-27"
++      "capturedAt": "2026-09-27",
++      "historical": true
+     },
+     {
+       "id": "gate-map3-open",
+-      "title": "MAP3：壁内の門と中央の入口",
++      "title": "旧仕様：MAP3：壁内の門と中央の入口",
+       "category": "exploration",
+       "image": "assets/images/gate-map3-open.png",
+-      "caption": "3MAP共通の青緑ポータルと台座を撤去。既存の壁面と石積みを保持し、各MAPの石材・床素材で掘り込み、敷居、暗い奥行き、閉じた鉄格子を描画。門だけ別の石板に見える外周をなくした。中央入場と遷移条件は維持。 製品Sceneへ敵/宝箱状態を設定した確認用Capture。",
+-      "decision": "keep",
++      "caption": "3MAP共通の青緑ポータルと台座を撤去。既存の壁面と石積みを保持し、各MAPの石材・床素材で掘り込み、敷居、暗い奥行き、閉じた鉄格子を描画。門だけ別の石板に見える外周をなくした。中央入場と遷移条件は維持。 製品Sceneへ敵/宝箱状態を設定した確認用Capture。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "門",
+         "MAP進行"
+       ],
+-      "capturedAt": "2026-09-27"
++      "capturedAt": "2026-09-27",
++      "historical": true
+     },
+     {
+       "id": "gate-map3-entering",
+-      "title": "MAP3：壁内の門へ入場",
++      "title": "旧仕様：MAP3：壁内の門へ入場",
+       "category": "exploration",
+       "image": "assets/images/gate-map3-entering.png",
+-      "caption": "3MAP共通の青緑ポータルと台座を撤去。既存の壁面と石積みを保持し、各MAPの石材・床素材で掘り込み、敷居、暗い奥行き、閉じた鉄格子を描画。門だけ別の石板に見える外周をなくした。中央入場と遷移条件は維持。 製品Sceneへ敵/宝箱状態を設定した確認用Capture。",
+-      "decision": "keep",
++      "caption": "3MAP共通の青緑ポータルと台座を撤去。既存の壁面と石積みを保持し、各MAPの石材・床素材で掘り込み、敷居、暗い奥行き、閉じた鉄格子を描画。門だけ別の石板に見える外周をなくした。中央入場と遷移条件は維持。 製品Sceneへ敵/宝箱状態を設定した確認用Capture。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "門",
+         "MAP進行"
+       ],
+-      "capturedAt": "2026-09-27"
++      "capturedAt": "2026-09-27",
++      "historical": true
+     },
+     {
+       "id": "equipment-readable",
+@@ -498,83 +609,89 @@
+     },
+     {
+       "id": "object-style-map2",
+-      "title": "MAP2：更新した小物と現行キャラ",
++      "title": "旧仕様：MAP2：更新した小物と現行キャラ",
+       "category": "exploration",
+       "image": "assets/images/object-style-map2.png",
+-      "caption": "製品Sceneの検証用描画。装備やHUDの一部は確認用データを投入。MAP比較には現行キャラ3種を並べており、通常プレイの記録とは区別する。",
+-      "decision": "keep",
++      "caption": "製品Sceneの検証用描画。装備やHUDの一部は確認用データを投入。MAP比較には現行キャラ3種を並べており、通常プレイの記録とは区別する。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "作画統一",
+         "オブジェクト・UI精査"
+       ],
+-      "capturedAt": "2026-09-27"
++      "capturedAt": "2026-09-27",
++      "historical": true
+     },
+     {
+       "id": "object-style-map3",
+-      "title": "MAP3：更新した小物と現行キャラ",
++      "title": "旧仕様：MAP3：更新した小物と現行キャラ",
+       "category": "exploration",
+       "image": "assets/images/object-style-map3.png",
+-      "caption": "製品Sceneの検証用描画。装備やHUDの一部は確認用データを投入。MAP比較には現行キャラ3種を並べており、通常プレイの記録とは区別する。",
+-      "decision": "keep",
++      "caption": "製品Sceneの検証用描画。装備やHUDの一部は確認用データを投入。MAP比較には現行キャラ3種を並べており、通常プレイの記録とは区別する。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "作画統一",
+         "オブジェクト・UI精査"
+       ],
+-      "capturedAt": "2026-09-27"
++      "capturedAt": "2026-09-27",
++      "historical": true
+     },
+     {
+       "id": "map3-pixel-style",
+-      "title": "MAP3：現行キャラクターと床・壁の作画比較",
++      "title": "旧仕様：MAP3：現行キャラクターと床・壁の作画比較",
+       "category": "exploration",
+       "image": "assets/images/map3_pixel_style.png",
+-      "caption": "製品StageEnvironmentの描画に現行Soldier・Swordsman・Wizardを並べた検証Scene。ローカル生成素材と2倍Nearest表示。実プレイ画面ではない。",
+-      "decision": "redesign",
++      "caption": "製品StageEnvironmentの描画に現行Soldier・Swordsman・Wizardを並べた検証Scene。ローカル生成素材と2倍Nearest表示。実プレイ画面ではない。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "キャラクターとの作画統一",
+         "MAP床・壁"
+       ],
+-      "capturedAt": "2026-09-27"
++      "capturedAt": "2026-09-27",
++      "historical": true
+     },
+     {
+       "id": "map2-pixel-style",
+-      "title": "MAP2：現行キャラクターと床・壁の作画比較",
++      "title": "旧仕様：MAP2：現行キャラクターと床・壁の作画比較",
+       "category": "exploration",
+       "image": "assets/images/map2_pixel_style.png",
+-      "caption": "製品StageEnvironmentの描画に現行Soldier・Swordsman・Wizardを並べた検証Scene。ローカル生成素材と2倍Nearest表示。実プレイ画面ではない。",
+-      "decision": "redesign",
++      "caption": "製品StageEnvironmentの描画に現行Soldier・Swordsman・Wizardを並べた検証Scene。ローカル生成素材と2倍Nearest表示。実プレイ画面ではない。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "キャラクターとの作画統一",
+         "MAP床・壁"
+       ],
+-      "capturedAt": "2026-09-27"
++      "capturedAt": "2026-09-27",
++      "historical": true
+     },
+     {
+       "id": "isolated-map1-room",
+-      "title": "MAP1：石柱の広間と手動退出",
++      "title": "旧仕様：MAP1：石柱の広間と手動退出",
+       "category": "exploration",
+       "image": "assets/images/isolated_room_2.png",
+-      "caption": "1280×720の実ゲーム。従来の青灰の石床、遮蔽物・中央の通路、部屋別の敵残数、スマホ横画面操作を確認。1室ずつ読み込み、全滅後も自動遷移しない。",
+-      "decision": "redesign",
++      "caption": "1280×720の実ゲーム。従来の青灰の石床、遮蔽物・中央の通路、部屋別の敵残数、スマホ横画面操作を確認。1室ずつ読み込み、全滅後も自動遷移しない。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "MAP1個別部屋",
+         "従来の石床",
+         "手動退出"
+       ],
+-      "capturedAt": "2026-09-27"
++      "capturedAt": "2026-09-27",
++      "historical": true
+     },
+     {
+       "id": "sector-room-exit-mobile",
+-      "title": "スマホ横画面の部屋出口と宝箱",
++      "title": "旧仕様：スマホ横画面の部屋出口と宝箱",
+       "category": "exploration",
+       "image": "assets/images/mobile_room_exit.png",
+-      "caption": "1280×720の実ゲーム描画。部屋の敵を全滅し、宝箱を開けてから出口を手動で調べる。時間で選択画面は現れない。",
+-      "decision": "redesign",
++      "caption": "1280×720の実ゲーム描画。部屋の敵を全滅し、宝箱を開けてから出口を手動で調べる。時間で選択画面は現れない。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "部屋Wave",
+         "ランダム宝箱",
+         "スマホUI"
+       ],
+-      "capturedAt": "2026-09-24"
++      "capturedAt": "2026-09-24",
++      "historical": true
+     },
+     {
+       "id": "mobile-forge",
+@@ -606,44 +723,47 @@
+     },
+     {
+       "id": "survival-layout",
+-      "title": "細いHUDと地下回廊",
++      "title": "旧仕様：細いHUDと地下回廊",
+       "category": "exploration",
+       "image": "assets/images/ember_v5_hud_map1.png",
+-      "caption": "2026-10-04の実ゲーム画面。ComfyUIの素材と細い共通枠へ刷新。キャラクター・戦闘・部屋進行は維持。",
+-      "decision": "keep",
++      "caption": "2026-10-04の実ゲーム画面。ComfyUIの素材と細い共通枠へ刷新。キャラクター・戦闘・部屋進行は維持。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "ComfyUI",
+         "ビジュアル刷新"
+       ],
+-      "capturedAt": "2026-10-04"
++      "capturedAt": "2026-10-04",
++      "historical": true
+     },
+     {
+       "id": "survival-map2",
+-      "title": "MAP2・広い紫晶の広間",
++      "title": "旧仕様：MAP2・広い紫晶の広間",
+       "category": "exploration",
+       "image": "assets/images/survival_map2.png",
+-      "caption": "作画は維持して、大群向けランダム広間へ。実ゲームの新規層開始直後。",
+-      "decision": "keep",
++      "caption": "作画は維持して、大群向けランダム広間へ。実ゲームの新規層開始直後。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "自動攻撃",
+         "旧・継続湧き記録",
+         "広いダンジョン"
+       ],
+-      "capturedAt": "2026-09-23"
++      "capturedAt": "2026-09-23",
++      "historical": true
+     },
+     {
+       "id": "survival-map3",
+-      "title": "MAP3・広い炉心の広間",
++      "title": "旧仕様：MAP3・広い炉心の広間",
+       "category": "exploration",
+       "image": "assets/images/survival_map3.png",
+-      "caption": "作画は維持して、大群向けランダム広間へ。実ゲームの新規層開始直後。",
+-      "decision": "keep",
++      "caption": "作画は維持して、大群向けランダム広間へ。実ゲームの新規層開始直後。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "自動攻撃",
+         "旧・継続湧き記録",
+         "広いダンジョン"
+       ],
+-      "capturedAt": "2026-09-23"
++      "capturedAt": "2026-09-23",
++      "historical": true
+     },
+     {
+       "id": "boss-room-fixed-loot",
+@@ -692,73 +812,79 @@
+       "title": "旧画面：MAP1・探索型の分岐と広間",
+       "category": "exploration",
+       "image": "assets/images/exploration_map1.png",
+-      "caption": "少数遭遇型だった時点の記録。現在は部屋制圧・ランダム宝箱・手動退出へ変更済み。",
+-      "decision": "remove",
++      "caption": "少数遭遇型だった時点の記録。現在は部屋制圧・ランダム宝箱・手動退出へ変更済み。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "旧仕様の記録"
+       ],
+-      "capturedAt": "2026-09-14"
++      "capturedAt": "2026-09-14",
++      "historical": true
+     },
+     {
+       "id": "exploration-map-2",
+       "title": "旧画面：MAP2・探索型の分岐と広間",
+       "category": "exploration",
+       "image": "assets/images/exploration_map2.png",
+-      "caption": "少数遭遇型だった時点の記録。現在は部屋制圧・ランダム宝箱・手動退出へ変更済み。",
+-      "decision": "remove",
++      "caption": "少数遭遇型だった時点の記録。現在は部屋制圧・ランダム宝箱・手動退出へ変更済み。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "旧仕様の記録"
+       ],
+-      "capturedAt": "2026-09-14"
++      "capturedAt": "2026-09-14",
++      "historical": true
+     },
+     {
+       "id": "exploration-map-3",
+       "title": "旧画面：MAP3・探索型の分岐と広間",
+       "category": "exploration",
+       "image": "assets/images/exploration_map3.png",
+-      "caption": "少数遭遇型だった時点の記録。現在は部屋制圧・ランダム宝箱・手動退出へ変更済み。",
+-      "decision": "remove",
++      "caption": "少数遭遇型だった時点の記録。現在は部屋制圧・ランダム宝箱・手動退出へ変更済み。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "旧仕様の記録"
+       ],
+-      "capturedAt": "2026-09-14"
++      "capturedAt": "2026-09-14",
++      "historical": true
+     },
+     {
+       "id": "exploration-routes",
+       "title": "旧画面：3MAPの構造と広さ",
+       "category": "exploration",
+       "image": "assets/images/exploration_routes.png",
+-      "caption": "少数遭遇型だった時点の記録。現在は部屋制圧・ランダム宝箱・手動退出へ変更済み。",
+-      "decision": "remove",
++      "caption": "少数遭遇型だった時点の記録。現在は部屋制圧・ランダム宝箱・手動退出へ変更済み。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "旧仕様の記録"
+       ],
+-      "capturedAt": "2026-09-14"
++      "capturedAt": "2026-09-14",
++      "historical": true
+     },
+     {
+       "id": "exploration-discovery",
+       "title": "旧画面：Mキー・発見した道の探索図",
+       "category": "exploration",
+       "image": "assets/images/exploration_discovery.png",
+-      "caption": "少数遭遇型だった時点の記録。現在は部屋制圧・ランダム宝箱・手動退出へ変更済み。",
+-      "decision": "remove",
++      "caption": "少数遭遇型だった時点の記録。現在は部屋制圧・ランダム宝箱・手動退出へ変更済み。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "旧仕様の記録"
+       ],
+-      "capturedAt": "2026-09-14"
++      "capturedAt": "2026-09-14",
++      "historical": true
+     },
+     {
+       "id": "chest-ingame",
+-      "title": "小型宝箱・閉／開",
++      "title": "旧仕様：小型宝箱・閉／開",
+       "category": "exploration",
+       "image": "assets/images/chest-ingame.png",
+-      "caption": "実マップ描画。左は未開封、右は開封済み。通常のマップ宝箱と同じシーンを表示。",
+-      "decision": "keep",
++      "caption": "実マップ描画。左は未開封、右は開封済み。通常のマップ宝箱と同じシーンを表示。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "マップ宝箱",
+         "報酬"
+       ],
+-      "capturedAt": "2026-09-14"
++      "capturedAt": "2026-09-14",
++      "historical": true
+     },
+     {
+       "id": "equipment-200",
+@@ -774,29 +900,31 @@
+     },
+     {
+       "id": "mine-art-match",
+-      "title": "鉱山と周辺マップの作画統一",
++      "title": "旧仕様：鉱山と周辺マップの作画統一",
+       "category": "exploration",
+       "image": "assets/images/mine-art-match.png",
+-      "caption": "実ゲーム画面。岩壁・石床・収納小物・灯りを新規素材へ置換。採掘場と描き込みの密度を揃えた。",
+-      "decision": "keep",
++      "caption": "実ゲーム画面。岩壁・石床・収納小物・灯りを新規素材へ置換。採掘場と描き込みの密度を揃えた。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "MAP景観",
+         "ランドマーク"
+       ],
+-      "capturedAt": "2026-09-13"
++      "capturedAt": "2026-09-13",
++      "historical": true
+     },
+     {
+       "id": "miner-working",
+-      "title": "鉱山作業員の採掘",
++      "title": "旧仕様：鉱山作業員の採掘",
+       "category": "exploration",
+       "image": "assets/images/miner-working.png",
+-      "caption": "実ゲームの採掘動作。構え→短い打撃→戻し→休止。壁際の鉱山内で働く作業員。 周辺の壁・床・小物もランドマークと同じ細かな石肌・陰影・木材表現へ刷新。",
+-      "decision": "keep",
++      "caption": "実ゲームの採掘動作。構え→短い打撃→戻し→休止。壁際の鉱山内で働く作業員。 周辺の壁・床・小物もランドマークと同じ細かな石肌・陰影・木材表現へ刷新。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "ランドマーク",
+         "環境アニメーション"
+       ],
+-      "capturedAt": "2026-09-13"
++      "capturedAt": "2026-09-13",
++      "historical": true
+     },
+     {
+       "id": "title-gate",
+@@ -840,71 +968,76 @@
+     },
+     {
+       "id": "map-exploration",
+-      "title": "石枠へ統一した戦闘HUD",
++      "title": "旧仕様：石枠へ統一した戦闘HUD",
+       "category": "exploration",
+       "image": "assets/images/map-exploration.png",
+-      "caption": "HP・EXP、MAP進行、戦利品、技ゲージ、コンボを同じ石枠へ。画像は小物衝突・祭壇撤去前のUI撮影。",
+-      "decision": "keep",
++      "caption": "HP・EXP、MAP進行、戦利品、技ゲージ、コンボを同じ石枠へ。画像は小物衝突・祭壇撤去前のUI撮影。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "MAP探索",
+         "戦闘HUD",
+         "通常2D"
+       ],
+-      "capturedAt": "2026-09-11"
++      "capturedAt": "2026-09-11",
++      "historical": true
+     },
+     {
+       "id": "map2-amethyst-depths",
+-      "title": "MAP2｜紫晶の深層",
++      "title": "旧仕様：MAP2｜紫晶の深層",
+       "category": "exploration",
+       "image": "assets/images/map2-amethyst-depths.png",
+-      "caption": "紫晶層、青い鉱脈、青紫の灯火へ全面交換した実装画面。MAP1の部屋・通路・到達可能性ルールを維持し、水晶柱には通り抜け防止のCollisionを設定。",
+-      "decision": "keep",
++      "caption": "紫晶層、青い鉱脈、青紫の灯火へ全面交換した実装画面。MAP1の部屋・通路・到達可能性ルールを維持し、水晶柱には通り抜け防止のCollisionを設定。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "MAP2",
+         "紫晶の深層",
+         "Prop Collision"
+       ],
+-      "capturedAt": "2026-09-12"
++      "capturedAt": "2026-09-12",
++      "historical": true
+     },
+     {
+       "id": "map3-ruin-forge",
+-      "title": "MAP3｜終焉の炉心",
++      "title": "旧仕様：MAP3｜終焉の炉心",
+       "category": "exploration",
+       "image": "assets/images/map3-ruin-forge.png",
+-      "caption": "黒い炉床、鉄板、溶岩亀裂、炉火で構成した実装画面。MAP1の生成規則を維持し、炉心柱と生成壁はすべてCollision付き。",
+-      "decision": "keep",
++      "caption": "黒い炉床、鉄板、溶岩亀裂、炉火で構成した実装画面。MAP1の生成規則を維持し、炉心柱と生成壁はすべてCollision付き。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "MAP3",
+         "終焉の炉心",
+         "Wall Collision"
+       ],
+-      "capturedAt": "2026-09-12"
++      "capturedAt": "2026-09-12",
++      "historical": true
+     },
+     {
+       "id": "normal-room",
+       "title": "旧画面（参考）｜通常区画の構造",
+       "category": "exploration",
+       "image": "assets/images/map-normal-room.png",
+-      "caption": "旧版の記録。現在の仕様・UIとは異なります。石造回廊、宝箱、祭壇、通路幅を確認する現行MAP構造。MAPごとの景観差は今後の再設計対象。",
++      "caption": "旧版の記録。現在の仕様・UIとは異なります。石造回廊、宝箱、祭壇、通路幅を確認する現行MAP構造。MAPごとの景観差は今後の再設計対象。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+       "decision": "hold",
+       "related": [
+         "MAP Theme",
+         "宝箱",
+         "DungeonGenerator"
+-      ]
++      ],
++      "historical": true
+     },
+     {
+       "id": "boss-chamber",
+-      "title": "Boss領域",
++      "title": "旧仕様：Boss領域",
+       "category": "exploration",
+       "image": "assets/images/map-boss-chamber.png",
+-      "caption": "最深部へ到達して侵入するBoss領域。探索から決戦へ切り替わる地点として維持する。",
+-      "decision": "keep",
++      "caption": "最深部へ到達して侵入するBoss領域。探索から決戦へ切り替わる地点として維持する。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "Boss Gate",
+         "最深部",
+         "MAP進行"
+-      ]
++      ],
++      "historical": true
+     },
+     {
+       "id": "boss-minotaur",
+@@ -1053,59 +1186,63 @@
+     },
+     {
+       "id": "landmark-0",
+-      "title": "紫晶採掘場",
++      "title": "旧仕様：紫晶採掘場",
+       "category": "exploration",
+       "image": "assets/images/landmark0.png",
+-      "caption": "壁面に接続した実配置。基本1か所、時々離れた場所にもう1か所。入口や狭い壁は避け、台座は通行不可。 周辺の壁・床・小物もランドマークと同じ細かな石肌・陰影・木材表現へ刷新。",
+-      "decision": "keep",
++      "caption": "壁面に接続した実配置。基本1か所、時々離れた場所にもう1か所。入口や狭い壁は避け、台座は通行不可。 周辺の壁・床・小物もランドマークと同じ細かな石肌・陰影・木材表現へ刷新。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "MAP景観",
+         "ランドマーク",
+         "通行・出現位置"
+       ],
+-      "capturedAt": "2026-09-12"
++      "capturedAt": "2026-09-12",
++      "historical": true
+     },
+     {
+       "id": "landmark-1",
+-      "title": "結晶神殿",
++      "title": "旧仕様：結晶神殿",
+       "category": "exploration",
+       "image": "assets/images/landmark1.png",
+-      "caption": "壁面に接続した実配置。基本1か所、時々離れた場所にもう1か所。入口や狭い壁は避け、台座は通行不可。 周辺の壁・床・小物もランドマークと同じ細かな石肌・陰影・木材表現へ刷新。",
+-      "decision": "keep",
++      "caption": "壁面に接続した実配置。基本1か所、時々離れた場所にもう1か所。入口や狭い壁は避け、台座は通行不可。 周辺の壁・床・小物もランドマークと同じ細かな石肌・陰影・木材表現へ刷新。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "MAP景観",
+         "ランドマーク",
+         "通行・出現位置"
+       ],
+-      "capturedAt": "2026-09-12"
++      "capturedAt": "2026-09-12",
++      "historical": true
+     },
+     {
+       "id": "landmark-2",
+-      "title": "古代溶鉱炉",
++      "title": "旧仕様：古代溶鉱炉",
+       "category": "exploration",
+       "image": "assets/images/landmark2.png",
+-      "caption": "壁面に接続した実配置。基本1か所、時々離れた場所にもう1か所。入口や狭い壁は避け、台座は通行不可。 周辺の壁・床・小物もランドマークと同じ細かな石肌・陰影・木材表現へ刷新。",
+-      "decision": "keep",
++      "caption": "壁面に接続した実配置。基本1か所、時々離れた場所にもう1か所。入口や狭い壁は避け、台座は通行不可。 周辺の壁・床・小物もランドマークと同じ細かな石肌・陰影・木材表現へ刷新。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "MAP景観",
+         "ランドマーク",
+         "通行・出現位置"
+       ],
+-      "capturedAt": "2026-09-12"
++      "capturedAt": "2026-09-12",
++      "historical": true
+     },
+     {
+       "id": "landmark-3",
+-      "title": "冷却水車",
++      "title": "旧仕様：冷却水車",
+       "category": "exploration",
+       "image": "assets/images/landmark3.png",
+-      "caption": "壁面に接続した実配置。基本1か所、時々離れた場所にもう1か所。入口や狭い壁は避け、台座は通行不可。 周辺の壁・床・小物もランドマークと同じ細かな石肌・陰影・木材表現へ刷新。",
+-      "decision": "keep",
++      "caption": "壁面に接続した実配置。基本1か所、時々離れた場所にもう1か所。入口や狭い壁は避け、台座は通行不可。 周辺の壁・床・小物もランドマークと同じ細かな石肌・陰影・木材表現へ刷新。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "MAP景観",
+         "ランドマーク",
+         "通行・出現位置"
+       ],
+-      "capturedAt": "2026-09-12"
++      "capturedAt": "2026-09-12",
++      "historical": true
+     },
+     {
+       "id": "ember-v5-hover",
+@@ -1122,29 +1259,31 @@
+     },
+     {
+       "id": "ember-v5-map2",
+-      "title": "紫晶の深層・床と壁の刷新",
++      "title": "旧仕様：紫晶の深層・床と壁の刷新",
+       "category": "exploration",
+       "image": "assets/images/ember_v5_hud_map2.png",
+-      "caption": "2026-10-04の実ゲーム画面。ComfyUIの素材と細い共通枠へ刷新。キャラクター・戦闘・部屋進行は維持。",
+-      "decision": "keep",
++      "caption": "2026-10-04の実ゲーム画面。ComfyUIの素材と細い共通枠へ刷新。キャラクター・戦闘・部屋進行は維持。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "ComfyUI",
+         "ビジュアル刷新"
+       ],
+-      "capturedAt": "2026-10-04"
++      "capturedAt": "2026-10-04",
++      "historical": true
+     },
+     {
+       "id": "ember-v5-map3",
+-      "title": "終焉の炉心・床と壁の刷新",
++      "title": "旧仕様：終焉の炉心・床と壁の刷新",
+       "category": "exploration",
+       "image": "assets/images/ember_v5_hud_map3.png",
+-      "caption": "2026-10-04の実ゲーム画面。ComfyUIの素材と細い共通枠へ刷新。キャラクター・戦闘・部屋進行は維持。",
+-      "decision": "keep",
++      "caption": "2026-10-04の実ゲーム画面。ComfyUIの素材と細い共通枠へ刷新。キャラクター・戦闘・部屋進行は維持。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
++      "decision": "hold",
+       "related": [
+         "ComfyUI",
+         "ビジュアル刷新"
+       ],
+-      "capturedAt": "2026-10-04"
++      "capturedAt": "2026-10-04",
++      "historical": true
+     },
+     {
+       "id": "ember-v5-overview",
+--- before/dashboard/dist/data/maps.json
++++ after/dashboard/dist/data/maps.json
+@@ -4,168 +4,162 @@
+       "id": "map1",
+       "index": 1,
+       "name": "忘却の地下回廊",
+-      "image": "assets/images/survival_arena1.png",
++      "image": "assets/images/open_field_arena1.png",
+       "theme": "廃都の地下回廊",
+       "status": "testing",
+       "progress": 95,
+-      "width": 44,
+-      "height": 36,
+-      "enemyCap": 80,
++      "width": 96,
++      "height": 96,
++      "enemyCap": 128,
+       "enemyFamily": [
+         "スライム",
+         "オーク",
+         "スケルトン"
+       ],
+       "strongEnemy": "重装スケルトン・大剣スケルトン",
+-      "elite": "90秒前後から既存の巡回精鋭。部屋の封鎖イベントは使用しない。",
++      "elite": "通常群れの強敵・巡回精鋭は停止。強敵は終盤ボスへ。",
+       "eliteRooms": 0,
+-      "midBoss": "120秒・240秒の時間ボス",
++      "midBoss": "途中ボスなし",
+       "boss": [
+-        "ミノタウロス",
+-        "デーモンA",
+-        "黒騎士A"
++        "重装スケルトン",
++        "大剣スケルトン"
+       ],
+-      "treasure": "75秒で60%・180秒で確定の補給箱。ボス撃破でも宝箱。終了後の生存報酬を開けても自動帰還しない。",
+-      "background": "2026-10-04の全体刷新：ComfyUI製の低色数ドット床・立体壁。MAP1の色味を保持し、床の明度を抑えて敵と装備を見分けやすくした。",
++      "treasure": "75秒に60%の装備箱、150秒に確定の補給箱。補給箱を自分で開けるとショップ、閉じると戦闘へ。ボス撃破後は装備・討伐宝箱・帰還階段を離して配置し、開封しても自動帰還しない。残金・回収装備は従来どおり継承報酬へ。",
++      "background": "現在の低色数ドット床と各テーマの色味を保持。床の明度を抑えて敵と装備を見分けやすくした。壁・柱・地形小物は生成しない。",
+       "bgm": "既存探索BGM（MAP別分離は今後）",
+-      "notes": "出撃前に3つのテーマを選択。現在の床・壁の作画を保持。タイマー、ボスHP、浮遊武器とレア度オーラを継承。Android/iOS実機、無敵を使わない全職の難度比較、最終的な成長・価格調整は未検証。相手の内部数値を複製したとは扱わない。",
+-      "spawnMode": "時間による連続増援。序盤2〜3体/1.4秒→終盤6〜8体/0.6秒。ボス戦でも増援継続。",
++      "notes": "3テーマ共通で、壁・柱・地形小物のない広い床へ。床とカメラが現在地へ追従し、表示基準96×96セルの外でも歩行・出現・回収が続く。約4分の大群戦の後、従来の強敵から1体を終盤ボスとして出す。撃破してクリア、5分を過ぎても生存ボスを消さない。 無敵・自動強化の検査は勝率の証明ではない。Android/iOS実機と無敵なしの全職難度は未確認。Crazy Gunnerの正確な出現数・HPは公開資料から確定できず、数値はVSGAME向けの独自調整。",
++      "spawnMode": "序盤3〜4体/1.0秒→終盤8〜10体/0.45秒。45秒から標準敵を混ぜ、150秒から45%。PC128体・タッチ96体。通常敵は序盤比で、終盤にHP約+72%、攻撃約+32%、EXP必要量は2.1倍。画面外の周囲から出現する。",
+       "roomCount": 1,
+-      "bossUnlock": "120秒・240秒に自動出現。5分生存がクリア条件で、撃破必須ではない。",
++      "bossUnlock": "240秒で終盤ボス1体。撃破が必須。5分を過ぎても戦闘を継続。",
+       "encounterEnemyIds": [
+         "basic_enemy",
+         "shield_guard",
+         "bat",
+         "fast_enemy",
+         "slime",
+-        "armored_skeleton",
+-        "skeleton_archer",
+-        "greatsword_skeleton"
++        "skeleton_archer"
+       ],
+-      "imageId": "five-minute-arena1",
++      "imageId": "open-field-arena1",
+       "floorsPerTheme": 1,
+       "globalFloorRange": [
+         1,
+         1
+       ],
+       "bossPerFloor": false,
+-      "floorGeneration": "36×28セルのアリーナ、外周を含め44×36。遮蔽物の型と左右、小物の位置を再抽選。",
+-      "depthScaling": "60層下降は現行進行から外した。5分の経過で通常敵HPを最大+60%、攻撃を+25%、強敵比率を増加。",
+-      "mobileEnemyCap": 48,
+-      "objectStyle": "現行アリーナは既存の岩・骨・廃墟と壁の松明。ComfyUI景観・作業員・炉/水の素材とアニメーションは保持し、単一アリーナでは未配置。",
++      "floorGeneration": "96×96セルは地図の表示基準。床はカメラ周囲の同じタイル模様を繰り返して描画し、壁・境界衝突を置かない。",
++      "depthScaling": "通常4分の時間曲線、終盤ボスの固定HP。Playerの火力に応じたBoss HP変更なし。",
++      "mobileEnemyCap": 96,
++      "objectStyle": "地形は床のみ。宝箱・装備・帰還階段は対話用オブジェクト。旧景観・小物の素材は保存。",
+       "objectValidation": "3テーマの実出撃と表面描画を確認。過去の景観60seed/炉・水の検査は素材側の履歴。実機は未検証。",
+-      "doorStyle": "戦闘中の部屋出口はなし。5分後に別位置の帰還階段を設置。宝箱開封後に手動帰還。"
++      "doorStyle": "部屋出口はなし。ボス撃破後の別位置の帰還階段だけを使う。",
++      "openField": true
+     },
+     {
+       "id": "map2",
+       "index": 2,
+       "name": "紫晶の深層",
+-      "image": "assets/images/survival_arena2.png",
++      "image": "assets/images/open_field_arena2.png",
+       "theme": "紫晶と封印の地下層",
+       "status": "testing",
+       "progress": 95,
+-      "width": 44,
+-      "height": 36,
+-      "enemyCap": 80,
++      "width": 96,
++      "height": 96,
++      "enemyCap": 128,
+       "enemyFamily": [
+         "眼球・血の魔物",
+         "鬼火・デモネス",
+         "狼人・ワーベア"
+       ],
+       "strongEnemy": "ブラッドモンスターB・ワーベア",
+-      "elite": "90秒前後から既存の巡回精鋭。部屋の封鎖イベントは使用しない。",
++      "elite": "通常群れの強敵・巡回精鋭は停止。強敵は終盤ボスへ。",
+       "eliteRooms": 0,
+-      "midBoss": "120秒・240秒の時間ボス",
++      "midBoss": "途中ボスなし",
+       "boss": [
+-        "黒騎士B",
+-        "デーモンC",
+-        "デーモンD"
++        "ブラッドモンスターB",
++        "ワーベア"
+       ],
+-      "treasure": "75秒で60%・180秒で確定の補給箱。ボス撃破でも宝箱。終了後の生存報酬を開けても自動帰還しない。",
+-      "background": "2026-10-04の全体刷新：ComfyUI製の低色数ドット床・立体壁。MAP2の色味を保持し、床の明度を抑えて敵と装備を見分けやすくした。",
++      "treasure": "75秒に60%の装備箱、150秒に確定の補給箱。補給箱を自分で開けるとショップ、閉じると戦闘へ。ボス撃破後は装備・討伐宝箱・帰還階段を離して配置し、開封しても自動帰還しない。残金・回収装備は従来どおり継承報酬へ。",
++      "background": "現在の低色数ドット床と各テーマの色味を保持。床の明度を抑えて敵と装備を見分けやすくした。壁・柱・地形小物は生成しない。",
+       "bgm": "既存探索BGM（MAP別分離は今後）",
+-      "notes": "出撃前に3つのテーマを選択。現在の床・壁の作画を保持。タイマー、ボスHP、浮遊武器とレア度オーラを継承。Android/iOS実機、無敵を使わない全職の難度比較、最終的な成長・価格調整は未検証。相手の内部数値を複製したとは扱わない。",
+-      "spawnMode": "時間による連続増援。序盤2〜3体/1.4秒→終盤6〜8体/0.6秒。ボス戦でも増援継続。",
++      "notes": "3テーマ共通で、壁・柱・地形小物のない広い床へ。床とカメラが現在地へ追従し、表示基準96×96セルの外でも歩行・出現・回収が続く。約4分の大群戦の後、従来の強敵から1体を終盤ボスとして出す。撃破してクリア、5分を過ぎても生存ボスを消さない。 無敵・自動強化の検査は勝率の証明ではない。Android/iOS実機と無敵なしの全職難度は未確認。Crazy Gunnerの正確な出現数・HPは公開資料から確定できず、数値はVSGAME向けの独自調整。",
++      "spawnMode": "序盤3〜4体/1.0秒→終盤8〜10体/0.45秒。45秒から標準敵を混ぜ、150秒から45%。PC128体・タッチ96体。通常敵は序盤比で、終盤にHP約+72%、攻撃約+32%、EXP必要量は2.1倍。画面外の周囲から出現する。",
+       "roomCount": 1,
+-      "bossUnlock": "120秒・240秒に自動出現。5分生存がクリア条件で、撃破必須ではない。",
++      "bossUnlock": "240秒で終盤ボス1体。撃破が必須。5分を過ぎても戦闘を継続。",
+       "encounterEnemyIds": [
+         "blood_monster_a",
+         "eyeball_monster",
+-        "blood_monster_b",
+         "demoness_a",
+         "ghostfire",
+-        "werebear",
+         "werewolf"
+       ],
+-      "imageId": "five-minute-arena2",
++      "imageId": "open-field-arena2",
+       "floorsPerTheme": 1,
+       "globalFloorRange": [
+         1,
+         1
+       ],
+       "bossPerFloor": false,
+-      "floorGeneration": "36×28セルのアリーナ、外周を含め44×36。遮蔽物の型と左右、小物の位置を再抽選。",
+-      "depthScaling": "60層下降は現行進行から外した。5分の経過で通常敵HPを最大+60%、攻撃を+25%、強敵比率を増加。",
+-      "mobileEnemyCap": 48,
+-      "objectStyle": "現行アリーナは既存の岩・骨・廃墟と壁の松明。ComfyUI景観・作業員・炉/水の素材とアニメーションは保持し、単一アリーナでは未配置。",
++      "floorGeneration": "96×96セルは地図の表示基準。床はカメラ周囲の同じタイル模様を繰り返して描画し、壁・境界衝突を置かない。",
++      "depthScaling": "通常4分の時間曲線、終盤ボスの固定HP。Playerの火力に応じたBoss HP変更なし。",
++      "mobileEnemyCap": 96,
++      "objectStyle": "地形は床のみ。宝箱・装備・帰還階段は対話用オブジェクト。旧景観・小物の素材は保存。",
+       "objectValidation": "3テーマの実出撃と表面描画を確認。過去の景観60seed/炉・水の検査は素材側の履歴。実機は未検証。",
+-      "doorStyle": "戦闘中の部屋出口はなし。5分後に別位置の帰還階段を設置。宝箱開封後に手動帰還。"
++      "doorStyle": "部屋出口はなし。ボス撃破後の別位置の帰還階段だけを使う。",
++      "openField": true
+     },
+     {
+       "id": "map3",
+       "index": 3,
+       "name": "終焉の炉心",
+-      "image": "assets/images/survival_arena3.png",
++      "image": "assets/images/open_field_arena3.png",
+       "theme": "火山炉心と崩壊王宮",
+       "status": "testing",
+       "progress": 95,
+-      "width": 44,
+-      "height": 36,
+-      "enemyCap": 80,
++      "width": 96,
++      "height": 96,
++      "enemyCap": 128,
+       "enemyFamily": [
+         "溶岩スライム",
+         "ヘルバット",
+         "重装オーク"
+       ],
+       "strongEnemy": "重装オーク・エリートオーク",
+-      "elite": "90秒前後から既存の巡回精鋭。部屋の封鎖イベントは使用しない。",
++      "elite": "通常群れの強敵・巡回精鋭は停止。強敵は終盤ボスへ。",
+       "eliteRooms": 0,
+-      "midBoss": "120秒・240秒の時間ボス",
++      "midBoss": "途中ボスなし",
+       "boss": [
+-        "フレイムゴーレム",
+-        "デーモンE",
+-        "黒騎士C"
++        "重装オーク",
++        "エリートオーク"
+       ],
+-      "treasure": "75秒で60%・180秒で確定の補給箱。ボス撃破でも宝箱。終了後の生存報酬を開けても自動帰還しない。",
+-      "background": "2026-10-04の全体刷新：ComfyUI製の低色数ドット床・立体壁。MAP3の色味を保持し、床の明度を抑えて敵と装備を見分けやすくした。",
++      "treasure": "75秒に60%の装備箱、150秒に確定の補給箱。補給箱を自分で開けるとショップ、閉じると戦闘へ。ボス撃破後は装備・討伐宝箱・帰還階段を離して配置し、開封しても自動帰還しない。残金・回収装備は従来どおり継承報酬へ。",
++      "background": "現在の低色数ドット床と各テーマの色味を保持。床の明度を抑えて敵と装備を見分けやすくした。壁・柱・地形小物は生成しない。",
+       "bgm": "既存探索BGM（Final専用化は今後）",
+-      "notes": "出撃前に3つのテーマを選択。現在の床・壁の作画を保持。タイマー、ボスHP、浮遊武器とレア度オーラを継承。Android/iOS実機、無敵を使わない全職の難度比較、最終的な成長・価格調整は未検証。相手の内部数値を複製したとは扱わない。",
+-      "spawnMode": "時間による連続増援。序盤2〜3体/1.4秒→終盤6〜8体/0.6秒。ボス戦でも増援継続。",
++      "notes": "3テーマ共通で、壁・柱・地形小物のない広い床へ。床とカメラが現在地へ追従し、表示基準96×96セルの外でも歩行・出現・回収が続く。約4分の大群戦の後、従来の強敵から1体を終盤ボスとして出す。撃破してクリア、5分を過ぎても生存ボスを消さない。 無敵・自動強化の検査は勝率の証明ではない。Android/iOS実機と無敵なしの全職難度は未確認。Crazy Gunnerの正確な出現数・HPは公開資料から確定できず、数値はVSGAME向けの独自調整。",
++      "spawnMode": "序盤3〜4体/1.0秒→終盤8〜10体/0.45秒。45秒から標準敵を混ぜ、150秒から45%。PC128体・タッチ96体。通常敵は序盤比で、終盤にHP約+72%、攻撃約+32%、EXP必要量は2.1倍。画面外の周囲から出現する。",
+       "roomCount": 1,
+-      "bossUnlock": "120秒・240秒に自動出現。5分生存がクリア条件で、撃破必須ではない。",
++      "bossUnlock": "240秒で終盤ボス1体。撃破が必須。5分を過ぎても戦闘を継続。",
+       "encounterEnemyIds": [
+         "hellbat",
+         "lava_slime",
+-        "armored_orc",
+         "demoness_b",
+-        "elite_orc",
+         "hellhound",
+         "orc_rider",
+         "warlock"
+       ],
+-      "imageId": "five-minute-arena3",
++      "imageId": "open-field-arena3",
+       "floorsPerTheme": 1,
+       "globalFloorRange": [
+         1,
+         1
+       ],
+       "bossPerFloor": false,
+-      "floorGeneration": "36×28セルのアリーナ、外周を含め44×36。遮蔽物の型と左右、小物の位置を再抽選。",
+-      "depthScaling": "60層下降は現行進行から外した。5分の経過で通常敵HPを最大+60%、攻撃を+25%、強敵比率を増加。",
+-      "mobileEnemyCap": 48,
+-      "objectStyle": "現行アリーナは既存の岩・骨・廃墟と壁の松明。ComfyUI景観・作業員・炉/水の素材とアニメーションは保持し、単一アリーナでは未配置。",
++      "floorGeneration": "96×96セルは地図の表示基準。床はカメラ周囲の同じタイル模様を繰り返して描画し、壁・境界衝突を置かない。",
++      "depthScaling": "通常4分の時間曲線、終盤ボスの固定HP。Playerの火力に応じたBoss HP変更なし。",
++      "mobileEnemyCap": 96,
++      "objectStyle": "地形は床のみ。宝箱・装備・帰還階段は対話用オブジェクト。旧景観・小物の素材は保存。",
+       "objectValidation": "3テーマの実出撃と表面描画を確認。過去の景観60seed/炉・水の検査は素材側の履歴。実機は未検証。",
+-      "doorStyle": "戦闘中の部屋出口はなし。5分後に別位置の帰還階段を設置。宝箱開封後に手動帰還。"
++      "doorStyle": "部屋出口はなし。ボス撃破後の別位置の帰還階段だけを使う。",
++      "openField": true
+     }
+   ]
+ }
+--- before/dashboard/dist/data/project.json
++++ after/dashboard/dist/data/project.json
+@@ -1,9 +1,9 @@
+ {
+   "name": "VSGAME",
+   "dashboardTitle": "開発記録庫",
+-  "updatedAt": "2026-10-12",
+-  "version": "dashboard-1.6.17",
+-  "summary": "3テーマから出撃先を選び、36×28セルの1アリーナで5分間生き残る。敵は時間帯で密度と階級が増え、浮遊武器が自動攻撃。120秒・240秒にボス（前のボスが生存中なら延期）。300秒で敵を退去させ、経験値は付与しない。終了後は時間制限なく宝箱・装備を回収し、階段を手動で調べて結果へ。",
++  "updatedAt": "2026-10-13",
++  "version": "dashboard-1.6.18",
++  "summary": "3テーマ共通で、壁・柱・地形小物のない広い床へ。床とカメラが現在地へ追従し、表示基準96×96セルの外でも歩行・出現・回収が続く。約4分の大群戦の後、従来の強敵から1体を終盤ボスとして出す。撃破してクリア、5分を過ぎても生存ボスを消さない。",
+   "progressRule": "100%は実装完了かつテスト完了。設計のみ20%、実装中40〜70%、実装完了80%、テスト済み100%を目安とする。",
+   "statusLabels": {
+     "not_started": "未着手",
+@@ -20,20 +20,20 @@
+   },
+   "publicDataPolicy": "秘密情報、個人情報、ローカル絶対Pathを含めない。",
+   "dailyUpdate": {
+-    "date": "2026-10-12",
+-    "title": "5分サバイバルへ変更",
++    "date": "2026-10-13",
++    "title": "広い床だけの戦場と、強敵の終盤ボス",
+     "items": [
+       {
+-        "route": "combat",
+-        "title": "自動攻撃で5分間生き残る",
+-        "body": "3テーマから出撃先を選び、36×28セルの1アリーナで5分間生き残る。敵は時間帯で密度と階級が増え、浮遊武器が自動攻撃。120秒・240秒にボス（前のボスが生存中なら延期）。300秒で敵を退去させ、経験値は付与しない。終了後は時間制限なく宝箱・装備を回収し、階段を手動で調べて結果へ。"
++        "route": "maps",
++        "title": "壁と地形障害物を撤去",
++        "body": "3テーマ共通で、壁・柱・地形小物のない広い床へ。床とカメラが現在地へ追従し、表示基準96×96セルの外でも歩行・出現・回収が続く。約4分の大群戦の後、従来の強敵から1体を終盤ボスとして出す。撃破してクリア、5分を過ぎても生存ボスを消さない。"
+       },
+       {
+-        "route": "items",
+-        "title": "回収を急がせず、報酬に意味を残す",
+-        "body": "途中のボス宝箱を自分で開けると装備・戦技と補給ショップ。ショップと強化選択中は時間停止。残金は1G=1欠片、回収装備は1点=5欠片として、撃破数に加えて継承報酬へ反映。装備自体は従来どおりRun内専用。"
++        "route": "combat",
++        "title": "大群4分＋ボス約1分を目標",
++        "body": "序盤3〜4体/1.0秒→終盤8〜10体/0.45秒。45秒から標準敵を混ぜ、150秒から45%。PC128体・タッチ96体。通常敵は序盤比で、終盤にHP約+72%、攻撃約+32%、EXP必要量は2.1倍。画面外の周囲から出現する。 75秒に60%の装備箱、150秒に確定の補給箱。補給箱を自分で開けるとショップ、閉じると戦闘へ。ボス撃破後は装備・討伐宝箱・帰還階段を離して配置し、開封しても自動帰還しない。残金・回収装備は従来どおり継承報酬へ。"
+       }
+     ],
+-    "note": "PC/OpenGL・横画面/Vulkan・3テーマの実出撃・自然出現の300秒検査を無音確認。Android/iOS実機、無敵を使わない全職の難度比較、最終的な成長・価格調整は未検証。相手の内部数値を複製したとは扱わない。"
++    "note": "PC/OpenGL・横画面/Vulkan・6ボスの固有動作・遠方の出現と回収を無音確認。通し検査例は約4分51秒、Boss約51秒。無敵・自動強化の検査は勝率の証明ではない。Android/iOS実機と無敵なしの全職難度は未確認。Crazy Gunnerの正確な出現数・HPは公開資料から確定できず、数値はVSGAME向けの独自調整。"
+   }
+ }
+--- before/dashboard/dist/data/relations.json
++++ after/dashboard/dist/data/relations.json
+@@ -14,38 +14,38 @@
+   "diagrams": [
+     {
+       "id": "exploration-loop",
+-      "title": "5分サバイバルと回収・継承",
+-      "description": "3テーマから出撃先を選び、36×28セルの1アリーナで5分間生き残る。敵は時間帯で密度と階級が増え、浮遊武器が自動攻撃。120秒・240秒にボス（前のボスが生存中なら延期）。300秒で敵を退去させ、経験値は付与しない。終了後は時間制限なく宝箱・装備を回収し、階段を手動で調べて結果へ。",
++      "title": "床だけの大群戦→終盤Boss→回収と帰還",
++      "description": "3テーマ共通で、壁・柱・地形小物のない広い床へ。床とカメラが現在地へ追従し、表示基準96×96セルの外でも歩行・出現・回収が続く。約4分の大群戦の後、従来の強敵から1体を終盤ボスとして出す。撃破してクリア、5分を過ぎても生存ボスを消さない。",
+       "columns": 4,
+       "nodes": [
+         {
+           "id": "routes",
+-          "title": "3テーマから出撃",
+-          "detail": "36×28セル・小物と遮蔽物を再抽選",
++          "title": "床だけの広い戦場",
++          "detail": "3テーマ・壁も見えない境界もなし",
+           "decision": "keep",
+           "col": 1,
+           "row": 1
+         },
+         {
+           "id": "encounters",
+-          "title": "時間で増える大群",
+-          "detail": "全6職・装備武器の自動攻撃",
++          "title": "約4分の大群戦",
++          "detail": "画面外から増援・自動攻撃で成長",
+           "decision": "keep",
+           "col": 2,
+           "row": 1
+         },
+         {
+           "id": "key",
+-          "title": "5分生存達成",
+-          "detail": "増援停止・消失予約停止",
++          "title": "強敵の終盤Boss",
++          "detail": "240秒に1体・時間切れでは消えない",
+           "decision": "keep",
+           "col": 3,
+           "row": 1
+         },
+         {
+           "id": "boss",
+-          "title": "報酬回収と帰還",
+-          "detail": "宝箱開封後に階段を手動操作",
++          "title": "撃破して回収",
++          "detail": "討伐箱・装備・手動帰還",
+           "decision": "keep",
+           "col": 4,
+           "row": 1
+@@ -92,12 +92,12 @@
+         {
+           "from": "encounters",
+           "to": "key",
+-          "label": "5分生存"
++          "label": "240秒でBoss"
+         },
+         {
+           "from": "key",
+           "to": "boss",
+-          "label": "急がず回収"
++          "label": "撃破して完了"
+         },
+         {
+           "from": "routes",
+@@ -838,7 +838,7 @@
+       "id": "boss-rewards",
+       "name": "Boss宝箱の装備報酬",
+       "decision": "keep",
+-      "reason": "通常MAPの旧属性・完成大技三択は停止。装備を獲得してShopまたはRun Clearへ進む。",
++      "reason": "終盤Bossを実撃破した後に装備と討伐宝箱を回収。開封で自動遷移しない。帰還階段を自分で調べて結果へ。Shopは150秒の補給箱から手動で開く。",
+       "affects": [
+         "Item",
+         "完成大技",
+@@ -859,7 +859,7 @@
+       "id": "room-main",
+       "name": "旧ROOMモード削除",
+       "decision": "remove",
+-      "reason": "進行処理・選択UI・専用データとLabのROOM操作を削除。本編は3テーマ各20層の探索へ一本化。",
++      "reason": "旧ROOM専用処理とLab操作を削除済み。現行は3テーマの床だけの約5分ステージで、終盤Boss撃破まで戦う。20層下降は履歴。",
+       "affects": [
+         "Game Mode",
+         "Flow"
+@@ -913,7 +913,7 @@
+       "id": "all-talents",
+       "name": "全職業の天賦図",
+       "decision": "hold",
+-      "reason": "正式6職は確定。手動攻撃方針と各職の流派設計を整理してから展開する。",
++      "reason": "正式6職の自動攻撃と短時間のステージに合わせ、各職の流派設計と成長予算を整理してから展開する。",
+       "affects": [
+         "職業",
+         "Upgrade",
+--- before/dashboard/dist/data/roadmap.json
++++ after/dashboard/dist/data/roadmap.json
+@@ -229,12 +229,12 @@
+         },
+         {
+           "id": "late_enemy_density",
+-          "name": "区画Waveと深層の敵密度",
++          "name": "時間経過による大群の敵密度",
+           "status": "testing",
+           "progress": 90,
+           "priority": "low",
+           "lane": "now",
+-          "notes": "区画ごとに敵数を増やし、深度で編成とHP/攻撃が強化。スマホ同時28・PC同時42。全60層の自然プレイは未評価。"
++          "notes": "床だけの戦場で3〜4体/1秒から8〜10体/0.45秒へ。PC同時128・タッチ96、通常HPは序盤比で終盤約+72%/攻撃約+32%。約4分で増援を止め終盤Bossへ。端末実機と無敵なし難度は未評価。"
+         }
+       ]
+     },
+@@ -357,13 +357,22 @@
+       "weight": 2,
+       "tasks": [
+         {
++          "id": "open_field_final_boss",
++          "name": "広い床だけの戦場・強敵の終盤Boss・約5分ステージ",
++          "status": "completed",
++          "progress": 100,
++          "priority": "high",
++          "lane": "now",
++          "notes": "3テーマ共通で、壁・柱・地形小物のない広い床へ。床とカメラが現在地へ追従し、表示基準96×96セルの外でも歩行・出現・回収が続く。約4分の大群戦の後、従来の強敵から1体を終盤ボスとして出す。撃破してクリア、5分を過ぎても生存ボスを消さない。 序盤3〜4体/1.0秒→終盤8〜10体/0.45秒。45秒から標準敵を混ぜ、150秒から45%。PC128体・タッチ96体。通常敵は序盤比で、終盤にHP約+72%、攻撃約+32%、EXP必要量は2.1倍。画面外の周囲から出現する。 6ボスの実動作、遠方歩行/カメラ/出現/回収、240秒からの戦闘、305秒後の生存Boss保持、手動回収を検査。無敵・自動強化の検査は勝率の証明ではない。Android/iOS実機と無敵なしの全職難度は未確認。Crazy Gunnerの正確な出現数・HPは公開資料から確定できず、数値はVSGAME向けの独自調整。"
++        },
++        {
+           "id": "five_minute_survival",
+           "name": "Crazy Gunnerを参考に5分サバイバルへ変更",
+           "status": "completed",
+           "progress": 100,
+           "priority": "high",
+           "lane": "now",
+-          "notes": "3テーマから出撃先を選び、36×28セルの1アリーナで5分間生き残る。敵は時間帯で密度と階級が増え、浮遊武器が自動攻撃。120秒・240秒にボス（前のボスが生存中なら延期）。300秒で敵を退去させ、経験値は付与しない。終了後は時間制限なく宝箱・装備を回収し、階段を手動で調べて結果へ。 途中のボス宝箱を自分で開けると装備・戦技と補給ショップ。ショップと強化選択中は時間停止。残金は1G=1欠片、回収装備は1点=5欠片として、撃破数に加えて継承報酬へ反映。装備自体は従来どおりRun内専用。 実ゲームの時間・Pause・ボス・上限・回収・再出撃・3テーマを検査。Android/iOS実機、無敵を使わない全職の難度比較、最終的な成長・価格調整は未検証。相手の内部数値を複製したとは扱わない。"
++          "notes": "2026-10-12の生存タイマー方式の履歴。10-13は床だけの連続戦場・終盤Boss撃破でクリアへ改定。"
+         },
+         {
+           "id": "five_minute_survival_balance",
+@@ -386,7 +395,7 @@
+         {
+           "id": "encounter_roles",
+           "name": "群れの中の敵役割",
+-          "notes": "雑魚主体へ標準・強敵・精鋭を時間で混ぜる。射撃と前衛の圧は今後も体感調整。",
++          "notes": "現行は雑魚から標準敵へ時間で混ぜる。45秒から25%、150秒から45%。従来の強敵6種は終盤Boss候補へ移し、通常の群れには出さない。射撃と前衛の圧は実プレイで継続調整。",
+           "status": "testing",
+           "progress": 85,
+           "priority": "high",
+@@ -454,7 +463,7 @@
+           "progress": 10,
+           "priority": "medium",
+           "lane": "future",
+-          "notes": "最終構成は手動攻撃方針の決定後に整理する。"
++          "notes": "旧戦闘移植計画の保留。現行は自動攻撃と約5分のステージに合わせ、必要な項目だけ再評価する。"
+         },
+         {
+           "id": "enemy_telegraph_unification",
+@@ -506,7 +515,7 @@
+           "progress": 80,
+           "priority": "high",
+           "lane": "now",
+-          "notes": "通常MAPのskill／attribute宝箱を装備へ置換。Boss宝箱後はShopまたはRun Clear。"
++          "notes": "通常MAPのskill／attribute宝箱を装備へ置換。現行は150秒の補給箱から手動Shopへ。終盤Boss宝箱の開封で自動遷移せず、報酬回収後に自分で帰還する。"
+         }
+       ]
+     },
+@@ -627,7 +636,7 @@
+           "progress": 92,
+           "priority": "high",
+           "lane": "now",
+-          "notes": "少数Dropに合わせ緑→青→紫→橙→赤の全段階を同レア3個に変更。失敗率と部分消費は維持。60層の成長体感は未評価。"
++          "notes": "少数Dropに合わせ緑→青→紫→橙→赤の全段階を同レア3個に変更。失敗率と部分消費は維持。約5分ステージの成長と装備予算は実機で再評価する。"
+         },
+         {
+           "id": "continuous_forge",
+--- before/dashboard/dist/data/systems.json
++++ after/dashboard/dist/data/systems.json
+@@ -4802,7 +4802,7 @@
+   "ui": [
+     {
+       "id": "five_minute_survival_ui",
+-      "name": "5分タイマー・3テーマ選択・手動回収と生存結果",
++      "name": "ボスまでの時計・延長戦・討伐結果",
+       "progress": 100,
+       "group": "Survival / HUD / Mobile"
+     },
+@@ -4839,7 +4839,7 @@
+       "details": "最後にめくる紙の裏面に天賦図を載せ、その下から刻印の記録が現れる。文字も紙と一緒に曲がり、着地後は同じ9つの操作ノードへ切り替わる。文字の後出しフェードを撤去。既存のComfyUI表紙・紙素材を使用。PC／横画面タッチプレビューの実描画、全9天賦、途中閉じる・再開、Pause解除を無音で確認。"
+     },
+     {
+-      "name": "Mキー/タッチの全体地図・区画進行HUD",
++      "name": "Mキー/タッチの全体地図・終盤ボスHUD",
+       "progress": 100,
+       "group": "UI"
+     },
+@@ -4849,7 +4849,7 @@
+       "group": "MAP景観"
+     },
+     {
+-      "name": "スマホ横画面：仮想スティック・操作ボタン・部屋出口の操作・装備ポップアップ",
++      "name": "スマホ横画面：仮想スティック・操作ボタン・帰還の操作・装備ポップアップ",
+       "progress": 85,
+       "group": "Mobile"
+     },
+@@ -5221,7 +5221,7 @@
+     "validation": "6種の実描画・命中・回避・中断・死亡取消、精鋭の同時発動防止、Bossの予兆範囲と発動後の隙を確認。既存Kキャンセル・J反撃・ダブルクリック装備も成功。"
+   },
+   "exploration": {
+-    "mode": "3テーマ選択の5分サバイバル",
++    "mode": "連続する床の大群戦→強敵由来の終盤Boss",
+     "themeCount": 3,
+     "floorsPerTheme": 1,
+     "totalFloors": 1,
+@@ -5230,23 +5230,23 @@
+       1,
+       1
+     ],
+-    "bossUnlock": "120秒・240秒に自動出現。5分生存がクリア条件で、撃破必須ではない。",
++    "bossUnlock": "240秒で終盤ボス1体。撃破が必須。5分を過ぎても戦闘を継続。",
+     "mapKey": "M",
+-    "details": "3テーマから出撃先を選び、36×28セルの1アリーナで5分間生き残る。敵は時間帯で密度と階級が増え、浮遊武器が自動攻撃。120秒・240秒にボス（前のボスが生存中なら延期）。300秒で敵を退去させ、経験値は付与しない。終了後は時間制限なく宝箱・装備を回収し、階段を手動で調べて結果へ。",
+-    "bossSelection": "各Runでテーマの候補から抽選。生存ボスがいる間は次を追加せず延期。",
+-    "bossSeal": "アリーナでは紋章を表示しない。",
+-    "bossLoot": "撃破位置付近の同じ部屋へ。通行余裕のある床・実障害物・宝箱と階段の操作範囲を確認して装備を配置する。",
++    "details": "3テーマ共通で、壁・柱・地形小物のない広い床へ。床とカメラが現在地へ追従し、表示基準96×96セルの外でも歩行・出現・回収が続く。約4分の大群戦の後、従来の強敵から1体を終盤ボスとして出す。撃破してクリア、5分を過ぎても生存ボスを消さない。",
++    "bossSelection": "テーマ別の強敵2種類から1体を選択。240秒に1度だけ出現。",
++    "bossSeal": "なし。専用HP Barと既存赤予兆で区別。",
++    "bossLoot": "討伐場所近くの床、宝箱と帰還階段の操作範囲を避けて置く。開始地点から離れていても現在地に配置。",
+     "enemyCaps": [
+-      80,
+-      80,
+-      80
++      128,
++      128,
++      128
+     ],
+-    "milestones": "75/180秒の補給、120/240秒の時間ボス、300秒の生存報酬",
+-    "doorStyle": "戦闘中の部屋出口はなし。5分後に別位置の帰還階段を設置。宝箱開封後に手動帰還。",
+-    "surfaceCollisionConsistency": "石柱・短壁の当たり判定が残るマスを床として描いていた原因を修正。壁・床の分類を物理データへ合わせ、ランドマークに覆われる足元だけ床を継続。同期／分割生成とMAP1の小部屋に共通適用。3テーマ12地形で11,237の壁と21,535の床、実主人公の通行・遮断を検査。"
++    "milestones": "75秒のランダム箱、150秒の補給ショップ箱、240秒の終盤Boss",
++    "doorStyle": "部屋出口はなし。ボス撃破後の別位置の帰還階段だけを使う。",
++    "surfaceCollisionConsistency": "現行ステージは壁・柱・地形障害物なし。旧ダンジョンの描画/衝突修正は履歴として維持。"
+   },
+   "shop": {
+-    "when": "戦闘中、倒したボスの宝箱を自分で開けた時だけ補給ショップ。閉店後は同じ戦闘へ。",
++    "when": "150秒の補給箱を自分で開けた時。閉店後は同じ戦闘へ。",
+     "priceScale": "5分Runの訪問番号は1。深度による値上げなし。",
+     "firstFloorPrices": {
+       "recovery": [
+@@ -5257,20 +5257,22 @@
+       "weaponFrom": 165,
+       "reroll": 25
+     },
+-    "gold": "通常敵4体1G、精鋭の既存加算、ボス51/66/81G。生存完了時は既存クリア加算。残金は結果で継承の欠片へ。",
++    "gold": "通常敵4体1G、Boss51/66/81Gとクリア加算。残金は継承の欠片へ。",
+     "sameUpgradePerRun": "非回復商品は同じIDを1Runで一回だけ購入可能。",
+     "status": "testing",
+     "descentHeal": "現行サバイバルには階層下降・下降回復なし。"
+   },
+   "survival": {
+-    "updatedAt": "2026-10-12",
+-    "spawn": "連続増援。PC80体／タッチ48体、ボス召喚も同じ上限。序盤2〜3体/1.4秒→終盤6〜8体/0.6秒。",
+-    "enemyOrder": "0秒から雑魚、20秒から通常、60秒から強敵。180秒以降は強敵18%・通常27%の抽選。既存巡回精鋭も出現。",
+-    "rewards": "途中のボス宝箱を自分で開けると装備・戦技と補給ショップ。ショップと強化選択中は時間停止。残金は1G=1欠片、回収装備は1点=5欠片として、撃破数に加えて継承報酬へ反映。装備自体は従来どおりRun内専用。",
++    "updatedAt": "2026-10-13",
++    "spawn": "序盤3〜4体/1.0秒→終盤8〜10体/0.45秒。45秒から標準敵を混ぜ、150秒から45%。PC128体・タッチ96体。通常敵は序盤比で、終盤にHP約+72%、攻撃約+32%、EXP必要量は2.1倍。画面外の周囲から出現する。",
++    "enemyOrder": "序盤は雑魚、45秒から標準敵。強敵・巡回精鋭は通常群れから除外。",
++    "rewards": "75秒に60%の装備箱、150秒に確定の補給箱。補給箱を自分で開けるとショップ、閉じると戦闘へ。ボス撃破後は装備・討伐宝箱・帰還階段を離して配置し、開封しても自動帰還しない。残金・回収装備は従来どおり継承報酬へ。",
+     "healthBars": "通常敵は被弾後24px、強敵と精鋭は常時32px。",
+     "controls": "PCはWASD移動・自動攻撃・K回避・L技・J反撃・E操作・C所持品・M地図。スマホ横画面は仮想スティックと大きな操作ボタン。",
+     "durationSeconds": 300,
+-    "finish": "3テーマから出撃先を選び、36×28セルの1アリーナで5分間生き残る。敵は時間帯で密度と階級が増え、浮遊武器が自動攻撃。120秒・240秒にボス（前のボスが生存中なら延期）。300秒で敵を退去させ、経験値は付与しない。終了後は時間制限なく宝箱・装備を回収し、階段を手動で調べて結果へ。",
+-    "reference": "Crazy Gunner: サバイバー / Pixel Survivor（公式ストア説明の短い戦闘を参考）"
++    "finish": "3テーマ共通で、壁・柱・地形小物のない広い床へ。床とカメラが現在地へ追従し、表示基準96×96セルの外でも歩行・出現・回収が続く。約4分の大群戦の後、従来の強敵から1体を終盤ボスとして出す。撃破してクリア、5分を過ぎても生存ボスを消さない。",
++    "reference": "Crazy Gunner: サバイバー / Pixel Survivor（公式ストア説明の短い戦闘を参考）",
++    "nominalDurationSeconds": 300,
++    "bossStartsSeconds": 240
+   }
+ }
+--- before/data/difficulty/five_minute_survival.json
++++ after/data/difficulty/five_minute_survival.json
+@@ -1,42 +1,42 @@
+ [
+   {
+     "time_seconds": 0,
+-    "spawn_interval": 1.4,
+-    "spawn_batch": [
+-      2,
+-      3
+-    ]
+-  },
+-  {
+-    "time_seconds": 45,
+-    "spawn_interval": 1.15,
++    "spawn_interval": 1.0,
+     "spawn_batch": [
+       3,
+       4
+     ]
+   },
+   {
+-    "time_seconds": 90,
+-    "spawn_interval": 0.95,
++    "time_seconds": 45,
++    "spawn_interval": 0.8,
+     "spawn_batch": [
+       4,
+       5
+     ]
+   },
+   {
+-    "time_seconds": 180,
+-    "spawn_interval": 0.75,
++    "time_seconds": 90,
++    "spawn_interval": 0.65,
+     "spawn_batch": [
+       5,
+       7
+     ]
+   },
+   {
+-    "time_seconds": 240,
+-    "spawn_interval": 0.6,
++    "time_seconds": 150,
++    "spawn_interval": 0.5,
+     "spawn_batch": [
+-      6,
+-      8
++      7,
++      9
++    ]
++  },
++  {
++    "time_seconds": 210,
++    "spawn_interval": 0.45,
++    "spawn_batch": [
++      8,
++      10
+     ]
+   }
+ ]
+--- before/data/maps/exploration_run.json
++++ after/data/maps/exploration_run.json
+@@ -3,7 +3,7 @@
+   "sector_mode": false,
+   "sectors_per_floor": 4,
+   "combo_timeout_seconds": 3.5,
+-  "experience_requirement_multiplier": 1.5,
++  "experience_requirement_multiplier": 2.1,
+   "economy": {
+     "enemy_kill_gold": 1,
+     "elite_kill_bonus": 10,
+@@ -34,8 +34,8 @@
+     {
+       "index": 1,
+       "display_name": "忘却の地下回廊",
+-      "width": 44,
+-      "height": 36,
++      "width": 96,
++      "height": 96,
+       "room_count": 1,
+       "elite_rooms": 0,
+       "target_duration_seconds": 300,
+@@ -48,19 +48,18 @@
+       "surge_equipment_rarity": "uncommon",
+       "hazard_damage": 5.0,
+       "boss_candidates": [
+-        "minotaur",
+-        "demon_a",
+-        "black_knight_a"
++        "armored_skeleton",
++        "greatsword_skeleton"
+       ],
+-      "boss_hp_multiplier": 0.8,
+-      "boss_damage_multiplier": 0.5,
++      "boss_hp_multiplier": 1,
++      "boss_damage_multiplier": 1,
+       "enemy_progress_offset": 0.0,
+       "enemy_hp_multiplier": 0.38,
+       "enemy_damage_multiplier": 0.7,
+-      "enemy_cap": 80,
++      "enemy_cap": 128,
+       "spawn_batch": [
+-        2,
+-        8
++        3,
++        10
+       ],
+       "difficulty_curve_id": "five_minute_survival",
+       "treasure_rewards": [
+@@ -81,8 +80,8 @@
+     {
+       "index": 2,
+       "display_name": "紫晶の深層",
+-      "width": 44,
+-      "height": 36,
++      "width": 96,
++      "height": 96,
+       "room_count": 1,
+       "elite_rooms": 0,
+       "target_duration_seconds": 300,
+@@ -95,19 +94,18 @@
+       "surge_equipment_rarity": "rare",
+       "hazard_damage": 6.0,
+       "boss_candidates": [
+-        "black_knight_b",
+-        "demon_c",
+-        "demon_d"
++        "blood_monster_b",
++        "werebear"
+       ],
+-      "boss_hp_multiplier": 1.2,
+-      "boss_damage_multiplier": 0.65,
++      "boss_hp_multiplier": 1,
++      "boss_damage_multiplier": 1,
+       "enemy_progress_offset": 150.0,
+       "enemy_hp_multiplier": 0.5,
+       "enemy_damage_multiplier": 0.85,
+-      "enemy_cap": 80,
++      "enemy_cap": 128,
+       "spawn_batch": [
+-        2,
+-        8
++        3,
++        10
+       ],
+       "difficulty_curve_id": "five_minute_survival",
+       "treasure_rewards": [
+@@ -127,8 +125,8 @@
+     {
+       "index": 3,
+       "display_name": "終焉の炉心",
+-      "width": 44,
+-      "height": 36,
++      "width": 96,
++      "height": 96,
+       "room_count": 1,
+       "elite_rooms": 0,
+       "target_duration_seconds": 300,
+@@ -141,19 +139,18 @@
+       "surge_equipment_rarity": "epic",
+       "hazard_damage": 7.0,
+       "boss_candidates": [
+-        "flame_golem",
+-        "demon_e",
+-        "black_knight_c"
++        "armored_orc",
++        "elite_orc"
+       ],
+-      "boss_hp_multiplier": 1.7,
+-      "boss_damage_multiplier": 0.8,
++      "boss_hp_multiplier": 1,
++      "boss_damage_multiplier": 1,
+       "enemy_progress_offset": 300.0,
+       "enemy_hp_multiplier": 0.65,
+       "enemy_damage_multiplier": 1.0,
+-      "enemy_cap": 80,
++      "enemy_cap": 128,
+       "spawn_batch": [
+-        2,
+-        8
++        3,
++        10
+       ],
+       "difficulty_curve_id": "five_minute_survival",
+       "treasure_rewards": [
+@@ -176,11 +173,10 @@
+   "total_floors": 1,
+   "survival_duration_seconds": 300,
+   "survival_boss_seconds": [
+-    120,
+     240
+   ],
+   "survival_supply_seconds": [
+     75,
+-    180
++    150
+   ]
+ }
+--- before/docs/codex_handoff.md
++++ after/docs/codex_handoff.md
+@@ -1,19 +1,19 @@
+-# Codex Handoff — 2026-10-12
++# Codex Handoff — 2026-10-13
+ 
+ ## 現行
+-- 製品Runは3テーマ選択の5分サバイバル。36×28セルの単一アリーナ、時間増援、浮遊装備武器の自動攻撃。4室・60層下降は履歴。`survival_duration_seconds=300`が現行入口。
+-- 75/180秒の補給、120/240秒Boss（生存中なら延期）、300秒で退去。Boss戦にも通常Wave、総cap PC80/タッチ48、SummonStrategyにもcap確認。回収中の装備消失予約を取消。宝箱を開いても移動しない。手動帰還だけで結果へ。
+-- ボス宝箱を自分で開けると戦闘途中のショップ。メニュー中は時間停止。撃破＋残金＋回収装備×5を既存meta_currencyへ。Run装備は永続化していない。
+-- Boss死亡受信をDeferredへ。alive/recoveryはawait後の解放済み参照を受けて検証する。物理flushとBoss退去の不具合を修正。
+-- 前Taskの大きな本、紙上の文字、200アイコン、9武器攻撃、48px武器/5色オーラ、見えない壁修正は維持。新素材の生成は不要。
+-- Dashboard1.6.17、仕様の2026-10-12節、調査/設計はdocs/crazy_gunner_survival.md。実画面と検査はartifacts/five_minute_survival/。
++- 3テーマ共通で床だけの連続戦場。RoomLayoutのsurvival生成がfloor_only=trueの96×96参照地図。床描画はDetailedMapSurfacesの反復1枚、カメラへ256px周期で追従。壁/柱/地形小物なし。旧世界の床素材を保持。
++- floor_onlyの空間/通行判定は領域外も床。Chaseは直進。Waveは表示範囲外の周囲から、装備は現在地の近傍セルから。遠方へ移動しても原点へ出現しない。有限BFSのvalidate_reachabilityはboundsを確認。
++- 約4分の大群戦→240秒に終盤Boss→撃破必須。経過時計は300秒で止めない。5分後も生存Bossは継続。Player火力へBoss HPを合わせない。通常敵/強敵混在・巡回精鋭・途中Bossは廃止。
++- Strong6種をBossDataとして別JSON追加。元のSprite・特技・赤い予兆を保持、特技IDをBoss Loader/EnemyBasicでも接続。ベースHP7800/9000＋テーマ15%、既存倍率1.5で11700〜17550、見た目倍率1.7。旧BossはTest Lab/履歴。
++- Curve：1.0秒/3〜4体→0.45秒/8〜10体、PC128/タッチ96。標準敵は45秒25%→150秒45%。通常HPは4分時点で序盤比約+72%/攻撃約+32%（300秒基準の係数0.9/0.4）、XP必要量2.1。75秒60%装備箱、150秒手動補給箱→ショップ。
++- 討伐後は消失予約停止、装備・討伐箱・階段を離し、手動帰還のみ結果へ。残金＋取得装備×5の継承報酬を維持。本・200装備・9武器攻撃・浮遊オーラは保持。
++- Dashboard1.6.18、仕様末尾の10-13節、docs/crazy_gunner_survival.mdへ同期。artifacts/open_field_survival/に実画面・結果。6Bossの256px図鑑は元のidle素材をGodotで描画（tools/export_stage_boss_portraits）。
+ 
+ ## 検証
+-- five_minute_survival_check：実入口・自動命中・時計/Pause・段階圧力・時間Boss・召喚cap・宝箱/回収・消失予約・帰還/継承・死亡/再出撃。PC/OpenGLと横画面/Vulkanを無音確認。
+-- --full-run：時計を飛ばさず300秒。無敵・強化自動選択なので勝率評価ではない。survival_home_checkは3テーマを実出撃し表示確認。9攻撃系統のequipment_auto_attack_checkもPASS。
+-- 実行は必ず --audio-driver Dummy --fixed-fps 60 と書込可能な --log-file、-- --mute-audio。既定user://ログ/Shader cacheは管理環境で書込不可。
+-- 旧部屋進行テストは履歴。製品の --survival-check / --sector-mobile-check は新検査。保存データはEphemeralで保護。
++- five_minute_survival_checkが現行：実出撃、自然戦闘、壁なし、遠方の実歩行/カメラ/画面外Spawn/Drop、メニュー/補給停止、305秒後の生存Boss/HP、撃破後の回収/期限取消/帰還/継承、6種類の実固有動作。PC/OpenGL・横画面/Vulkan、音はDummy＋mute-audio。
++- --full-runは時計を飛ばさない。例：290.96秒、Boss50.93秒、Lv19・1671撃破、peak128。無敵・自動選択・Bossへ接近させる測定で、勝率の証明ではない。
++- survival_home_checkは3テーマを実出撃。equipment_auto_attack_checkは9系統をPASS。Godotは書込可能な--log-fileと--fixed-fps 60、--audio-driver Dummy -- --mute-audio。既定user://ログ/Shader cache不可は環境由来。
+ 
+ ## 次
+-- 全職で無敵なしの難度・成長・装備予算とショップ価格を評価。Android/iOS実機、タッチ精度・発熱は未確認。全スキル二分岐、Endless、縦画面は未実装。
+-- 大量の以前からの未コミット変更がある。全体restore/reset禁止。
++- Android/iOS実機、無敵なし全職の勝率・成長/装備/価格、タッチと発熱を評価。旧部屋/60層やタイムクリア専用Testは履歴。新スキル・縦画面・永続装備は未追加。
++- 多数の既存未コミット変更あり。全体restore/reset禁止。今回のファイル差分はworkspaceのwork/open-field-survival/beforeを基準にする。
+--- before/docs/crazy_gunner_survival.md
++++ after/docs/crazy_gunner_survival.md
+@@ -1,39 +1,46 @@
+-# Crazy Gunnerを参考にした5分サバイバル（2026-10-12）
++# Crazy Gunnerを参考にした約5分ステージ（2026-10-13）
+ 
+-## 調査と限界
++## 確認した公開情報
+ 
+-- [公式Google Play](https://play.google.com/store/apps/details?id=com.leguas.gunstorm&hl=ja)は短い約5分の戦闘、スキルの2方向進化、複数ヒーロー、簡単な片手操作を説明。
+-- [開発元](https://rykistudio.com/)もピクセルの弾幕サバイバル、スキル構成、複数ヒーローを紹介。
+-- 公式ストア画像は宣伝用イラスト。実際のUIの細部や正確な敵数・威力を観測した証拠にはしない。公式トレーラーはプレイヤーエラー153で未視聴。「1000体以上」は宣伝上の記述で実測値ではない。
+-- ユーザーは部屋を順に攻略する形より「1ステージ約5分のサバイバル」を選択した。
++- [公式Google Play](https://play.google.com/store/apps/details?id=com.leguas.gunstorm&hl=ja)、[開発元](https://rykistudio.com/)、[公式App Store](https://apps.apple.com/ca/app/crazy-gunner-pixel-survivor/id6757685841)は短い約5分の弾幕・サバイバル、簡単な操作、スキル構成を説明。
++- ストアの画像は宣伝用イラスト。正確な出現間隔・HP・敵数や生成コードを観測した証拠にはしない。公式動画は前回playerエラー153で未視聴。今回も動画を視聴したとは扱わない。
++- ユーザー指定：広い床だけ、壁なし、今の強敵を最後のBossにし時間をかけて倒す、スマホ向け約5分。
+ 
+-## 今回の適用
++## 現行設計
+ 
+-3テーマから出撃先を選び、36×28セルの1アリーナで5分間生き残る。敵は時間帯で密度と階級が増え、浮遊武器が自動攻撃。120秒・240秒にボス（前のボスが生存中なら延期）。300秒で敵を退去させ、経験値は付与しない。終了後は時間制限なく宝箱・装備を回収し、階段を手動で調べて結果へ。
++3テーマ共通で、壁・柱・地形小物のない広い床へ。床とカメラが現在地へ追従し、表示基準96×96セルの外でも歩行・出現・回収が続く。約4分の大群戦の後、従来の強敵から1体を終盤ボスとして出す。撃破してクリア、5分を過ぎても生存ボスを消さない。
+ 
+-途中のボス宝箱を自分で開けると装備・戦技と補給ショップ。ショップと強化選択中は時間停止。残金は1G=1欠片、回収装備は1点=5欠片として、撃破数に加えて継承報酬へ反映。装備自体は従来どおりRun内専用。
++序盤3〜4体/1.0秒→終盤8〜10体/0.45秒。45秒から標準敵を混ぜ、150秒から45%。PC128体・タッチ96体。通常敵は序盤比で、終盤にHP約+72%、攻撃約+32%、EXP必要量は2.1倍。画面外の周囲から出現する。
+ 
+-| 時間 | VSGAMEの独自設定 |
++75秒に60%の装備箱、150秒に確定の補給箱。補給箱を自分で開けるとショップ、閉じると戦闘へ。ボス撃破後は装備・討伐宝箱・帰還階段を離して配置し、開封しても自動帰還しない。残金・回収装備は従来どおり継承報酬へ。
++
++| 戦闘時計 | 内容 |
+ |---|---|
+-| 0秒 | 雑魚、2〜3体/1.4秒、既存の自動攻撃 |
+-| 20秒 | 通常敵が候補へ |
+-| 60秒 | 強敵が候補へ |
+-| 75秒 | 60%で補給箱 |
+-| 120秒 | 1体目の時間ボス |
+-| 180秒 | 補給箱、強敵比率18%、通常比率27% |
+-| 240秒 | 2体目のボス、6〜8体/0.6秒 |
+-| 300秒 | 生存成功、敵退去、回収後に手動帰還 |
++| 0秒 | 雑魚主体、3〜4体/1.0秒 |
++| 45秒 | 標準敵25%、4〜5体/0.8秒 |
++| 75秒 | 60%で装備箱 |
++| 90秒 | 5〜7体/0.65秒 |
++| 150秒 | 標準敵45%、7〜9体/0.5秒、補給箱（手動開封でショップ） |
++| 210秒 | 8〜10体/0.45秒 |
++| 240秒 | 通常増援停止・通常敵退去、テーマの強敵2種類から1体をBossとして生成 |
++| Boss撃破 | 安全な回収時間、手動帰還で結果へ |
+ 
+-通常敵のHPは経過で最大+60%、攻撃は+25%。敵総数はPC80・タッチ48、ボス召喚にも適用する。壁・小物を考慮した既存の安全出現を使う。回収済み装備は1点=5欠片、融合完成品を再取得として数えず、同じ結果を二重に精算しない。
++メニュー・強化選択・ショップ中は時計を止める。5分は通常4分＋Boss約1分の目標であり、300秒でボスを消したり、未撃破クリアにしたりしない。火力によって戦闘時間が変わり、Boss HPをPlayer火力へ自動追従させない。
+ 
+-全スキルへの二分岐進化、Endless、銃への全置換、縦画面、課金・拠点追加は今回の範囲外。既存の職業天賦、200装備、52武器9攻撃系統、浮遊武器とオーラ・本のUIを再利用する。
++## 地形と安全な出現・回収
++
++同じComfyUI床128pxを2倍・Nearestで繰り返し、カメラ周囲へ256px刻みで置き直す。描画は大きな床の1枚で、移動距離に応じてタイル/壁を増やさない。96×96セルのデータは地図の表示基準で、歩行の境界ではない。空間判定とAIは床のみを認識する。壁・柱・地形小物を生成しない。
++
++通常敵は現在の表示範囲より外から生成。出現候補と装備の安全位置はPlayer周辺から計算し、遠くへ移動しても原点へ戻らない。宝箱と帰還階段は可視の対話オブジェクトとして残す。有限領域の到達性検査には明示的なbounds判定を入れ、連続床で無限探索しない。
++
++## 強敵の転用
++
++6種の元絵と固有攻撃、赤い目の予告をそのまま使う。敵とBossのDataを別に保持し、通常敵の原Dataは変更しない。Boss用の固定HP、表示倍率1.7、専用HP Barと討伐演出を使う。ベースHP7800/9000にテーマごと+15%、既存Boss HP倍率1.5を適用（実HP11700〜17550）。基準ダメージ15/18.75、固有技の倍率は元の動作を維持。
+ 
+ ## 検証
+ 
+-`five_minute_survival_check`は実game.tscnの入口、出現・自動命中、段階圧力、時間ボス、Boss召喚上限、Pause/Shop中の時間停止、300秒の停止、死亡/再出撃、宝箱の実操作、回収中の消失予約取消、拾得と手動帰還、継承精算を検査。PC/OpenGLと横画面/Vulkan Mobileを無音実行。
++実game.tscnの出撃・自然増援・自動命中・画面外出現・遠方移動と実衝突・カメラ・遠方装備・補給ショップ・240秒Boss・305秒でも同じBoss/HPを保持・撃破必須・討伐箱/回収/手動帰還・継承精算をPC/OpenGLと横画面/Vulkanで無音確認。6種類すべて、実BossSpawnerで生成し固有動作の開始を検査。3テーマの実出撃と描画、9装備攻撃系統も回帰確認。
+ 
+-`survival_home_check`はホームの画面内配置、3テーマ選択から実game.tscnへの出撃と描画テーマを検査。`--full-run`はゲーム時計を飛ばさず300秒の自然増援・自動戦闘を動かす。主人公は無敵、レベルアップは自動選択なので、難度・勝率の証明にはしない。
++時計を飛ばさない検査の例は約4分51秒（Boss約51秒）。主人公は無敵、レベルアップは自動選択、Bossへ接近させて計測するため、実プレイの勝率を証明しない。成果物はartifacts/open_field_survival/。
+ 
+-成果物は`artifacts/five_minute_survival/`。既存の9攻撃系統回帰も実行。通常の5分導線では旧4室・60層・鍵・階段下降を使わない。旧進行の専用テストは履歴であり、現行の`--survival-check`/`--sector-mobile-check`は新検査へ接続。
+-
+-Android/iOS実機、無敵を使わない全職の難度比較、最終的な成長・価格調整は未検証。相手の内部数値を複製したとは扱わない。
++無敵・自動強化の検査は勝率の証明ではない。Android/iOS実機と無敵なしの全職難度は未確認。Crazy Gunnerの正確な出現数・HPは公開資料から確定できず、数値はVSGAME向けの独自調整。
+--- before/entities/enemies/enemy_basic.gd
++++ after/entities/enemies/enemy_basic.gd
+@@ -172,7 +172,7 @@
+ 	status_effect_component.states_changed.connect(_on_states_changed)
+ 	_on_states_changed(status_effect_component.get_states())
+ 	contact_hitbox.damage_enabled = false
+-	if enemy_data and enemy_data.special_attack_id != "" and not enemy_data is BossData:
++	if enemy_data and enemy_data.special_attack_id != "":
+ 		var special_script = load("res://systems/strong_enemy_special.gd")
+ 		if enemy_data.special_attack_id == "orc_step_slash":
+ 			strong_attack = load("res://systems/orc_step_slash.gd").new()
+--- before/entities/player/player.gd
++++ after/entities/player/player.gd
+@@ -77,6 +77,15 @@
+ func setup_camera_limits(map: DungeonMap) -> void:
+ 	if map == null:
+ 		return
++	if map.get_meta("floor_only", false):
++		camera.limit_left = -10000000
++		camera.limit_top = -10000000
++		camera.limit_right = 10000000
++		camera.limit_bottom = 10000000
++		camera.zoom = Vector2.ONE
++		camera.offset = Vector2.ZERO
++		camera.reset_smoothing()
++		return
+ 	var min_world := map.grid_to_world(map.get_min_coords())
+ 	var max_world := map.grid_to_world(map.get_max_coords() + Vector2i.ONE)
+ 	camera.limit_left = int(min_world.x)
+--- before/entities/stage_environment/detailed_map_surfaces.gd
++++ after/entities/stage_environment/detailed_map_surfaces.gd
+@@ -5,6 +5,7 @@
+ var surface_texture: Texture2D
+ var wall_texture: Texture2D
+ var theme := 1
++var _actor: Player
+ 
+ func configure(map: DungeonMap, rendered_cells: Array[Vector2i], map_theme: int) -> void:
+ 	dungeon = map
+@@ -14,12 +15,25 @@
+ 	wall_texture = load("res://assets/visuals/ember_v5/map%d_wall.png" % theme)
+ 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+ 	z_index = -90
++	set_process(map.get_meta("floor_only", false))
++	if map.get_meta("floor_only", false):
++		texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
++		_actor = get_tree().get_first_node_in_group("player") as Player
+ 	queue_redraw()
+ 
+ func _walk_surface(cell: Vector2i) -> bool:
+ 	return dungeon.is_floor(cell) or dungeon.get_meta("scenic_landmark_cells", {}).has(cell)
+ 
++func _process(_delta: float) -> void:
++	if is_instance_valid(_actor):
++		# Snap to the texture period so re-centering never shifts the floor artwork.
++		position = (_actor.camera.get_screen_center_position() / 256.0).floor() * 256.0
++
+ func _draw() -> void:
++	if dungeon.get_meta("floor_only", false) and surface_texture:
++		draw_set_transform(Vector2.ZERO, 0, Vector2(2, 2))
++		draw_texture_rect(surface_texture, Rect2(-2048, -2048, 4096, 4096), true, Color(.83,.83,.86))
++		return
+ 	if not surface_texture or not wall_texture: return
+ 	for cell in cells:
+ 		var rect := Rect2(Vector2(cell)*32,Vector2(32,32))
+--- before/entities/stage_environment/stage_environment.gd
++++ after/entities/stage_environment/stage_environment.gd
+@@ -490,6 +490,9 @@
+ func _build_isolated_room(map: DungeonMap) -> void:
+ 	_clear_previous_dungeon()
+ 	_ensure_void_background(map)
++	if map.get_meta("floor_only", false):
++		_refresh_painted_surfaces(map)
++		return
+ 	_fill_floor_and_walls(map)
+ 	_refresh_painted_surfaces(map)
+ 	var occupied := {}
+--- before/tests/five_minute_survival_check.gd
++++ after/tests/five_minute_survival_check.gd
+@@ -1,30 +1,28 @@
+ extends Node
+-
+ var game: Node2D
++var player: Player
+ var controller: MapRunController
+ var wave: WaveSpawner
+-var player: Player
++var OUT := "res://artifacts/open_field_survival"
+ var failures: Array[String] = []
+-var OUT := "res://artifacts/five_minute_survival"
+ var fired := 0
+ 
+ func _ready() -> void:
+ 	process_mode = Node.PROCESS_MODE_ALWAYS
+ 	if "--touch-preview" in OS.get_cmdline_user_args(): OUT += "/mobile"
+-	get_tree().create_timer(600 if "--full-run" in OS.get_cmdline_user_args() else 160, true).timeout.connect(func(): get_tree().quit(1))
++	get_tree().create_timer(900, true).timeout.connect(func(): get_tree().quit(1))
+ 	_run.call_deferred()
+ 
+ func check(ok: bool, message: String) -> void:
+ 	if not ok:
+-		failures.append(message)
+-		push_error(message)
++		if message not in failures: failures.append(message); push_error(message)
+ 
+ func frames(count: int) -> void:
+ 	for i in count:
+ 		await get_tree().physics_frame
+-		var select := game.get_node("LevelUpSelect") as LevelUpSelect
+-		if select.visible and select.grid_container.get_child_count() > 0:
+-			(select.grid_container.get_child(0) as Button).pressed.emit()
++		var ui := game.get_node("LevelUpSelect") as LevelUpSelect
++		if ui.visible and ui.grid_container.get_child_count() > 0:
++			(ui.grid_container.get_child(0) as Button).pressed.emit()
+ 
+ func capture(name: String) -> void:
+ 	if DisplayServer.get_name() == "headless": return
+@@ -33,162 +31,189 @@
+ 
+ func _run() -> void:
+ 	game = get_parent()
++	player = game.get_node("Player")
+ 	controller = game.get_node("MapRunController")
+ 	wave = game.get_node("WaveSpawner")
+-	player = game.get_node("Player")
+ 	DirAccess.make_dir_recursive_absolute(OUT)
+-	check(AudioServer.get_driver_name() == "Dummy" and AudioServer.is_bus_mute(0), "Test must be silent")
+-	check(GameManager.survival_mode_active and controller._active and not controller._sector_mode, "Real entry still uses rooms")
+-	check(GameManager.survival_duration_seconds == 300, "Not a five-minute run")
+-	check(GameManager.dungeon_map.get_meta("survival_arena", false) and GameManager.dungeon_map.rooms.size() == 1, "No compact arena")
+-	check(controller._boss_gate == null and controller._sector_exit == null, "Legacy progression objects remain")
++	check(AudioServer.get_driver_name() == "Dummy" and AudioServer.is_bus_mute(0), "Tests must stay silent")
++	check(GameManager.survival_mode_active and GameManager.dungeon_map.get_meta("floor_only", false), "Product entry is not floor-only")
++	check(game.get_node("StageEnvironment")._tile_map_layer.get_used_cells().is_empty(), "Terrain walls/floor TileMap still built")
++	check(DungeonGenerator.validate_reachability(GameManager.dungeon_map).reachable, "Reference floor connectivity validation must terminate")
++	check(GameManager.dungeon_map.terrain_obstacle_cells.is_empty(), "Field contains obstacles")
++	check(game.get_node("EliteRoomManager").process_mode == Node.PROCESS_MODE_DISABLED, "Strong roaming enemies still spawn")
+ 	player.health_component.invincible = true
+ 	player.weapon_manager.weapon_fired.connect(func(): fired += 1)
+-	var item := game.get_node("EquipmentDropSystem").debug_generate_equipment("wanderer_iron_sword", "uncommon") as EquipmentData
+-	check(player.equipment_component.add_item(item) and player.equipment_component.equip(item), "Weapon equip failed")
++	var gear := game.get_node("EquipmentDropSystem").debug_generate_equipment("wanderer_iron_sword", "uncommon") as EquipmentData
++	check(player.equipment_component.add_item(gear) and player.equipment_component.equip(gear), "Starter weapon failed")
+ 	if "--full-run" in OS.get_cmdline_user_args():
+-		await _soak()
++		await soak()
+ 		return
+-	var early := wave.debug_get_map_spawn_snapshot()
+ 	var peak := 0
+ 	for i in 900:
+ 		await frames(1)
+ 		peak = maxi(peak, wave._active_enemy_count())
+-	check(peak >= 8 and fired > 0 and GameManager.kill_count > 0, "No real automatic horde combat")
+-	await capture("start")
+-	var before := GameManager.elapsed_seconds
++	check(peak >= 12 and fired > 0 and GameManager.kill_count > 0, "No natural automatic horde combat")
++	await capture("field")
++	var time := GameManager.elapsed_seconds
+ 	GameManager.open_modal()
+ 	await frames(30)
+-	check(is_equal_approx(before, GameManager.elapsed_seconds), "Modal consumes survival timer")
++	check(is_equal_approx(time, GameManager.elapsed_seconds), "Menu consumes battle time")
+ 	GameManager.close_modal()
++	controller.set_process(false)
++	wave.set_process(false)
++	controller._clear_combat_transients(true)
++	await frames(5)
++	player.global_position = Vector2(22000, -17000)
++	await frames(8)
++	var map := GameManager.dungeon_map
++	check(map.is_floor(map.world_to_grid(player.global_position)) and map.has_navigation_clearance(map.world_to_grid(player.global_position)), "Remote floor becomes void or a hidden wall")
++	check(not player.test_move(player.global_transform, Vector2(160, 0)), "Empty field blocks movement")
++	var before := player.global_position
++	Input.action_press("ui_right")
++	await frames(20)
++	Input.action_release("ui_right")
++	check(player.global_position.x > before.x + 10, "Real player cannot move beyond old arena bounds")
++	var surface := game.get_node("StageEnvironment/PaintedSurfaces")
++	check(surface.position.distance_to(player.camera.get_screen_center_position()) < 400, "Floor does not follow remote camera")
++	var half := player.get_viewport_rect().size / player.camera.zoom * 0.5
++	for i in 12:
++		var point := wave._pick_spawn_position(player.global_position)
++		check(point.is_finite() and (absf(point.x-player.position.x)>half.x or absf(point.y-player.position.y)>half.y), "Enemy pops into the visible field")
++	var drop := game.get_node("EquipmentDropSystem").spawn_treasure_drop(player.global_position + Vector2(160, 0), "uncommon") as GroundEquipmentItem
++	check(drop != null and drop.global_position.distance_to(player.global_position) < 400, "Remote loot returned to origin")
++	await capture("remote_floor")
+ 	if game.mobile_controls.visible:
+ 		game.mobile_controls._update_stick(Vector2(204, 102))
+-		check(Input.get_action_strength("ui_right") > 0.8, "Touch movement disconnected")
++		check(Input.is_action_pressed("ui_right"), "Touch movement is disconnected")
+ 		game.mobile_controls._release_stick()
+-		check(not Input.is_action_pressed("ui_right"), "Touch movement stuck")
+-	controller.set_process(false)
+-	GameManager.elapsed_seconds = 75
+-	controller._tick_survival()
+-	check(controller._survival_supply_index == 1, "Timed supplies not processed")
+ 	GameManager.elapsed_seconds = 120
+ 	controller._tick_survival()
+-	check(controller._boss_active and controller._survival_boss_index == 1, "Timed boss did not spawn")
+-	check(not wave.is_map_spawn_suppressed(), "Boss stopped the survival horde")
+-	await frames(40)
+-	check(game.hud.room_status_label.visible and game.hud.boss_health_container.visible, "Boss hides timer")
+-	await capture("boss")
+-	game.boss_spawner.debug_defeat_current_boss()
+-	await frames(30)
+-	check(not controller._boss_active and controller._stairs == null and not game.get_node("ResultScreen").visible, "Mid-run boss skipped to result/next room")
+-	var boss_chests := get_tree().get_nodes_in_group("map_content").filter(func(n): return n is TreasureChest and n.is_boss_chest)
+-	check(not boss_chests.is_empty(), "Boss reward chest missing")
+-	player.global_position = boss_chests[0].global_position
+-	await frames(6)
+-	check(boss_chests[0].interact(player) and game.get_node("ShopScreen").visible, "Manual boss chest did not open useful mid-run shop")
++	check(not controller._boss_active, "Boss appears before finale")
++	GameManager.elapsed_seconds = 150
++	controller._tick_survival()
++	var supplies := get_tree().get_nodes_in_group("map_content").filter(func(n): return n is TreasureChest and not n.is_boss_chest)
++	check(not supplies.is_empty(), "Mid-run supplies missing")
++	var chest := supplies.back() as TreasureChest
++	player.position = chest.position
++	await frames(6)
++	check(chest.interact(player) and game.get_node("ShopScreen").visible, "Supply chest did not offer useful shop")
+ 	var shop_time := GameManager.elapsed_seconds
+ 	await frames(20)
+-	check(is_equal_approx(shop_time, GameManager.elapsed_seconds), "Shop consumes battle time")
++	check(shop_time == GameManager.elapsed_seconds, "Shop consumes stage time")
+ 	game.get_node("ShopScreen")._close()
+-	check(not game.get_node("ResultScreen").visible, "Closing supply shop ended battle")
+-	GameManager.elapsed_seconds = 180
+-	controller._tick_survival()
+-	check(controller._survival_supply_index == 2, "Second supply missing")
++	GameManager.elapsed_seconds = 239
++	controller._tick_survival()
++	var early_ids: Array = WaveSpawner.MAP_ENEMY_ROSTERS[GameManager.current_map_index].strong
++	for i in 50:
++		for data in wave._survival_enemy_pool(): check(data.id not in early_ids, "Promoted strong enemy still in regular horde")
++	var late := wave.debug_get_map_spawn_snapshot()
+ 	GameManager.elapsed_seconds = 240
+ 	controller._tick_survival()
+-	var late := wave.debug_get_map_spawn_snapshot()
+-	check(late.spawn_interval < early.spawn_interval and late.batch_max > early.batch_max, "Enemy pressure did not increase")
+-	check(controller._boss_active and controller._survival_boss_index == 2, "Second boss missing")
+-	var saved_cap := wave._map_enemy_cap
+-	wave._map_enemy_cap = wave._active_enemy_count() + 1
+-	var summon := SummonStrategy.new()
+-	summon.execute(game.boss_spawner.debug_get_current_boss(), player)
++	await frames(8)
++	var boss := game.boss_spawner.debug_get_current_boss() as EnemyBasic
++	check(boss != null and controller._boss_active and controller._survival_boss_index == 1 and wave._spawning_paused, "Final boss phase did not replace horde")
++	check(boss.enemy_data.id in early_ids and boss.enemy_data is BossData and boss.strong_attack != null, "Final boss lost strong enemy identity/moves")
++	check(boss.health_component.max_hp >= 4000, "Boss dies like a regular mob")
++	var id := boss.get_instance_id()
++	var hp := boss.health_component.current_hp
++	boss.health_component.invincible = true
++	GameManager.elapsed_seconds = 305
++	controller._tick_survival()
+ 	await frames(90)
+-	check(wave._active_enemy_count() <= wave._map_enemy_cap, "Boss summons bypass total cap")
+-	wave._map_enemy_cap = saved_cap
+-	await frames(30)
+-	await capture("late")
+-	var expiring := game.get_node("EquipmentDropSystem").spawn_treasure_drop(player.global_position + Vector2(-160, 160), "uncommon") as GroundEquipmentItem
+-	expiring.begin_cap_expiration(1.2)
+-	var kills_before := GameManager.kill_count
+-	GameManager.elapsed_seconds = 300
+-	controller._tick_survival()
+-	await frames(90)
+-	check(is_instance_valid(expiring) and not expiring.cap_expiration_pending, "Reward collection still expires equipment")
+-	check(GameManager.survival_completed and wave._spawning_paused, "Time limit did not end combat")
+-	check(is_equal_approx(GameManager.elapsed_seconds, 300), "Recovery timer keeps running")
+-	check(wave._active_enemy_count() == 0 and GameManager.kill_count == kills_before, "Withdrawal granted kills or left enemies")
+-	check(GameManager.run_state == GameManager.RunState.PLAYING and not game.get_node("ResultScreen").visible, "Result interrupted loot collection")
+-	check(controller._boss_chest != null and not controller._stairs.available, "Missing safe chest/locked exit")
+-	controller._continue_after_boss_reward()
+-	check(GameManager.run_state == GameManager.RunState.PLAYING, "Return allowed before chest opened")
+-	var chest := controller._boss_chest
+-	player.global_position = chest.global_position
+-	await frames(4)
+-	check(chest.interact(player), "Real final chest interaction failed")
+-	await frames(8)
+-	check(controller._stairs.available and not game.get_node("ResultScreen").visible, "Chest automatically ends run")
++	check(is_instance_valid(boss) and boss.get_instance_id() == id and boss.health_component.current_hp == hp and not GameManager.survival_completed, "Five minutes deletes or resets a living boss")
++	check(game.hud.room_status_label.text.contains("ボス戦"), "HUD hides overtime boss fight")
++	player.global_position = boss.global_position + Vector2(56, 0)
++	player.camera.reset_smoothing()
++	await frames(8)
++	await capture("final_boss")
++	controller._tick_survival()
++	check(game.boss_spawner.debug_get_current_boss().get_instance_id() == id, "Final boss duplicated")
++	drop.begin_cap_expiration(1.2)
++	boss.health_component.invincible = false
++	game.boss_spawner.debug_defeat_current_boss()
++	await frames(95)
++	check(GameManager.survival_completed and not game.get_node("ResultScreen").visible, "Boss defeat skips recovery")
++	check(is_instance_valid(drop) and not drop.cap_expiration_pending, "Recovery still expires floor loot")
++	chest = controller._boss_chest
++	check(chest != null and not controller._stairs.available, "Victory reward/return missing")
++	player.position = chest.position
++	await frames(8)
++	check(chest.interact(player), "Victory chest cannot be opened remotely")
++	await frames(5)
++	check(controller._stairs.available and not game.get_node("ResultScreen").visible, "Chest automatically ends stage")
++	controller._tick_survival()
++	await capture("recovery")
+ 	var ground := get_tree().get_nodes_in_group("ground_equipment")
+-	check(not ground.is_empty(), "Chest created no physical equipment")
+-	for drop in ground:
+-		check(GameManager.dungeon_map.is_floor(GameManager.dungeon_map.world_to_grid(drop.global_position)), "Loot inside a wall")
+-		check(drop.global_position.distance_to(chest.global_position) >= 90, "Loot overlaps final chest")
+-	controller._tick_survival()
+-	await capture("recovery")
+-	var loot := ground.back() as GroundEquipmentItem
+-	player.global_position = loot.global_position
+-	await frames(6)
+-	check(loot.collect(player), "Loot cannot be picked up during recovery")
+-	await frames(3)
+-	var reward_before := int(SaveManager.data.get("meta_currency", 0))
+-	var expected_reward := GameManager.kill_count + GameManager.run_gold + GameManager.run_equipment_count * 5
+-	player.global_position = controller._stairs.global_position
+-	await frames(6)
+-	check(controller._stairs.interact(player), "Manual return interaction failed")
++	check(not ground.is_empty(), "No physical victory loot")
++	var picked := ground.back() as GroundEquipmentItem
++	player.position = picked.position
++	await frames(6)
++	check(picked.collect(player), "Remote victory loot cannot be collected")
++	var reward_before := int(SaveManager.data.meta_currency)
++	var reward := GameManager.kill_count + GameManager.run_gold + GameManager.run_equipment_count * 5
++	player.position = controller._stairs.position
++	await frames(6)
++	check(controller._stairs.interact(player), "Manual return failed")
+ 	await frames(6)
+ 	var result := game.get_node("ResultScreen") as ResultScreen
+-	check(GameManager.run_state == GameManager.RunState.RESULT and result.visible and result.title_label.text == "生存成功", "No correct survival result")
+-	check(int(SaveManager.data.get("meta_currency", 0)) - reward_before == expected_reward, "Unspent gold/collected equipment reward lost")
+-	check(result.time_label.text.contains("05:00") and not result.time_label.text.contains("60層"), "Legacy result wording/time")
++	check(result.visible and result.title_label.text == "ステージクリア", "Victory result still says survive timeout")
++	check(int(SaveManager.data.meta_currency)-reward_before==reward, "Meta reward lost")
+ 	await capture("result")
+ 	get_tree().paused = false
+ 	GameManager.start_run(true)
+-	check(not GameManager.survival_completed and is_zero_approx(GameManager.elapsed_seconds), "Retry carries old completion")
+-	for theme in [1, 2, 3]:
+-		GameManager.selected_survival_map = theme
+-		GameManager.start_run(true)
+-		check(GameManager.current_map_index == theme and GameManager.dungeon_map.get_meta("survival_arena", false), "Selected theme not used")
+-		check(DungeonGenerator.validate_reachability(GameManager.dungeon_map).reachable, "Arena unreachable")
+-	GameManager.end_run()
+-	check(result.title_label.text == "生存失敗", "Death does not show survival failure")
+-	var f := FileAccess.open(OUT + "/check.json", FileAccess.WRITE)
+-	f.store_string(JSON.stringify({"failures": failures, "early": early, "late": late, "peak_early": peak, "auto_fired": fired, "duration": 300, "real_entry": true, "silent": true}, "\t"))
+-	f.close()
+-	var exit := preload("res://tests/runtime_exit_cleanup.gd").new()
+-	get_tree().root.add_child(exit)
+-	exit.begin(0 if failures.is_empty() else 1, "FIVE_MINUTE_SURVIVAL " + ("PASS" if failures.is_empty() else "FAIL"))
+-
+-func _soak() -> void:
++	check(not GameManager.survival_completed and GameManager.elapsed_seconds == 0, "Retry preserves previous victory")
++	await _boss_moves()
++	finish({"peak_early":peak,"late":late,"remote_floor":true,"boss_survives_overtime":true})
++
++func soak() -> void:
++	if DisplayServer.get_name() != "headless": DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
+ 	var peak := 0
+ 	var captured := false
+-	var levels := 1
+-	while not GameManager.survival_completed:
++	var boss_at := 0.0
++	while not GameManager.survival_completed and GameManager.elapsed_seconds < 600:
+ 		await frames(1)
+ 		var alive := wave._active_enemy_count()
+ 		peak = maxi(peak, alive)
+-		levels = player.experience_component.level
+-		check(alive <= wave._map_enemy_cap, "Natural survival exceeded total enemy cap")
+-		if not captured and GameManager.elapsed_seconds >= 235:
++		check(alive <= wave._map_enemy_cap, "Natural horde exceeds cap")
++		if not captured and GameManager.elapsed_seconds >= 205:
+ 			captured = true
+ 			await capture("horde")
++		if controller._boss_active and boss_at == 0: boss_at = GameManager.elapsed_seconds
++		if controller._boss_active and GameManager.elapsed_seconds > 245:
++			var boss := game.boss_spawner.debug_get_current_boss() as EnemyBasic
++			if boss and player.position.distance_to(boss.position) > 70:
++				player.global_position = boss.position + Vector2(50, 0)
+ 	await frames(20)
+-	check(peak >= 35 and GameManager.kill_count >= 80 and levels >= 5, "Natural five minutes lack horde/build growth")
+-	check(GameManager.elapsed_seconds == 300 and wave._active_enemy_count() == 0, "Natural five-minute end failed")
+-	check(not game.get_node("ResultScreen").visible and controller._boss_chest != null, "Natural completion skipped reward collection")
+-	var report := {"failures": failures, "duration": GameManager.elapsed_seconds, "kills": GameManager.kill_count, "level": levels, "peak": peak, "cap": wave._map_enemy_cap, "bosses_spawned": controller._survival_boss_index, "supplies_processed": controller._survival_supply_index, "invincible_test_player": true, "upgrades_chosen_automatically": true, "clock_not_skipped": true}
+-	var f := FileAccess.open(OUT + "/soak.json", FileAccess.WRITE)
+-	f.store_string(JSON.stringify(report, "\t"))
+-	f.close()
+-	print("FIVE_MINUTE_SOAK " + JSON.stringify(report))
+-	var exit := preload("res://tests/runtime_exit_cleanup.gd").new()
+-	get_tree().root.add_child(exit)
+-	exit.begin(0 if failures.is_empty() else 1, "FIVE_MINUTE_SOAK " + ("PASS" if failures.is_empty() else "FAIL"))
++	var boss_seconds := GameManager.elapsed_seconds - boss_at
++	check(GameManager.survival_completed and boss_at >= 240 and peak >= 60, "Natural stage failed to complete")
++	check(boss_seconds >= 35 and boss_seconds <= 180, "Baseline final boss duration needs tuning")
++	check(not game.get_node("ResultScreen").visible, "Natural victory forced result")
++	finish({"duration":GameManager.elapsed_seconds,"boss_seconds":boss_seconds,"boss_hp_data":"fixed, not player-scaled","peak":peak,"cap":wave._map_enemy_cap,"kills":GameManager.kill_count,"level":player.experience_component.level,"invincible_test_player":true,"auto_upgrades":true,"clock_not_skipped":true}, "soak")
++
++func finish(report: Dictionary, name: String = "check") -> void:
++	report["failures"] = failures
++	var f := FileAccess.open(OUT + "/" + name + ".json", FileAccess.WRITE)
++	f.store_string(JSON.stringify(report, "\t")); f.close()
++	print("OPEN_FIELD " + name + " " + JSON.stringify(report))
++	var cleanup := preload("res://tests/runtime_exit_cleanup.gd").new()
++	get_tree().root.add_child(cleanup)
++	cleanup.begin(0 if failures.is_empty() else 1, "OPEN_FIELD " + ("PASS" if failures.is_empty() else "FAIL"))
++
++func _boss_moves() -> void:
++	for theme in [1, 2, 3]:
++		for ident: String in WaveSpawner.MAP_ENEMY_ROSTERS[theme].strong:
++			game.boss_spawner.prepare_map_run()
++			var boss := game.boss_spawner.start_room_boss(theme, {"candidates":[ident], "is_final":true}, player.position + Vector2(56, 0)) as EnemyBasic
++			check(boss != null and boss.strong_attack != null and boss.enemy_data.sprite_folder == DataLoader.enemies[ident].sprite_folder, "Promoted boss does not reuse original art/moves: "+ident)
++			boss.health_component.invincible = true
++			var performed := false
++			for i in 360:
++				await frames(1)
++				if boss.strong_attack.active and boss.strong_attack.elapsed >= .1:
++					performed = true
++					await capture("boss_"+ident)
++					break
++			check(performed, "Boss never performs its authored attack: "+ident)
++			game.boss_spawner.clear_room_boss()
++			player.weapon_manager.cancel_current_attack()
++			await frames(6)
+--- before/game_specification.md
++++ after/game_specification.md
+@@ -7,7 +7,7 @@
+ > 推測で正とせず、関連するCode / Scene / Resource / Data / Assetsを確認したうえで、
+ > 採用する現行仕様へ両者を同じ作業内で同期します。
+ 
+-> **現行進行（2026-10-12）:** 3テーマを選ぶ5分サバイバル。部屋制圧・60層下降は履歴。最新の数値と終了条件は末尾の2026-10-12節を参照。
++> **現行進行（2026-10-13）:** 床だけの広い戦場で約4分の大群戦、その後に強敵由来のBossを撃破してクリア。約5分が目標。壁・地形障害物なし。最新の数値・終了条件は末尾の2026-10-13節を参照。
+ 
+ ---
+ 
+@@ -3884,7 +3884,7 @@
+ - Capture/比較GIF/レポートは`artifacts/weapon_aura_walls/`。Dashboard1.6.16の戦闘・アイテム・MAP・進捗/Bug/Decisionへ同期。既存ComfyUIの絵を再利用。
+ 
+ 
+-## 2026-10-12 5分サバイバル（現行進行）
++## 2026-10-12 5分サバイバル（旧タイムクリア仕様）
+ 
+ 3テーマから出撃先を選び、36×28セルの1アリーナで5分間生き残る。敵は時間帯で密度と階級が増え、浮遊武器が自動攻撃。120秒・240秒にボス（前のボスが生存中なら延期）。300秒で敵を退去させ、経験値は付与しない。終了後は時間制限なく宝箱・装備を回収し、階段を手動で調べて結果へ。
+ 
+@@ -3895,3 +3895,17 @@
+ - 回収中は時計が05:00で停止。残敵を消す際のEXP・ドロップなし。宝箱・装備・階段を離し、自動選択画面は表示しない。手動帰還後に結果。旧下降ショップは使わない。
+ - 保存済み解放・音量・最高記録を削除しない。Run装備を永続装備へ変更する範囲ではない。所持品・鍛造・天賦の既存導線は保持。
+ - 調査・適用・検査と限界：docs/crazy_gunner_survival.md。Android/iOS実機、無敵を使わない全職の難度比較、最終的な成長・価格調整は未検証。相手の内部数値を複製したとは扱わない。
++
++
++## 2026-10-13 床のみの広い戦場と終盤Boss（現行進行）
++
++3テーマ共通で、壁・柱・地形小物のない広い床へ。床とカメラが現在地へ追従し、表示基準96×96セルの外でも歩行・出現・回収が続く。約4分の大群戦の後、従来の強敵から1体を終盤ボスとして出す。撃破してクリア、5分を過ぎても生存ボスを消さない。
++
++序盤3〜4体/1.0秒→終盤8〜10体/0.45秒。45秒から標準敵を混ぜ、150秒から45%。PC128体・タッチ96体。通常敵は序盤比で、終盤にHP約+72%、攻撃約+32%、EXP必要量は2.1倍。画面外の周囲から出現する。
++
++75秒に60%の装備箱、150秒に確定の補給箱。補給箱を自分で開けるとショップ、閉じると戦闘へ。ボス撃破後は装備・討伐宝箱・帰還階段を離して配置し、開封しても自動帰還しない。残金・回収装備は従来どおり継承報酬へ。
++
++- 96×96はデータの表示基準。床は現在地のカメラへ追従して描画。遠方でも歩行、AI、出現、装備回収が継続する。元の床素材・作画は維持。
++- 通常4分＋Boss約1分を目指す。240秒後は増援停止、元の強敵6種をテーマごと2候補から1体生成。300秒の自動撤退・生存だけでの成功を撤去。時計とBoss HPを保ち、実撃破後にのみ回収へ。
++- 6BossはData Loaderの特技IDを通常敵と共用し、元絵/アニメーション/予兆を保持。通常データは変更しない。実HP11700〜17550、倍率1.7。
++- 無敵の検査キャラ・自動強化の通し例：全体約4分51秒、Boss約51秒。実機と全職の難度は別評価。調査・数値・検査の範囲はdocs/crazy_gunner_survival.md。
+--- before/systems/dungeon_generator.gd
++++ after/systems/dungeon_generator.gd
+@@ -206,7 +206,7 @@
+ 		head += 1
+ 		for offset: Vector2i in [Vector2i.RIGHT, Vector2i.LEFT, Vector2i.DOWN, Vector2i.UP]:
+ 			var neighbor: Vector2i = current + offset
+-			if map.is_floor(neighbor) and not visited.has(neighbor):
++			if map.is_in_bounds(neighbor) and map.is_floor(neighbor) and not visited.has(neighbor):
+ 				visited[neighbor] = true
+ 				queue.append(neighbor)
+ 	var floors := map.get_floor_cells()
+--- before/systems/dungeon_map.gd
++++ after/systems/dungeon_map.gd
+@@ -80,6 +80,7 @@
+ 	return local.x >= 0 and local.x < width and local.y >= 0 and local.y < height
+ 
+ func is_floor(grid_pos: Vector2i) -> bool:
++	if get_meta("floor_only", false): return true
+ 	if not is_in_bounds(grid_pos):
+ 		return false
+ 	return _cells[_index(grid_pos)] == 1
+@@ -148,6 +149,7 @@
+ ## 自分と周囲8マスがすべて床かどうか。敵AIの経路探索(ChaseStrategy)が
+ ## 「体格ぶんの余裕があって引っかからないマス」を判定するのに使う。
+ func has_navigation_clearance(grid_pos: Vector2i) -> bool:
++	if get_meta("floor_only", false): return true
+ 	if not is_in_bounds(grid_pos):
+ 		return false
+ 	if not _clearance_cache_valid:
+@@ -201,6 +203,11 @@
+ ## Spawnは床の点だけでなく本体が収まる必要がある。既存の3x3通行余裕を
+ ## 共用し、噴水/柱/壁の内部と境界を候補から除外する（地形自体は変更しない）。
+ func get_spawn_cells(bounds: Rect2i = Rect2i()) -> Array[Vector2i]:
++	if get_meta("floor_only", false) and bounds.has_area():
++		var points: Array[Vector2i] = []
++		for y in range(bounds.position.y, bounds.end.y):
++			for x in range(bounds.position.x, bounds.end.x): points.append(Vector2i(x, y))
++		return points
+ 	if not _clearance_cache_valid:
+ 		_rebuild_clearance_cache()
+ 	if not bounds.has_area():
+--- before/systems/equipment_drop_system.gd
++++ after/systems/equipment_drop_system.gd
+@@ -228,11 +228,11 @@
+ 	if map == null:
+ 		return origin
+ 	var origin_cell := map.world_to_grid(origin)
+-	var candidates := map.get_spawn_cells()
++	var candidates := map.get_spawn_cells(Rect2i(origin_cell - Vector2i(8, 8), Vector2i(17, 17))) if map.get_meta("floor_only", false) else map.get_spawn_cells()
+ 	# Stay on the death/chest side of a wall, instead of scattering into a
+ 	# neighbouring corridor. Navigation-clear cells leave room for the player.
+ 	for room in map.rooms:
+-		if room.has_point(origin_cell):
++		if not map.get_meta("floor_only", false) and room.has_point(origin_cell):
+ 			candidates = map.get_spawn_cells(room)
+ 			break
+ 	candidates.sort_custom(func(a: Vector2i, b: Vector2i): return map.grid_to_world(a).distance_squared_to(origin) < map.grid_to_world(b).distance_squared_to(origin))
+--- before/systems/map_run_controller.gd
++++ after/systems/map_run_controller.gd
+@@ -121,6 +121,7 @@
+ 
+ var _survival_boss_index := 0
+ var _survival_supply_index := 0
++var _survival_boss_phase := false
+ 
+ func _start_survival() -> void:
+ 	GameManager.elapsed_seconds = 0.0
+@@ -131,44 +132,50 @@
+ 	_boss_reward_pending = false
+ 	_survival_boss_index = 0
+ 	_survival_supply_index = 0
++	_survival_boss_phase = false
+ 	wave_spawner.configure_map_phase(_current_config)
+-	elite_room_manager.setup(GameManager.dungeon_map)
++	elite_room_manager.clear_map_runtime()
++	elite_room_manager.process_mode = Node.PROCESS_MODE_DISABLED
+ 	stage_environment.set_boss_seal_visible(false)
+ 	_setup_survival_map_overlay()
+ 	_tick_survival()
+-	hud.set_room_message("5分間生き残れ！　移動だけで自動攻撃　[K] 回避　[L] 技")
++	hud.set_room_message("群れを倒し、終盤のボスを撃破！　移動で自動攻撃")
+ 	EventBus.map_started.emit(GameManager.current_map_index, _maps.size(), String(_current_config.get("display_name", "")))
+ 
+ func _tick_survival() -> void:
+ 	var elapsed := GameManager.elapsed_seconds
+-	if elapsed >= GameManager.survival_duration_seconds and not GameManager.survival_completed:
+-		_finish_survival()
++	var boss_at := float(_config.get("survival_boss_seconds", [240])[0])
+ 	if not GameManager.survival_completed:
+-		var boss_times: Array = _config.get("survival_boss_seconds", [120, 240])
+-		if _survival_boss_index < boss_times.size() and elapsed >= float(boss_times[_survival_boss_index]) and not _boss_active and wave_spawner._active_enemy_count() < wave_spawner._map_enemy_cap:
++		if elapsed >= boss_at and _survival_boss_index == 0:
++			if not _survival_boss_phase:
++				_survival_boss_phase = true
++				wave_spawner.set_spawning_paused(true)
++				_clear_combat_transients(true)
+ 			var point := wave_spawner._pick_spawn_position(player.global_position)
+ 			if point.is_finite():
+ 				var boss := boss_spawner.start_room_boss(GameManager.current_map_index, {
+ 					"candidates": _current_config.get("boss_candidates", []),
+-					"hp_multiplier": float(_current_config.get("boss_hp_multiplier", 0.8)),
+-					"damage_multiplier": float(_current_config.get("boss_damage_multiplier", 0.5)),
+-					"is_final": _survival_boss_index == boss_times.size() - 1,
++					"hp_multiplier": 1.0,
++					"damage_multiplier": 1.0,
++					"is_final": true,
+ 				}, point)
+ 				if boss:
+ 					_boss_active = true
+-					_survival_boss_index += 1
+-		var supply_times: Array = _config.get("survival_supply_seconds", [75, 180])
+-		if _survival_supply_index < supply_times.size() and elapsed >= float(supply_times[_survival_supply_index]):
+-			var point := wave_spawner._pick_spawn_position(player.global_position)
+-			if point.is_finite():
+-				if _survival_supply_index > 0 or randf() < 0.6:
+-					_spawn_treasure(point, "normal", "equipment", false)
+-				_survival_supply_index += 1
+-	var phase := "序盤：雑魚の群れ" if elapsed < 60 else ("中盤：強敵に注意" if elapsed < 180 else "終盤：包囲を抜けて生き残れ")
++					_survival_boss_index = 1
++		if not _survival_boss_phase:
++			var supply_times: Array = _config.get("survival_supply_seconds", [75, 150])
++			if _survival_supply_index < supply_times.size() and elapsed >= float(supply_times[_survival_supply_index]):
++				var point := wave_spawner._pick_spawn_position(player.global_position)
++				if point.is_finite():
++					if _survival_supply_index > 0 or randf() < 0.6:
++						_spawn_treasure(point, "normal", "supply_equipment" if _survival_supply_index > 0 else "equipment", false)
++					_survival_supply_index += 1
++	var phase := "群れを倒して成長" if elapsed < 120 else "密度上昇：包囲を抜けて戦う"
++	if _survival_boss_phase: phase = "ボスを倒せ！　5分を過ぎても撃破まで継続"
+ 	if GameManager.survival_completed:
+-		phase = "生存成功！　宝箱と装備を回収して帰還" if _boss_reward_pending else "装備を回収し、帰還の階段へ [E]"
++		phase = "ボス撃破！　宝箱と装備を回収" if _boss_reward_pending else "装備を回収し、帰還の階段へ [E]"
+ 	GameManager.dungeon_map.set_meta("objective_text", phase)
+-	hud.set_survival_status(String(_current_config.get("display_name", "")), elapsed, GameManager.survival_duration_seconds, _map_kills, phase)
++	hud.set_survival_status(String(_current_config.get("display_name", "")), elapsed, boss_at, _map_kills, phase, _survival_boss_phase)
+ 
+ func _finish_survival() -> void:
+ 	GameManager.survival_completed = true
+@@ -184,11 +191,11 @@
+ 	_boss_reward_pending = true
+ 	var point := equipment_drop_system._find_safe_drop_position(player.global_position + Vector2(160, 0))
+ 	_boss_chest = _spawn_treasure(point, "rare", "boss_equipment", true)
+-	_boss_chest.name_override = "生存報酬"
++	_boss_chest.name_override = "討伐報酬"
+ 	_boss_chest._update_label()
+ 	_boss_loot_position = _boss_exit_position(point, false)
+ 	_stairs = _spawn_landmark("descent_stairs", "帰還の階段", Color("d9b973"), _boss_exit_position(point, true), false)
+-	EventBus.map_completed.emit(GameManager.current_map_index, GameManager.survival_duration_seconds, _map_kills)
++	EventBus.map_completed.emit(GameManager.current_map_index, GameManager.elapsed_seconds, _map_kills)
+ 
+ func _start_map(map_index: int, floor_index: int = 1) -> void:
+ 	_floor_index = floor_index
+@@ -760,7 +767,7 @@
+ 	_boss_active = false
+ 	if GameManager.survival_mode_active:
+ 		if GameManager.survival_completed: return
+-		_spawn_treasure(equipment_drop_system._find_safe_drop_position(death_position), "rare", "equipment", true)
++		_finish_survival()
+ 		return
+ 	SaveManager.record_cleared_floor(GameManager.current_depth)
+ 	if GameManager.current_depth % 5 == 0:
+@@ -790,11 +797,11 @@
+ 			GameManager.dungeon_map.set_meta("key_acquired", true)
+ 			_update_exploration_progress()
+ 			hud.set_room_message("封印の鍵を入手。ボス領域へ向かう")
+-		"equipment":
++		"equipment", "supply_equipment":
+ 			_spawn_equipment_reward(chest.global_position, rarity)
+ 			if GameManager.survival_mode_active:
+ 				player.weapon_manager.grant_sector_style()
+-				if chest.is_boss_chest and not GameManager.survival_completed:
++				if reward_type == "supply_equipment" and not GameManager.survival_completed:
+ 					shop_screen.show_shop(1)
+ 			if _sector_mode and chest == _sector_chest:
+ 				player.weapon_manager.grant_sector_style()
+@@ -904,6 +911,9 @@
+ 
+ func _boss_exit_position(chest_position: Vector2, staircase: bool) -> Vector2:
+ 	var map := GameManager.dungeon_map
++	if map.get_meta("floor_only", false):
++		var offset := Vector2(0, 192) if staircase else Vector2(-160, 0)
++		return equipment_drop_system._find_safe_drop_position(chest_position + offset)
+ 	var room: Rect2i = map.rooms[map.boss_room_index]
+ 	var candidates := map.get_spawn_cells(room.grow(-2))
+ 	var target := map.grid_to_world(Vector2i(room.position.x + room.size.x / 2, room.end.y - 3))
+--- before/systems/room_layout.gd
++++ after/systems/room_layout.gd
+@@ -3,6 +3,19 @@
+ const ROLES := ["入口の広間", "崩れた回廊", "石柱の広間", "強敵の前室", "ボスの祭室"]
+ 
+ static func generate(depth: int, ordinal: int, seed_value: int, survival: bool = false) -> DungeonMap:
++	if survival:
++		var field := DungeonMap.new(96, 96)
++		field.rooms.append(Rect2i(Vector2i(-48, -48), Vector2i(96, 96)))
++		for y in range(-48, 48):
++			for x in range(-48, 48): field.set_floor(Vector2i(x, y), true)
++		field.spawn_point = Vector2i.ZERO
++		field.boss_room_index = 0
++		field.set_meta("floor_only", true)
++		field.set_meta("isolated_room", true)
++		field.set_meta("survival_arena", true)
++		field.set_meta("survival_layout", true)
++		field.set_meta("global_depth", depth)
++		return field
+ 	var rng := RandomNumberGenerator.new()
+ 	rng.seed = seed_value + depth * 701 + ordinal * 131
+ 	var boss := ordinal >= 4
+--- before/systems/wave_spawner.gd
++++ after/systems/wave_spawner.gd
+@@ -209,8 +209,8 @@
+ 	enemy.room_damage_multiplier = _map_damage_multiplier
+ 	if GameManager.survival_mode_active:
+ 		var progress := clampf(_map_elapsed() / GameManager.survival_duration_seconds, 0.0, 1.0)
+-		enemy.room_hp_multiplier *= 1.0 + progress * 0.6
+-		enemy.room_damage_multiplier *= 1.0 + progress * 0.25
++		enemy.room_hp_multiplier *= 1.0 + progress * 0.9
++		enemy.room_damage_multiplier *= 1.0 + progress * 0.4
+ 	enemy.set_meta("survival_wave", true)
+ 	GameManager.get_runtime_world(self).add_child(enemy)
+ 
+@@ -229,7 +229,7 @@
+ 	_map_damage_multiplier = maxf(float(config.get("enemy_damage_multiplier", 1.0)), 0.1)
+ 	_map_enemy_cap = maxi(int(config.get("enemy_cap", 60)), 1)
+ 	if GameManager.survival_mode_active and (DisplayServer.is_touchscreen_available() or "--touch-preview" in OS.get_cmdline_user_args()):
+-		_map_enemy_cap = mini(_map_enemy_cap, 48)
++		_map_enemy_cap = mini(_map_enemy_cap, 96)
+ 	var batch: Array = config.get("spawn_batch", [1, 2])
+ 	_map_spawn_batch = Vector2i(maxi(int(batch[0]), 1), maxi(int(batch[1]), 1)) if batch.size() >= 2 else Vector2i(1, 2)
+ 	set_map_surge(false)
+@@ -378,6 +378,21 @@
+ 	if map == null:
+ 		return _fallback_ring_position(near_world_pos)
+ 
++	if map.get_meta("floor_only", false):
++		var actor := get_tree().get_first_node_in_group("player") as Player
++		var half := get_viewport_rect().size / actor.camera.zoom * 0.5 + Vector2(80, 80)
++		var shape := CircleShape2D.new()
++		shape.radius = 26.0
++		var query := PhysicsShapeQueryParameters2D.new()
++		query.shape = shape
++		query.collision_mask = 9
++		for attempt in 24:
++			var direction := Vector2.from_angle(randf() * TAU)
++			var radius := minf(half.x / maxf(absf(direction.x), 0.001), half.y / maxf(absf(direction.y), 0.001)) + randf_range(32, 96)
++			var point := near_world_pos + direction * maxf(radius, min_spawn_distance)
++			query.transform = Transform2D(0, point)
++			if get_world_2d().direct_space_state.intersect_shape(query, 1).is_empty(): return point
++		return Vector2.INF
+ 	if _floor_cells.is_empty():
+ 		_floor_cells = map.get_spawn_cells()
+ 	if _floor_cells.is_empty():
+@@ -408,9 +423,7 @@
+ 	var elapsed := _map_elapsed()
+ 	var roll := randf()
+ 	var rank_name := "mob"
+-	if elapsed >= 60.0 and roll < (0.18 if elapsed >= 180.0 else 0.08):
+-		rank_name = "strong"
+-	elif elapsed >= 20.0 and roll < (0.45 if elapsed >= 180.0 else 0.30):
++	if elapsed >= 45.0 and roll < (0.45 if elapsed >= 150.0 else 0.25):
+ 		rank_name = "standard"
+ 	var roster: Dictionary = MAP_ENEMY_ROSTERS.get(GameManager.current_map_index, MAP_ENEMY_ROSTERS[1])
+ 	var pool: Array[EnemyData] = []
+--- before/tests/survival_home_check.gd
++++ after/tests/survival_home_check.gd
+@@ -1,5 +1,5 @@
+ extends Node
+-var OUT := "res://artifacts/five_minute_survival"
++var OUT := "res://artifacts/open_field_survival"
+ var failures: Array[String] = []
+ 
+ func _ready() -> void:
+--- before/ui/home/home.gd
++++ after/ui/home/home.gd
+@@ -56,7 +56,7 @@
+ 	var maps: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/maps/exploration_run.json"))
+ 	var selector := $MarginContainer/VBoxContainer/MapChoice as OptionButton
+ 	for entry in maps.get("maps", []):
+-		selector.add_item("5分サバイバル　%s" % entry.display_name, int(entry.index))
++		selector.add_item("約5分のステージ　%s" % entry.display_name, int(entry.index))
+ 	selector.select(clampi(GameManager.selected_survival_map - 1, 0, selector.item_count - 1))
+ 	selector.item_selected.connect(func(index): GameManager.selected_survival_map = selector.get_item_id(index))
+ 	PixelUIStyle.apply_button(selector)
+@@ -151,7 +151,7 @@
+ 	action_label.add_theme_font_size_override("font_size", 18)
+ 	action_label.add_theme_color_override("font_color", accent if unlocked else PixelUIStyle.DISABLED)
+ 	action_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+-	action_label.text = "決定で5分サバイバル" if unlocked else "欠片を捧げて解放"
++	action_label.text = "決定で出撃・終盤ボスを撃破" if unlocked else "欠片を捧げて解放"
+ 	vbox.add_child(action_label)
+ 
+ 	return button
+--- before/ui/hud/exploration_map_overlay.gd
++++ after/ui/hud/exploration_map_overlay.gd
+@@ -57,6 +57,24 @@
+ 	panel.draw_rect(box,Color("b68b49"),false,2)
+ 	panel.draw_string(_font,box.position+Vector2(28,38),"探索図",HORIZONTAL_ALIGNMENT_LEFT,-1,24,Color("f2e6cc"))
+ 	panel.draw_string(_font,box.position+Vector2(490,38),"[M / Esc] 閉じる",HORIZONTAL_ALIGNMENT_LEFT,-1,18,Color("adbac5"))
++	if map.get_meta("floor_only", false):
++		var area := Rect2(30, 68, 660, 420)
++		panel.draw_rect(area, Color("38454d"))
++		var center := area.get_center()
++		var scale := 0.12
++		for content in get_tree().get_nodes_in_group("map_content"):
++			var point: Vector2 = center + (content.global_position - actor.global_position) * scale
++			if not area.has_point(point): continue
++			panel.draw_circle(point, 4, Color("d3a45b"))
++			panel.draw_string(_font, point+Vector2(8, 5), "帰還" if content is MapLandmark else "宝箱", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color("d9c8a5"))
++		for enemy in get_tree().get_nodes_in_group("enemies"):
++			if not enemy.enemy_data is BossData: continue
++			var point: Vector2 = center + (enemy.global_position - actor.global_position) * scale
++			if area.has_point(point): panel.draw_circle(point, 6, Color("e87661"))
++		panel.draw_circle(center, 5, Color("5be1d5"))
++		panel.draw_string(_font, Vector2(30, 524), _objective_text(), HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color("e6c887"))
++		panel.draw_string(_font, Vector2(30, 554), "現在地の周辺を表示　／　壁・地形障害物なし", HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color("a8b5c0"))
++		return
+ 	var scale := minf(660.0/map.width,420.0/map.height)
+ 	var origin := box.position+Vector2(30,68)+(Vector2(660,420)-Vector2(map.width,map.height)*scale)/2
+ 	var explored: Dictionary = map.get_meta("explored_cells",{})
+--- before/ui/hud/hud.gd
++++ after/ui/hud/hud.gd
+@@ -496,11 +496,16 @@
+ 		room_status_label.visible = true
+ 		boss_gauge_wrap.visible = true
+ 
+-func set_survival_status(map_name: String, elapsed: float, duration: float, kills: int, phase: String) -> void:
++func set_survival_status(map_name: String, elapsed: float, duration: float, kills: int, phase: String, boss_phase: bool = false) -> void:
+ 	var left := maxi(ceili(duration - elapsed), 0)
+ 	room_status_label.visible = true
+-	room_status_label.text = "[center]%s　[color=#d6c29d][b]%d:%02d[/b][/color]　撃破 %d\n%s[/center]" % [map_name, left / 60, left % 60, kills, phase]
+-	boss_gauge_wrap.visible = true
++	var clock := "ボスまで %d:%02d" % [left / 60, left % 60]
++	if boss_phase:
++		var fight_time := maxi(int(elapsed - duration), 0)
++		clock = "ボス戦 %d:%02d" % [fight_time / 60, fight_time % 60]
++	if GameManager.survival_completed: clock = "撃破成功"
++	room_status_label.text = "[center]%s　[color=#d6c29d][b]%s[/b][/color]　撃破 %d\n%s[/center]" % [map_name, clock, kills, phase]
++	boss_gauge_wrap.visible = not boss_phase
+ 	if _boss_gauge: _boss_gauge.set_value(minf(elapsed, duration), duration)
+ 	boss_health_container.offset_top = 98.0
+ 	boss_health_container.offset_bottom = 154.0
+--- before/ui/result_screen/result_screen.gd
++++ after/ui/result_screen/result_screen.gd
+@@ -39,7 +39,7 @@
+ 	time_label.text = "探索時間　%s" % _format_time(survived_seconds)
+ 	if GameManager.survival_mode_active:
+ 		eyebrow_label.text = "5分サバイバル"
+-		title_label.text = "生存失敗"
++		title_label.text = "ステージ失敗"
+ 	elif GameManager.map_mode_active:
+ 		time_label.text += "　最高到達 地下%d層" % int(SaveManager.data.get("deepest_cleared_floor", 0))
+ 	kill_label.text = "撃破数　%d体" % kill_count
+@@ -61,8 +61,8 @@
+ 	var route_name := "全%d層踏破" % room_count if GameManager.map_mode_active else "全%d区画踏破" % room_count
+ 	if GameManager.survival_mode_active:
+ 		eyebrow_label.text = "5分サバイバル"
+-		title_label.text = "生存成功"
+-		route_name = "5分生存達成"
++		title_label.text = "ステージクリア"
++		route_name = "ボス討伐"
+ 	time_label.text = "%s　%s" % [route_name, _format_time(elapsed_seconds)]
+ 	kill_label.text = "撃破数　%d体" % kill_count
+ 	reward_label.text = "継承の欠片　+%d" % reward
+--- /dev/null
++++ after/data/bosses/armored_skeleton.json
+@@ -0,0 +1,15 @@
++{
++  "id": "armored_skeleton",
++  "display_name": "重装スケルトン",
++  "sprite_folder": "enemy/Armored Skeleton",
++  "max_hp": 7800,
++  "move_speed": 85,
++  "contact_damage": 12,
++  "exp_value": 20,
++  "min_elapsed_seconds": 90.0,
++  "special_attack_id": "skeleton_thrust",
++  "visual_scale": 1.7,
++  "attack_pattern_id": "",
++  "attack_interval": 1.5,
++  "attack_windup": 0.6
++}
+--- /dev/null
++++ after/data/bosses/greatsword_skeleton.json
+@@ -0,0 +1,15 @@
++{
++  "id": "greatsword_skeleton",
++  "display_name": "大剣スケルトン",
++  "sprite_folder": "enemy/Greatsword Skeleton",
++  "max_hp": 9000,
++  "move_speed": 85,
++  "contact_damage": 15,
++  "exp_value": 20,
++  "min_elapsed_seconds": 180.0,
++  "special_attack_id": "greatsword_sweep",
++  "visual_scale": 1.7,
++  "attack_pattern_id": "",
++  "attack_interval": 1.5,
++  "attack_windup": 0.6
++}
+--- /dev/null
++++ after/data/bosses/blood_monster_b.json
+@@ -0,0 +1,15 @@
++{
++  "id": "blood_monster_b",
++  "display_name": "ブラッドモンスターB",
++  "sprite_folder": "enemy/Blood Monster_B/Blood Monster_B",
++  "max_hp": 8970,
++  "move_speed": 85,
++  "contact_damage": 12,
++  "exp_value": 20,
++  "min_elapsed_seconds": 90.0,
++  "special_attack_id": "blood_spear",
++  "visual_scale": 1.7,
++  "attack_pattern_id": "",
++  "attack_interval": 1.5,
++  "attack_windup": 0.6
++}
+--- /dev/null
++++ after/data/bosses/werebear.json
+@@ -0,0 +1,15 @@
++{
++  "id": "werebear",
++  "display_name": "ワーベア",
++  "sprite_folder": "enemy/Werebear",
++  "max_hp": 10350,
++  "move_speed": 85,
++  "contact_damage": 15,
++  "exp_value": 20,
++  "min_elapsed_seconds": 180.0,
++  "special_attack_id": "bear_pounce",
++  "visual_scale": 1.7,
++  "attack_pattern_id": "",
++  "attack_interval": 1.5,
++  "attack_windup": 0.6
++}
+--- /dev/null
++++ after/data/bosses/armored_orc.json
+@@ -0,0 +1,15 @@
++{
++  "id": "armored_orc",
++  "display_name": "重装オーク",
++  "sprite_folder": "enemy/Armored Orc",
++  "max_hp": 10140,
++  "move_speed": 85,
++  "contact_damage": 12,
++  "exp_value": 20,
++  "min_elapsed_seconds": 90.0,
++  "special_attack_id": "orc_step_slash",
++  "visual_scale": 1.7,
++  "attack_pattern_id": "",
++  "attack_interval": 1.5,
++  "attack_windup": 0.6
++}
+--- /dev/null
++++ after/data/bosses/elite_orc.json
+@@ -0,0 +1,15 @@
++{
++  "id": "elite_orc",
++  "display_name": "エリートオーク",
++  "sprite_folder": "enemy/Elite Orc",
++  "max_hp": 11700,
++  "move_speed": 85,
++  "contact_damage": 15,
++  "exp_value": 20,
++  "min_elapsed_seconds": 180.0,
++  "special_attack_id": "orc_double_slash",
++  "visual_scale": 1.7,
++  "attack_pattern_id": "",
++  "attack_interval": 1.5,
++  "attack_windup": 0.6
++}
+--- /dev/null
++++ after/tools/export_stage_boss_portraits.gd
+@@ -0,0 +1,42 @@
++extends Node
++const IDS := ["armored_skeleton", "greatsword_skeleton", "blood_monster_b", "werebear", "armored_orc", "elite_orc"]
++
++class Frame extends Node2D:
++	func _draw() -> void:
++		draw_rect(Rect2(0,0,256,256), Color("10161d"))
++		for i in range(0,256,16):
++			draw_line(Vector2(0,i),Vector2(256,i),Color("52616e"))
++			for j in range(0,256,32): draw_line(Vector2(j+(16 if i%32 else 0),i),Vector2(j+(16 if i%32 else 0),i+16),Color("52616e"))
++		for inset in [8,12,16]: draw_rect(Rect2(inset,inset,256-inset*2,256-inset*2),Color("a36a56"),false,1)
++		draw_polyline(PackedVector2Array([Vector2(128,24),Vector2(140,36),Vector2(128,48),Vector2(116,36),Vector2(128,24)]),Color("d57460"),1)
++		draw_set_transform(Vector2(128,214),0,Vector2(1,.18))
++		draw_circle(Vector2.ZERO,72,Color("482d22"))
++		draw_circle(Vector2.ZERO,62,Color("d76b56"))
++
++func _ready() -> void:
++	_run.call_deferred()
++
++func _run() -> void:
++	var view := SubViewport.new()
++	view.size = Vector2i(256,256)
++	view.render_target_update_mode = SubViewport.UPDATE_ALWAYS
++	view.transparent_bg = false
++	add_child(view)
++	view.add_child(Frame.new())
++	var sprite := Sprite2D.new()
++	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
++	view.add_child(sprite)
++	for id: String in IDS:
++		var data: BossData = DataLoader.bosses[id]
++		sprite.texture = SpriteSheetBuilder.build_portrait_texture(data.sprite_folder)
++		var factor := floorf(minf(160.0/sprite.texture.get_width(),144.0/sprite.texture.get_height()))
++		sprite.scale = Vector2.ONE * maxf(factor,1.0)
++		sprite.position = Vector2(128,214-sprite.texture.get_height()*sprite.scale.y/2)
++		await get_tree().process_frame
++		await RenderingServer.frame_post_draw
++		var path := "res://dashboard/dist/assets/portraits/bosses/"+id+".png"
++		assert(view.get_texture().get_image().save_png(path)==OK)
++	view.queue_free()
++	await get_tree().process_frame
++	print("STAGE_BOSS_PORTRAITS PASS: six original sprite portraits at 256px")
++	get_tree().quit()
+--- /dev/null
++++ after/tools/export_stage_boss_portraits.tscn
+@@ -0,0 +1,6 @@
++[gd_scene load_steps=2 format=3]
++
++[ext_resource type="Script" path="res://tools/export_stage_boss_portraits.gd" id="1"]
++
++[node name="StageBossPortraits" type="Node"]
++script = ExtResource("1")

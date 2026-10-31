@@ -1,0 +1,534 @@
+{
+  "hierarchy": [
+    {
+      "id": "mob",
+      "name": "雑魚",
+      "hp": "低",
+      "attack": "一般攻撃のみ",
+      "notes": "数と移動で圧を作る。"
+    },
+    {
+      "id": "standard",
+      "name": "標準敵",
+      "hp": "標準",
+      "attack": "一般攻撃のみ",
+      "notes": "戦闘の基準となる敵。"
+    },
+    {
+      "id": "strong",
+      "name": "強敵",
+      "hp": "高め",
+      "attack": "一般攻撃＋小技",
+      "notes": "小移動を伴う斬撃など。"
+    },
+    {
+      "id": "elite",
+      "name": "精鋭",
+      "hp": "高",
+      "attack": "一般＋小技",
+      "notes": "特殊能力を1〜3個付与。能力別の紋章と発動予兆で目視判別できる。"
+    },
+    {
+      "id": "midboss",
+      "name": "中ボス",
+      "hp": "非常に高い",
+      "attack": "専用技",
+      "notes": "現行Bossを転用。赤Line / Aura。"
+    },
+    {
+      "id": "boss",
+      "name": "ボス",
+      "hp": "MAP最上位",
+      "attack": "専用Pattern",
+      "notes": "登場演出、専用HP Bar、Treasure、大量Drop。"
+    }
+  ],
+  "enemies": [
+    {
+      "id": "basic_enemy",
+      "name": "小さな侵略者",
+      "rank": "standard",
+      "maps": [
+        "map1"
+      ],
+      "hp": 78,
+      "damage": 5,
+      "attack": "近接一般攻撃",
+      "skill": "なし",
+      "attribute": "なし",
+      "drop": "XP 1 / 装備0.6%",
+      "status": "completed",
+      "progress": 100,
+      "notes": "0秒解禁",
+      "image": "assets/portraits/enemies/basic_enemy.png",
+      "combatRole": "line_melee"
+    },
+    {
+      "id": "shield_guard",
+      "name": "盾兵",
+      "rank": "standard",
+      "maps": [
+        "map1"
+      ],
+      "hp": 86,
+      "damage": 5,
+      "attack": "近接一般攻撃・盾防御（被ダメージ20%軽減）",
+      "skill": "被弾時に防御モーション",
+      "attribute": "なし",
+      "drop": "XP 2 / 装備0.6%",
+      "status": "completed",
+      "progress": 100,
+      "notes": "MAP1・2の一部の警備部屋に配置。通常攻撃に予備動作あり。",
+      "image": "assets/portraits/enemies/shield_guard.svg",
+      "combatRole": "guard"
+    },
+    {
+      "id": "bat",
+      "name": "コウモリ",
+      "rank": "mob",
+      "maps": [
+        "map1"
+      ],
+      "hp": 32,
+      "damage": 3,
+      "attack": "近接一般攻撃",
+      "skill": "なし",
+      "attribute": "なし",
+      "drop": "XP 1 / 装備0.6%",
+      "status": "completed",
+      "progress": 100,
+      "notes": "0秒解禁",
+      "image": "assets/portraits/enemies/bat.png",
+      "combatRole": "flying_rush"
+    },
+    {
+      "id": "blood_monster_a",
+      "name": "ブラッドモンスターA",
+      "rank": "standard",
+      "maps": [
+        "map2"
+      ],
+      "hp": 78,
+      "damage": 5,
+      "attack": "近接一般攻撃",
+      "skill": "なし",
+      "attribute": "なし",
+      "drop": "XP 1 / 装備0.6%",
+      "status": "completed",
+      "progress": 100,
+      "notes": "0秒解禁",
+      "image": "assets/portraits/enemies/blood_monster_a.png",
+      "combatRole": "line_melee"
+    },
+    {
+      "id": "eyeball_monster",
+      "name": "アイボールモンスター",
+      "rank": "mob",
+      "maps": [
+        "map2"
+      ],
+      "hp": 36,
+      "damage": 3,
+      "attack": "近接一般攻撃",
+      "skill": "固有遠距離攻撃は未実装",
+      "attribute": "なし",
+      "drop": "XP 1 / 装備0.6%",
+      "status": "testing",
+      "progress": 80,
+      "notes": "見た目に対応する固有技は今後",
+      "image": "assets/portraits/enemies/eyeball_monster.png",
+      "combatRole": "quick_chaser"
+    },
+    {
+      "id": "fast_enemy",
+      "name": "俊敏な侵略者",
+      "rank": "mob",
+      "maps": [
+        "map1"
+      ],
+      "hp": 36,
+      "damage": 3,
+      "attack": "高速接近＋一般攻撃",
+      "skill": "なし",
+      "attribute": "なし",
+      "drop": "XP 1 / 装備0.6%",
+      "status": "completed",
+      "progress": 100,
+      "notes": "0秒解禁",
+      "image": "assets/portraits/enemies/fast_enemy.png",
+      "combatRole": "quick_chaser"
+    },
+    {
+      "id": "hellbat",
+      "name": "ヘルバット",
+      "rank": "mob",
+      "maps": [
+        "map3"
+      ],
+      "hp": 32,
+      "damage": 3,
+      "attack": "高速接近＋一般攻撃",
+      "skill": "固有炎攻撃は未実装",
+      "attribute": "なし",
+      "drop": "XP 1 / 装備0.6%",
+      "status": "testing",
+      "progress": 80,
+      "notes": "素材の炎表現だけで能力を推測しない",
+      "image": "assets/portraits/enemies/hellbat.png",
+      "combatRole": "flying_rush"
+    },
+    {
+      "id": "lava_slime",
+      "name": "溶岩スライム",
+      "rank": "mob",
+      "maps": [
+        "map3"
+      ],
+      "hp": 34,
+      "damage": 3,
+      "attack": "近接一般攻撃",
+      "skill": "固有炎攻撃は未実装",
+      "attribute": "なし",
+      "drop": "XP 1 / 装備0.6%",
+      "status": "testing",
+      "progress": 80,
+      "notes": "0秒解禁",
+      "image": "assets/portraits/enemies/lava_slime.png",
+      "combatRole": "slow_contact"
+    },
+    {
+      "id": "slime",
+      "name": "スライム",
+      "rank": "mob",
+      "maps": [
+        "map1"
+      ],
+      "hp": 34,
+      "damage": 3,
+      "attack": "近接一般攻撃",
+      "skill": "なし",
+      "attribute": "なし",
+      "drop": "XP 1 / 装備0.6%",
+      "status": "completed",
+      "progress": 100,
+      "notes": "0秒解禁",
+      "image": "assets/portraits/enemies/slime.png",
+      "combatRole": "slow_contact"
+    },
+    {
+      "id": "armored_orc",
+      "name": "重装オーク",
+      "rank": "strong",
+      "maps": [
+        "map3"
+      ],
+      "hp": 100,
+      "damage": 8,
+      "attack": "通常攻撃＋踏み込み斬り",
+      "skill": "踏み込み斬り",
+      "attribute": "なし",
+      "drop": "XP 2 / 装備4%候補",
+      "status": "completed",
+      "progress": 100,
+      "notes": "60秒以降の波へ8%で混成。赤い合図0.40秒・寸法1.6倍。赤い扇から横へ抜け、振り抜いた後に反撃。 現行ステージでは通常群れに混ぜず、終盤Bossへ転用。",
+      "image": "assets/portraits/enemies/armored_orc.png",
+      "combatRole": "step_slash",
+      "stageUse": "final_boss"
+    },
+    {
+      "id": "armored_skeleton",
+      "name": "重装スケルトン",
+      "rank": "strong",
+      "maps": [
+        "map1"
+      ],
+      "hp": 92,
+      "damage": 7,
+      "attack": "通常攻撃＋迎撃突き",
+      "skill": "迎撃突き",
+      "attribute": "なし",
+      "drop": "XP 2 / 装備4%候補",
+      "status": "completed",
+      "progress": 100,
+      "notes": "60秒以降の波へ8%で混成。赤い合図0.40秒・寸法1.6倍。細い直線の射線から横へ避ける。 現行ステージでは通常群れに混ぜず、終盤Bossへ転用。",
+      "image": "assets/portraits/enemies/armored_skeleton.png",
+      "combatRole": "counter_thrust",
+      "stageUse": "final_boss"
+    },
+    {
+      "id": "blood_monster_b",
+      "name": "ブラッドモンスターB",
+      "rank": "strong",
+      "maps": [
+        "map2"
+      ],
+      "hp": 100,
+      "damage": 8,
+      "attack": "通常攻撃＋血槍",
+      "skill": "血槍",
+      "attribute": "なし",
+      "drop": "XP 2 / 装備4%候補",
+      "status": "completed",
+      "progress": 100,
+      "notes": "60秒以降の波へ8%で混成。赤い合図0.40秒・寸法1.6倍。口元の赤い発光を見て、固定した射線から横へ避ける。 現行ステージでは通常群れに混ぜず、終盤Bossへ転用。",
+      "image": "assets/portraits/enemies/blood_monster_b.png",
+      "combatRole": "blood_spear",
+      "stageUse": "final_boss"
+    },
+    {
+      "id": "demoness_a",
+      "name": "デモネスA",
+      "rank": "standard",
+      "maps": [
+        "map2"
+      ],
+      "hp": 78,
+      "damage": 6,
+      "attack": "近接一般攻撃",
+      "skill": "固有魔法は未実装",
+      "attribute": "なし",
+      "drop": "XP 2 / 装備0.6%",
+      "status": "testing",
+      "progress": 80,
+      "notes": "90秒解禁",
+      "image": "assets/portraits/enemies/demoness_a.png",
+      "combatRole": "caster_visual_pending"
+    },
+    {
+      "id": "ghostfire",
+      "name": "ゴーストファイア",
+      "rank": "standard",
+      "maps": [
+        "map2"
+      ],
+      "hp": 42,
+      "damage": 6,
+      "attack": "近接一般攻撃",
+      "skill": "固有魔法は未実装",
+      "attribute": "なし",
+      "drop": "XP 2 / 装備0.6%",
+      "status": "testing",
+      "progress": 80,
+      "notes": "90秒解禁",
+      "image": "assets/portraits/enemies/ghostfire.png",
+      "combatRole": "caster_visual_pending"
+    },
+    {
+      "id": "skeleton_archer",
+      "name": "スケルトン弓兵",
+      "rank": "standard",
+      "maps": [
+        "map1"
+      ],
+      "hp": 42,
+      "damage": 6,
+      "attack": "一般攻撃",
+      "skill": "固有遠距離攻撃は未実装",
+      "attribute": "なし",
+      "drop": "XP 2 / 装備0.6%",
+      "status": "testing",
+      "progress": 80,
+      "notes": "90秒解禁",
+      "image": "assets/portraits/enemies/skeleton_archer.png",
+      "combatRole": "ranged_visual_pending"
+    },
+    {
+      "id": "demoness_b",
+      "name": "デモネスB",
+      "rank": "standard",
+      "maps": [
+        "map3"
+      ],
+      "hp": 92,
+      "damage": 9,
+      "attack": "近接一般攻撃",
+      "skill": "固有魔法は未実装",
+      "attribute": "なし",
+      "drop": "XP 2 / 装備0.6%",
+      "status": "testing",
+      "progress": 80,
+      "notes": "180秒解禁",
+      "image": "assets/portraits/enemies/demoness_b.png",
+      "combatRole": "caster_visual_pending"
+    },
+    {
+      "id": "elite_orc",
+      "name": "エリートオーク",
+      "rank": "strong",
+      "maps": [
+        "map3"
+      ],
+      "hp": 160,
+      "damage": 12,
+      "attack": "通常攻撃＋二連斬り",
+      "skill": "二連斬り",
+      "attribute": "精鋭化時にランダム付与",
+      "drop": "XP 3 / 装備4%候補",
+      "status": "completed",
+      "progress": 100,
+      "notes": "60秒以降の波へ8%で混成。赤い合図0.40秒・寸法1.6倍。二発目にも発光。二振りを避けてから接近する。精鋭Affixとは別の強敵種。 現行ステージでは通常群れに混ぜず、終盤Bossへ転用。",
+      "image": "assets/portraits/enemies/elite_orc.png",
+      "combatRole": "double_slash",
+      "stageUse": "final_boss"
+    },
+    {
+      "id": "greatsword_skeleton",
+      "name": "大剣スケルトン",
+      "rank": "strong",
+      "maps": [
+        "map1"
+      ],
+      "hp": 154,
+      "damage": 14,
+      "attack": "通常攻撃＋大薙ぎ払い",
+      "skill": "大薙ぎ払い",
+      "attribute": "なし",
+      "drop": "XP 3 / 装備4%候補",
+      "status": "completed",
+      "progress": 100,
+      "notes": "60秒以降の波へ8%で混成。赤い合図0.40秒・寸法1.6倍。前方半円から背後へ回り、振り抜いた後に反撃。 現行ステージでは通常群れに混ぜず、終盤Bossへ転用。",
+      "image": "assets/portraits/enemies/greatsword_skeleton.png",
+      "combatRole": "wide_sweep",
+      "stageUse": "final_boss"
+    },
+    {
+      "id": "hellhound",
+      "name": "ヘルハウンド",
+      "rank": "standard",
+      "maps": [
+        "map3"
+      ],
+      "hp": 86,
+      "damage": 10,
+      "attack": "高速接近＋一般攻撃",
+      "skill": "固有炎攻撃は未実装",
+      "attribute": "なし",
+      "drop": "XP 2 / 装備0.6%",
+      "status": "testing",
+      "progress": 80,
+      "notes": "180秒解禁",
+      "image": "assets/portraits/enemies/hellhound.png",
+      "combatRole": "beast_rush"
+    },
+    {
+      "id": "orc_rider",
+      "name": "オーク騎兵",
+      "rank": "standard",
+      "maps": [
+        "map3"
+      ],
+      "hp": 92,
+      "damage": 9,
+      "attack": "高速接近＋一般攻撃",
+      "skill": "固有突進は未実装",
+      "attribute": "なし",
+      "drop": "XP 2 / 装備0.6%",
+      "status": "testing",
+      "progress": 80,
+      "notes": "180秒解禁",
+      "image": "assets/portraits/enemies/orc_rider.png",
+      "combatRole": "charge_visual_pending"
+    },
+    {
+      "id": "warlock",
+      "name": "ウォーロック",
+      "rank": "standard",
+      "maps": [
+        "map3"
+      ],
+      "hp": 92,
+      "damage": 7,
+      "attack": "近接一般攻撃",
+      "skill": "固有魔法は未実装",
+      "attribute": "なし",
+      "drop": "XP 2 / 装備0.6%",
+      "status": "testing",
+      "progress": 80,
+      "notes": "180秒解禁",
+      "image": "assets/portraits/enemies/warlock.png",
+      "combatRole": "caster_visual_pending"
+    },
+    {
+      "id": "werebear",
+      "name": "ワーベア",
+      "rank": "strong",
+      "maps": [
+        "map2"
+      ],
+      "hp": 182,
+      "damage": 15,
+      "attack": "通常攻撃＋跳びかかり叩きつけ",
+      "skill": "跳びかかり叩きつけ",
+      "attribute": "なし",
+      "drop": "XP 3 / 装備4%候補",
+      "status": "completed",
+      "progress": 100,
+      "notes": "60秒以降の波へ8%で混成。赤い合図0.40秒・寸法1.6倍。接近してくる円の範囲から離れ、着地後に反撃。 現行ステージでは通常群れに混ぜず、終盤Bossへ転用。",
+      "image": "assets/portraits/enemies/werebear.png",
+      "combatRole": "pounce",
+      "stageUse": "final_boss"
+    },
+    {
+      "id": "werewolf",
+      "name": "ワーウルフ",
+      "rank": "standard",
+      "maps": [
+        "map2"
+      ],
+      "hp": 86,
+      "damage": 10,
+      "attack": "高速接近＋一般攻撃",
+      "skill": "なし",
+      "attribute": "なし",
+      "drop": "XP 2 / 装備0.6%",
+      "status": "completed",
+      "progress": 100,
+      "notes": "180秒解禁",
+      "image": "assets/portraits/enemies/werewolf.png",
+      "combatRole": "beast_rush"
+    }
+  ],
+  "duplicateRoles": [
+    {
+      "decision": "MAP別の外見差として維持。固有挙動は未実装。",
+      "role": "slow_contact",
+      "members": [
+        "slime",
+        "lava_slime"
+      ]
+    },
+    {
+      "decision": "MAP別の外見差として維持。固有挙動は未実装。",
+      "role": "flying_rush",
+      "members": [
+        "bat",
+        "hellbat"
+      ]
+    },
+    {
+      "decision": "同一数値。アイボールの遠距離行動は未実装。",
+      "role": "quick_chaser",
+      "members": [
+        "fast_enemy",
+        "eyeball_monster"
+      ]
+    },
+    {
+      "decision": "同一数値。MAP別の基準敵として維持。",
+      "role": "line_melee",
+      "members": [
+        "basic_enemy",
+        "blood_monster_a"
+      ]
+    },
+    {
+      "decision": "同一数値。MAP別の外見差として維持。",
+      "role": "beast_rush",
+      "members": [
+        "werewolf",
+        "hellhound"
+      ]
+    }
+  ],
+  "spawnOrder": "各層の第1戦闘室は雑魚編成。後続は標準→強敵の有限Wave。全滅で出口を解放し、時間巡回精鋭は停止。"
+}

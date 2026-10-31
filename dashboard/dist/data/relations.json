@@ -1,0 +1,993 @@
+{
+  "decisionLabels": {
+    "keep": "維持",
+    "redesign": "再設計",
+    "remove": "削除・非採用",
+    "hold": "保留"
+  },
+  "decisionDescriptions": {
+    "keep": "現行の強み。磨き込みながら正式仕様へ残す。",
+    "redesign": "核は使えるが、周辺仕様との重複や不足を整理する。",
+    "remove": "現行の主導線から外す、または廃止済みとして復活させない。",
+    "hold": "先に別の判断・検証が必要。依存先が決まるまで実装を増やさない。"
+  },
+  "diagrams": [
+    {
+      "id": "exploration-loop",
+      "title": "床だけの大群戦→終盤Boss→回収と帰還",
+      "description": "3テーマ共通で、壁・柱・地形小物のない広い床へ。床とカメラが現在地へ追従し、表示基準96×96セルの外でも歩行・出現・回収が続く。約4分の大群戦の後、従来の強敵から1体を終盤ボスとして出す。撃破してクリア、5分を過ぎても生存ボスを消さない。",
+      "columns": 4,
+      "nodes": [
+        {
+          "id": "routes",
+          "title": "床だけの広い戦場",
+          "detail": "3テーマ・壁も見えない境界もなし",
+          "decision": "keep",
+          "col": 1,
+          "row": 1
+        },
+        {
+          "id": "encounters",
+          "title": "約4分の大群戦",
+          "detail": "画面外から増援・自動攻撃で成長",
+          "decision": "keep",
+          "col": 2,
+          "row": 1
+        },
+        {
+          "id": "key",
+          "title": "強敵の終盤Boss",
+          "detail": "240秒に1体・時間切れでは消えない",
+          "decision": "keep",
+          "col": 3,
+          "row": 1
+        },
+        {
+          "id": "boss",
+          "title": "撃破して回収",
+          "detail": "討伐箱・装備・手動帰還",
+          "decision": "keep",
+          "col": 4,
+          "row": 1
+        },
+        {
+          "id": "rewards",
+          "title": "補給・ボス・強化",
+          "detail": "75/180秒の箱、120/240秒のBoss",
+          "decision": "keep",
+          "col": 2,
+          "row": 2
+        },
+        {
+          "id": "roles",
+          "title": "敵の役割差",
+          "detail": "次：前衛＋射撃／援護",
+          "decision": "redesign",
+          "col": 2,
+          "row": 3
+        },
+        {
+          "id": "growth",
+          "title": "成長・装備強度",
+          "detail": "次：EXP・全200装備の予算",
+          "decision": "redesign",
+          "col": 3,
+          "row": 3
+        },
+        {
+          "id": "return",
+          "title": "継承の欠片",
+          "detail": "撃破＋残金＋回収装備×5",
+          "decision": "keep",
+          "col": 4,
+          "row": 3
+        }
+      ],
+      "edges": [
+        {
+          "from": "routes",
+          "to": "encounters",
+          "label": "探索"
+        },
+        {
+          "from": "encounters",
+          "to": "key",
+          "label": "240秒でBoss"
+        },
+        {
+          "from": "key",
+          "to": "boss",
+          "label": "撃破して完了"
+        },
+        {
+          "from": "routes",
+          "to": "rewards",
+          "label": "宝箱の有無を探索"
+        },
+        {
+          "from": "encounters",
+          "to": "roles",
+          "label": "対処に変化を"
+        },
+        {
+          "from": "rewards",
+          "to": "growth",
+          "label": "報酬を成長へ"
+        },
+        {
+          "from": "growth",
+          "to": "return",
+          "label": "次の挑戦へ"
+        }
+      ]
+    },
+    {
+      "id": "class-boss-reorg",
+      "title": "10職からPlayer6職・Boss3戦への再編",
+      "description": "四職をPlayer選択から外し、見た目と既存能力をBoss戦の役割へ変換します。司祭と聖堂騎士は同時出現する一つのペア戦です。",
+      "columns": 6,
+      "nodes": [
+        {
+          "id": "old10",
+          "title": "旧Player 10職",
+          "detail": "戦闘接続済みの現行Roster",
+          "decision": "redesign",
+          "col": 1,
+          "row": 1
+        },
+        {
+          "id": "player6",
+          "title": "正式Player 6職",
+          "detail": "ソルジャー・剣士・弓兵・騎士・重装斧兵・魔導士",
+          "decision": "keep",
+          "col": 2,
+          "row": 1
+        },
+        {
+          "id": "boss4",
+          "title": "Boss転用 4職",
+          "detail": "槍兵・死霊術師・聖堂騎士・司祭",
+          "decision": "redesign",
+          "col": 2,
+          "row": 2
+        },
+        {
+          "id": "lancer-boss",
+          "title": "槍兵Boss",
+          "detail": "突進・貫通・射線管理",
+          "decision": "redesign",
+          "col": 3,
+          "row": 2
+        },
+        {
+          "id": "necro-boss",
+          "title": "死霊術師Boss",
+          "detail": "召喚・蘇生・呪い領域",
+          "decision": "redesign",
+          "col": 4,
+          "row": 2
+        },
+        {
+          "id": "duo-boss",
+          "title": "聖堂騎士＋司祭",
+          "detail": "前衛と支援のペアBoss",
+          "decision": "redesign",
+          "col": 5,
+          "row": 2
+        },
+        {
+          "id": "templar-role",
+          "title": "聖堂騎士",
+          "detail": "前衛・主攻撃・司祭を守る",
+          "decision": "redesign",
+          "col": 5,
+          "row": 3
+        },
+        {
+          "id": "priest-role",
+          "title": "司祭",
+          "detail": "低攻撃・強化・回復・聖域",
+          "decision": "redesign",
+          "col": 6,
+          "row": 3
+        },
+        {
+          "id": "target-choice",
+          "title": "撃破順の判断",
+          "detail": "支援を先に崩すか、前衛を押し切るか",
+          "decision": "keep",
+          "col": 6,
+          "row": 2
+        }
+      ],
+      "edges": [
+        {
+          "from": "old10",
+          "to": "player6",
+          "label": "6職を正式Playerへ"
+        },
+        {
+          "from": "old10",
+          "to": "boss4",
+          "label": "4職を選択対象から外す"
+        },
+        {
+          "from": "boss4",
+          "to": "lancer-boss",
+          "label": "単独戦"
+        },
+        {
+          "from": "boss4",
+          "to": "necro-boss",
+          "label": "単独戦"
+        },
+        {
+          "from": "boss4",
+          "to": "duo-boss",
+          "label": "2体で1戦"
+        },
+        {
+          "from": "duo-boss",
+          "to": "templar-role",
+          "label": "前衛"
+        },
+        {
+          "from": "duo-boss",
+          "to": "priest-role",
+          "label": "後衛"
+        },
+        {
+          "from": "priest-role",
+          "to": "templar-role",
+          "label": "強化・回復"
+        },
+        {
+          "from": "templar-role",
+          "to": "target-choice",
+          "label": "正面圧力"
+        },
+        {
+          "from": "priest-role",
+          "to": "target-choice",
+          "label": "放置リスク"
+        }
+      ]
+    },
+    {
+      "id": "core-loop",
+      "title": "1 Runの体験ループ",
+      "description": "入口から探索、成長、Boss、次MAP、結果まで。矢印はプレイヤーが実際に通る主導線を示します。",
+      "columns": 6,
+      "nodes": [
+        {
+          "id": "entry",
+          "title": "タイトル・職業選択",
+          "detail": "専用タイトル・6職選択を実装",
+          "decision": "keep",
+          "col": 1,
+          "row": 1
+        },
+        {
+          "id": "explore",
+          "title": "MAP探索",
+          "detail": "自由移動・敵撃破・宝箱",
+          "decision": "keep",
+          "col": 2,
+          "row": 1
+        },
+        {
+          "id": "level",
+          "title": "レベルアップ",
+          "detail": "基礎・職業強化の三択",
+          "decision": "redesign",
+          "col": 3,
+          "row": 1
+        },
+        {
+          "id": "boss",
+          "title": "最深部Boss",
+          "detail": "予兆を読む決戦",
+          "decision": "keep",
+          "col": 4,
+          "row": 1
+        },
+        {
+          "id": "reward",
+          "title": "Boss報酬",
+          "detail": "Rare／Legendary装備 → Shop／結果",
+          "decision": "keep",
+          "col": 5,
+          "row": 1
+        },
+        {
+          "id": "next",
+          "title": "Shop / 次MAP",
+          "detail": "MAP1・2は買物、MAP3は結果へ",
+          "decision": "keep",
+          "col": 6,
+          "row": 1
+        },
+        {
+          "id": "result",
+          "title": "探索結果",
+          "detail": "撃破・時間・継承",
+          "decision": "redesign",
+          "col": 6,
+          "row": 2
+        }
+      ],
+      "edges": [
+        {
+          "from": "entry",
+          "to": "explore",
+          "label": "開始"
+        },
+        {
+          "from": "explore",
+          "to": "level",
+          "label": "EXP"
+        },
+        {
+          "from": "level",
+          "to": "explore",
+          "label": "Build更新"
+        },
+        {
+          "from": "explore",
+          "to": "boss",
+          "label": "撃破数 / 時間"
+        },
+        {
+          "from": "boss",
+          "to": "reward",
+          "label": "撃破"
+        },
+        {
+          "from": "reward",
+          "to": "next",
+          "label": "選択"
+        },
+        {
+          "from": "next",
+          "to": "explore",
+          "label": "MAP1・2"
+        },
+        {
+          "from": "next",
+          "to": "result",
+          "label": "MAP3"
+        }
+      ]
+    },
+    {
+      "id": "world-hierarchy",
+      "title": "MAP・敵・Bossの階層",
+      "description": "量産する通常敵から新規Bossまでの役割差。現行Bossは中Bossへ寄せる方針です。",
+      "columns": 5,
+      "nodes": [
+        {
+          "id": "map-theme",
+          "title": "MAPテーマ",
+          "detail": "背景・BGM・敵Familyを束ねる",
+          "decision": "redesign",
+          "col": 1,
+          "row": 1
+        },
+        {
+          "id": "normal",
+          "title": "通常敵",
+          "detail": "数で圧力を作る",
+          "decision": "keep",
+          "col": 2,
+          "row": 1
+        },
+        {
+          "id": "strong",
+          "title": "強敵",
+          "detail": "通常敵の上位個体",
+          "decision": "redesign",
+          "col": 3,
+          "row": 1
+        },
+        {
+          "id": "elite",
+          "title": "精鋭部屋",
+          "detail": "任意の高リスク報酬",
+          "decision": "keep",
+          "col": 3,
+          "row": 2
+        },
+        {
+          "id": "midboss",
+          "title": "中Boss",
+          "detail": "現行10Bossを再配置",
+          "decision": "redesign",
+          "col": 4,
+          "row": 1
+        },
+        {
+          "id": "newboss",
+          "title": "新規Boss",
+          "detail": "MAP固有の大決戦",
+          "decision": "redesign",
+          "col": 5,
+          "row": 1
+        },
+        {
+          "id": "treasure",
+          "title": "宝箱・装備",
+          "detail": "探索の寄り道報酬",
+          "decision": "keep",
+          "col": 4,
+          "row": 2
+        },
+        {
+          "id": "bossreward",
+          "title": "完成大技",
+          "detail": "旧データ保存・通常MAP宝箱から非接続",
+          "decision": "remove",
+          "col": 5,
+          "row": 2
+        }
+      ],
+      "edges": [
+        {
+          "from": "map-theme",
+          "to": "normal",
+          "label": "敵Family"
+        },
+        {
+          "from": "normal",
+          "to": "strong",
+          "label": "上位化"
+        },
+        {
+          "from": "strong",
+          "to": "midboss",
+          "label": "役割差"
+        },
+        {
+          "from": "elite",
+          "to": "treasure",
+          "label": "攻略報酬"
+        },
+        {
+          "from": "midboss",
+          "to": "newboss",
+          "label": "決戦への段階"
+        },
+        {
+          "from": "newboss",
+          "to": "bossreward",
+          "label": "撃破報酬"
+        },
+        {
+          "from": "map-theme",
+          "to": "elite",
+          "label": "区画設計"
+        },
+        {
+          "from": "treasure",
+          "to": "bossreward",
+          "label": "Build蓄積"
+        }
+      ]
+    },
+    {
+      "id": "combat-build",
+      "title": "職業・攻撃・状態・完成大技",
+      "description": "手動攻撃の結論が、職業数、天賦、Upgrade、完成大技の設計へ波及します。",
+      "columns": 6,
+      "nodes": [
+        {
+          "id": "class",
+          "title": "Player6職",
+          "detail": "役割を分離して個性を強化",
+          "decision": "keep",
+          "col": 1,
+          "row": 1
+        },
+        {
+          "id": "attack-input",
+          "title": "攻撃方式",
+          "detail": "手動 / 半自動 / 自動",
+          "decision": "hold",
+          "col": 2,
+          "row": 1
+        },
+        {
+          "id": "pattern",
+          "title": "攻撃Pattern",
+          "detail": "近接・射撃・召喚・Pulse",
+          "decision": "keep",
+          "col": 3,
+          "row": 1
+        },
+        {
+          "id": "state",
+          "title": "状態付与",
+          "detail": "燃焼・凍結・帯電・聖印・呪い",
+          "decision": "keep",
+          "col": 4,
+          "row": 1
+        },
+        {
+          "id": "conditional",
+          "title": "条件強化",
+          "detail": "状態と立ち回りを報酬化",
+          "decision": "redesign",
+          "col": 5,
+          "row": 1
+        },
+        {
+          "id": "finisher",
+          "title": "完成大技",
+          "detail": "旧データ保存・通常MAP宝箱から非接続",
+          "decision": "remove",
+          "col": 6,
+          "row": 1
+        },
+        {
+          "id": "talent",
+          "title": "天賦図",
+          "detail": "職業固有の分岐",
+          "decision": "hold",
+          "col": 3,
+          "row": 2
+        },
+        {
+          "id": "dodge",
+          "title": "共通回避",
+          "detail": "手動攻撃とセットで評価",
+          "decision": "hold",
+          "col": 2,
+          "row": 2
+        },
+        {
+          "id": "old-element",
+          "title": "旧属性Lv / Fusion",
+          "detail": "現行主導線では廃止済み",
+          "decision": "remove",
+          "col": 5,
+          "row": 2
+        },
+        {
+          "id": "relic",
+          "title": "旧Fusion武器",
+          "detail": "Shop遺物武器として再利用",
+          "decision": "keep",
+          "col": 6,
+          "row": 2
+        }
+      ],
+      "edges": [
+        {
+          "from": "class",
+          "to": "attack-input",
+          "label": "操作役割"
+        },
+        {
+          "from": "attack-input",
+          "to": "pattern",
+          "label": "入力"
+        },
+        {
+          "from": "pattern",
+          "to": "state",
+          "label": "Hit"
+        },
+        {
+          "from": "state",
+          "to": "conditional",
+          "label": "発動条件"
+        },
+        {
+          "from": "conditional",
+          "to": "finisher",
+          "label": "完成"
+        },
+        {
+          "from": "class",
+          "to": "talent",
+          "label": "固有分岐"
+        },
+        {
+          "from": "attack-input",
+          "to": "dodge",
+          "label": "操作密度"
+        },
+        {
+          "from": "talent",
+          "to": "conditional",
+          "label": "強化"
+        },
+        {
+          "from": "old-element",
+          "to": "relic",
+          "label": "名称だけ再利用"
+        }
+      ]
+    },
+    {
+      "id": "implementation",
+      "title": "実装順の依存関係",
+      "description": "先に決めないと手戻りが大きい項目を左から右へ並べています。Phase計画の着手順を判断する図です。",
+      "columns": 5,
+      "nodes": [
+        {
+          "id": "manual",
+          "title": "自動攻撃を採用",
+          "detail": "K回避/L技/J反撃を併用",
+          "decision": "keep",
+          "col": 1,
+          "row": 1
+        },
+        {
+          "id": "class-plan",
+          "title": "職業を再編",
+          "detail": "6職選択は実装済み。転用Boss AIは設計中。",
+          "decision": "keep",
+          "col": 2,
+          "row": 1
+        },
+        {
+          "id": "class-content",
+          "title": "天賦・職業Balance",
+          "detail": "確定Rosterだけ作り込む",
+          "decision": "hold",
+          "col": 3,
+          "row": 1
+        },
+        {
+          "id": "enemy-rule",
+          "title": "敵階級を確定",
+          "detail": "通常・強敵・中Boss・新Boss",
+          "decision": "redesign",
+          "col": 1,
+          "row": 2
+        },
+        {
+          "id": "map-rule",
+          "title": "MAPテーマを確定",
+          "detail": "背景実装済み・敵FamilyとBGMを調整",
+          "decision": "keep",
+          "col": 2,
+          "row": 2
+        },
+        {
+          "id": "content",
+          "title": "MAP2・3を差別化",
+          "detail": "紫晶層・古代炉心の専用地形を接続済み",
+          "decision": "keep",
+          "col": 3,
+          "row": 2
+        },
+        {
+          "id": "perf",
+          "title": "性能の再現計測",
+          "detail": "実プレイのカクつきを特定",
+          "decision": "redesign",
+          "col": 1,
+          "row": 3
+        },
+        {
+          "id": "density",
+          "title": "敵密度を拡張",
+          "detail": "96／144／192体へ拡張済み・体感調整へ",
+          "decision": "keep",
+          "col": 2,
+          "row": 3
+        },
+        {
+          "id": "phase3",
+          "title": "通常2D Phase 3〜5",
+          "detail": "操作・敵・MAPを統合",
+          "decision": "hold",
+          "col": 4,
+          "row": 2
+        },
+        {
+          "id": "polish",
+          "title": "通しPlayと磨き込み",
+          "detail": "30〜40分Runで評価",
+          "decision": "hold",
+          "col": 5,
+          "row": 2
+        }
+      ],
+      "edges": [
+        {
+          "from": "manual",
+          "to": "class-plan",
+          "label": "操作役割"
+        },
+        {
+          "from": "class-plan",
+          "to": "class-content",
+          "label": "対象確定"
+        },
+        {
+          "from": "class-content",
+          "to": "phase3",
+          "label": "戦闘Content"
+        },
+        {
+          "from": "enemy-rule",
+          "to": "map-rule",
+          "label": "敵Family"
+        },
+        {
+          "from": "map-rule",
+          "to": "content",
+          "label": "Theme"
+        },
+        {
+          "from": "content",
+          "to": "phase3",
+          "label": "MAP Content"
+        },
+        {
+          "from": "perf",
+          "to": "density",
+          "label": "安全上限"
+        },
+        {
+          "from": "density",
+          "to": "phase3",
+          "label": "戦闘密度"
+        },
+        {
+          "from": "phase3",
+          "to": "polish",
+          "label": "統合版"
+        }
+      ]
+    }
+  ],
+  "board": [
+    {
+      "id": "visual-growth",
+      "name": "見た目で選ぶ5分の成長",
+      "decision": "keep",
+      "reason": "敵の歩行を35%減速し、主人公の通常歩行速度の75%以内へ。経験値倍率を2.1から0.6へ、初回必要EXPは32→9。5分の中で強化を試しやすくした。 広域攻撃・高速攻撃・残影追撃・雷光連鎖・再生結界・強撃・多重射撃・貫通射撃。旧数値/状態カードを現行レベルアップから外し、職業技と流派は維持。通常攻撃と浮遊装備の実命中・弾数・貫通へ接続。",
+      "affects": [
+        "敵の移動",
+        "EXP",
+        "レベルアップ",
+        "職業通常攻撃",
+        "浮遊装備",
+        "UI/Mobile"
+      ]
+    },
+    {
+      "id": "map-exploration",
+      "name": "通常2D MAP探索",
+      "decision": "keep",
+      "reason": "探索性とPixel背景がVSGAMEの核。Phase 1〜2で戦闘の立ち上がりも改善済み。",
+      "affects": [
+        "MAP",
+        "戦闘",
+        "宝箱"
+      ]
+    },
+    {
+      "id": "boss-telegraph",
+      "name": "Boss予兆と固有攻撃",
+      "decision": "keep",
+      "reason": "ミノタウロスで読み合いの基準を作れている。新Bossへ展開できる。",
+      "affects": [
+        "Boss",
+        "VFX",
+        "Difficulty"
+      ]
+    },
+    {
+      "id": "completed-skill",
+      "name": "完成大技",
+      "decision": "remove",
+      "reason": "通常MAP宝箱から非接続。旧データは保存し、属性三択を復活させない。",
+      "affects": [
+        "状態",
+        "報酬",
+        "Build"
+      ]
+    },
+    {
+      "id": "equipment",
+      "name": "装備・鍛造・希少度",
+      "decision": "keep",
+      "reason": "6部位・50枠・5列所持品・比較と鍛造の3列UI。",
+      "affects": [
+        "宝箱",
+        "Shop",
+        "Icon"
+      ]
+    },
+    {
+      "id": "ui-world",
+      "name": "朽ちた王国のUI世界観",
+      "decision": "keep",
+      "reason": "生成石枠を共通UIへ接続。タイトルは専用背景、天賦は古書。",
+      "affects": [
+        "全画面",
+        "Icon",
+        "VFX"
+      ]
+    },
+    {
+      "id": "class-roster",
+      "name": "Player6職＋Boss転用4職",
+      "decision": "keep",
+      "reason": "正式6職の選択を実装。4職はボス向けに保存。",
+      "affects": [
+        "職業選択",
+        "Boss",
+        "天賦",
+        "Balance"
+      ]
+    },
+    {
+      "id": "map-themes",
+      "name": "MAP2・3の個性",
+      "decision": "keep",
+      "reason": "MAP2は紫晶層、MAP3は古代炉心の専用地形へ分離済み。次は敵FamilyとBGMの体感差を詰める。",
+      "affects": [
+        "MAP",
+        "敵",
+        "Audio"
+      ]
+    },
+    {
+      "id": "boss-hierarchy",
+      "name": "敵とBossの階級",
+      "decision": "redesign",
+      "reason": "現行10Bossを中Bossへ整理し、MAP固有の新規Bossを上位に置く。",
+      "affects": [
+        "敵",
+        "Boss",
+        "報酬"
+      ]
+    },
+    {
+      "id": "boss-rewards",
+      "name": "Boss宝箱の装備報酬",
+      "decision": "keep",
+      "reason": "終盤Bossを実撃破した後に装備と討伐宝箱を回収。開封で自動遷移しない。帰還階段を自分で調べて結果へ。Shopは150秒の補給箱から手動で開く。",
+      "affects": [
+        "Item",
+        "完成大技",
+        "Shop"
+      ]
+    },
+    {
+      "id": "result-loop",
+      "name": "結果画面と継承",
+      "decision": "redesign",
+      "reason": "敗北・踏破・再挑戦で次の行動と継承価値を分けて見せる余地がある。",
+      "affects": [
+        "Result",
+        "Meta Progression"
+      ]
+    },
+    {
+      "id": "room-main",
+      "name": "旧ROOMモード削除",
+      "decision": "remove",
+      "reason": "旧ROOM専用処理とLab操作を削除済み。現行は3テーマの床だけの約5分ステージで、終盤Boss撃破まで戦う。20層下降は履歴。",
+      "affects": [
+        "Game Mode",
+        "Flow"
+      ]
+    },
+    {
+      "id": "old-attribute",
+      "name": "旧属性Lv・属性欠片",
+      "decision": "remove",
+      "reason": "旧属性Lvは廃止済み。旧属性系の宝箱報酬も停止。",
+      "affects": [
+        "Upgrade",
+        "Drop",
+        "HUD"
+      ]
+    },
+    {
+      "id": "old-fusion",
+      "name": "旧Element Fusion",
+      "decision": "remove",
+      "reason": "多層化してBuild理解を妨げるため廃止済み。旧武器名だけShop遺物へ再利用する。",
+      "affects": [
+        "Fusion",
+        "VFX",
+        "武器"
+      ]
+    },
+    {
+      "id": "manual-attack",
+      "name": "J必須の手動攻撃",
+      "decision": "remove",
+      "reason": "2026-09-23ユーザー指定で自動攻撃へ復帰。Jは任意の反撃入力。",
+      "affects": [
+        "全職",
+        "Upgrade",
+        "Mobile"
+      ]
+    },
+    {
+      "id": "common-dodge",
+      "name": "共通回避Action",
+      "decision": "keep",
+      "reason": "自動攻撃中もK取消・ジャスト回避・J反撃を維持。",
+      "affects": [
+        "Input",
+        "Boss",
+        "Mobile"
+      ]
+    },
+    {
+      "id": "all-talents",
+      "name": "全職業の天賦図",
+      "decision": "hold",
+      "reason": "正式6職の自動攻撃と短時間のステージに合わせ、各職の流派設計と成長予算を整理してから展開する。",
+      "affects": [
+        "職業",
+        "Upgrade",
+        "UI"
+      ]
+    },
+    {
+      "id": "hd2d",
+      "name": "HD-2D試作削除",
+      "decision": "remove",
+      "reason": "専用Scene・Script・Shader・素材・生成ツール・テストを削除。本編で使用中のMinotaur共通素材は維持。",
+      "affects": [
+        "Rendering",
+        "Asset",
+        "Camera"
+      ]
+    },
+    {
+      "id": "pwa",
+      "name": "PWA・オフライン対応",
+      "decision": "hold",
+      "reason": "公開Dashboardには有用だが、ゲーム本体の優先課題ではない。",
+      "affects": [
+        "Dashboard",
+        "Deployment"
+      ]
+    },
+    {
+      "id": "player-six-roster",
+      "name": "正式Player 6職",
+      "decision": "keep",
+      "reason": "6職選択は実装済み。ボス転用AIは設計中。",
+      "affects": [
+        "職業選択",
+        "天賦",
+        "Upgrade"
+      ]
+    },
+    {
+      "id": "class-boss-transfer",
+      "name": "槍兵・死霊術師のBoss転用",
+      "decision": "redesign",
+      "reason": "Player職として重ねるより、突進型と召喚型の単独Bossとして見た目と能力を活かす。",
+      "affects": [
+        "Boss",
+        "予兆",
+        "AI"
+      ]
+    },
+    {
+      "id": "templar-priest-pair",
+      "name": "聖堂騎士＋司祭のペアBoss",
+      "decision": "redesign",
+      "reason": "聖堂騎士が攻撃を担い、司祭が強化・回復することで、撃破順そのものを攻略判断にする。",
+      "affects": [
+        "Boss",
+        "回復",
+        "強化",
+        "撃破順"
+      ]
+    }
+  ]
+}

@@ -12,4 +12,6 @@
   正常動作を検証して初めて Implemented とする。
 - Task 終了時は、実装変更に関係する `game_specification.md` の章と、短い現在状態だけを
   記す `docs/codex_handoff.md` を更新する。
+- 大きな機能追加・仕様変更・Bug修正後は、`docs/dashboard_update_rules.md`に従い
+  `dashboard/dist/data/`のTask Status、Progress、Bug、Decision Logも更新する。
 - 無関係な User 変更を保持する。詳細ルールは `docs/codex_workflow.md` を参照する。

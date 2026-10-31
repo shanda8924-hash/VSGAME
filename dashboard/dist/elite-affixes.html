@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#091620">
+  <title>精鋭能力の新エフェクト｜VSGAME</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#091620;color:#ecede5;font:16px/1.75 system-ui,sans-serif}
+    main{max-width:1120px;margin:auto;padding:24px 16px 64px}a{color:#78dacf}
+    header{padding:16px 0 30px}h1{font-size:clamp(26px,5vw,40px);color:#edc883;margin:16px 0 8px}
+    header p{max-width:800px;color:#b9c8d0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:24px}
+    article{overflow:hidden;border:1px solid #87673c;background:#102331;box-shadow:0 10px 24px #0003}.copy{padding:20px}
+    small{color:#8acfc9}h2{font-size:22px;line-height:1.45;margin:6px 0 10px}h2 span{display:block;color:#edc883;font-size:17px}
+    p{margin:0}.copy p{font-size:15px;color:#c8d2d6}video{display:block;width:100%;aspect-ratio:4/3;background:#101c26}
+    .actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:16px}
+    button,.actions a{border:1px solid #8e774f;border-radius:4px;padding:10px 12px;background:#0a1722;color:#eddfbe;cursor:pointer;font:inherit;font-size:14px;min-height:44px}
+    button[aria-pressed=true]{border-color:#7fdbcf;color:#7fdbcf}.note{margin-top:28px;padding:18px;border-left:2px solid #a28758;color:#b9c8d0;font-size:14px}
+    :focus-visible{outline:2px solid #78dacf;outline-offset:3px}
+  </style>
+</head>
+<body><main>
+  <header>
+    <a href="./#enemies">← 敵の図鑑へ</a>
+    <h1>精鋭能力の新エフェクト</h1>
+    <p>精鋭本体の周囲には能力別の紋章が常時回り、発動前には大きな床予兆が出ます。色だけでなく紋章の形も変え、複数能力を持つ個体でも見分けられるようにしました。</p>
+    <p>再生ボタンを押してご覧ください。スマホ対応MP4／各5秒・無音。</p>
+  </header>
+  <section class="grid">
+    <article><div class="copy"><small>周期能力</small><h2>火炎<span>周囲爆発</span></h2><p>橙の炎紋章が脈動し、床の輪が収束してから大きく爆発します。</p></div><video controls playsinline preload="none" poster="assets/motion/affix-fire.png"><source src="assets/motion/affix-fire.mp4" type="video/mp4"></video><div class="actions"><button data-rate=".5">ゆっくり見る</button><button data-rate="1" aria-pressed="true">等速</button><a href="assets/motion/affix-fire.mp4">MP4を直接開く ↗</a></div></article>
+    <article><div class="copy"><small>地点攻撃</small><h2>雷撃<span>地点落雷</span></h2><p>黄色い照準を固定し、0.8秒後にその場所へ雷柱を落とします。</p></div><video controls playsinline preload="none" poster="assets/motion/affix-lightning.png"><source src="assets/motion/affix-lightning.mp4" type="video/mp4"></video><div class="actions"><button data-rate=".5">ゆっくり見る</button><button data-rate="1" aria-pressed="true">等速</button><a href="assets/motion/affix-lightning.mp4">MP4を直接開く ↗</a></div></article>
+    <article><div class="copy"><small>命中能力</small><h2>氷結<span>移動低下</span></h2><p>青い結晶紋章を常時表示。攻撃命中時に氷片が弾け、対象を遅くします。</p></div><video controls playsinline preload="none" poster="assets/motion/affix-freeze.png"><source src="assets/motion/affix-freeze.mp4" type="video/mp4"></video><div class="actions"><button data-rate=".5">ゆっくり見る</button><button data-rate="1" aria-pressed="true">等速</button><a href="assets/motion/affix-freeze.mp4">MP4を直接開く ↗</a></div></article>
+    <article><div class="copy"><small>持続領域</small><h2>毒<span>毒沼</span></h2><p>緑の予兆後に紫緑の渦が残り、中にいる間は継続ダメージを受けます。</p></div><video controls playsinline preload="none" poster="assets/motion/affix-poison.png"><source src="assets/motion/affix-poison.mp4" type="video/mp4"></video><div class="actions"><button data-rate=".5">ゆっくり見る</button><button data-rate="1" aria-pressed="true">等速</button><a href="assets/motion/affix-poison.mp4">MP4を直接開く ↗</a></div></article>
+    <article><div class="copy"><small>命中能力</small><h2>吸血<span>生命吸収</span></h2><p>紅い血滴紋章を常時表示。命中時に対象と精鋭の両方へ吸収光が走ります。</p></div><video controls playsinline preload="none" poster="assets/motion/affix-vampiric.png"><source src="assets/motion/affix-vampiric.mp4" type="video/mp4"></video><div class="actions"><button data-rate=".5">ゆっくり見る</button><button data-rate="1" aria-pressed="true">等速</button><a href="assets/motion/affix-vampiric.mp4">MP4を直接開く ↗</a></div></article>
+    <article><div class="copy"><small>防御能力</small><h2>堅牢<span>再生シールド</span></h2><p>銀の盾紋章を表示し、シールドが残っている間は青い六角障壁で本体を覆います。</p></div><video controls playsinline preload="none" poster="assets/motion/affix-fortified.png"><source src="assets/motion/affix-fortified.mp4" type="video/mp4"></video><div class="actions"><button data-rate=".5">ゆっくり見る</button><button data-rate="1" aria-pressed="true">等速</button><a href="assets/motion/affix-fortified.mp4">MP4を直接開く ↗</a></div></article>
+  </section>
+  <p class="note">2026-09-12 · 実ゲームと同じ敵・ダメージ・状態異常処理を使った拡大撮影です。火炎・雷撃・毒は予兆中にダメージが発生しません。</p>
+</main>
+<script>
+document.querySelectorAll('[data-rate]').forEach(b=>b.onclick=()=>{const card=b.closest('article');card.querySelector('video').playbackRate=Number(b.dataset.rate);card.querySelectorAll('[data-rate]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)))});
+document.querySelectorAll('video').forEach(v=>v.addEventListener('play',()=>document.querySelectorAll('video').forEach(other=>{if(other!==v)other.pause()})));
+</script></body></html>

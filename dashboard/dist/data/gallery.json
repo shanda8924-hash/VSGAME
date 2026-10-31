@@ -1,0 +1,1344 @@
+{
+  "categoryLabels": {
+    "entry": "入口・世界観",
+    "exploration": "探索・MAP",
+    "combat": "戦闘・Boss",
+    "growth": "成長・報酬",
+    "build": "天賦・装備",
+    "result": "結果・継承"
+  },
+  "items": [
+    {
+      "id": "survival-growth-choices",
+      "title": "動く比較で選ぶ強化",
+      "category": "growth",
+      "image": "assets/images/survival_growth_choices.gif",
+      "caption": "大きなアイコン・現在→強化後の動く比較・選択チェック・独立した取得ボタン。タップだけでは取得せず、選択中は戦闘時間を止める。上限に達した強化と、使えない遠距離強化は候補に出さない。 実UIを録画。比較に実キャラクター・敵素材を使用。",
+      "decision": "keep",
+      "related": [
+        "レベルアップ",
+        "UI",
+        "Mobile"
+      ],
+      "capturedAt": "2026-10-13"
+    },
+    {
+      "id": "survival-growth-effects",
+      "title": "残影と雷が実際に命中",
+      "category": "combat",
+      "image": "assets/images/survival_growth_effects.png",
+      "caption": "検査用の敵に実際の追撃・連鎖が命中する画面。残影は既存ComfyUI斬撃、雷は敵同士の接続を描く。副次ダメージは再発動させない。",
+      "decision": "keep",
+      "related": [
+        "追撃",
+        "連鎖",
+        "VFX"
+      ],
+      "capturedAt": "2026-10-13"
+    },
+    {
+      "id": "survival-growth-shots",
+      "title": "装備した弓も弾が増え、貫通する",
+      "category": "combat",
+      "image": "assets/images/survival_growth_ranged_equipment_archer.png",
+      "caption": "検査用の敵列へ、装備した弓が3本を発射。実射撃と複数敵への貫通を確認。魔法装備も同じ強化へ接続。",
+      "decision": "keep",
+      "related": [
+        "装備",
+        "多重射撃",
+        "貫通"
+      ],
+      "capturedAt": "2026-10-13"
+    },
+    {
+      "id": "open-field",
+      "title": "床だけが続く広い戦場",
+      "image": "assets/images/open_field.png",
+      "category": "exploration",
+      "caption": "3テーマ共通で、壁・柱・地形小物のない広い床へ。床とカメラが現在地へ追従し、表示基準96×96セルの外でも歩行・出現・回収が続く。約4分の大群戦の後、従来の強敵から1体を終盤ボスとして出す。撃破してクリア、5分を過ぎても生存ボスを消さない。",
+      "decision": "keep",
+      "related": [
+        "サバイバル",
+        "床のみ",
+        "終盤Boss"
+      ],
+      "capturedAt": "2026-10-13"
+    },
+    {
+      "id": "open-field-boss",
+      "title": "既存の強敵を終盤Bossへ",
+      "image": "assets/images/open_field_boss.png",
+      "category": "combat",
+      "caption": "大きさと固定HPをBoss用に調整し、元の絵・攻撃・赤い予兆は保持。5分を超えても撃破まで継続。",
+      "decision": "keep",
+      "related": [
+        "サバイバル",
+        "床のみ",
+        "終盤Boss"
+      ],
+      "capturedAt": "2026-10-13"
+    },
+    {
+      "id": "open-field-horde",
+      "title": "変更前：4分の大群戦と成長",
+      "image": "assets/images/open_field_horde.png",
+      "category": "combat",
+      "caption": "序盤3〜4体/1.0秒→終盤8〜10体/0.45秒。45秒から標準敵を混ぜ、150秒から45%。PC128体・タッチ96体。通常敵は序盤比で、終盤にHP約+72%、攻撃約+32%、EXP必要量は2.1倍。画面外の周囲から出現する。 敵速度・成長・強化を刷新する前の比較記録。現行は経験値倍率0.6、視覚的な8系統の強化。",
+      "decision": "hold",
+      "related": [
+        "サバイバル",
+        "床のみ",
+        "終盤Boss"
+      ],
+      "capturedAt": "2026-10-13"
+    },
+    {
+      "id": "open-field-recovery",
+      "title": "討伐後、現在地で報酬を回収",
+      "image": "assets/images/open_field_recovery.png",
+      "category": "result",
+      "caption": "75秒に60%の装備箱、150秒に確定の補給箱。補給箱を自分で開けるとショップ、閉じると戦闘へ。ボス撃破後は装備・討伐宝箱・帰還階段を離して配置し、開封しても自動帰還しない。残金・回収装備は従来どおり継承報酬へ。",
+      "decision": "keep",
+      "related": [
+        "サバイバル",
+        "床のみ",
+        "終盤Boss"
+      ],
+      "capturedAt": "2026-10-13"
+    },
+    {
+      "id": "open-field-arena1",
+      "title": "床だけの戦場：忘却の地下回廊",
+      "image": "assets/images/open_field_arena1.png",
+      "category": "exploration",
+      "caption": "現在の床の作画を保持。遠くへ移動しても同じ模様が続く。",
+      "decision": "keep",
+      "related": [
+        "サバイバル",
+        "床のみ",
+        "終盤Boss"
+      ],
+      "capturedAt": "2026-10-13"
+    },
+    {
+      "id": "open-field-arena2",
+      "title": "床だけの戦場：紫晶の深層",
+      "image": "assets/images/open_field_arena2.png",
+      "category": "exploration",
+      "caption": "現在の床の作画を保持。遠くへ移動しても同じ模様が続く。",
+      "decision": "keep",
+      "related": [
+        "サバイバル",
+        "床のみ",
+        "終盤Boss"
+      ],
+      "capturedAt": "2026-10-13"
+    },
+    {
+      "id": "open-field-arena3",
+      "title": "床だけの戦場：終焉の炉心",
+      "image": "assets/images/open_field_arena3.png",
+      "category": "exploration",
+      "caption": "現在の床の作画を保持。遠くへ移動しても同じ模様が続く。",
+      "decision": "keep",
+      "related": [
+        "サバイバル",
+        "床のみ",
+        "終盤Boss"
+      ],
+      "capturedAt": "2026-10-13"
+    },
+    {
+      "id": "five-minute-home",
+      "title": "出撃前に3テーマを選ぶ",
+      "image": "assets/images/survival_home.png",
+      "category": "entry",
+      "caption": "継承者と5分ステージを選択。戦闘の途中で行き先選択は表示しない。",
+      "decision": "keep",
+      "related": [
+        "サバイバル",
+        "自動攻撃",
+        "報酬回収"
+      ],
+      "capturedAt": "2026-10-12"
+    },
+    {
+      "id": "five-minute-horde",
+      "title": "5分サバイバルの自動戦闘",
+      "image": "assets/images/survival_horde.png",
+      "category": "combat",
+      "caption": "3テーマから出撃先を選び、36×28セルの1アリーナで5分間生き残る。敵は時間帯で密度と階級が増え、浮遊武器が自動攻撃。120秒・240秒にボス（前のボスが生存中なら延期）。300秒で敵を退去させ、経験値は付与しない。終了後は時間制限なく宝箱・装備を回収し、階段を手動で調べて結果へ。",
+      "decision": "keep",
+      "related": [
+        "サバイバル",
+        "自動攻撃",
+        "報酬回収"
+      ],
+      "capturedAt": "2026-10-12"
+    },
+    {
+      "id": "five-minute-recovery",
+      "title": "生存後、回収してから手動帰還",
+      "image": "assets/images/survival_recovery.png",
+      "category": "result",
+      "caption": "宝箱と装備・帰還階段を離して配置。残り時間は0:00のまま停止。開封しても自動帰還しない。途中のボス宝箱を自分で開けると装備・戦技と補給ショップ。ショップと強化選択中は時間停止。残金は1G=1欠片、回収装備は1点=5欠片として、撃破数に加えて継承報酬へ反映。装備自体は従来どおりRun内専用。",
+      "decision": "keep",
+      "related": [
+        "サバイバル",
+        "自動攻撃",
+        "報酬回収"
+      ],
+      "capturedAt": "2026-10-12"
+    },
+    {
+      "id": "five-minute-arena1",
+      "title": "旧仕様：5分アリーナ：忘却の地下回廊",
+      "image": "assets/images/survival_arena1.png",
+      "category": "exploration",
+      "caption": "3テーマ共通36×28セルの戦闘空間。既存の床・壁の作画を保持。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "サバイバル",
+        "自動攻撃",
+        "報酬回収"
+      ],
+      "capturedAt": "2026-10-12",
+      "historical": true
+    },
+    {
+      "id": "five-minute-arena2",
+      "title": "旧仕様：5分アリーナ：紫晶の深層",
+      "image": "assets/images/survival_arena2.png",
+      "category": "exploration",
+      "caption": "3テーマ共通36×28セルの戦闘空間。既存の床・壁の作画を保持。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "サバイバル",
+        "自動攻撃",
+        "報酬回収"
+      ],
+      "capturedAt": "2026-10-12",
+      "historical": true
+    },
+    {
+      "id": "five-minute-arena3",
+      "title": "旧仕様：5分アリーナ：終焉の炉心",
+      "image": "assets/images/survival_arena3.png",
+      "category": "exploration",
+      "caption": "3テーマ共通36×28セルの戦闘空間。既存の床・壁の作画を保持。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "サバイバル",
+        "自動攻撃",
+        "報酬回収"
+      ],
+      "capturedAt": "2026-10-12",
+      "historical": true
+    },
+    {
+      "id": "floating-weapon-aura",
+      "title": "拡大した浮遊武器と5色のオーラ",
+      "category": "combat",
+      "image": "assets/images/floating_weapon_aura.gif",
+      "caption": "実ゲームの待機中の比較。浮遊武器の絵の長辺を48pxへ統一。緑・青・紫・橙・赤の細い輪郭と、輪郭から立ち上るオーラを追加。高レアほど強く揺らぎ、ミシックは鮮明な赤。旧画像参照は現在の透過素材へ解決し、薄いAlphaの四角い背景を描かない。待機位置と帰還位置、残像の中心も拡大に合わせた。 52武器・5レア度・透過の実描画をPC/OpenGLと横画面/Vulkan Mobileで無音確認。攻撃の威力と射程は継承。",
+      "decision": "keep",
+      "related": [
+        "浮遊武器",
+        "レアリティ",
+        "透過"
+      ],
+      "capturedAt": "2026-10-09"
+    },
+    {
+      "id": "dungeon-solid-surfaces",
+      "title": "旧部屋制：見えない壁の修正記録",
+      "category": "exploration",
+      "image": "assets/images/dungeon_visible_walls.png",
+      "caption": "実ゲームの石柱の広間。中央の石柱は輪郭と陰影が見え、中央通路は歩ける。石柱・短壁の当たり判定が残るマスを床として描いていた原因を修正。壁・床の分類を物理データへ合わせ、ランドマークに覆われる足元だけ床を継続。同期／分割生成とMAP1の小部屋に共通適用。3テーマ12地形で11,237の壁と21,535の床、実主人公の通行・遮断を検査。 2026-10-13以降のステージは床のみで、この柱・壁は生成しない。以前の部屋制の検証画像として保存。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "MAP",
+        "衝突判定"
+      ],
+      "capturedAt": "2026-10-09",
+      "historical": true
+    },
+    {
+      "id": "ember-book-opening",
+      "title": "めくる紙に、天賦図が描かれている",
+      "category": "build",
+      "image": "assets/images/talent_book_ink_opening_v4.gif",
+      "caption": "実ゲームの連続撮影。最後にめくる紙の裏面に天賦図を載せ、その下から刻印の記録が現れる。文字も紙と一緒に曲がり、着地後は同じ9つの操作ノードへ切り替わる。文字の後出しフェードを撤去。既存のComfyUI表紙・紙素材を使用。PC／横画面タッチプレビューの実描画、全9天賦、途中閉じる・再開、Pause解除を無音で確認。",
+      "decision": "keep",
+      "related": [
+        "天賦図",
+        "ComfyUI"
+      ],
+      "capturedAt": "2026-10-05"
+    },
+    {
+      "id": "weapon-traits-inventory",
+      "title": "装備詳細で攻撃の特色を確認",
+      "category": "combat",
+      "image": "assets/images/weapon_traits_inventory.png",
+      "caption": "特色・基準間隔・一撃倍率を能力表の先頭へ表示。装備を選ぶと更新する。 UIは刷新前の比較撮影。攻撃系統は現行も同じ。",
+      "decision": "keep",
+      "related": [
+        "武器の特色",
+        "自動攻撃"
+      ],
+      "capturedAt": "2026-10-04"
+    },
+    {
+      "id": "weapon-traits-comparison",
+      "title": "大剣・細剣・弓・斧の比較",
+      "category": "combat",
+      "image": "assets/images/weapon_traits_comparison.gif",
+      "caption": "実ゲームの自動攻撃を並べた比較。待ち時間も含め、範囲・速度・動作の違いを確認できる。 UIは刷新前の比較撮影。攻撃系統は現行も同じ。",
+      "decision": "keep",
+      "related": [
+        "武器の特色",
+        "自動攻撃"
+      ],
+      "capturedAt": "2026-10-04"
+    },
+    {
+      "id": "equipment-attack-star_sorcerer_staff",
+      "title": "杖・魔導書：魔法弾",
+      "category": "combat",
+      "image": "assets/images/equipment_attack_star_sorcerer_staff.gif",
+      "caption": "基準1.15秒。弓の矢と区別できる魔法弾。 同じ能力値の実ゲームで撮影。待ち時間を含む。攻撃速度の強化で間隔は短縮する。 UIは刷新前の比較撮影。攻撃系統は現行も同じ。",
+      "decision": "keep",
+      "related": [
+        "浮遊武器",
+        "武器の特色",
+        "ComfyUI"
+      ],
+      "capturedAt": "2026-10-04"
+    },
+    {
+      "id": "equipment-attack-traveler_shortbow",
+      "title": "弓：浮遊位置から矢を射る",
+      "category": "combat",
+      "image": "assets/images/equipment_attack_traveler_shortbow.gif",
+      "caption": "基準1.00秒。速い矢で遠くの敵を狙う。 同じ能力値の実ゲームで撮影。待ち時間を含む。攻撃速度の強化で間隔は短縮する。 UIは刷新前の比較撮影。攻撃系統は現行も同じ。",
+      "decision": "keep",
+      "related": [
+        "浮遊武器",
+        "武器の特色",
+        "ComfyUI"
+      ],
+      "capturedAt": "2026-10-04"
+    },
+    {
+      "id": "equipment-attack-abyss_watch_03",
+      "title": "大鎌：長い弧の薙ぎ払い",
+      "category": "combat",
+      "image": "assets/images/equipment_attack_abyss_watch_03.gif",
+      "caption": "基準1.38秒。長く細い三日月の軌道で広く刈る。 同じ能力値の実ゲームで撮影。待ち時間を含む。攻撃速度の強化で間隔は短縮する。 UIは刷新前の比較撮影。攻撃系統は現行も同じ。",
+      "decision": "keep",
+      "related": [
+        "浮遊武器",
+        "武器の特色",
+        "ComfyUI"
+      ],
+      "capturedAt": "2026-10-04"
+    },
+    {
+      "id": "equipment-attack-royal_guard_04",
+      "title": "鎚・棍：重い打ち下ろし",
+      "category": "combat",
+      "image": "assets/images/equipment_attack_royal_guard_04.gif",
+      "caption": "基準2.10秒、一撃×2.25。小さな衝撃と強い押し返し。 同じ能力値の実ゲームで撮影。待ち時間を含む。攻撃速度の強化で間隔は短縮する。 UIは刷新前の比較撮影。攻撃系統は現行も同じ。",
+      "decision": "keep",
+      "related": [
+        "浮遊武器",
+        "武器の特色",
+        "ComfyUI"
+      ],
+      "capturedAt": "2026-10-04"
+    },
+    {
+      "id": "equipment-attack-sunfire_battle_axe",
+      "title": "斧：溜めて重く叩き斬る",
+      "category": "combat",
+      "image": "assets/images/equipment_attack_sunfire_battle_axe.gif",
+      "caption": "基準1.80秒、一撃×2.00。飛行に溜めを作り、斬る部分は素早い。 同じ能力値の実ゲームで撮影。待ち時間を含む。攻撃速度の強化で間隔は短縮する。 UIは刷新前の比較撮影。攻撃系統は現行も同じ。",
+      "decision": "keep",
+      "related": [
+        "浮遊武器",
+        "武器の特色",
+        "ComfyUI"
+      ],
+      "capturedAt": "2026-10-04"
+    },
+    {
+      "id": "equipment-attack-fallen_dynasty_02",
+      "title": "細剣：鋭い連続刺突",
+      "category": "combat",
+      "image": "assets/images/equipment_attack_fallen_dynasty_02.gif",
+      "caption": "基準0.78秒、一撃×0.85。細い直線を素早く突く。 同じ能力値の実ゲームで撮影。待ち時間を含む。攻撃速度の強化で間隔は短縮する。 UIは刷新前の比較撮影。攻撃系統は現行も同じ。",
+      "decision": "keep",
+      "related": [
+        "浮遊武器",
+        "武器の特色",
+        "ComfyUI"
+      ],
+      "capturedAt": "2026-10-04"
+    },
+    {
+      "id": "equipment-attack-rune_greatsword",
+      "title": "大剣：幅広い薙ぎ払い",
+      "category": "combat",
+      "image": "assets/images/equipment_attack_rune_greatsword.gif",
+      "caption": "基準1.25秒、一撃×1.20。横の敵も巻き込む広い斬撃。 同じ能力値の実ゲームで撮影。待ち時間を含む。攻撃速度の強化で間隔は短縮する。 UIは刷新前の比較撮影。攻撃系統は現行も同じ。",
+      "decision": "keep",
+      "related": [
+        "浮遊武器",
+        "武器の特色",
+        "ComfyUI"
+      ],
+      "capturedAt": "2026-10-04"
+    },
+    {
+      "id": "equipment-attack-wanderer_iron_sword",
+      "title": "片手剣：標準の飛行斬撃",
+      "category": "combat",
+      "image": "assets/images/equipment_attack_wanderer_iron_sword.gif",
+      "caption": "敵へ飛んで斬り、帰還。基準0.95秒。 同じ能力値の実ゲームで撮影。待ち時間を含む。攻撃速度の強化で間隔は短縮する。 UIは刷新前の比較撮影。攻撃系統は現行も同じ。",
+      "decision": "keep",
+      "related": [
+        "浮遊武器",
+        "武器の特色",
+        "ComfyUI"
+      ],
+      "capturedAt": "2026-10-04"
+    },
+    {
+      "id": "equipment-attack-moonblue_dagger",
+      "title": "短剣・爪：素早い連撃",
+      "category": "combat",
+      "image": "assets/images/equipment_attack_moonblue_dagger.gif",
+      "caption": "小さな斬撃を0.62秒ごとに繰り出す。 同じ能力値の実ゲームで撮影。待ち時間を含む。攻撃速度の強化で間隔は短縮する。 UIは刷新前の比較撮影。攻撃系統は現行も同じ。",
+      "decision": "keep",
+      "related": [
+        "浮遊武器",
+        "武器の特色",
+        "ComfyUI"
+      ],
+      "capturedAt": "2026-10-04"
+    },
+    {
+      "id": "weapon-variety-12b",
+      "title": "斧槍・大剣・戦棍・魔杖",
+      "category": "build",
+      "image": "assets/images/weapon_variety_12b.png",
+      "alt": "斧槍・大剣・戦棍・魔杖のComfyUI生成素材一覧",
+      "caption": "新しい武器素材24種のうち12種。48pxの透過PNG。レア度は候補で、現行ドロップ・合成へは未追加。",
+      "decision": "hold",
+      "related": [
+        "ComfyUI",
+        "新武器素材",
+        "実装前"
+      ],
+      "capturedAt": "2026-10-04"
+    },
+    {
+      "id": "weapon-variety-12a",
+      "title": "曲刀・短剣・槍・弓・大鎌",
+      "category": "build",
+      "image": "assets/images/weapon_variety_12a.png",
+      "alt": "曲刀・短剣・槍・弓・大鎌のComfyUI生成素材一覧",
+      "caption": "新しい武器素材24種のうち12種。48pxの透過PNG。レア度は候補で、現行ドロップ・合成へは未追加。",
+      "decision": "hold",
+      "related": [
+        "ComfyUI",
+        "新武器素材",
+        "実装前"
+      ],
+      "capturedAt": "2026-10-04"
+    },
+    {
+      "id": "gate-masonry-1",
+      "title": "旧仕様：MAP1：壁材を使った門の拡大確認",
+      "category": "exploration",
+      "image": "assets/images/gate-masonry-1.png",
+      "caption": "3MAP共通の青緑ポータルと台座を撤去。既存の壁面と石積みを保持し、各MAPの石材・床素材で掘り込み、敷居、暗い奥行き、閉じた鉄格子を描画。門だけ別の石板に見える外周をなくした。中央入場と遷移条件は維持。 確認用Sceneでカメラだけ拡大。通常ゲームのズームは変更していない。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "門の壁面統合",
+        "作画"
+      ],
+      "capturedAt": "2026-09-27",
+      "historical": true
+    },
+    {
+      "id": "gate-masonry-2",
+      "title": "旧仕様：MAP2：壁材を使った門の拡大確認",
+      "category": "exploration",
+      "image": "assets/images/gate-masonry-2.png",
+      "caption": "3MAP共通の青緑ポータルと台座を撤去。既存の壁面と石積みを保持し、各MAPの石材・床素材で掘り込み、敷居、暗い奥行き、閉じた鉄格子を描画。門だけ別の石板に見える外周をなくした。中央入場と遷移条件は維持。 確認用Sceneでカメラだけ拡大。通常ゲームのズームは変更していない。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "門の壁面統合",
+        "作画"
+      ],
+      "capturedAt": "2026-09-27",
+      "historical": true
+    },
+    {
+      "id": "gate-masonry-3",
+      "title": "旧仕様：MAP3：壁材を使った門の拡大確認",
+      "category": "exploration",
+      "image": "assets/images/gate-masonry-3.png",
+      "caption": "3MAP共通の青緑ポータルと台座を撤去。既存の壁面と石積みを保持し、各MAPの石材・床素材で掘り込み、敷居、暗い奥行き、閉じた鉄格子を描画。門だけ別の石板に見える外周をなくした。中央入場と遷移条件は維持。 確認用Sceneでカメラだけ拡大。通常ゲームのズームは変更していない。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "門の壁面統合",
+        "作画"
+      ],
+      "capturedAt": "2026-09-27",
+      "historical": true
+    },
+    {
+      "id": "gate-map1-open",
+      "title": "旧仕様：MAP1：壁内の門と中央の入口",
+      "category": "exploration",
+      "image": "assets/images/gate-map1-open.png",
+      "caption": "3MAP共通の青緑ポータルと台座を撤去。既存の壁面と石積みを保持し、各MAPの石材・床素材で掘り込み、敷居、暗い奥行き、閉じた鉄格子を描画。門だけ別の石板に見える外周をなくした。中央入場と遷移条件は維持。 製品Sceneへ敵/宝箱状態を設定した確認用Capture。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "門",
+        "MAP進行"
+      ],
+      "capturedAt": "2026-09-27",
+      "historical": true
+    },
+    {
+      "id": "gate-map1-entering",
+      "title": "旧仕様：MAP1：壁内の門へ入場",
+      "category": "exploration",
+      "image": "assets/images/gate-map1-entering.png",
+      "caption": "3MAP共通の青緑ポータルと台座を撤去。既存の壁面と石積みを保持し、各MAPの石材・床素材で掘り込み、敷居、暗い奥行き、閉じた鉄格子を描画。門だけ別の石板に見える外周をなくした。中央入場と遷移条件は維持。 製品Sceneへ敵/宝箱状態を設定した確認用Capture。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "門",
+        "MAP進行"
+      ],
+      "capturedAt": "2026-09-27",
+      "historical": true
+    },
+    {
+      "id": "gate-map2-open",
+      "title": "旧仕様：MAP2：壁内の門と中央の入口",
+      "category": "exploration",
+      "image": "assets/images/gate-map2-open.png",
+      "caption": "3MAP共通の青緑ポータルと台座を撤去。既存の壁面と石積みを保持し、各MAPの石材・床素材で掘り込み、敷居、暗い奥行き、閉じた鉄格子を描画。門だけ別の石板に見える外周をなくした。中央入場と遷移条件は維持。 製品Sceneへ敵/宝箱状態を設定した確認用Capture。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "門",
+        "MAP進行"
+      ],
+      "capturedAt": "2026-09-27",
+      "historical": true
+    },
+    {
+      "id": "gate-map2-entering",
+      "title": "旧仕様：MAP2：壁内の門へ入場",
+      "category": "exploration",
+      "image": "assets/images/gate-map2-entering.png",
+      "caption": "3MAP共通の青緑ポータルと台座を撤去。既存の壁面と石積みを保持し、各MAPの石材・床素材で掘り込み、敷居、暗い奥行き、閉じた鉄格子を描画。門だけ別の石板に見える外周をなくした。中央入場と遷移条件は維持。 製品Sceneへ敵/宝箱状態を設定した確認用Capture。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "門",
+        "MAP進行"
+      ],
+      "capturedAt": "2026-09-27",
+      "historical": true
+    },
+    {
+      "id": "gate-map3-open",
+      "title": "旧仕様：MAP3：壁内の門と中央の入口",
+      "category": "exploration",
+      "image": "assets/images/gate-map3-open.png",
+      "caption": "3MAP共通の青緑ポータルと台座を撤去。既存の壁面と石積みを保持し、各MAPの石材・床素材で掘り込み、敷居、暗い奥行き、閉じた鉄格子を描画。門だけ別の石板に見える外周をなくした。中央入場と遷移条件は維持。 製品Sceneへ敵/宝箱状態を設定した確認用Capture。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "門",
+        "MAP進行"
+      ],
+      "capturedAt": "2026-09-27",
+      "historical": true
+    },
+    {
+      "id": "gate-map3-entering",
+      "title": "旧仕様：MAP3：壁内の門へ入場",
+      "category": "exploration",
+      "image": "assets/images/gate-map3-entering.png",
+      "caption": "3MAP共通の青緑ポータルと台座を撤去。既存の壁面と石積みを保持し、各MAPの石材・床素材で掘り込み、敷居、暗い奥行き、閉じた鉄格子を描画。門だけ別の石板に見える外周をなくした。中央入場と遷移条件は維持。 製品Sceneへ敵/宝箱状態を設定した確認用Capture。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "門",
+        "MAP進行"
+      ],
+      "capturedAt": "2026-09-27",
+      "historical": true
+    },
+    {
+      "id": "equipment-readable",
+      "title": "小型アイコンのアイテムボックス",
+      "category": "build",
+      "image": "assets/images/ember_v5_inventory.png",
+      "caption": "2026-10-04の実ゲーム画面。ComfyUIの素材と細い共通枠へ刷新。キャラクター・戦闘・部屋進行は維持。",
+      "decision": "keep",
+      "related": [
+        "ComfyUI",
+        "ビジュアル刷新"
+      ],
+      "capturedAt": "2026-10-04"
+    },
+    {
+      "id": "forge-readable",
+      "title": "コンパクトな連続鍛造",
+      "category": "build",
+      "image": "assets/images/ember_v5_forge.png",
+      "caption": "2026-10-04の実ゲーム画面。ComfyUIの素材と細い共通枠へ刷新。キャラクター・戦闘・部屋進行は維持。",
+      "decision": "keep",
+      "related": [
+        "ComfyUI",
+        "ビジュアル刷新"
+      ],
+      "capturedAt": "2026-10-04"
+    },
+    {
+      "id": "object-ui-equipment",
+      "title": "装備：統一した200アイコンと欠けない能力値",
+      "category": "build",
+      "image": "assets/images/object-ui-equipment.png",
+      "caption": "製品Sceneの検証用描画。装備やHUDの一部は確認用データを投入。MAP比較には現行キャラ3種を並べており、通常プレイの記録とは区別する。",
+      "decision": "keep",
+      "related": [
+        "作画統一",
+        "オブジェクト・UI精査"
+      ],
+      "capturedAt": "2026-09-27"
+    },
+    {
+      "id": "object-ui-touch",
+      "title": "横画面タッチ：調べる操作とHUD",
+      "category": "combat",
+      "image": "assets/images/object-ui-touch.png",
+      "caption": "製品Sceneの検証用描画。装備やHUDの一部は確認用データを投入。MAP比較には現行キャラ3種を並べており、通常プレイの記録とは区別する。",
+      "decision": "keep",
+      "related": [
+        "作画統一",
+        "オブジェクト・UI精査"
+      ],
+      "capturedAt": "2026-09-27"
+    },
+    {
+      "id": "object-ui-talents",
+      "title": "天賦図：読みやすい文字と選択表示",
+      "category": "build",
+      "image": "assets/images/object-ui-talents.png",
+      "caption": "製品Sceneの検証用描画。装備やHUDの一部は確認用データを投入。MAP比較には現行キャラ3種を並べており、通常プレイの記録とは区別する。",
+      "decision": "keep",
+      "related": [
+        "作画統一",
+        "オブジェクト・UI精査"
+      ],
+      "capturedAt": "2026-09-27"
+    },
+    {
+      "id": "object-style-map2",
+      "title": "旧仕様：MAP2：更新した小物と現行キャラ",
+      "category": "exploration",
+      "image": "assets/images/object-style-map2.png",
+      "caption": "製品Sceneの検証用描画。装備やHUDの一部は確認用データを投入。MAP比較には現行キャラ3種を並べており、通常プレイの記録とは区別する。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "作画統一",
+        "オブジェクト・UI精査"
+      ],
+      "capturedAt": "2026-09-27",
+      "historical": true
+    },
+    {
+      "id": "object-style-map3",
+      "title": "旧仕様：MAP3：更新した小物と現行キャラ",
+      "category": "exploration",
+      "image": "assets/images/object-style-map3.png",
+      "caption": "製品Sceneの検証用描画。装備やHUDの一部は確認用データを投入。MAP比較には現行キャラ3種を並べており、通常プレイの記録とは区別する。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "作画統一",
+        "オブジェクト・UI精査"
+      ],
+      "capturedAt": "2026-09-27",
+      "historical": true
+    },
+    {
+      "id": "map3-pixel-style",
+      "title": "旧仕様：MAP3：現行キャラクターと床・壁の作画比較",
+      "category": "exploration",
+      "image": "assets/images/map3_pixel_style.png",
+      "caption": "製品StageEnvironmentの描画に現行Soldier・Swordsman・Wizardを並べた検証Scene。ローカル生成素材と2倍Nearest表示。実プレイ画面ではない。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "キャラクターとの作画統一",
+        "MAP床・壁"
+      ],
+      "capturedAt": "2026-09-27",
+      "historical": true
+    },
+    {
+      "id": "map2-pixel-style",
+      "title": "旧仕様：MAP2：現行キャラクターと床・壁の作画比較",
+      "category": "exploration",
+      "image": "assets/images/map2_pixel_style.png",
+      "caption": "製品StageEnvironmentの描画に現行Soldier・Swordsman・Wizardを並べた検証Scene。ローカル生成素材と2倍Nearest表示。実プレイ画面ではない。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "キャラクターとの作画統一",
+        "MAP床・壁"
+      ],
+      "capturedAt": "2026-09-27",
+      "historical": true
+    },
+    {
+      "id": "isolated-map1-room",
+      "title": "旧仕様：MAP1：石柱の広間と手動退出",
+      "category": "exploration",
+      "image": "assets/images/isolated_room_2.png",
+      "caption": "1280×720の実ゲーム。従来の青灰の石床、遮蔽物・中央の通路、部屋別の敵残数、スマホ横画面操作を確認。1室ずつ読み込み、全滅後も自動遷移しない。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "MAP1個別部屋",
+        "従来の石床",
+        "手動退出"
+      ],
+      "capturedAt": "2026-09-27",
+      "historical": true
+    },
+    {
+      "id": "sector-room-exit-mobile",
+      "title": "旧仕様：スマホ横画面の部屋出口と宝箱",
+      "category": "exploration",
+      "image": "assets/images/mobile_room_exit.png",
+      "caption": "1280×720の実ゲーム描画。部屋の敵を全滅し、宝箱を開けてから出口を手動で調べる。時間で選択画面は現れない。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "部屋Wave",
+        "ランダム宝箱",
+        "スマホUI"
+      ],
+      "capturedAt": "2026-09-24",
+      "historical": true
+    },
+    {
+      "id": "mobile-forge",
+      "title": "スマホ横画面の装備鍛造",
+      "category": "build",
+      "image": "assets/images/mobile_inventory_forge.png",
+      "caption": "1280×720の実ゲーム描画。鍛造を中央に収め、操作中は戦闘ボタンを隠す。実機タッチと安全領域は今後確認する。",
+      "decision": "redesign",
+      "related": [
+        "装備",
+        "鍛造",
+        "スマホUI"
+      ],
+      "capturedAt": "2026-09-24"
+    },
+    {
+      "id": "survival-horde",
+      "title": "大群と自動攻撃の実ゲーム",
+      "category": "combat",
+      "image": "assets/images/survival_horde.png",
+      "caption": "2026-09-23の旧・継続湧き仕様の記録。現在は縮小した部屋ごとの有限Wave、ランダム宝箱、手動退出。",
+      "decision": "keep",
+      "related": [
+        "自動攻撃",
+        "旧・継続湧き記録",
+        "広いダンジョン"
+      ],
+      "capturedAt": "2026-09-23"
+    },
+    {
+      "id": "survival-layout",
+      "title": "旧仕様：細いHUDと地下回廊",
+      "category": "exploration",
+      "image": "assets/images/ember_v5_hud_map1.png",
+      "caption": "2026-10-04の実ゲーム画面。ComfyUIの素材と細い共通枠へ刷新。キャラクター・戦闘・部屋進行は維持。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "ComfyUI",
+        "ビジュアル刷新"
+      ],
+      "capturedAt": "2026-10-04",
+      "historical": true
+    },
+    {
+      "id": "survival-map2",
+      "title": "旧仕様：MAP2・広い紫晶の広間",
+      "category": "exploration",
+      "image": "assets/images/survival_map2.png",
+      "caption": "作画は維持して、大群向けランダム広間へ。実ゲームの新規層開始直後。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "自動攻撃",
+        "旧・継続湧き記録",
+        "広いダンジョン"
+      ],
+      "capturedAt": "2026-09-23",
+      "historical": true
+    },
+    {
+      "id": "survival-map3",
+      "title": "旧仕様：MAP3・広い炉心の広間",
+      "category": "exploration",
+      "image": "assets/images/survival_map3.png",
+      "caption": "作画は維持して、大群向けランダム広間へ。実ゲームの新規層開始直後。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "自動攻撃",
+        "旧・継続湧き記録",
+        "広いダンジョン"
+      ],
+      "capturedAt": "2026-09-23",
+      "historical": true
+    },
+    {
+      "id": "boss-room-fixed-loot",
+      "title": "壁際撃破後・床上の装備と宝箱と階段",
+      "category": "combat",
+      "image": "assets/images/boss_room_fixed_loot.png",
+      "caption": "実ボスを右壁際で倒した後。装備を同じ部屋の床へ分離して置き、紋章を消した。E回収で宝箱を誤開封しないことも確認。",
+      "decision": "keep",
+      "related": [
+        "Boss領域",
+        "60層進行",
+        "報酬配置"
+      ],
+      "capturedAt": "2026-09-22"
+    },
+    {
+      "id": "boss-room-fixed-fight",
+      "title": "地下4層・ボス召喚に成功",
+      "category": "combat",
+      "image": "assets/images/boss_room_fixed_fight.png",
+      "caption": "候補一巡後もボスが登場。戦闘中は床紋章を非表示にし、敵の姿と予兆を見やすくした。",
+      "decision": "keep",
+      "related": [
+        "Boss領域",
+        "60層進行",
+        "報酬配置"
+      ],
+      "capturedAt": "2026-09-22"
+    },
+    {
+      "id": "boss-room-fixed-before",
+      "title": "ボス領域・薄くした待機紋章",
+      "category": "combat",
+      "image": "assets/images/boss_room_fixed_before.png",
+      "caption": "不透明度28%の控えめな床紋章。見た目は維持。撮影当時は鍵方式、現在は撃破数または時間で解放。",
+      "decision": "keep",
+      "related": [
+        "Boss領域",
+        "60層進行",
+        "報酬配置"
+      ],
+      "capturedAt": "2026-09-22"
+    },
+    {
+      "id": "exploration-map-1",
+      "title": "旧画面：MAP1・探索型の分岐と広間",
+      "category": "exploration",
+      "image": "assets/images/exploration_map1.png",
+      "caption": "少数遭遇型だった時点の記録。現在は部屋制圧・ランダム宝箱・手動退出へ変更済み。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "旧仕様の記録"
+      ],
+      "capturedAt": "2026-09-14",
+      "historical": true
+    },
+    {
+      "id": "exploration-map-2",
+      "title": "旧画面：MAP2・探索型の分岐と広間",
+      "category": "exploration",
+      "image": "assets/images/exploration_map2.png",
+      "caption": "少数遭遇型だった時点の記録。現在は部屋制圧・ランダム宝箱・手動退出へ変更済み。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "旧仕様の記録"
+      ],
+      "capturedAt": "2026-09-14",
+      "historical": true
+    },
+    {
+      "id": "exploration-map-3",
+      "title": "旧画面：MAP3・探索型の分岐と広間",
+      "category": "exploration",
+      "image": "assets/images/exploration_map3.png",
+      "caption": "少数遭遇型だった時点の記録。現在は部屋制圧・ランダム宝箱・手動退出へ変更済み。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "旧仕様の記録"
+      ],
+      "capturedAt": "2026-09-14",
+      "historical": true
+    },
+    {
+      "id": "exploration-routes",
+      "title": "旧画面：3MAPの構造と広さ",
+      "category": "exploration",
+      "image": "assets/images/exploration_routes.png",
+      "caption": "少数遭遇型だった時点の記録。現在は部屋制圧・ランダム宝箱・手動退出へ変更済み。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "旧仕様の記録"
+      ],
+      "capturedAt": "2026-09-14",
+      "historical": true
+    },
+    {
+      "id": "exploration-discovery",
+      "title": "旧画面：Mキー・発見した道の探索図",
+      "category": "exploration",
+      "image": "assets/images/exploration_discovery.png",
+      "caption": "少数遭遇型だった時点の記録。現在は部屋制圧・ランダム宝箱・手動退出へ変更済み。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "旧仕様の記録"
+      ],
+      "capturedAt": "2026-09-14",
+      "historical": true
+    },
+    {
+      "id": "chest-ingame",
+      "title": "旧仕様：小型宝箱・閉／開",
+      "category": "exploration",
+      "image": "assets/images/chest-ingame.png",
+      "caption": "実マップ描画。左は未開封、右は開封済み。通常のマップ宝箱と同じシーンを表示。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "マップ宝箱",
+        "報酬"
+      ],
+      "capturedAt": "2026-09-14",
+      "historical": true
+    },
+    {
+      "id": "equipment-200",
+      "title": "装備200種・実装画面",
+      "category": "build",
+      "image": "assets/images/equipment-200-implemented.png",
+      "caption": "実ゲームのアイテムボックス。新規の紫晶鉱山装備と描き直した既存装備を表示。",
+      "decision": "keep",
+      "related": [
+        "装備200種",
+        "アイテムボックス"
+      ]
+    },
+    {
+      "id": "mine-art-match",
+      "title": "旧仕様：鉱山と周辺マップの作画統一",
+      "category": "exploration",
+      "image": "assets/images/mine-art-match.png",
+      "caption": "実ゲーム画面。岩壁・石床・収納小物・灯りを新規素材へ置換。採掘場と描き込みの密度を揃えた。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "MAP景観",
+        "ランドマーク"
+      ],
+      "capturedAt": "2026-09-13",
+      "historical": true
+    },
+    {
+      "id": "miner-working",
+      "title": "旧仕様：鉱山作業員の採掘",
+      "category": "exploration",
+      "image": "assets/images/miner-working.png",
+      "caption": "実ゲームの採掘動作。構え→短い打撃→戻し→休止。壁際の鉱山内で働く作業員。 周辺の壁・床・小物もランドマークと同じ細かな石肌・陰影・木材表現へ刷新。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "ランドマーク",
+        "環境アニメーション"
+      ],
+      "capturedAt": "2026-09-13",
+      "historical": true
+    },
+    {
+      "id": "title-gate",
+      "title": "入口・タイトル",
+      "category": "entry",
+      "image": "assets/images/ember_v5_title.png",
+      "caption": "2026-10-04の実ゲーム画面。ComfyUIの素材と細い共通枠へ刷新。キャラクター・戦闘・部屋進行は維持。",
+      "decision": "keep",
+      "related": [
+        "ComfyUI",
+        "ビジュアル刷新"
+      ],
+      "capturedAt": "2026-10-04"
+    },
+    {
+      "id": "title-modes",
+      "title": "通常2Dの探索入口",
+      "category": "entry",
+      "image": "assets/images/title-modes.png",
+      "caption": "正式版を2Dへ確定。2.5D試作の入口を撤去し、通常探索と演出確認室を維持。",
+      "decision": "keep",
+      "related": [
+        "ゲームモード",
+        "2.5D試作",
+        "検証室"
+      ],
+      "capturedAt": "2026-09-11"
+    },
+    {
+      "id": "characters-six",
+      "title": "職業選択・元のキャラを継承",
+      "category": "entry",
+      "image": "assets/images/ember_v5_characters.png",
+      "caption": "2026-10-04の実ゲーム画面。ComfyUIの素材と細い共通枠へ刷新。キャラクター・戦闘・部屋進行は維持。",
+      "decision": "keep",
+      "related": [
+        "ComfyUI",
+        "ビジュアル刷新"
+      ],
+      "capturedAt": "2026-10-04"
+    },
+    {
+      "id": "map-exploration",
+      "title": "旧仕様：石枠へ統一した戦闘HUD",
+      "category": "exploration",
+      "image": "assets/images/map-exploration.png",
+      "caption": "HP・EXP、MAP進行、戦利品、技ゲージ、コンボを同じ石枠へ。画像は小物衝突・祭壇撤去前のUI撮影。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "MAP探索",
+        "戦闘HUD",
+        "通常2D"
+      ],
+      "capturedAt": "2026-09-11",
+      "historical": true
+    },
+    {
+      "id": "map2-amethyst-depths",
+      "title": "旧仕様：MAP2｜紫晶の深層",
+      "category": "exploration",
+      "image": "assets/images/map2-amethyst-depths.png",
+      "caption": "紫晶層、青い鉱脈、青紫の灯火へ全面交換した実装画面。MAP1の部屋・通路・到達可能性ルールを維持し、水晶柱には通り抜け防止のCollisionを設定。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "MAP2",
+        "紫晶の深層",
+        "Prop Collision"
+      ],
+      "capturedAt": "2026-09-12",
+      "historical": true
+    },
+    {
+      "id": "map3-ruin-forge",
+      "title": "旧仕様：MAP3｜終焉の炉心",
+      "category": "exploration",
+      "image": "assets/images/map3-ruin-forge.png",
+      "caption": "黒い炉床、鉄板、溶岩亀裂、炉火で構成した実装画面。MAP1の生成規則を維持し、炉心柱と生成壁はすべてCollision付き。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "MAP3",
+        "終焉の炉心",
+        "Wall Collision"
+      ],
+      "capturedAt": "2026-09-12",
+      "historical": true
+    },
+    {
+      "id": "normal-room",
+      "title": "旧画面（参考）｜通常区画の構造",
+      "category": "exploration",
+      "image": "assets/images/map-normal-room.png",
+      "caption": "旧版の記録。現在の仕様・UIとは異なります。石造回廊、宝箱、祭壇、通路幅を確認する現行MAP構造。MAPごとの景観差は今後の再設計対象。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "MAP Theme",
+        "宝箱",
+        "DungeonGenerator"
+      ],
+      "historical": true
+    },
+    {
+      "id": "boss-chamber",
+      "title": "旧仕様：Boss領域",
+      "category": "exploration",
+      "image": "assets/images/map-boss-chamber.png",
+      "caption": "最深部へ到達して侵入するBoss領域。探索から決戦へ切り替わる地点として維持する。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "Boss Gate",
+        "最深部",
+        "MAP進行"
+      ],
+      "historical": true
+    },
+    {
+      "id": "boss-minotaur",
+      "title": "ミノタウロス薙ぎ払い",
+      "category": "combat",
+      "image": "assets/images/boss-minotaur-cleave.png",
+      "caption": "予兆、全身動作、剣撃、判定を同期した通常2D Phase 2の戦闘基準。既存Bossを中Bossへ転用する際の品質基準にもなる。",
+      "decision": "keep",
+      "related": [
+        "Boss戦",
+        "予兆",
+        "中Boss再編"
+      ]
+    },
+    {
+      "id": "level-up",
+      "title": "変更前：読みやすい三択",
+      "category": "growth",
+      "image": "assets/images/ember_v5_level_up.png",
+      "caption": "2026-10-04の実ゲーム画面。ComfyUIの素材と細い共通枠へ刷新。キャラクター・戦闘・部屋進行は維持。 敵速度・成長・強化を刷新する前の比較記録。現行は経験値倍率0.6、視覚的な8系統の強化。",
+      "decision": "hold",
+      "related": [
+        "ComfyUI",
+        "ビジュアル刷新"
+      ],
+      "capturedAt": "2026-10-04"
+    },
+    {
+      "id": "boss-reward",
+      "title": "髑髏の三択UI・表示用撮影",
+      "category": "growth",
+      "image": "assets/images/boss-reward.png",
+      "caption": "既存ItemSelectの見た目を撮影したもの。通常MAPのボス宝箱は装備報酬へ変更済みで、属性系完成大技の三択は出ない。",
+      "decision": "keep",
+      "related": [
+        "Boss報酬",
+        "ItemData",
+        "Run Build"
+      ],
+      "capturedAt": "2026-09-11"
+    },
+    {
+      "id": "completed-skill",
+      "title": "旧画面（参考）｜完成大技の継承",
+      "category": "growth",
+      "image": "assets/images/completed-skill.png",
+      "caption": "旧版の記録。現在の仕様・UIとは異なります。状態や攻撃条件を積み上げた後の大技を選ぶ画面。VSGAME固有のBuild到達点として維持する。",
+      "decision": "remove",
+      "related": [
+        "完成大技",
+        "状態異常",
+        "Boss宝箱"
+      ]
+    },
+    {
+      "id": "shop",
+      "title": "薄い枠のショップ",
+      "category": "growth",
+      "image": "assets/images/ember_v5_shop.png",
+      "caption": "2026-10-04の実ゲーム画面。ComfyUIの素材と細い共通枠へ刷新。キャラクター・戦闘・部屋進行は維持。",
+      "decision": "keep",
+      "related": [
+        "ComfyUI",
+        "ビジュアル刷新"
+      ],
+      "capturedAt": "2026-10-04"
+    },
+    {
+      "id": "shop-purchased",
+      "title": "購入後のBuild反映",
+      "category": "growth",
+      "image": "assets/images/shop-purchased.png",
+      "caption": "購入済み表示と右側のBuild台帳が連動する状態。選択結果を画面内で確認できる点は維持する。",
+      "decision": "keep",
+      "related": [
+        "Shop UX",
+        "所持品",
+        "Build可視化"
+      ]
+    },
+    {
+      "id": "talent-top",
+      "title": "左ページの天賦図と右ページの刻印の記録",
+      "category": "build",
+      "image": "assets/images/talent_book_ink_v4.png",
+      "caption": "実ゲーム1600×900。紙をめくって出た左の天賦図を選ぶと、右の刻印の記録が更新。紙面内は演出用の描画から操作へ切り替わる前後でPC／横画面プレビューとも同一ピクセル。",
+      "decision": "keep",
+      "related": [
+        "ComfyUI",
+        "ビジュアル刷新"
+      ],
+      "capturedAt": "2026-10-05"
+    },
+    {
+      "id": "talent-bottom",
+      "title": "旧画面（参考）｜天賦図・到達点",
+      "category": "build",
+      "image": "assets/images/talent-bottom.png",
+      "caption": "旧版の記録。現在の仕様・UIとは異なります。分岐の先に状態条件や派生攻撃を置く構成。完成大技との重複を整理してから確定する。",
+      "decision": "hold",
+      "related": [
+        "天賦図",
+        "状態条件",
+        "完成大技"
+      ]
+    },
+    {
+      "id": "equipment",
+      "title": "アイテムボックス・現行UI",
+      "category": "build",
+      "image": "assets/images/equipment.png",
+      "caption": "6部位の装備、5列の所持品、詳細・鍛造の3領域。能力名と数値を並べ、部位フィルタは白黒専用アイコンへ変更。",
+      "decision": "keep",
+      "related": [
+        "Equipment",
+        "Forge",
+        "Rarity"
+      ],
+      "capturedAt": "2026-09-11"
+    },
+    {
+      "id": "equipment-catalog",
+      "title": "旧画面（参考）｜装備アイコン体系",
+      "category": "build",
+      "image": "assets/images/equipment-catalog.png",
+      "caption": "旧版の記録。現在の仕様・UIとは異なります。武器・防具・装飾品を希少度別に並べた実装済みカタログ。色の意味を全報酬画面へ統一する基準。",
+      "decision": "hold",
+      "related": [
+        "Icon System",
+        "Equipment",
+        "Rarity Color"
+      ]
+    },
+    {
+      "id": "result",
+      "title": "探索結果と継承",
+      "category": "result",
+      "image": "assets/images/result.png",
+      "caption": "探索時間、撃破数、継承の欠片を返すRun終端。敗北と踏破で次の行動が明確に変わるよう再設計余地がある。",
+      "decision": "redesign",
+      "related": [
+        "Result",
+        "継承",
+        "再挑戦"
+      ]
+    },
+    {
+      "id": "landmark-0",
+      "title": "旧仕様：紫晶採掘場",
+      "category": "exploration",
+      "image": "assets/images/landmark0.png",
+      "caption": "壁面に接続した実配置。基本1か所、時々離れた場所にもう1か所。入口や狭い壁は避け、台座は通行不可。 周辺の壁・床・小物もランドマークと同じ細かな石肌・陰影・木材表現へ刷新。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "MAP景観",
+        "ランドマーク",
+        "通行・出現位置"
+      ],
+      "capturedAt": "2026-09-12",
+      "historical": true
+    },
+    {
+      "id": "landmark-1",
+      "title": "旧仕様：結晶神殿",
+      "category": "exploration",
+      "image": "assets/images/landmark1.png",
+      "caption": "壁面に接続した実配置。基本1か所、時々離れた場所にもう1か所。入口や狭い壁は避け、台座は通行不可。 周辺の壁・床・小物もランドマークと同じ細かな石肌・陰影・木材表現へ刷新。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "MAP景観",
+        "ランドマーク",
+        "通行・出現位置"
+      ],
+      "capturedAt": "2026-09-12",
+      "historical": true
+    },
+    {
+      "id": "landmark-2",
+      "title": "旧仕様：古代溶鉱炉",
+      "category": "exploration",
+      "image": "assets/images/landmark2.png",
+      "caption": "壁面に接続した実配置。基本1か所、時々離れた場所にもう1か所。入口や狭い壁は避け、台座は通行不可。 周辺の壁・床・小物もランドマークと同じ細かな石肌・陰影・木材表現へ刷新。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "MAP景観",
+        "ランドマーク",
+        "通行・出現位置"
+      ],
+      "capturedAt": "2026-09-12",
+      "historical": true
+    },
+    {
+      "id": "landmark-3",
+      "title": "旧仕様：冷却水車",
+      "category": "exploration",
+      "image": "assets/images/landmark3.png",
+      "caption": "壁面に接続した実配置。基本1か所、時々離れた場所にもう1か所。入口や狭い壁は避け、台座は通行不可。 周辺の壁・床・小物もランドマークと同じ細かな石肌・陰影・木材表現へ刷新。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "MAP景観",
+        "ランドマーク",
+        "通行・出現位置"
+      ],
+      "capturedAt": "2026-09-12",
+      "historical": true
+    },
+    {
+      "id": "ember-v5-hover",
+      "title": "半透明の装備比較",
+      "category": "build",
+      "image": "assets/images/ember_v5_inventory_detail.png",
+      "caption": "2026-10-04の実ゲーム画面。ComfyUIの素材と細い共通枠へ刷新。キャラクター・戦闘・部屋進行は維持。",
+      "decision": "keep",
+      "related": [
+        "ComfyUI",
+        "ビジュアル刷新"
+      ],
+      "capturedAt": "2026-10-04"
+    },
+    {
+      "id": "ember-v5-map2",
+      "title": "旧仕様：紫晶の深層・床と壁の刷新",
+      "category": "exploration",
+      "image": "assets/images/ember_v5_hud_map2.png",
+      "caption": "2026-10-04の実ゲーム画面。ComfyUIの素材と細い共通枠へ刷新。キャラクター・戦闘・部屋進行は維持。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "ComfyUI",
+        "ビジュアル刷新"
+      ],
+      "capturedAt": "2026-10-04",
+      "historical": true
+    },
+    {
+      "id": "ember-v5-map3",
+      "title": "旧仕様：終焉の炉心・床と壁の刷新",
+      "category": "exploration",
+      "image": "assets/images/ember_v5_hud_map3.png",
+      "caption": "2026-10-04の実ゲーム画面。ComfyUIの素材と細い共通枠へ刷新。キャラクター・戦闘・部屋進行は維持。 以前の地形・進行の比較記録。現在のステージは壁のない床だけの戦場。",
+      "decision": "hold",
+      "related": [
+        "ComfyUI",
+        "ビジュアル刷新"
+      ],
+      "capturedAt": "2026-10-04",
+      "historical": true
+    },
+    {
+      "id": "ember-v5-overview",
+      "title": "全体のビジュアル刷新",
+      "category": "entry",
+      "image": "assets/images/ember_v5_overview.png",
+      "caption": "2026-10-04の実ゲーム画面。ComfyUIの素材と細い共通枠へ刷新。キャラクター・戦闘・部屋進行は維持。",
+      "decision": "keep",
+      "related": [
+        "ComfyUI",
+        "ビジュアル刷新"
+      ],
+      "capturedAt": "2026-10-04"
+    }
+  ]
+}
