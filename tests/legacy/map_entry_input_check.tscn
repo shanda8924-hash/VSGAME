@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://tests/map_entry_input_boot.gd" id="1"]
+[ext_resource type="Script" path="res://tests/legacy/map_entry_input_boot.gd" id="1"]
 
 [node name="MapEntryInputCheck" type="Node"]
 process_mode = 3

@@ -1,6 +1,6 @@
 extends Node
 
-const RUNNER_SCRIPT := preload("res://tests/map_entry_input_check.gd")
+const RUNNER_SCRIPT := preload("res://tests/legacy/map_entry_input_check.gd")
 
 func _ready() -> void:
 	var runner := Node.new()

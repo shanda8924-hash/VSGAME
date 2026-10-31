@@ -1,5 +1,5 @@
 extends Node
-## `godot --headless --path . res://tests/run_economy_check.tscn`で実行する。
+## `godot --headless --path . res://tests/legacy/run_economy_check.tscn`で実行する。
 
 var _failures: Array[String] = []
 

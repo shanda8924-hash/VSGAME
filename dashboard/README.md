@@ -1,5 +1,8 @@
 # VSGAME 開発ダッシュボード
 
+> 2026-10-31: このリポジトリ内の `dashboard/dist` を唯一の正本とする（判断D7）。
+> 公開は `.github/workflows/dashboard-pages.yml`（GitHub Pages）。ChatGPT Sites 側の旧コピー（1.6.6）は更新しない。
+
 `dist/`だけで動作する、依存パッケージ不要の静的Webダッシュボードです。
 
 ## 構成

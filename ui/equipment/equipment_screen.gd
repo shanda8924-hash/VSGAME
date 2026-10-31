@@ -483,6 +483,13 @@ func _open() -> void:
 	# as a separate line and can permanently inflate the panel height.
 	visible = true
 	_refresh_gold()
+	# 5分サバイバル中は「新しく拾った装備を装備中と比べる」が目的なので、
+	# 入手順（新しい順）で開き、最新の装備を選択して比較を先に見せる（D5、2026-10-31）。
+	if GameManager.survival_mode_active and _right_mode != "forge":
+		_sort_mode = 2
+		sort_button.text = SORT_NAMES[_sort_mode]
+		_selected = null
+		_right_mode = "details"
 	_set_right_mode(_right_mode)
 	_refresh()
 	call_deferred("_focus_initial_control")

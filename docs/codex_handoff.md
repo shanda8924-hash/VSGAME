@@ -1,6 +1,13 @@
 # Codex Handoff — 2026-10-31（Phase 4まで）
 
-## 今回（D3：5分アリーナに合わない機能の整理、2026-10-31）
+## 今回（D5〜D8、2026-10-31）
+- D5 所持品：サバイバル中に[C]で開くと「入手順（新しい順）」で並び、最新の装備を選択して装備中との比較を先に見せる。鍛造は従来どおり画面内のタブから使える（Run間への移動は装備の永続化が必要なので見送り）。
+- D6 旧テスト：廃止モード向け22件を`tests/legacy/`へ移動（`tests/legacy/README.md`）。`script_load_check`は`legacy`を走査しない。`scenes/game.gd`が参照する`map_*`/`shop_runtime`/`run_economy_balance`/`imported_assets`は`tests/`直下に残した。
+- D7 ダッシュボード：リポジトリ内`dashboard/dist`を正本に（`dashboard/README.md`冒頭）。公開はGitHub Pagesのworkflow。リモート作成はユーザー作業。
+- D8 実画面：`artifacts/`の中身（432MB）を`../_backup_20261031/artifacts/`へ退避し、空の`artifacts/`（`.gdignore`）だけ残した。検査は従来どおり`artifacts/`へ書く。保存版は`docs/screens/`。
+- 検証は`script_load_check`と`five_minute_survival_check`（PC）。
+
+## 直前（D3：5分アリーナに合わない機能の整理、2026-10-31）
 - 地図（M）：サバイバルでは`ExplorationMapOverlay`を生成しない。スマホの「地図」ボタンもサバイバル中は非表示。Test Labの旧モードでは従来どおり。
 - 天賦図（T）：内容がある職業（剣士）だけ`[T]`とポーズのタブを出す（`pause_menu.gd`の`TALENT_CHARACTER_IDS`）。
 - ジャスト回避→J反撃：サバイバルでは終盤ボス（`survival_boss`グループ）が居る間だけ発生。スマホの「反撃」ボタンもその間だけ表示。

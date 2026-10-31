@@ -20,7 +20,7 @@ func _scan(path: String) -> void:
 		failures.append(path)
 		return
 	for name in directory.get_directories():
-		if name.begins_with(".") or name in ["assets", "artifacts", "data", "docs", "tools"]:
+		if name.begins_with(".") or name in ["assets", "artifacts", "data", "docs", "tools", "legacy"]:
 			continue
 		_scan(path.path_join(name))
 	for name in directory.get_files():
