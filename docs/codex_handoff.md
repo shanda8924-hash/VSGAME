@@ -1,5 +1,12 @@
 # Codex Handoff — 2026-10-31（Phase 4まで）
 
+## 今回（サバイバルの戦場の見た目：床の飾り・光だまり・空気感、2026-10-31）
+- 床だけの連続戦場（floor_only）は同じ床素材の繰り返しだけだった。`entities/stage_environment/detailed_map_surfaces.gd`のfloor_only経路に、描画だけの3層を追加（当たり判定・湧き・経路は不変）：
+  1. 床の飾り：`tools/map_unified/build.py`→`assets/visuals/floor_decals/map{1,2,3}.png`（1テーマ16種、64px、1ドット＝2px。ひび・瓦礫・欠け・水たまり・骨・苔・格子・染み＋MAP1 骸と鎖・古い紋、MAP2 紫晶と鉱脈、MAP3 熔岩のひび・鉱滓・歯車）。世界座標のハッシュで64px格子の約1割へ配置（同じ場所は常に同じ）。192px格子の約1/3に大きな染みを薄く敷いて調子を変える。位置の256px吸着時だけ再描画。
+  2. 光だまり：光る飾り（紫晶・熔岩・紋）の上へ加算合成の`FloorGlow`（明滅）。
+  3. 空気感：画面の縁の暗がり（`vignette.png`、テーマ色、HUDより下のCanvasLayer）と浮遊粒（MAP1 塵／MAP2 煌めき／MAP3 上昇する火の粉、CPUParticles2D 22〜34粒、世界座標）。床の色味もテーマ別（寒色／紫／暖色）。
+- 検証：`script_load_check` 0件、`five_minute_survival_check` PASS、`map_theme_check` PASS。実画面は`tools/capture_survival_field.tscn`（change_sceneで通常起動と同じ経路）→`docs/screens/survival_field_after.png`。
+
 ## 今回（居合のブラッシュアップ、2026-10-31）
 - 威力・判定・時間は変えず、見た目と手触りだけ。`components/active_skill_component.gd`：構え中に柄の閃き（`hit_light` 22px）と進路の点線（`IaiTelegraph`、青緑、構えの0.16秒で消える）＋抜刀音`iai_draw.wav`。残像を鋼色`#90ddff`の加算合成に。斬り抜け後に進路全体へ刀筋`assets/vfx/pixel/iai_trail.png`（新規6コマ、`tools/vfx_unified/effects.py`の`iai_trail`）を0.3秒、敵に当たっていれば0.03秒のヒットストップ。最後に`sheathe_hold`（既定0.12秒、`active_skill_params`で調整可）の納刀の静止と`iai_sheathe.wav`で移動ロック解除（乱撃派のコンボキャンセル時は静止しない）。
 - `charges_changed(remaining, max)`信号を追加し、HUDは乱撃派のとき残りチャージを「◆◆／◆◇」で状態の横に表示。準備完了時はアイコンも一瞬白く光る。
