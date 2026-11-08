@@ -1,0 +1,25 @@
+{
+ "key": "signature_glacial_spear_rain",
+ "fx": "ice/icicle-fall",
+ "name": "Icicle fall",
+ "fps": 15,
+ "loop": false,
+ "count": 40,
+ "columns": 15,
+ "frame_size": [
+  132,
+  114
+ ],
+ "pivot": [
+  65,
+  97
+ ],
+ "scale": 2,
+ "fit": "size",
+ "speed": 1.3,
+ "z": 45,
+ "tail_fade": 0.3,
+ "flip": false,
+ "palette": null,
+ "source": "pixelfx (MIT) https://github.com/patch-gg/pixelfx"
+}

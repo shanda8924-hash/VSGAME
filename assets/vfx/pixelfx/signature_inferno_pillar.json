@@ -1,0 +1,25 @@
+{
+ "key": "signature_inferno_pillar",
+ "fx": "fire/flame-pillar",
+ "name": "Flame pillar",
+ "fps": 15,
+ "loop": false,
+ "count": 46,
+ "columns": 11,
+ "frame_size": [
+  171,
+  234
+ ],
+ "pivot": [
+  85,
+  211
+ ],
+ "scale": 2,
+ "fit": "size",
+ "speed": 1.5,
+ "z": 45,
+ "tail_fade": 0.3,
+ "flip": false,
+ "palette": null,
+ "source": "pixelfx (MIT) https://github.com/patch-gg/pixelfx"
+}

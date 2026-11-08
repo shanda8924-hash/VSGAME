@@ -1,0 +1,474 @@
+[
+ {
+  "key": "hit_normal",
+  "fx": "impacts/hit-spark",
+  "n": 11,
+  "w": 113,
+  "h": 69,
+  "mb": 0.33
+ },
+ {
+  "key": "hit_critical",
+  "fx": "impacts/crit-hit",
+  "n": 19,
+  "w": 164,
+  "h": 121,
+  "mb": 1.82
+ },
+ {
+  "key": "hit_fire",
+  "fx": "impacts/hit-spark",
+  "n": 11,
+  "w": 113,
+  "h": 69,
+  "mb": 0.33
+ },
+ {
+  "key": "hit_ice",
+  "fx": "impacts/hit-spark",
+  "n": 11,
+  "w": 113,
+  "h": 69,
+  "mb": 0.33
+ },
+ {
+  "key": "hit_lightning",
+  "fx": "lightning/zap-hit",
+  "n": 19,
+  "w": 118,
+  "h": 86,
+  "mb": 1.32
+ },
+ {
+  "key": "hit_dark",
+  "fx": "impacts/hit-spark",
+  "n": 11,
+  "w": 113,
+  "h": 69,
+  "mb": 0.33
+ },
+ {
+  "key": "hit_light",
+  "fx": "impacts/hit-spark",
+  "n": 11,
+  "w": 113,
+  "h": 69,
+  "mb": 0.33
+ },
+ {
+  "key": "contact_mark",
+  "fx": "impacts/blunt-hit",
+  "n": 11,
+  "w": 89,
+  "h": 76,
+  "mb": 0.28
+ },
+ {
+  "key": "power_spark",
+  "fx": "impacts/hit-spark",
+  "n": 11,
+  "w": 113,
+  "h": 69,
+  "mb": 0.33
+ },
+ {
+  "key": "attack_pulse",
+  "fx": "arcane/mana-burst",
+  "n": 19,
+  "w": 160,
+  "h": 144,
+  "mb": 2.11
+ },
+ {
+  "key": "attack_projectile",
+  "fx": "projectiles/muzzle-pistol",
+  "n": 13,
+  "w": 73,
+  "h": 60,
+  "mb": 0.22
+ },
+ {
+  "key": "beam",
+  "fx": "arcane/arcane-beam",
+  "n": 18,
+  "w": 229,
+  "h": 88,
+  "mb": 1.84
+ },
+ {
+  "key": "chain",
+  "fx": "lightning/chain-lightning",
+  "n": 16,
+  "w": 212,
+  "h": 93,
+  "mb": 1.35
+ },
+ {
+  "key": "echo_slash",
+  "fx": "melee/double-slash",
+  "n": 17,
+  "w": 113,
+  "h": 97,
+  "mb": 0.71
+ },
+ {
+  "key": "guard_shield",
+  "fx": "holy/divine-shield",
+  "n": 29,
+  "w": 72,
+  "h": 74,
+  "mb": 1.14
+ },
+ {
+  "key": "iai_trail",
+  "fx": "melee/thrust",
+  "n": 16,
+  "w": 155,
+  "h": 66,
+  "mb": 1.01
+ },
+ {
+  "key": "iai_glint",
+  "fx": "impacts/hit-spark",
+  "n": 11,
+  "w": 113,
+  "h": 69,
+  "mb": 0.33
+ },
+ {
+  "key": "equip_slash",
+  "fx": "melee/sword-slash",
+  "n": 16,
+  "w": 127,
+  "h": 101,
+  "mb": 0.78
+ },
+ {
+  "key": "equip_light",
+  "fx": "melee/dagger-flurry",
+  "n": 20,
+  "w": 108,
+  "h": 82,
+  "mb": 1.22
+ },
+ {
+  "key": "equip_heavy",
+  "fx": "melee/heavy-cleave",
+  "n": 25,
+  "w": 149,
+  "h": 102,
+  "mb": 1.51
+ },
+ {
+  "key": "equip_thrust",
+  "fx": "melee/thrust",
+  "n": 16,
+  "w": 155,
+  "h": 66,
+  "mb": 1.01
+ },
+ {
+  "key": "equip_axe",
+  "fx": "melee/spin-slash",
+  "n": 17,
+  "w": 185,
+  "h": 94,
+  "mb": 1.46
+ },
+ {
+  "key": "equip_hammer",
+  "fx": "melee/hammer-smash",
+  "n": 25,
+  "w": 154,
+  "h": 96,
+  "mb": 1.47
+ },
+ {
+  "key": "equip_scythe",
+  "fx": "melee/scythe-reap",
+  "n": 25,
+  "w": 124,
+  "h": 66,
+  "mb": 1
+ },
+ {
+  "key": "equip_shot",
+  "fx": "projectiles/muzzle-pistol",
+  "n": 13,
+  "w": 73,
+  "h": 60,
+  "mb": 0.22
+ },
+ {
+  "key": "equip_magic",
+  "fx": "projectiles/plasma-shot",
+  "n": 12,
+  "w": 103,
+  "h": 52,
+  "mb": 0.25
+ },
+ {
+  "key": "wizard_bolt",
+  "fx": "arcane/arcane-orb",
+  "n": 29,
+  "w": 88,
+  "h": 105,
+  "mb": 1.62
+ },
+ {
+  "key": "dodge_burst",
+  "fx": "spawn/poof",
+  "n": 33,
+  "w": 85,
+  "h": 75,
+  "mb": 1.17
+ },
+ {
+  "key": "chest_burst",
+  "fx": "holy/feather-burst",
+  "n": 31,
+  "w": 139,
+  "h": 131,
+  "mb": 2.92
+ },
+ {
+  "key": "active_aura",
+  "fx": "nature/healing-bloom",
+  "n": 31,
+  "w": 108,
+  "h": 114,
+  "mb": 1.69
+ },
+ {
+  "key": "active_burst",
+  "fx": "arcane/mana-burst",
+  "n": 28,
+  "w": 160,
+  "h": 144,
+  "mb": 3.16
+ },
+ {
+  "key": "active_chains",
+  "fx": "shadow/grasping-hands",
+  "n": 31,
+  "w": 120,
+  "h": 88,
+  "mb": 1.37
+ },
+ {
+  "key": "active_charge",
+  "fx": "melee/thrust",
+  "n": 16,
+  "w": 155,
+  "h": 66,
+  "mb": 1.01
+ },
+ {
+  "key": "active_execution",
+  "fx": "melee/heavy-cleave",
+  "n": 29,
+  "w": 154,
+  "h": 102,
+  "mb": 2.34
+ },
+ {
+  "key": "active_holy_burst",
+  "fx": "holy/smite",
+  "n": 31,
+  "w": 181,
+  "h": 175,
+  "mb": 3.99
+ },
+ {
+  "key": "active_impact",
+  "fx": "impacts/ground-slam",
+  "n": 31,
+  "w": 236,
+  "h": 167,
+  "mb": 4.81
+ },
+ {
+  "key": "active_rain",
+  "fx": "arcane/star-fall",
+  "n": 39,
+  "w": 170,
+  "h": 156,
+  "mb": 4.86
+ },
+ {
+  "key": "active_sanctuary",
+  "fx": "holy/heal-aoe",
+  "n": 45,
+  "w": 228,
+  "h": 112,
+  "mb": 4.68
+ },
+ {
+  "key": "active_shield",
+  "fx": "holy/divine-shield",
+  "n": 29,
+  "w": 72,
+  "h": 74,
+  "mb": 1.14
+ },
+ {
+  "key": "active_summon",
+  "fx": "spawn/summon-rise",
+  "n": 46,
+  "w": 161,
+  "h": 112,
+  "mb": 3.3
+ },
+ {
+  "key": "active_time",
+  "fx": "arcane/time-stop",
+  "n": 37,
+  "w": 107,
+  "h": 111,
+  "mb": 1.72
+ },
+ {
+  "key": "concept_dark_rift",
+  "fx": "shadow/dark-explosion",
+  "n": 37,
+  "w": 249,
+  "h": 231,
+  "mb": 8.78
+ },
+ {
+  "key": "concept_fire_burst",
+  "fx": "fire/fire-ring",
+  "n": 37,
+  "w": 206,
+  "h": 110,
+  "mb": 3.89
+ },
+ {
+  "key": "concept_ice_nova",
+  "fx": "ice/frost-nova",
+  "n": 37,
+  "w": 256,
+  "h": 127,
+  "mb": 4.96
+ },
+ {
+  "key": "concept_light_burst",
+  "fx": "holy/feather-burst",
+  "n": 31,
+  "w": 139,
+  "h": 131,
+  "mb": 2.92
+ },
+ {
+  "key": "concept_thunder_strike",
+  "fx": "lightning/thunderclap",
+  "n": 30,
+  "w": 256,
+  "h": 140,
+  "mb": 4.38
+ },
+ {
+  "key": "concept_wind_blade",
+  "fx": "melee/spin-slash",
+  "n": 17,
+  "w": 185,
+  "h": 94,
+  "mb": 1.46
+ },
+ {
+  "key": "signature_thunderlord_descent",
+  "fx": "lightning/lightning-strike",
+  "n": 34,
+  "w": 227,
+  "h": 262,
+  "mb": 8.17
+ },
+ {
+  "key": "signature_inferno_pillar",
+  "fx": "fire/flame-pillar",
+  "n": 46,
+  "w": 171,
+  "h": 234,
+  "mb": 8.4
+ },
+ {
+  "key": "signature_glacial_spear_rain",
+  "fx": "ice/icicle-fall",
+  "n": 40,
+  "w": 132,
+  "h": 114,
+  "mb": 2.58
+ },
+ {
+  "key": "signature_radiant_blade_array",
+  "fx": "holy/holy-pillar",
+  "n": 40,
+  "w": 192,
+  "h": 227,
+  "mb": 6.65
+ },
+ {
+  "key": "signature_void_severance",
+  "fx": "shadow/shadow-tendrils",
+  "n": 40,
+  "w": 137,
+  "h": 97,
+  "mb": 2.13
+ },
+ {
+  "key": "mass_kill",
+  "fx": "explosions/plasma-explosion",
+  "n": 27,
+  "w": 201,
+  "h": 188,
+  "mb": 4.32
+ },
+ {
+  "key": "poison",
+  "fx": "nature/toxic-puddle",
+  "n": 48,
+  "w": 102,
+  "h": 55,
+  "mb": 1.28
+ },
+ {
+  "key": "warning_ring",
+  "fx": "arcane/rune-circle",
+  "n": 48,
+  "w": 114,
+  "h": 86,
+  "mb": 1.91
+ },
+ {
+  "key": "loot_awaken",
+  "fx": "pickups/collect-burst",
+  "n": 21,
+  "w": 76,
+  "h": 86,
+  "mb": 0.52
+ },
+ {
+  "key": "loot_seal",
+  "fx": "arcane/rune-circle",
+  "n": 48,
+  "w": 114,
+  "h": 87,
+  "mb": 1.93
+ },
+ {
+  "key": "forge_awaken",
+  "fx": "arcane/mana-burst",
+  "n": 28,
+  "w": 160,
+  "h": 144,
+  "mb": 3.16
+ },
+ {
+  "key": "heal_pickup",
+  "fx": "nature/healing-bloom",
+  "n": 31,
+  "w": 108,
+  "h": 114,
+  "mb": 1.69
+ }
+]

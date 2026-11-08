@@ -529,8 +529,7 @@ func _configure_preview(preview: Control, upgrade: UpgradeData, rank: int, accen
 	preview.set("rank", rank)
 	preview.set("accent", accent)
 	if upgrade.category == "arcana":
-		var sheet_path := String(upgrade.effect_params.get("vfx_sheet", ""))
-		preview.set("arcana_sheet", load(sheet_path) as Texture2D if ResourceLoader.exists(sheet_path) else null)
+		preview.set("arcana_key", String(upgrade.effect_params.get("vfx_key", "signature_" + String(upgrade.effect_params.get("skill_id", "")))))
 		preview.set("arcana_counts", upgrade.effect_params.get("strike_counts", [1]))
 		preview.set("arcana_unit", String(upgrade.effect_params.get("unit", "")))
 	var character: CharacterData = actor.weapon_manager._character_data if actor else null

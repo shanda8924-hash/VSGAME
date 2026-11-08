@@ -1,0 +1,25 @@
+{
+ "key": "guard_shield",
+ "fx": "holy/divine-shield",
+ "name": "Divine shield",
+ "fps": 12,
+ "loop": true,
+ "count": 29,
+ "columns": 28,
+ "frame_size": [
+  72,
+  74
+ ],
+ "pivot": [
+  36,
+  61
+ ],
+ "scale": 1,
+ "fit": "fixed",
+ "speed": 1,
+ "z": 4,
+ "tail_fade": 0.3,
+ "flip": false,
+ "palette": "steel",
+ "source": "pixelfx (MIT) https://github.com/patch-gg/pixelfx"
+}

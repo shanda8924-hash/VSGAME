@@ -3,8 +3,6 @@ class_name Projectile
 ## 飛翔武器の弾。HitboxComponentを継承し、移動ロジックのみを追加する。
 ## (弾は「移動する攻撃判定」そのものなので、コンポジションではなく継承が適切)
 
-const WIZARD_MAGIC_SHEET := preload("res://assets/vfx/imported/pixel_magic_effects_animations.png")
-static var _wizard_magic_frames: SpriteFrames
 
 @export var speed: float = 320.0
 ## 矢の絵柄の背後に、武器Theme色のごく控えめな加算(ADD)グローを重ねる
@@ -31,27 +29,37 @@ var chain_visited: Dictionary = {}
 func _ready() -> void:
 	# ROOM遷移・Boss死亡時に残弾を確実に回収できる共通識別子。
 	add_to_group("projectiles")
+	# 矢の背後の淡い光は pixelfx projectiles/plasma-shot の1コマ（projectile_core）。
+	if _glow and _glow.texture == null:
+		_glow.texture = PixelSpriteVFX.frame_texture("projectile_core", 2)
 
-## 紫の渦（6コマのループ、tools/vfx_unified）を魔導士の追尾弾に使う。判定と属性命中演出は維持する。
-func use_wizard_magic() -> void:
-	if _wizard_magic_frames == null:
-		_wizard_magic_frames = SpriteFrames.new()
-		_wizard_magic_frames.set_animation_speed("default", 12.0)
-		var side := WIZARD_MAGIC_SHEET.get_height()
-		for frame in int(WIZARD_MAGIC_SHEET.get_width() / side):
-			var atlas := AtlasTexture.new()
-			atlas.atlas = WIZARD_MAGIC_SHEET
-			atlas.region = Rect2(frame * side, 0, side, side)
-			_wizard_magic_frames.add_frame("default", atlas)
+## 敵弾：矢の絵を隠し、赤いpixelfxの弾（enemy_shot、ループ）にする。プレイヤーの矢と一目で区別できる。
+func use_enemy_shot() -> void:
 	$Visual.visible = false
-	var magic := AnimatedSprite2D.new()
+	if _glow:
+		_glow.visible = false
+	var shot := PixelSpriteVFX.make_persistent("enemy_shot", Vector2.ZERO, true)
+	if shot == null:
+		return
+	shot.name = "EnemyShotVFX"
+	shot.offset = -PixelSpriteVFX.frame_size_for("enemy_shot") * Vector2(0.8, 0.5)
+	shot.scale = Vector2.ONE * 0.6
+	add_child(shot)
+	shot.play_once(global_position)
+	shot.position = Vector2.ZERO
+
+## 魔導士の追尾弾の見た目は pixelfx arcane/arcane-orb（wizard_bolt、ループ）。判定と属性命中演出は維持する。
+func use_wizard_magic() -> void:
+	$Visual.visible = false
+	var magic := PixelSpriteVFX.make_persistent("wizard_bolt", Vector2.ZERO, true)
+	if magic == null:
+		return
 	magic.name = "WizardMagic"
-	magic.sprite_frames = _wizard_magic_frames
-	magic.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	magic.scale = Vector2.ONE * 41.0 / float(WIZARD_MAGIC_SHEET.get_height())
-	magic.modulate = Color(0.93, 0.86, 1.0)
+	magic.offset = -PixelSpriteVFX.frame_size_for("wizard_bolt") * 0.5
+	magic.scale = Vector2.ONE * 0.5
 	add_child(magic)
-	magic.play("default")
+	magic.play_once(global_position)
+	magic.position = Vector2.ZERO
 
 func launch(target_position: Vector2, weapon_data: WeaponData, empowerment_level: int = 1, stat_modifier: StatModifierComponent = null, player_upgrades: PlayerUpgradesComponent = null) -> void:
 	# クリティカル判定は「発射時」に一度だけ行う(弾は基本1回しか当たらないため命中時と実質同じだが、

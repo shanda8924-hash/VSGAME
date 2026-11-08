@@ -1,0 +1,25 @@
+{
+ "key": "contact_mark",
+ "fx": "impacts/blunt-hit",
+ "name": "Blunt hit",
+ "fps": 20,
+ "loop": false,
+ "count": 11,
+ "columns": 11,
+ "frame_size": [
+  89,
+  76
+ ],
+ "pivot": [
+  48,
+  61
+ ],
+ "scale": 1,
+ "fit": "fixed",
+ "speed": 1.8,
+ "z": 45,
+ "tail_fade": 0.3,
+ "flip": false,
+ "palette": null,
+ "source": "pixelfx (MIT) https://github.com/patch-gg/pixelfx"
+}

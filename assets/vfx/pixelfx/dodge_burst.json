@@ -1,0 +1,25 @@
+{
+ "key": "dodge_burst",
+ "fx": "spawn/poof",
+ "name": "Poof",
+ "fps": 20,
+ "loop": false,
+ "count": 33,
+ "columns": 24,
+ "frame_size": [
+  85,
+  75
+ ],
+ "pivot": [
+  39,
+  64
+ ],
+ "scale": 1,
+ "fit": "fixed",
+ "speed": 1.6,
+ "z": 45,
+ "tail_fade": 0.3,
+ "flip": false,
+ "palette": "steel",
+ "source": "pixelfx (MIT) https://github.com/patch-gg/pixelfx"
+}

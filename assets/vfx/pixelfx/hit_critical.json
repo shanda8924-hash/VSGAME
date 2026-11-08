@@ -1,0 +1,25 @@
+{
+ "key": "hit_critical",
+ "fx": "impacts/crit-hit",
+ "name": "Critical hit",
+ "fps": 20,
+ "loop": false,
+ "count": 19,
+ "columns": 12,
+ "frame_size": [
+  164,
+  121
+ ],
+ "pivot": [
+  67,
+  93
+ ],
+ "scale": 1,
+ "fit": "fixed",
+ "speed": 1.4,
+ "z": 45,
+ "tail_fade": 0.3,
+ "flip": false,
+ "palette": null,
+ "source": "pixelfx (MIT) https://github.com/patch-gg/pixelfx"
+}

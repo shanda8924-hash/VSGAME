@@ -14,18 +14,16 @@ var source: EnemyBasic
 var _elapsed := 0.0
 var _tick := 0.0
 var _activated := false
-var _ring: Sprite2D
+var _ring: PixelSpriteVFX
 
 func _ready() -> void:
 	add_to_group("room_transient")
 	z_index = 5
-	_ring = Sprite2D.new()
-	_ring.name = "PixelRing"
-	_ring.texture = WarningCircle.RING_TEXTURE
-	_ring.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	_ring.scale = Vector2.ONE * (radius / WarningCircle.RING_PIXEL_RADIUS)
-	_ring.modulate = Color(color, 0.9)
-	add_child(_ring)
+	_ring = WarningCircle.make_ring(radius, Color(color, 0.9))
+	if _ring:
+		add_child(_ring)
+		_ring.play_once(global_position)
+		_ring.position = Vector2.ZERO
 
 func _process(delta: float) -> void:
 	if source != null and (not is_instance_valid(source) or source._is_dead or (source.exploration_guard and (not source.exploration_alert or source._returning_home))):
@@ -34,7 +32,8 @@ func _process(delta: float) -> void:
 	_elapsed += delta
 	if not _activated:
 		var warning_progress := clampf(_elapsed / maxf(warning_duration, 0.01), 0.0, 1.0)
-		_ring.modulate.a = 0.75 + warning_progress * 0.25
+		if _ring:
+			_ring.modulate.a = 0.75 + warning_progress * 0.25
 		queue_redraw()
 		if _elapsed >= warning_duration:
 			_activate()
@@ -49,7 +48,8 @@ func _process(delta: float) -> void:
 func _activate() -> void:
 	_activated = true
 	queue_redraw()
-	_ring.modulate = Color(color, 0.95)
+	if _ring:
+		_ring.set_tint(Color(color, 0.95))
 	var vfx_id := "concept_fire_burst"
 	if effect_id == "lightning":
 		vfx_id = "concept_thunder_strike"

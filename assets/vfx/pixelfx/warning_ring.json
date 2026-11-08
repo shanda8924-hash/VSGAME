@@ -1,0 +1,25 @@
+{
+ "key": "warning_ring",
+ "fx": "arcane/rune-circle",
+ "name": "Rune circle",
+ "fps": 12,
+ "loop": true,
+ "count": 48,
+ "columns": 17,
+ "frame_size": [
+  114,
+  86
+ ],
+ "pivot": [
+  57,
+  66
+ ],
+ "scale": 2,
+ "fit": "size",
+ "speed": 1,
+ "z": 2,
+ "tail_fade": 0.3,
+ "flip": false,
+ "palette": "danger",
+ "source": "pixelfx (MIT) https://github.com/patch-gg/pixelfx"
+}

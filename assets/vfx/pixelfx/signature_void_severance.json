@@ -1,0 +1,25 @@
+{
+ "key": "signature_void_severance",
+ "fx": "shadow/shadow-tendrils",
+ "name": "Shadow tendrils",
+ "fps": 15,
+ "loop": false,
+ "count": 40,
+ "columns": 14,
+ "frame_size": [
+  137,
+  97
+ ],
+ "pivot": [
+  64,
+  74
+ ],
+ "scale": 2,
+ "fit": "size",
+ "speed": 1.4,
+ "z": 45,
+ "tail_fade": 0.3,
+ "flip": false,
+ "palette": null,
+ "source": "pixelfx (MIT) https://github.com/patch-gg/pixelfx"
+}

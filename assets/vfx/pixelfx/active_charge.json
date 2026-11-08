@@ -1,0 +1,25 @@
+{
+ "key": "active_charge",
+ "fx": "melee/thrust",
+ "name": "Thrust",
+ "fps": 20,
+ "loop": false,
+ "count": 16,
+ "columns": 13,
+ "frame_size": [
+  155,
+  66
+ ],
+ "pivot": [
+  13,
+  55
+ ],
+ "scale": 2,
+ "fit": "stretch_x",
+ "speed": 1.4,
+ "z": 45,
+ "tail_fade": 0.3,
+ "flip": false,
+ "palette": "steel",
+ "source": "pixelfx (MIT) https://github.com/patch-gg/pixelfx"
+}

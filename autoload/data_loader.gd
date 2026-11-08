@@ -138,7 +138,7 @@ func _load_attack_vfx_effects() -> void:
 	while file_name != "":
 		if file_name.ends_with(".tres"):
 			var data: AttackVFXData = load(ATTACK_VFX_DIR + file_name)
-			if data and data.id != "" and data.sprite_sheet:
+			if data and data.id != "":
 				attack_vfx_effects[data.id] = data
 			else:
 				push_warning("DataLoader: Attack VFX読込失敗 -> %s" % file_name)

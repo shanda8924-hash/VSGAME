@@ -1,0 +1,25 @@
+{
+ "key": "active_sanctuary",
+ "fx": "holy/heal-aoe",
+ "name": "Healing ring",
+ "fps": 15,
+ "loop": false,
+ "count": 45,
+ "columns": 8,
+ "frame_size": [
+  228,
+  112
+ ],
+ "pivot": [
+  114,
+  82
+ ],
+ "scale": 2,
+ "fit": "size",
+ "speed": 1.4,
+ "z": 45,
+ "tail_fade": 0.3,
+ "flip": false,
+ "palette": null,
+ "source": "pixelfx (MIT) https://github.com/patch-gg/pixelfx"
+}

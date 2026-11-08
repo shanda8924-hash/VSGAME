@@ -1,0 +1,25 @@
+{
+ "key": "loot_beam_uncommon",
+ "fx": "pickups/loot-beam",
+ "name": "Loot beam",
+ "fps": 12,
+ "loop": true,
+ "count": 29,
+ "columns": 29,
+ "frame_size": [
+  63,
+  164
+ ],
+ "pivot": [
+  31,
+  156
+ ],
+ "scale": 1,
+ "fit": "fixed",
+ "speed": 1,
+ "z": 0,
+ "tail_fade": 0.3,
+ "flip": false,
+ "palette": "rarity_uncommon",
+ "source": "pixelfx (MIT) https://github.com/patch-gg/pixelfx"
+}

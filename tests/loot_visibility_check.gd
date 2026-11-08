@@ -39,8 +39,8 @@ func _run_checks() -> void:
 	var dropped_items := get_tree().get_nodes_in_group("ground_equipment")
 	_check(dropped_items.size() == before_drop_count + 1, "elite equipment drop creates one ground item")
 	var dropped := dropped_items.back() as GroundEquipmentItem
-	var dropped_seal := dropped.get_node_or_null("Visual/RoyalLootSeal") as Sprite2D
-	_check(dropped_seal != null and dropped_seal.texture != null and dropped_seal.texture.resource_path == GroundEquipmentItem.LOOT_SEAL_TEXTURE_PATH, "drop connects the generated loot seal PNG")
+	var dropped_seal := dropped.get_node_or_null("Visual/RoyalLootSeal") as PixelSpriteVFX
+	_check(dropped_seal != null and dropped_seal.get_meta("pixel_vfx_id", "") == "loot_seal", "drop connects the pixelfx loot seal")
 	_check(dropped.get_node_or_null("Visual/PixelLootPlate") == null and dropped.get_node_or_null("Visual/PixelLootOutline") == null, "procedural plate and line are removed")
 	_check(dropped.get_node_or_null("Visual/LootBeam") is GroundEquipmentItem.LootBeam and dropped.get_node_or_null("Visual/LootBeamGlow") == null, "drop creates one rarity-coloured loot beam (Diablo-style pillar)")
 	_check(dropped.get_node_or_null("Visual/LootAmbientParticles") == null and dropped.get_node_or_null("Visual/LootSpawnBurst") == null, "drop creates no persistent or duplicate CPU emitter")
@@ -63,16 +63,16 @@ func _run_checks() -> void:
 		add_child(ground)
 		ground.global_position = origin + Vector2((index - 2) * 54, 90)
 		matrix.append(ground)
-		var seal := ground.get_node_or_null("Visual/RoyalLootSeal") as Sprite2D
-		seal_widths.append(seal.scale.x * seal.texture.get_width() if seal != null else 0.0)
+		var seal := ground.get_node_or_null("Visual/RoyalLootSeal") as PixelSpriteVFX
+		seal_widths.append(seal.scale.x * PixelSpriteVFX.frame_size_for("loot_seal").x if seal != null else 0.0)
 		seal_scales.append(seal.scale if seal != null else Vector2.ZERO)
-		_check(seal != null and seal.texture != null and seal.texture.resource_path == GroundEquipmentItem.LOOT_SEAL_TEXTURE_PATH, "%s uses its generated seal image" % rarities[index])
-		_check(seal != null and seal.modulate == item.get_rarity_color() and seal.modulate.a == 1.0, "%s remains solid and uses its rarity color" % rarities[index])
+		_check(seal != null and seal.get_meta("pixel_vfx_id", "") == "loot_seal" and seal.persistent, "%s uses the pixelfx seal" % rarities[index])
+		_check(seal != null and seal.modulate != Color.WHITE and seal.modulate.a == 1.0, "%s remains solid and carries its rarity tint" % rarities[index])
 		_check(seal != null and seal.texture_filter == CanvasItem.TEXTURE_FILTER_NEAREST and not seal.is_processing(), "%s has a static nearest-pixel seal" % rarities[index])
 		_check(seal_widths.back() >= 38.0 and seal_widths.back() <= 62.0, "%s seal stays inside the compact 38-62px width budget" % rarities[index])
 		var awakening := ground.get_node_or_null("Visual/LootAwakening") as PixelSpriteVFX
-		_check(awakening != null and awakening.get_meta("pixel_vfx_texture", "") == "res://assets/vfx/pixel/loot_awaken.png", "%s uses the generated arrival sheet" % rarities[index])
-		_check(awakening != null and awakening.sprite_frames.get_frame_count("play") == 6 and is_equal_approx(awakening._duration, 0.7), "%s arrival has six frames and a 0.7 second lifetime" % rarities[index])
+		_check(awakening != null and awakening.get_meta("pixel_vfx_id", "") == "loot_awaken" and String(awakening.get_meta("pixel_vfx_source", "")) == "pickups/collect-burst", "%s uses the pixelfx arrival burst" % rarities[index])
+		_check(awakening != null and awakening.sprite_frames.get_frame_count("play") >= 6 and awakening.get_length() < 0.8, "%s arrival is a short multi-frame burst" % rarities[index])
 	for index in range(1, rarities.size()):
 		_check(seal_widths[index] > seal_widths[index - 1], "seal size increases with rarity: %s" % rarities[index])
 	if DisplayServer.get_name() != "headless":
@@ -81,7 +81,7 @@ func _run_checks() -> void:
 	await get_tree().create_timer(0.82, false).timeout
 	for index in matrix.size():
 		var ground := matrix[index]
-		var seal := ground.get_node_or_null("Visual/RoyalLootSeal") as Sprite2D
+		var seal := ground.get_node_or_null("Visual/RoyalLootSeal") as PixelSpriteVFX
 		_check(seal != null and seal.scale == seal_scales[index] and seal.position == Vector2(0, 8) and seal.modulate.a == 1.0, "%s solid seal retains its fixed size and position after arrival" % ground.equipment.rarity)
 		_check(ground.get_node_or_null("Visual/LootAwakening") == null, "%s arrival animation expires" % ground.equipment.rarity)
 		_check(ground.get_node_or_null("Visual/LootBeam") is GroundEquipmentItem.LootBeam and ground.get_node_or_null("Visual/LootSpawnBeam") == null, "%s keeps its one rarity-coloured loot beam after arrival" % ground.equipment.rarity)

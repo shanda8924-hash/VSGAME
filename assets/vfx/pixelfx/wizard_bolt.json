@@ -1,0 +1,25 @@
+{
+ "key": "wizard_bolt",
+ "fx": "arcane/arcane-orb",
+ "name": "Arcane orb",
+ "fps": 12,
+ "loop": true,
+ "count": 29,
+ "columns": 23,
+ "frame_size": [
+  88,
+  105
+ ],
+ "pivot": [
+  44,
+  98
+ ],
+ "scale": 1,
+ "fit": "fixed",
+ "speed": 1,
+ "z": 45,
+ "tail_fade": 0.3,
+ "flip": false,
+ "palette": null,
+ "source": "pixelfx (MIT) https://github.com/patch-gg/pixelfx"
+}

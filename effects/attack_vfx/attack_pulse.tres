@@ -1,12 +1,10 @@
-[gd_resource type="Resource" script_class="AttackVFXData" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="AttackVFXData" load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://resources/attack_vfx_data.gd" id="1"]
-[ext_resource type="Texture2D" path="res://assets/vfx/attack/attack_pulse_6f.png" id="2"]
 
 [resource]
 script = ExtResource("1")
 id = "attack_pulse"
-sprite_sheet = ExtResource("2")
 frame_count = 6
 fps = 14.0
 lifetime = 0.5

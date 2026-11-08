@@ -1,0 +1,25 @@
+{
+ "key": "equip_slash",
+ "fx": "melee/sword-slash",
+ "name": "Sword slash",
+ "fps": 20,
+ "loop": false,
+ "count": 16,
+ "columns": 16,
+ "frame_size": [
+  127,
+  101
+ ],
+ "pivot": [
+  43,
+  92
+ ],
+ "scale": 1,
+ "fit": "fixed",
+ "speed": 1.6,
+ "z": 3,
+ "tail_fade": 0.3,
+ "flip": false,
+ "palette": null,
+ "source": "pixelfx (MIT) https://github.com/patch-gg/pixelfx"
+}

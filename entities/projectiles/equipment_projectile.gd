@@ -9,9 +9,15 @@ func _ready() -> void:
 	super._ready()
 	set_meta("equipment_attack", true)
 	if magic:
-		$Visual.texture = load("res://assets/vfx/equipment_comfy/magic_6f.png")
-		$Visual.hframes = 6
-		$Visual.scale = Vector2.ONE * 35.0 / float($Visual.texture.get_height())
+		# 魔法弾の見た目は pixelfx projectiles/plasma-shot（equip_magic、ループ）。向きは弾ノードの回転に従う。
+		var bolt := PixelSpriteVFX.make_persistent("equip_magic", Vector2.ZERO, true)
+		if bolt:
+			bolt.name = "MagicBolt"
+			bolt.offset = -PixelSpriteVFX.frame_size_for("equip_magic") * Vector2(0.8, 0.5)
+			$Visual.visible = false
+			add_child(bolt)
+			bolt.play_once(global_position)
+			bolt.position = Vector2.ZERO
 
 func _physics_process(delta: float) -> void:
 	if not is_instance_valid(actor) or actor._is_dead:
@@ -24,8 +30,6 @@ func _physics_process(delta: float) -> void:
 		damage_enabled = false
 		queue_free()
 	_age += delta
-	if magic:
-		$Visual.frame = int(_age * 20.0) % 6
 
 func _find_nearest_enemy() -> Node2D:
 	return actor.weapon_manager.find_nearest_enemy(actor.global_position, attack_radius, true) if is_instance_valid(actor) else null

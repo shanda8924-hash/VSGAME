@@ -354,9 +354,9 @@ func _run_ground_equipment_feature_probe() -> void:
 	var screen_center := camera.get_screen_center_position() if camera != null else player.global_position
 	visibility_item.global_position = screen_center + Vector2(5000.0, 5000.0)
 	await _wait_render_frames(4)
-	var seal := visibility_item.get_node_or_null("Visual/RoyalLootSeal") as Sprite2D
+	var seal := visibility_item.get_node_or_null("Visual/RoyalLootSeal") as PixelSpriteVFX
 	_expect(visibility_item.get_node_or_null("Visual/ItemLabel") == null and visibility_item.get_node_or_null("Visual/Prompt") == null, "範囲外の床装備がLabelを先行生成しています")
-	_expect(seal != null and seal.texture != null and seal.texture.resource_path == GroundEquipmentItem.LOOT_SEAL_TEXTURE_PATH and not seal.is_processing(), "画面外の床装備が生成済み静止PNGだけになっていません")
+	_expect(seal != null and seal.get_meta("pixel_vfx_id", "") == "loot_seal" and not seal.is_processing(), "画面外の床装備の紋が静止1コマになっていません")
 	_expect(visibility_item.get_node_or_null("Visual/LootAmbientParticles") == null and visibility_item.get_node_or_null("Visual/ParticleVisibilityNotifier") == null, "撤去した常駐Emitter/Notifierが残っています")
 	visibility_item.global_position = screen_center
 	await _wait_render_frames(4)

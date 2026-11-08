@@ -9,7 +9,6 @@ const ICON_HEIGHT_RATIO := 0.82
 const ICON_HEIGHT_MIN := 24.0
 const ICON_HEIGHT_MAX := 42.0
 const ICON_METRICS := preload("res://resources/equipment_icon_metrics.gd")
-const LOOT_SEAL_TEXTURE_PATH := "res://assets/vfx/pixel/loot_seal.png"
 static var _icon_used_rect_cache: Dictionary = {}
 static var _icon_image_read_count: int = 0
 var equipment: EquipmentData
@@ -20,7 +19,6 @@ var spawned_at_usec: int = 0
 ## 落下アニメーション（生成時に上から落ちて弾む）。テストや静止配置では切れる。
 @export var drop_animation: bool = true
 const BEAM_HEIGHT := {"uncommon": 56.0, "rare": 84.0, "epic": 112.0, "legendary": 144.0, "mythic": 168.0}
-const BEAM_WIDTH := {"uncommon": 7.0, "rare": 9.0, "epic": 12.0, "legendary": 16.0, "mythic": 20.0}
 var _beam: LootBeam
 var cap_expiration_pending := false
 var _cap_expiration_tween: Tween
@@ -52,50 +50,38 @@ func _build_visual() -> void:
 	if drop_animation and spawned_at_usec > 0:
 		_play_drop_arc(visual)
 
-## レア度色の光の柱。アイコンの後ろから立ち上がり、ゆっくり明滅する。
-class LootBeam extends Node2D:
-	var color := Color.WHITE
+## レア度色の光の柱（pixelfx pickups/loot-beam をレア度パレットで書き出したもの）。
+## アイコンの後ろから立ち上がる。高さはレア度で変え、reveal（0→1）で根元から伸びる。
+class LootBeam extends PixelSpriteVFX:
 	var height := 60.0
-	var width := 8.0
-	var reveal := 1.0
-	var _phase := 0.0
-	func _ready() -> void:
-		var material := CanvasItemMaterial.new()
-		material.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
-		self.material = material
-	func _process(delta: float) -> void:
-		_phase += delta
-		queue_redraw()
-	func _draw() -> void:
-		var h := height * reveal
-		if h < 2.0:
-			return
-		var pulse := 0.8 + 0.2 * sin(_phase * 2.4)
-		var w := width
-		# 外側の柔らかい光 → 本体 → 白い芯。上へ行くほど薄く、4px 刻みの段にする。
-		var steps := int(h / 4.0)
-		for step in steps:
-			var t := float(step) / float(maxi(steps - 1, 1))
-			var fade := (1.0 - t) * (1.0 - t * 0.6)
-			var y := -4.0 * (step + 1)
-			draw_rect(Rect2(-w * 1.6, y, w * 3.2, 4.0), Color(color, 0.10 * fade * pulse))
-			draw_rect(Rect2(-w, y, w * 2.0, 4.0), Color(color, 0.28 * fade * pulse))
-			draw_rect(Rect2(-w * 0.45, y, w * 0.9, 4.0), Color(color.lightened(0.35), 0.5 * fade * pulse))
-			draw_rect(Rect2(-1.0, y, 2.0, 4.0), Color(color.lightened(0.8), 0.75 * fade * pulse))
-		# 根元の光だまり（楕円）
-		for ring in 3:
-			var rw := w * (3.4 - ring * 0.9)
-			draw_rect(Rect2(-rw, -2.0 - ring, rw * 2.0, 2.0 + ring * 2.0), Color(color, (0.10 + ring * 0.08) * pulse))
+	var reveal := 1.0:
+		set(value):
+			reveal = clampf(value, 0.0, 1.0)
+			scale.y = _full_scale_y * maxf(reveal, 0.001)
+			visible = reveal > 0.01
+	var _full_scale_y := 1.0
+	func setup_beam(rarity: String, beam_height: float) -> bool:
+		height = beam_height
+		persistent = true
+		pooled = true
+		if not configure("loot_beam_" + rarity, Vector2.ZERO, 0.0, true):
+			return false
+		_full_scale_y = height / maxf(frame_size_for("loot_beam_" + rarity).y * 0.85, 1.0)
+		scale = Vector2(1.0, _full_scale_y)
+		return true
 
 func _build_beam(visual: Node2D) -> void:
 	_beam = LootBeam.new()
+	if not _beam.setup_beam(equipment.rarity, float(BEAM_HEIGHT.get(equipment.rarity, 60.0))):
+		_beam.free()
+		_beam = null
+		return
 	_beam.name = "LootBeam"
-	_beam.color = equipment.get_rarity_color()
-	_beam.height = float(BEAM_HEIGHT.get(equipment.rarity, 60.0))
-	_beam.width = float(BEAM_WIDTH.get(equipment.rarity, 8.0))
+	_beam.position = Vector2(0, 6)
+	visual.add_child(_beam)
+	_beam.play_once(visual.global_position + Vector2(0, 6))
 	_beam.position = Vector2(0, 6)
 	_beam.z_index = 0
-	visual.add_child(_beam)
 
 ## 落下：少し上から落ちて弾み、着地で柱が立つ。伝説以上は閃光と鐘。
 func _play_drop_arc(visual: Node2D) -> void:
@@ -203,18 +189,20 @@ func _build_labels(visual: Node2D) -> void:
 func _build_ground_effects(visual: Node2D) -> void:
 	var color := equipment.get_rarity_color()
 	var rank := _rarity_rank()
-	# 台座/輪郭/刻印/2Emitterを、生成画像の静止紋章＋0.7秒の6コマへ統合。
-	# 常駐VFXはSprite1枚だけ。希少度は既存の色と段階的な大きさで区別する。
+	# 常駐は足元の紋1枚、着地の一発は loot_awaken。希少度は色と大きさで区別する。
 	var width := clampf(_icon_visual_size.x + 18.0, 36.0, 52.0) + rank * 2.0
-	var seal := Sprite2D.new()
-	seal.name = "RoyalLootSeal"
-	seal.texture = load(LOOT_SEAL_TEXTURE_PATH) as Texture2D
-	seal.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	seal.modulate = color
-	seal.scale = Vector2(width, width * 0.5) / float(seal.texture.get_width())
-	seal.position = Vector2(0, 8)
-	seal.z_index = 1
-	visual.add_child(seal)
+	# 足元の紋（pixelfx arcane/rune-circle、loot_seal、ループ）。レア度色を薄く混ぜる。
+	var seal := PixelSpriteVFX.make_persistent("loot_seal", Vector2.ZERO, true)
+	if seal:
+		seal.name = "RoyalLootSeal"
+		seal.scale = Vector2.ONE * (width / maxf(PixelSpriteVFX.frame_size_for("loot_seal").x, 1.0))
+		seal.set_tint(color)
+		# 床に何十個も並ぶので、紋は静止（1コマ目）。動くのは柱と着地の一発だけ。
+		seal.position = Vector2(0, 8)
+		seal.visible = true
+		seal.frame = 0
+		seal.z_index = 1
+		visual.add_child(seal)
 	var awakening := PixelSpriteVFX.spawn(visual, visual.global_position + Vector2(0, -_icon_visual_size.y * 0.35), "loot_awaken", Vector2.ONE * (56.0 + rank * 4.0), 0.7, 0.0, color.lightened(0.75))
 	if awakening != null:
 		awakening.name = "LootAwakening"

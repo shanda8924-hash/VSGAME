@@ -1,0 +1,25 @@
+{
+ "key": "active_burst",
+ "fx": "arcane/mana-burst",
+ "name": "Mana burst",
+ "fps": 15,
+ "loop": false,
+ "count": 28,
+ "columns": 12,
+ "frame_size": [
+  160,
+  144
+ ],
+ "pivot": [
+  84,
+  119
+ ],
+ "scale": 2,
+ "fit": "size",
+ "speed": 1.4,
+ "z": 45,
+ "tail_fade": 0.3,
+ "flip": false,
+ "palette": null,
+ "source": "pixelfx (MIT) https://github.com/patch-gg/pixelfx"
+}

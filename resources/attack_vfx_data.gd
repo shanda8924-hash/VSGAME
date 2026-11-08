@@ -1,9 +1,9 @@
 extends Resource
 class_name AttackVFXData
-## 実ゲームのAttack/Hitで再生するPixel Sprite Animation定義。
+## 実ゲームのAttack/Hitで再生するエフェクトの置き方。見た目は assets/vfx/pixelfx/<id>（PixelSpriteVFX）。
 
 @export var id: String = ""
-@export var sprite_sheet: Texture2D
+## 旧6コマ画像。現在の見た目は assets/vfx/pixelfx/<id> （PixelSpriteVFX）で、ここは使わない。
 @export_range(1, 12, 1) var frame_count: int = 6
 @export var fps: float = 16.0
 @export var lifetime: float = 0.45

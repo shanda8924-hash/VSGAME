@@ -21,24 +21,16 @@ var _rarity_color := Color.WHITE
 var _rarity_rank := 0
 var _trail: Array[Dictionary] = []
 var _trail_timer := 0.0
-var _effect: Sprite2D
-const SLASH = preload("res://assets/vfx/equipment_comfy/slash_6f.png")
-const THRUST = preload("res://assets/vfx/equipment_comfy/thrust_6f.png")
-const SHOT = preload("res://assets/vfx/equipment_comfy/shot_6f.png")
-const LIGHT = preload("res://assets/vfx/equipment_comfy/light_6f.png")
-const HEAVY = preload("res://assets/vfx/equipment_comfy/heavy_6f.png")
-const AXE = preload("res://assets/vfx/equipment_comfy/axe_6f.png")
-const HAMMER = preload("res://assets/vfx/equipment_comfy/hammer_6f.png")
-const SCYTHE = preload("res://assets/vfx/equipment_comfy/scythe_6f.png")
+## 斬撃の見た目はpixelfxのシート（equip_*）。振りの時間に合わせてコマを進める。
+var _effect: PixelSpriteVFX
+var _effect_key := ""
+const EFFECT_KEYS := {"light": "equip_light", "heavy": "equip_heavy", "thrust": "equip_thrust", "axe": "equip_axe", "hammer": "equip_hammer", "scythe": "equip_scythe", "bow": "equip_shot", "magic": "equip_shot"}
+## 斬撃は振り（swing）の間だけでなく、余韻まで見せる。
+const EFFECT_LINGER := 2.4
 
 func bind_player(value: Player) -> void:
 	actor = value
-	_effect = Sprite2D.new()
-	_effect.hframes = 6
-	_effect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	_effect.z_index = 3
-	_effect.visible = false
-	add_child(_effect)
+	_set_effect("equip_slash")
 	actor.equipment_component.equipment_changed.connect(_on_equipment_changed)
 	actor.weapon_manager.weapon_added.connect(func(_data: WeaponData): _refresh())
 	actor.weapon_manager.weapon_fired.connect(func(): _attack_flash = 0.16)
@@ -116,11 +108,15 @@ func _process(delta: float) -> void:
 		(sprite as Sprite2D).rotation = sin(_phase * 3.0 + index) * 0.08 * side + (sin((_attack_flash / 0.16) * PI) * 0.5 * side if key != "equipment" else 0.0)
 		index += 1
 	var effect_age := _equipment_age - float(profile.flight)
-	_effect.visible = effect_age >= 0.0 and effect_age < float(profile.swing) and _sprites.has("equipment")
-	if _effect.visible:
-		_effect.frame = mini(int(effect_age / float(profile.swing) * 6.0), 5)
-		if _equipment_kind not in ["bow", "magic"]:
-			_effect.position = to_local(_strike_world) - _equipment_direction * float(profile.cut) * 0.45
+	var effect_window := float(profile.swing) * EFFECT_LINGER
+	if _effect:
+		_effect.visible = effect_age >= 0.0 and effect_age < effect_window and _sprites.has("equipment")
+		if _effect.visible:
+			var count := maxi(PixelSpriteVFX.frame_count(_effect_key), 1)
+			_effect.frame = mini(int(effect_age / effect_window * count), count - 1)
+			_effect.modulate.a = clampf((1.0 - effect_age / effect_window) * 3.0, 0.0, 1.0)
+			if _equipment_kind not in ["bow", "magic"]:
+				_effect.position = to_local(_strike_world) - _equipment_direction * 36.0
 	if _equipment_age >= motion_time:
 		_trail.clear()
 	queue_redraw()
@@ -137,14 +133,14 @@ func start_equipment_motion(kind: String, direction: Vector2, radius: float, tar
 	_rarity_color = item.get_rarity_color()
 	_rarity_rank = maxi(["uncommon", "rare", "epic", "legendary", "mythic"].find(item.rarity), 0)
 	_trail.clear()
-	_effect.texture = {"light":LIGHT, "heavy":HEAVY, "thrust":THRUST, "axe":AXE, "hammer":HAMMER, "scythe":SCYTHE, "bow":SHOT, "magic":SHOT}.get(kind, SLASH)
-	_effect.rotation = direction.angle()
-	_effect.position = direction * 35.0 if kind in ["bow", "magic"] else Vector2.ZERO
-	var profile: Dictionary = actor.weapon_manager.equipment_attack.PROFILES[kind]
-	# 表示サイズ：射撃は約42px、近接は64*cut/26px。シートはその約1/2の寸法で描いてある。
-	var display_side := 41.6 if kind in ["bow", "magic"] else 64.0 * float(profile.cut) / 26.0 * actor.weapon_manager.get_melee_range_multiplier()
-	_effect.scale = Vector2.ONE * display_side / float(_effect.texture.get_height())
-	_effect.modulate = Color.WHITE.lerp(_rarity_color, 0.48 + _rarity_rank * 0.09)
+	_set_effect(String(EFFECT_KEYS.get(kind, "equip_slash")))
+	if _effect:
+		# 範囲強化で斬撃も広がる（射撃は銃口の閃光なので固定）。
+		var widen := 1.0 if kind in ["bow", "magic"] else clampf(actor.weapon_manager.get_melee_range_multiplier(), 1.0, 2.0)
+		_effect.scale = Vector2.ONE * PixelSpriteVFX.scale_for(_effect_key, Vector2.ZERO).x * widen
+		_effect.set_angle(direction.angle())
+		_effect.position = direction * 35.0 if kind in ["bow", "magic"] else Vector2.ZERO
+		_effect.set_tint(Color.WHITE.lerp(_rarity_color, 0.3 + _rarity_rank * 0.1))
 	_update_equipment_pose(_sprites["equipment"])
 
 func track_equipment_target(position_in_world: Vector2) -> void:
@@ -203,11 +199,21 @@ func _draw() -> void:
 		draw_set_transform(to_local(pose.position), float(pose.rotation), sprite.scale)
 		draw_texture(sprite.texture, -sprite.texture.get_size() * 0.5 + sprite.offset, Color(_rarity_color, 0.06 + 0.04 * index))
 	draw_set_transform(Vector2.ZERO)
-	if _effect.visible and _rarity_rank > 0 and _equipment_kind not in ["bow", "magic"]:
-		for index in _rarity_rank:
-			var offset := Vector2.from_angle(index * 2.4 + 0.6) * (15.0 + _rarity_rank * 2.0)
-			var point := to_local(_strike_world) + offset
-			draw_texture_rect_region(SHOT, Rect2(point - Vector2(12,12), Vector2(24,24)), Rect2(_effect.frame * SHOT.get_height(), 0, SHOT.get_height(), SHOT.get_height()), Color(_rarity_color, 0.65))
+
+func _set_effect(key: String) -> void:
+	if _effect and _effect_key == key:
+		return
+	if _effect:
+		_effect.queue_free()
+		_effect = null
+	_effect_key = key
+	_effect = PixelSpriteVFX.make_persistent(key)
+	if _effect == null:
+		return
+	_effect.name = "EquipmentStrikeVFX"
+	_effect.z_index = 3
+	_effect.visible = false
+	add_child(_effect)
 
 func get_muzzle(weapon_id: String) -> Vector2:
 	if _sprites.has(weapon_id):

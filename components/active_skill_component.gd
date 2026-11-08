@@ -348,7 +348,7 @@ func _spawn_iai_telegraph(direction: Vector2, distance: float, windup: float) ->
 	world.add_child(telegraph)
 	telegraph.global_position = player.global_position + Vector2(0, 6)
 	# 柄の閃き（小さな白い光）
-	var glint := PixelSpriteVFX.spawn(world, player.global_position + direction * 10.0 + Vector2(0, -4), "hit_light", Vector2.ONE * 22.0, 0.14, 0.0, Color(0.95, 1.0, 1.0))
+	var glint := PixelSpriteVFX.spawn(world, player.global_position + direction * 10.0 + Vector2(0, -4), "iai_glint", Vector2.ZERO, 0.0, direction.angle())
 	if glint:
 		glint.z_index = 46
 

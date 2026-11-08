@@ -1,0 +1,25 @@
+{
+ "key": "concept_fire_burst",
+ "fx": "fire/fire-ring",
+ "name": "Fire ring",
+ "fps": 15,
+ "loop": false,
+ "count": 37,
+ "columns": 9,
+ "frame_size": [
+  206,
+  110
+ ],
+ "pivot": [
+  103,
+  75
+ ],
+ "scale": 2,
+ "fit": "size",
+ "speed": 1.6,
+ "z": 45,
+ "tail_fade": 0.3,
+ "flip": false,
+ "palette": null,
+ "source": "pixelfx (MIT) https://github.com/patch-gg/pixelfx"
+}

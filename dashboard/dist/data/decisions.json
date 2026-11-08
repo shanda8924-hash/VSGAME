@@ -419,6 +419,13 @@
       "decision": "装備は勝利で全部、敗北でもロック品と1点を持ち帰る。職業の熟練は3段階の持ち込みに変える。ステージ攻略ごとに深度+1で敵倍率と報酬レア度を上げ、次のMAPへ鎖でつなぐ。拠点でも装備・鍛造を開ける。",
       "reason": "ユーザー評価「育成がない」。1ダンジョンでキャラが終わると、ビルドと装備を育てる動機が続かない。",
       "impact": "SaveManager（persistent_equipment/class_mastery/class_memory/survival_depth）、equipment_component、player、map_run_controller、result_screen、home。既存セーブは既定値で補完。"
+    },
+    {
+      "date": "2026-11-08",
+      "title": "エフェクトを自作シートからpixelfx（MIT）へ全面的に置き換える",
+      "decision": "旧エフェクト一式を削除し、pixelfxのコード製エフェクトを対応表どおりにGodotシートへ書き出して使う。ゲームのキーと呼び出しAPIは維持し、色はパレットで合わせる。",
+      "reason": "ユーザー判断。ライブラリ規模（244種）の一貫した画風と、パレットで色を変えられる仕組みを使いたい。",
+      "impact": "assets/vfx/pixelfx、data/vfx/pixelfx_effects.json、tools/pixelfx_import、effects/pixel_sprite_vfx.gd と呼び出し側。体に描く種類は使わない。横視点の絵なので上視点では床の輪が楕円になる。"
     }
   ]
 }

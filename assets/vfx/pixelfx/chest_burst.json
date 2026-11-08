@@ -1,0 +1,25 @@
+{
+ "key": "chest_burst",
+ "fx": "holy/feather-burst",
+ "name": "Feather burst",
+ "fps": 15,
+ "loop": false,
+ "count": 31,
+ "columns": 14,
+ "frame_size": [
+  139,
+  131
+ ],
+ "pivot": [
+  67,
+  48
+ ],
+ "scale": 1,
+ "fit": "fixed",
+ "speed": 1.3,
+ "z": 45,
+ "tail_fade": 0.3,
+ "flip": false,
+ "palette": null,
+ "source": "pixelfx (MIT) https://github.com/patch-gg/pixelfx"
+}

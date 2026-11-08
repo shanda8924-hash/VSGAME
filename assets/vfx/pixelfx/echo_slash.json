@@ -1,0 +1,25 @@
+{
+ "key": "echo_slash",
+ "fx": "melee/double-slash",
+ "name": "Double slash",
+ "fps": 20,
+ "loop": false,
+ "count": 17,
+ "columns": 17,
+ "frame_size": [
+  113,
+  97
+ ],
+ "pivot": [
+  5,
+  82
+ ],
+ "scale": 1,
+ "fit": "fixed",
+ "speed": 1.4,
+ "z": 45,
+ "tail_fade": 0.3,
+ "flip": false,
+ "palette": "steel",
+ "source": "pixelfx (MIT) https://github.com/patch-gg/pixelfx"
+}

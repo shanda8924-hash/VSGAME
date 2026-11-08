@@ -150,8 +150,8 @@ func _run_checks() -> void:
 	_check(mythic_ground.get_node_or_null("Visual/RarityRing") == null, "large rarity ring removed")
 	_check(mythic_ground.get_node_or_null("Visual/RarityGlow") == null, "large rarity ring glow removed")
 	_check(mythic_ground.get_node_or_null("Visual/PixelLootPlate") == null and mythic_ground.get_node_or_null("Visual/PixelLootOutline") == null, "procedural plate and line are replaced by authored pixel art")
-	var loot_seal := mythic_ground.get_node_or_null("Visual/RoyalLootSeal") as Sprite2D
-	_check(loot_seal != null and loot_seal.texture != null and loot_seal.texture.resource_path == GroundEquipmentItem.LOOT_SEAL_TEXTURE_PATH, "drop uses the generated royal seal PNG")
+	var loot_seal := mythic_ground.get_node_or_null("Visual/RoyalLootSeal") as PixelSpriteVFX
+	_check(loot_seal != null and loot_seal.get_meta("pixel_vfx_id", "") == "loot_seal", "drop uses the pixelfx royal seal")
 	_check(loot_seal != null and loot_seal.texture_filter == CanvasItem.TEXTURE_FILTER_NEAREST and loot_seal.modulate == mythic_data.get_rarity_color(), "seal keeps nearest pixels and mythic rarity color")
 	_check(loot_seal != null and not loot_seal.is_processing() and loot_seal.scale.x * 64.0 <= 62.0, "persistent loot effect is one static compact sprite")
 	var awakening := mythic_ground.get_node_or_null("Visual/LootAwakening") as PixelSpriteVFX
@@ -159,7 +159,7 @@ func _run_checks() -> void:
 	_check(awakening != null and awakening.sprite_frames.get_frame_count("play") == 6 and is_equal_approx(awakening._duration, 0.7), "awakening has six frames and a bounded 0.7 second lifetime")
 	_check(mythic_ground.get_node_or_null("Visual/LootAmbientParticles") == null and mythic_ground.get_node_or_null("Visual/LootSpawnBurst") == null, "duplicated particle VFX are removed")
 	_check(mythic_ground.get_node_or_null("Visual/LootParticles") == null, "duplicate high-rarity emitter removed")
-	_check(mythic_ground.get_node_or_null("Visual/LootBeam") == null and mythic_ground.get_node_or_null("Visual/LootBeamGlow") == null, "long equipment loot beams stay removed")
+	_check(mythic_ground.get_node_or_null("Visual/LootBeam") is GroundEquipmentItem.LootBeam and mythic_ground.get_node_or_null("Visual/LootBeamGlow") == null, "drop has one pixelfx loot beam")
 	var player_visual_height := mythic_ground._get_player_visual_height()
 	var item_visual_height := mythic_ground._icon_visual_size.y
 	_check(item_visual_height >= player_visual_height * 0.7 and item_visual_height <= player_visual_height, "ground icon is 70-100 percent of player visual height")

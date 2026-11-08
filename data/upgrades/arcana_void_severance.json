@@ -11,7 +11,6 @@
     "max_rank": 5,
     "preview": "arcana",
     "unit": "裂界",
-    "vfx_sheet": "res://assets/vfx/pixel/signature_void_severance.png",
     "strike_counts": [
       1,
       1,
@@ -25,7 +24,8 @@
       "裂界が2か所に増える、間隔8.5秒。",
       "範囲が大きく広がる、間隔7.5秒。",
       "裂界が3か所に増える、間隔7.0秒。"
-    ]
+    ],
+    "vfx_key": "signature_void_severance"
   },
   "trigger": "periodic",
   "trigger_text": "10秒ごと（自動）",

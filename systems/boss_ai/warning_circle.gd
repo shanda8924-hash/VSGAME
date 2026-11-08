@@ -3,14 +3,13 @@ class_name WarningCircle
 ## SlamStrategyが着弾予告として床に表示する警告円。生成側が座標へ配置し、
 ## 演出時間が終わったらqueue_free()する単純な描画専用ノード。
 
-const RING_TEXTURE := preload("res://assets/vfx/pixel/warning_ring.png")
-## 128px画像の円周本体外端（暗い縁を含む）は51px。56pxまで伸びる四方の目盛りは半径に含めない。
-## テストでPNGを走査し、見える円周を実際の攻撃半径に合わせる。
-const RING_PIXEL_RADIUS := 51.0
+## 円周の装飾は pixelfx arcane/rune-circle を危険色で書き出したもの（warning_ring、ループ）。
+## 当たり判定と同じ半径は _draw の円（面と進行の弧）が正確に示し、装飾はその半径に合わせて伸縮する。
+const RING_KEY := "warning_ring"
 
 @export var radius: float = 100.0
 ## Nova/Summon生成側との互換。薄い面塗りはPNG内の固定ドット密度で表現する。
-## 色は tools/vfx_unified/style.py の danger ランプ（本体 e83a22、芯 ffe0c8）。
+## 色は pixelfx_effects.json の danger パレット（本体 e83a22、芯 ffe0c8）と同じ。
 @export var fill_color: Color = Color("e83a2247")
 @export var border_color: Color = Color("e83a22e6")
 
@@ -21,13 +20,23 @@ var radial_rays := 0
 
 func _ready() -> void:
 	add_to_group("boss_attack_transient")
-	var ring := Sprite2D.new()
+	var ring := make_ring(radius, border_color)
+	if ring:
+		add_child(ring)
+		ring.play_once(global_position)
+		ring.position = Vector2.ZERO
+
+## 半径 radius に合わせた装飾リング（常駐・ループ）。親へ add_child するのは呼び出し側。
+static func make_ring(ring_radius: float, color: Color) -> PixelSpriteVFX:
+	var ring := PixelSpriteVFX.make_persistent(RING_KEY, Vector2.ZERO, true)
+	if ring == null:
+		return null
 	ring.name = "PixelRing"
-	ring.texture = RING_TEXTURE
-	ring.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	ring.scale = Vector2.ONE * (radius / RING_PIXEL_RADIUS)
-	ring.modulate = border_color
-	add_child(ring)
+	var width := PixelSpriteVFX.frame_size_for(RING_KEY).x
+	ring.scale = Vector2.ONE * (ring_radius * 2.0 / maxf(width, 1.0))
+	ring.set_tint(color)
+	ring.z_index = 0
+	return ring
 
 func _process(delta: float) -> void:
 	if source != null and (not is_instance_valid(source) or source._is_dead):

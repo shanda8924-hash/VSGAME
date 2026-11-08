@@ -1,0 +1,25 @@
+{
+ "key": "concept_ice_nova",
+ "fx": "ice/frost-nova",
+ "name": "Frost nova",
+ "fps": 15,
+ "loop": false,
+ "count": 37,
+ "columns": 8,
+ "frame_size": [
+  256,
+  127
+ ],
+ "pivot": [
+  126,
+  89
+ ],
+ "scale": 2,
+ "fit": "size",
+ "speed": 1.6,
+ "z": 45,
+ "tail_fade": 0.3,
+ "flip": false,
+ "palette": null,
+ "source": "pixelfx (MIT) https://github.com/patch-gg/pixelfx"
+}

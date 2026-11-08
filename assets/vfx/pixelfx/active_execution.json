@@ -1,0 +1,25 @@
+{
+ "key": "active_execution",
+ "fx": "melee/heavy-cleave",
+ "name": "Heavy cleave",
+ "fps": 20,
+ "loop": false,
+ "count": 29,
+ "columns": 13,
+ "frame_size": [
+  154,
+  102
+ ],
+ "pivot": [
+  51,
+  82
+ ],
+ "scale": 2,
+ "fit": "size",
+ "speed": 1.5,
+ "z": 45,
+ "tail_fade": 0.3,
+ "flip": false,
+ "palette": null,
+ "source": "pixelfx (MIT) https://github.com/patch-gg/pixelfx"
+}

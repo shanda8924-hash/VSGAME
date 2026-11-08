@@ -1,0 +1,25 @@
+{
+ "key": "equip_axe",
+ "fx": "melee/spin-slash",
+ "name": "Spin slash",
+ "fps": 20,
+ "loop": false,
+ "count": 17,
+ "columns": 11,
+ "frame_size": [
+  185,
+  94
+ ],
+ "pivot": [
+  81,
+  75
+ ],
+ "scale": 1,
+ "fit": "fixed",
+ "speed": 1.6,
+ "z": 3,
+ "tail_fade": 0.3,
+ "flip": false,
+ "palette": null,
+ "source": "pixelfx (MIT) https://github.com/patch-gg/pixelfx"
+}

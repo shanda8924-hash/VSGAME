@@ -1,4 +1,12 @@
-# Codex Handoff — 2026-10-31（遊びの骨組み Phase 1〜4 実装済み）
+# Codex Handoff — 2026-11-08（エフェクトをpixelfxへ全面置き換え）
+
+## 今回（エフェクトの全面置き換え：pixelfx、2026-11-08）
+- 旧エフェクト（`assets/vfx/pixel`ほか74枚、`effects/particles`、`tools/vfx_unified`）を削除し、[pixelfx](https://github.com/patch-gg/pixelfx)（MIT）から書き出したシートへ。
+- 対応表 `data/vfx/pixelfx_effects.json`（66キー）→ `node tools/pixelfx_import/build.mjs --pixelfx ../patch-gg/pixelfx` → `assets/vfx/pixelfx/`。手順は `tools/pixelfx_import/README.md`。
+- 再生器 `effects/pixel_sprite_vfx.gd` を作り直し（pivot・整数倍・横伸ばし・左向き反転・常駐）。呼び出し側のAPIは維持。浮遊武器・結界・連鎖・残影・床の柱と紋・警告紋・敵弾・魔法弾・プレビューを接続。
+- 体に描く種類（hit-flash・heal・blink・status）はダミー人形ごと出るので使わない。
+- 検証：`script_load_check` 0件、新規`pixelfx_vfx_check` PASS、主要な実経路の検査はPASS。`pixel_hazard_check`6件は置き換え前と同じ。`chest_strikes_check`は移動の判定（歩いて敵を押さない）で停止し、置き換え前の作業ツリーでは時間内に終わらず比較できなかった。
+- 次：ゲームのピボット（スロットで召喚するオートバトラー）の設計。pixelfxは横視点の絵なので、視点の決定と合わせて割り当てを見直す。
 
 ## 今回（遊びの骨組み Phase 4：育成、2026-10-31）
 - 装備の持ち越し：`EquipmentComponent`が`run_started`で`SaveManager.persistent_equipment`を復元、`run_ended`（敗北＝ロック品＋1点50%）／`run_cleared`（勝利＝全部、所持品上限20）で保存。`EquipmentData.to_dict/from_dict`。

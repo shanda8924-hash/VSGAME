@@ -1,0 +1,571 @@
+{
+  "_comment": "ゲームのエフェクトキー → pixelfx（MIT, https://github.com/patch-gg/pixelfx）の対応表。node tools/pixelfx_import/build.mjs --pixelfx DIR で assets/vfx/pixelfx/ へ書き出す。fx=pixelfxのID、palette=色の段（暗→明）、fps=書き出しfps、speed=再生倍率、scale=表示倍率（1ドット=2pxが基準）、fit=fixed|size|stretch_x、max_seconds=一発物の打ち切り、tail_fade=最後の何割を薄くして消すか、z=描画順。",
+  "palettes": {
+    "fire": [
+      "#2a0805",
+      "#7a1a08",
+      "#d4471a",
+      "#ff8a2a",
+      "#ffd27a",
+      "#fff6d8"
+    ],
+    "ice": [
+      "#0a1a33",
+      "#1e4f8a",
+      "#3f9be0",
+      "#90ddff",
+      "#d8f6ff",
+      "#ffffff"
+    ],
+    "volt": [
+      "#151040",
+      "#3f4fd0",
+      "#8a96ff",
+      "#ffdf64",
+      "#fff3b0",
+      "#fffbe8"
+    ],
+    "shadow": [
+      "#10051a",
+      "#3a1260",
+      "#7a2fb0",
+      "#b06cff",
+      "#e0c0ff",
+      "#fbf0ff"
+    ],
+    "holy": [
+      "#3a2a08",
+      "#8a6a18",
+      "#d9b45a",
+      "#ffe9a0",
+      "#fff6d8",
+      "#ffffff"
+    ],
+    "danger": [
+      "#2a0604",
+      "#7a120a",
+      "#c8281a",
+      "#e83a22",
+      "#ffa080",
+      "#ffe0c8"
+    ],
+    "heal": [
+      "#06240e",
+      "#11602a",
+      "#2fae52",
+      "#7ef08f",
+      "#d0ffd8",
+      "#ffffff"
+    ],
+    "steel": [
+      "#0e1a2a",
+      "#2f5d8a",
+      "#5f9fd0",
+      "#90ddff",
+      "#d8f4ff",
+      "#f4fdff"
+    ],
+    "rarity_uncommon": [
+      "#0a2416",
+      "#1d5a36",
+      "#3f9466",
+      "#6bb88c",
+      "#c4f0d6",
+      "#f2fff7"
+    ],
+    "rarity_rare": [
+      "#0b1a2e",
+      "#1e4670",
+      "#3f74a8",
+      "#67a1d3",
+      "#c6e2fb",
+      "#f4faff"
+    ],
+    "rarity_epic": [
+      "#1a0b26",
+      "#47286a",
+      "#7a55a0",
+      "#ac82ca",
+      "#e3cdf3",
+      "#fbf4ff"
+    ],
+    "rarity_legendary": [
+      "#2a1806",
+      "#6a4414",
+      "#a87a36",
+      "#d5a35f",
+      "#f6e0b4",
+      "#fffaf0"
+    ],
+    "rarity_mythic": [
+      "#2a080a",
+      "#6a1c22",
+      "#a8424a",
+      "#d16c70",
+      "#f6c4c6",
+      "#fff4f4"
+    ]
+  },
+  "defaults": {
+    "fps": 15,
+    "speed": 1.0,
+    "scale": 2,
+    "fit": "fixed",
+    "z": 45,
+    "tail_fade": 0.3
+  },
+  "effects": {
+    "hit_normal": {
+      "fx": "impacts/hit-spark",
+      "fps": 20,
+      "speed": 1.5,
+      "scale": 1
+    },
+    "hit_critical": {
+      "fx": "impacts/crit-hit",
+      "fps": 20,
+      "speed": 1.4,
+      "scale": 1
+    },
+    "hit_fire": {
+      "fx": "impacts/hit-spark",
+      "palette": "fire",
+      "fps": 20,
+      "speed": 1.5,
+      "scale": 1
+    },
+    "hit_ice": {
+      "fx": "impacts/hit-spark",
+      "palette": "ice",
+      "fps": 20,
+      "speed": 1.5,
+      "scale": 1
+    },
+    "hit_lightning": {
+      "fx": "lightning/zap-hit",
+      "fps": 20,
+      "speed": 1.4,
+      "scale": 1
+    },
+    "hit_dark": {
+      "fx": "impacts/hit-spark",
+      "palette": "shadow",
+      "fps": 20,
+      "speed": 1.5,
+      "scale": 1
+    },
+    "hit_light": {
+      "fx": "impacts/hit-spark",
+      "palette": "holy",
+      "fps": 20,
+      "speed": 1.5,
+      "scale": 1
+    },
+    "contact_mark": {
+      "fx": "impacts/blunt-hit",
+      "fps": 20,
+      "speed": 1.8,
+      "scale": 1,
+      "max_seconds": 0.5
+    },
+    "power_spark": {
+      "fx": "impacts/hit-spark",
+      "palette": "holy",
+      "fps": 20,
+      "speed": 1.8,
+      "scale": 1
+    },
+    "attack_pulse": {
+      "fx": "arcane/mana-burst",
+      "fps": 15,
+      "speed": 1.6,
+      "scale": 1,
+      "max_seconds": 1.2
+    },
+    "attack_projectile": {
+      "fx": "projectiles/muzzle-pistol",
+      "fps": 20,
+      "speed": 1.6,
+      "scale": 1,
+      "max_seconds": 0.6
+    },
+    "beam": {
+      "fx": "arcane/arcane-beam",
+      "palette": "holy",
+      "fps": 15,
+      "speed": 1.0,
+      "scale": 1,
+      "fit": "stretch_x"
+    },
+    "chain": {
+      "fx": "lightning/chain-lightning",
+      "fps": 15,
+      "speed": 1.6,
+      "scale": 1,
+      "fit": "stretch_x",
+      "max_seconds": 1.0
+    },
+    "echo_slash": {
+      "fx": "melee/double-slash",
+      "palette": "steel",
+      "fps": 20,
+      "speed": 1.4,
+      "scale": 1
+    },
+    "guard_shield": {
+      "fx": "holy/divine-shield",
+      "palette": "steel",
+      "fps": 12,
+      "scale": 1,
+      "z": 4
+    },
+    "iai_trail": {
+      "fx": "melee/thrust",
+      "palette": "steel",
+      "fps": 20,
+      "speed": 1.2,
+      "scale": 1,
+      "fit": "stretch_x"
+    },
+    "iai_glint": {
+      "fx": "impacts/hit-spark",
+      "palette": "steel",
+      "fps": 20,
+      "speed": 1.5,
+      "scale": 1
+    },
+    "equip_slash": {
+      "fx": "melee/sword-slash",
+      "fps": 20,
+      "speed": 1.6,
+      "scale": 1,
+      "z": 3
+    },
+    "equip_light": {
+      "fx": "melee/dagger-flurry",
+      "fps": 20,
+      "speed": 1.6,
+      "scale": 1,
+      "z": 3
+    },
+    "equip_heavy": {
+      "fx": "melee/heavy-cleave",
+      "fps": 20,
+      "speed": 1.8,
+      "scale": 1,
+      "z": 3,
+      "max_seconds": 1.2
+    },
+    "equip_thrust": {
+      "fx": "melee/thrust",
+      "fps": 20,
+      "speed": 1.6,
+      "scale": 1,
+      "z": 3
+    },
+    "equip_axe": {
+      "fx": "melee/spin-slash",
+      "fps": 20,
+      "speed": 1.6,
+      "scale": 1,
+      "z": 3
+    },
+    "equip_hammer": {
+      "fx": "melee/hammer-smash",
+      "fps": 20,
+      "speed": 1.8,
+      "scale": 1,
+      "z": 3,
+      "max_seconds": 1.2
+    },
+    "equip_scythe": {
+      "fx": "melee/scythe-reap",
+      "fps": 20,
+      "speed": 1.8,
+      "scale": 1,
+      "z": 3,
+      "max_seconds": 1.2
+    },
+    "equip_shot": {
+      "fx": "projectiles/muzzle-pistol",
+      "fps": 20,
+      "speed": 1.6,
+      "scale": 1,
+      "z": 3,
+      "max_seconds": 0.6
+    },
+    "equip_magic": {
+      "fx": "projectiles/plasma-shot",
+      "palette": "shadow",
+      "fps": 15,
+      "scale": 1
+    },
+    "wizard_bolt": {
+      "fx": "arcane/arcane-orb",
+      "fps": 12,
+      "scale": 1
+    },
+    "dodge_burst": {
+      "fx": "spawn/poof",
+      "palette": "steel",
+      "fps": 20,
+      "speed": 1.6,
+      "scale": 1
+    },
+    "chest_burst": {
+      "fx": "holy/feather-burst",
+      "fps": 15,
+      "speed": 1.3,
+      "scale": 1,
+      "max_seconds": 2.0
+    },
+    "active_aura": {
+      "fx": "nature/healing-bloom",
+      "fps": 15,
+      "speed": 1.5,
+      "scale": 1,
+      "max_seconds": 2.0
+    },
+    "active_burst": {
+      "fx": "arcane/mana-burst",
+      "fps": 15,
+      "speed": 1.4,
+      "fit": "size"
+    },
+    "active_chains": {
+      "fx": "shadow/grasping-hands",
+      "fps": 15,
+      "speed": 1.5,
+      "fit": "size",
+      "max_seconds": 2.0
+    },
+    "active_charge": {
+      "fx": "melee/thrust",
+      "palette": "steel",
+      "fps": 20,
+      "speed": 1.4,
+      "fit": "stretch_x"
+    },
+    "active_execution": {
+      "fx": "melee/heavy-cleave",
+      "fps": 20,
+      "speed": 1.5,
+      "fit": "size",
+      "max_seconds": 1.4
+    },
+    "active_holy_burst": {
+      "fx": "holy/smite",
+      "fps": 15,
+      "speed": 1.5,
+      "fit": "size",
+      "max_seconds": 2.0
+    },
+    "active_impact": {
+      "fx": "impacts/ground-slam",
+      "fps": 15,
+      "speed": 1.6,
+      "fit": "size",
+      "max_seconds": 2.0
+    },
+    "active_rain": {
+      "fx": "arcane/star-fall",
+      "fps": 15,
+      "speed": 1.4,
+      "fit": "size"
+    },
+    "active_sanctuary": {
+      "fx": "holy/heal-aoe",
+      "fps": 15,
+      "speed": 1.4,
+      "fit": "size"
+    },
+    "active_shield": {
+      "fx": "holy/divine-shield",
+      "fps": 12,
+      "speed": 1.0,
+      "fit": "size"
+    },
+    "active_summon": {
+      "fx": "spawn/summon-rise",
+      "fps": 15,
+      "speed": 1.6,
+      "fit": "size",
+      "max_seconds": 3.0
+    },
+    "active_time": {
+      "fx": "arcane/time-stop",
+      "fps": 15,
+      "speed": 1.5,
+      "fit": "size",
+      "max_seconds": 2.4
+    },
+    "concept_dark_rift": {
+      "fx": "shadow/dark-explosion",
+      "fps": 15,
+      "speed": 1.6,
+      "fit": "size",
+      "max_seconds": 2.4
+    },
+    "concept_fire_burst": {
+      "fx": "fire/fire-ring",
+      "fps": 15,
+      "speed": 1.6,
+      "fit": "size",
+      "max_seconds": 2.4
+    },
+    "concept_ice_nova": {
+      "fx": "ice/frost-nova",
+      "fps": 15,
+      "speed": 1.6,
+      "fit": "size",
+      "max_seconds": 2.4
+    },
+    "concept_light_burst": {
+      "fx": "holy/feather-burst",
+      "fps": 15,
+      "speed": 1.6,
+      "fit": "size",
+      "max_seconds": 2.0
+    },
+    "concept_thunder_strike": {
+      "fx": "lightning/thunderclap",
+      "fps": 15,
+      "speed": 1.4,
+      "fit": "size"
+    },
+    "concept_wind_blade": {
+      "fx": "melee/spin-slash",
+      "fps": 20,
+      "speed": 1.2,
+      "fit": "size"
+    },
+    "signature_thunderlord_descent": {
+      "fx": "lightning/lightning-strike",
+      "fps": 15,
+      "speed": 1.3,
+      "fit": "size",
+      "max_seconds": 2.2
+    },
+    "signature_inferno_pillar": {
+      "fx": "fire/flame-pillar",
+      "fps": 15,
+      "speed": 1.5,
+      "fit": "size",
+      "max_seconds": 3.0
+    },
+    "signature_glacial_spear_rain": {
+      "fx": "ice/icicle-fall",
+      "fps": 15,
+      "speed": 1.3,
+      "fit": "size"
+    },
+    "signature_radiant_blade_array": {
+      "fx": "holy/holy-pillar",
+      "fps": 15,
+      "speed": 1.4,
+      "fit": "size",
+      "max_seconds": 2.6
+    },
+    "signature_void_severance": {
+      "fx": "shadow/shadow-tendrils",
+      "fps": 15,
+      "speed": 1.4,
+      "fit": "size",
+      "max_seconds": 2.6
+    },
+    "mass_kill": {
+      "fx": "explosions/plasma-explosion",
+      "fps": 15,
+      "speed": 1.4,
+      "scale": 1
+    },
+    "poison": {
+      "fx": "nature/toxic-puddle",
+      "fps": 12,
+      "fit": "size",
+      "z": -1
+    },
+    "warning_ring": {
+      "fx": "arcane/rune-circle",
+      "palette": "danger",
+      "fps": 12,
+      "fit": "size",
+      "z": 2
+    },
+    "loot_awaken": {
+      "fx": "pickups/collect-burst",
+      "fps": 15,
+      "speed": 2.0,
+      "scale": 1
+    },
+    "loot_seal": {
+      "fx": "arcane/rune-circle",
+      "palette": "holy",
+      "fps": 12,
+      "scale": 1
+    },
+    "forge_awaken": {
+      "fx": "arcane/mana-burst",
+      "palette": "holy",
+      "fps": 15,
+      "speed": 1.2,
+      "scale": 2,
+      "z": 0
+    },
+    "heal_pickup": {
+      "fx": "nature/healing-bloom",
+      "fps": 15,
+      "speed": 1.5,
+      "scale": 1,
+      "max_seconds": 2.0
+    },
+    "loot_beam_uncommon": {
+      "fx": "pickups/loot-beam",
+      "palette": "rarity_uncommon",
+      "fps": 12,
+      "scale": 1,
+      "z": 0
+    },
+    "loot_beam_rare": {
+      "fx": "pickups/loot-beam",
+      "palette": "rarity_rare",
+      "fps": 12,
+      "scale": 1,
+      "z": 0
+    },
+    "loot_beam_epic": {
+      "fx": "pickups/loot-beam",
+      "palette": "rarity_epic",
+      "fps": 12,
+      "scale": 1,
+      "z": 0
+    },
+    "loot_beam_legendary": {
+      "fx": "pickups/loot-beam",
+      "palette": "rarity_legendary",
+      "fps": 12,
+      "scale": 1,
+      "z": 0
+    },
+    "loot_beam_mythic": {
+      "fx": "pickups/loot-beam",
+      "palette": "rarity_mythic",
+      "fps": 12,
+      "scale": 1,
+      "z": 0
+    },
+    "projectile_core": {
+      "fx": "projectiles/plasma-shot",
+      "palette": "steel",
+      "fps": 15,
+      "scale": 1
+    },
+    "enemy_shot": {
+      "fx": "projectiles/plasma-shot",
+      "palette": "danger",
+      "fps": 15,
+      "scale": 1
+    }
+  },
+  "_avoid": "impacts/hit-flash・holy/heal・arcane/blink-in/out・status/* は灰色のダミー人形の体に描く種類なので使わない（書き出すと人形ごと出る）。"
+}

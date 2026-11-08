@@ -1,8 +1,7 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://entities/projectiles/projectile.gd" id="1"]
 [ext_resource type="Texture2D" path="res://assets/sprites/projectile/Arrow01(32x32).png" id="2"]
-[ext_resource type="Texture2D" path="res://assets/vfx/pixel/projectile_core.png" id="3"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_1"]
 radius = 6.0
@@ -25,8 +24,7 @@ shape = SubResource("CircleShape2D_1")
 texture_filter = 1
 material = SubResource("CanvasItemMaterial_1")
 modulate = Color(1, 1, 1, 0.25)
-scale = Vector2(2, 2)
-texture = ExtResource("3")
+scale = Vector2(0.5, 0.5)
 
 [node name="Visual" type="Sprite2D" parent="."]
 texture_filter = 1

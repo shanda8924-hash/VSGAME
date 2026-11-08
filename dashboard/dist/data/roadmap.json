@@ -914,13 +914,22 @@
       "weight": 0.8,
       "tasks": [
         {
+          "id": "vfx_pixelfx",
+          "name": "エフェクトをpixelfx（MIT）へ全面置き換え",
+          "status": "completed",
+          "progress": 100,
+          "priority": "high",
+          "lane": "now",
+          "notes": "旧シート74枚・粒子・生成器を削除。data/vfx/pixelfx_effects.json（66キー）→tools/pixelfx_import/build.mjs→assets/vfx/pixelfx。再生器PixelSpriteVFXを作り直し、命中・戦闘強化・浮遊武器・技・秘技・床ドロップ・警告・敵弾を接続。pixelfx_vfx_check PASS。横視点の絵なのでピボット後の視点で再評価。"
+        },
+        {
           "id": "vfx_unified_style",
           "name": "統一VFXスタイル（55シート描き直し）",
           "status": "completed",
           "progress": 100,
           "priority": "high",
           "lane": "now",
-          "notes": "攻撃・装備武器・回避/宝箱・属性命中・概念・秘技・戦技・線・その他を1生成器で描画。雷帝落雷は雷の大剣、氷槍豪雨は太い氷槍と結晶、虚無断界は裂け目と破片。コード描画の線色もランプへ統一。"
+          "notes": "（2026-11-08 pixelfxへの全面置き換えで廃止）攻撃・装備武器・回避/宝箱・属性命中・概念・秘技・戦技・線・その他を1生成器で描画。雷帝落雷は雷の大剣、氷槍豪雨は太い氷槍と結晶、虚無断界は裂け目と破片。コード描画の線色もランプへ統一。"
         },
         {
           "id": "pixel_vfx",

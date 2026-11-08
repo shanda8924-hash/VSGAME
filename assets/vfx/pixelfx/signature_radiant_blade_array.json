@@ -1,0 +1,25 @@
+{
+ "key": "signature_radiant_blade_array",
+ "fx": "holy/holy-pillar",
+ "name": "Holy pillar",
+ "fps": 15,
+ "loop": false,
+ "count": 40,
+ "columns": 10,
+ "frame_size": [
+  192,
+  227
+ ],
+ "pivot": [
+  96,
+  204
+ ],
+ "scale": 2,
+ "fit": "size",
+ "speed": 1.4,
+ "z": 45,
+ "tail_fade": 0.3,
+ "flip": false,
+ "palette": null,
+ "source": "pixelfx (MIT) https://github.com/patch-gg/pixelfx"
+}

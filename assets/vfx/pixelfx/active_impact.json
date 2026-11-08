@@ -1,0 +1,25 @@
+{
+ "key": "active_impact",
+ "fx": "impacts/ground-slam",
+ "name": "Ground slam",
+ "fps": 15,
+ "loop": false,
+ "count": 31,
+ "columns": 8,
+ "frame_size": [
+  236,
+  167
+ ],
+ "pivot": [
+  118,
+  124
+ ],
+ "scale": 2,
+ "fit": "size",
+ "speed": 1.6,
+ "z": 45,
+ "tail_fade": 0.3,
+ "flip": false,
+ "palette": null,
+ "source": "pixelfx (MIT) https://github.com/patch-gg/pixelfx"
+}

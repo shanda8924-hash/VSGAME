@@ -17,15 +17,11 @@ var _echo_target: WeakRef
 var _echo_position := Vector2.ZERO
 var _echo_damage := 0.0
 var _pending_chain: Dictionary = {}
-var _marks: Array[Dictionary] = []
-# tools/vfx_unified/style.py のランプと同じ色（暗縁・明・芯）。
-const STEEL_DARK := Color("2f5d8a")
-const STEEL_LIGHT := Color("90ddff")
-const STEEL_CORE := Color("f4fdff")
-const LIGHTNING_DARK := Color("3f4fd0")
-const LIGHTNING_LIGHT := Color("ffdf64")
-const LIGHTNING_CORE := Color("fffbe8")
-var _slash: Texture2D = preload("res://assets/vfx/equipment_comfy/slash_6f.png")
+## 見た目はすべてpixelfxのシート（data/vfx/pixelfx_effects.json）：残影＝echo_slash、連鎖＝chain、
+## 強撃の火花＝power_spark、結界＝guard_shield（シールドがある間だけ常駐）。
+var _guard_visual: PixelSpriteVFX
+var _power_spark_cooldown := 0.0
+const POWER_SPARK_INTERVAL := 0.06
 var debug_echo_hits := 0
 var debug_chain_hits := 0
 
@@ -70,7 +66,7 @@ func _on_shield_changed(current_shield: float, _max_shield: float) -> void:
 		if health.apply_secondary_damage(damage, CombatEventMeta.create_secondary("player_evo_charged_ward", [], false)) > 0:
 			struck += 1
 			debug_ward_hits += 1
-			_marks.append({"kind":"chain","from":origin,"to":enemy.global_position,"life":0.3,"rank":1})
+			_spawn_bolt(origin, enemy.global_position)
 	if struck > 0:
 		EventBus.upgrade_triggered.emit("evo_charged_ward", origin)
 
@@ -85,7 +81,7 @@ func _shadow_strike() -> void:
 	var dealt := health.apply_secondary_damage(_last_hit_amount * float(_numbers("evo_shadow_run").get("damage_pct", 0.4)), CombatEventMeta.create_secondary("player_evo_shadow_run", [], false))
 	if dealt > 0:
 		debug_shadow_hits += 1
-		_marks.append({"kind":"echo","from":target.global_position,"to":target.global_position,"life":0.24,"rank":3})
+		_spawn_echo(target.global_position)
 		EventBus.upgrade_triggered.emit("evo_shadow_run", target.global_position)
 
 func _on_hit(target: Node, amount: float, _critical: bool, metadata: Dictionary) -> void:
@@ -115,14 +111,19 @@ func _on_hit(target: Node, amount: float, _critical: bool, metadata: Dictionary)
 				damage_pct = float(_numbers("evo_thunder_strike").get("damage_pct", 0.5))
 			_pending_chain = {"origin":pos,"exclude":target.get_instance_id(),"damage":amount * damage_pct}
 	var power := upgrades.get_survival_rank("survival_power")
-	if power > 0 and _marks.size() < 32:
-		_marks.append({"kind":"power","from":pos,"to":pos,"life":0.20,"rank":power})
+	if power > 0 and _power_spark_cooldown <= 0.0:
+		_power_spark_cooldown = POWER_SPARK_INTERVAL
+		var spark := PixelSpriteVFX.spawn(GameManager.get_runtime_world(self), pos, "power_spark", Vector2.ZERO, 0.0, actor.global_position.direction_to(pos).angle())
+		if spark:
+			spark.scale *= 1.0 + 0.1 * mini(power, 5)
 
 func _process(delta: float) -> void:
 	if actor == null or actor._is_dead or GameManager.run_state != GameManager.RunState.PLAYING:
 		return
+	_power_spark_cooldown = maxf(_power_spark_cooldown - delta, 0.0)
 	_guard_timer -= delta
 	var guard := actor.upgrades_component.get_survival_rank("survival_guard")
+	_update_guard_visual(guard)
 	if guard > 0 and _guard_timer <= 0:
 		var numbers := _numbers("survival_guard")
 		_guard_timer = float(numbers.get("every_seconds", 8.0))
@@ -140,10 +141,33 @@ func _process(delta: float) -> void:
 		var pending := _pending_chain
 		_pending_chain = {}
 		_chain(pending)
-	for index in range(_marks.size()-1,-1,-1):
-		_marks[index].life -= delta
-		if _marks[index].life <= 0: _marks.remove_at(index)
-	queue_redraw()
+
+## 結界：シールドがある間だけ、体の周りに divine-shield を常駐させる。
+func _update_guard_visual(guard: int) -> void:
+	var show := guard > 0 and actor.health_component.shield_amount > 0.0
+	if show and _guard_visual == null:
+		_guard_visual = PixelSpriteVFX.make_persistent("guard_shield", Vector2.ZERO, true)
+		if _guard_visual:
+			_guard_visual.name = "GuardShield"
+			add_child(_guard_visual)
+			_guard_visual.play_once(actor.global_position)
+			_guard_visual.position = Vector2(0, 14)
+	if _guard_visual:
+		_guard_visual.visible = show
+		_guard_visual.active = show
+		_guard_visual.set_process(show)
+		if show:
+			_guard_visual.modulate.a = clampf(0.45 + 0.55 * actor.health_component.shield_amount / maxf(actor.health_component.shield_max, 1.0), 0.45, 1.0)
+
+func _spawn_echo(point: Vector2) -> void:
+	PixelSpriteVFX.spawn(GameManager.get_runtime_world(self), point, "echo_slash", Vector2.ZERO, 0.0, actor.global_position.direction_to(point).angle())
+
+## 雷の線：chain-lightning を2点の間へ横に伸ばして置く。
+func _spawn_bolt(from: Vector2, to: Vector2) -> void:
+	var segment := to - from
+	if segment.length() < 4.0:
+		return
+	PixelSpriteVFX.spawn(GameManager.get_runtime_world(self), (from + to) * 0.5, "chain", Vector2(segment.length(), 0.0), 0.0, segment.angle())
 
 func _numbers(id: String) -> Dictionary:
 	var upgrade: UpgradeData = DataLoader.upgrades.get(id)
@@ -189,7 +213,7 @@ func _echo() -> void:
 	var dealt := health.apply_secondary_damage(_echo_damage, CombatEventMeta.create_secondary("player_survival_echo", [], false))
 	if dealt > 0:
 		debug_echo_hits += 1
-		_marks.append({"kind":"echo","from":point,"to":point,"life":0.24,"rank":actor.upgrades_component.get_survival_rank("survival_echo")})
+		_spawn_echo(point)
 		EventBus.upgrade_triggered.emit("survival_echo", point)
 
 func _chain(pending: Dictionary) -> void:
@@ -214,42 +238,7 @@ func _chain(pending: Dictionary) -> void:
 		var dealt := (target.get_node("HealthComponent") as HealthComponent).apply_secondary_damage(float(pending.damage), CombatEventMeta.create_secondary("player_survival_chain", [], false))
 		if dealt > 0:
 			debug_chain_hits += 1
-			_marks.append({"kind":"chain","from":from,"to":point,"life":0.24,"rank":1})
+			_spawn_bolt(from, point)
 			if index == 0:
 				EventBus.upgrade_triggered.emit("survival_chain", point)
 		from = point
-
-func _draw() -> void:
-	if actor == null: return
-	if actor.upgrades_component.get_survival_rank("survival_guard") > 0 and actor.health_component.shield_amount > 0:
-		var fraction := actor.health_component.shield_amount / maxf(actor.health_component.shield_max, 1)
-		# 色は tools/vfx_unified/style.py の steel ランプ（暗縁→本体→明）。
-		draw_arc(Vector2(0,-12),27.0,-PI * 0.5,-PI * 0.5+TAU*fraction,24,Color(STEEL_DARK,0.8),4,false)
-		draw_arc(Vector2(0,-12),27.0,-PI * 0.5,-PI * 0.5+TAU*fraction,24,Color(STEEL_LIGHT,0.85),2,false)
-		var guard_rank := actor.upgrades_component.get_survival_rank("survival_guard")
-		for index in 2+guard_rank:
-			var p := Vector2.from_angle(index * TAU / (2+guard_rank) + Time.get_ticks_msec() * 0.001) * 27 + Vector2(0,-12)
-			draw_rect(Rect2(p-Vector2(3,3),Vector2(6,6)),STEEL_DARK)
-			draw_rect(Rect2(p-Vector2(2,2),Vector2(4,4)),STEEL_LIGHT)
-			draw_rect(Rect2(p-Vector2(1,1),Vector2(2,2)),STEEL_CORE)
-	for mark in _marks:
-		var point := to_local(mark.to)
-		var color := STEEL_LIGHT if mark.kind == "echo" else LIGHTNING_LIGHT
-		color.a = clampf(float(mark.life) / 0.12,0,1)
-		if mark.kind == "chain":
-			var start := to_local(mark.from)
-			var mid := start.lerp(point,0.5) + Vector2(3,-7)
-			var bolt := PackedVector2Array([start,mid,mid+Vector2(-6,5),point])
-			draw_polyline(bolt,Color(LIGHTNING_DARK,color.a),5,false)
-			draw_polyline(bolt,color,3,false)
-			draw_polyline(bolt,Color(LIGHTNING_CORE,color.a),1,false)
-		elif mark.kind == "echo":
-			var frame := clampi(int((0.24-float(mark.life))/0.24*6),0,5)
-			for index in int(mark.rank):
-				draw_texture_rect_region(_slash,Rect2(point-Vector2(25+index*4,25),Vector2(50,50)),Rect2(Vector2(frame*_slash.get_width()/6.0,0),Vector2(_slash.get_width()/6.0,_slash.get_height())),Color(color,color.a*(1.0-index*0.22)))
-		else:
-			var radius := minf(10 + float(mark.rank) * 2.5,26)
-			for index in 6:
-				var direction := Vector2.from_angle(index*TAU/6)
-				draw_line(point+direction*4,point+direction*radius,Color(LIGHTNING_DARK,color.a),4,false)
-				draw_line(point+direction*4,point+direction*radius,color,2,false)

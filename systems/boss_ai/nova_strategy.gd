@@ -50,10 +50,8 @@ func execute(boss: EnemyBasic, _player: Node2D) -> void:
 		GameManager.get_runtime_world(boss).add_child(bullet)
 		bullet.global_position = origin
 		bullet.launch(origin + direction * 100.0, weapon_data)
-		# Player弾の白/属性色と即座に区別できる敵性の紫紅色。Sprite自体と
-		# collision/damage/lifetimeは共通Projectileのまま維持する。
-		bullet.get_node("Visual").modulate = Color(1.0, 0.32, 0.72, 1.0)
-		bullet.get_node("Glow").modulate = Color(1.0, 0.12, 0.55, 0.5)
+		# 敵弾はpixelfxの赤い弾（enemy_shot）。collision/damage/lifetimeは共通Projectileのまま。
+		bullet.use_enemy_shot()
 	await wait_recovery(boss)
 
 ## Projectile.launch()はWeaponData(base_damage/crit_chance等)を要求するため、

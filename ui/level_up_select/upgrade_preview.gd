@@ -9,7 +9,6 @@ extends Control
 ## HPが減るので、「何体に当たるか」「何が増えるか」をそのまま数えられる。
 
 const FrameArt := preload("res://ui/common/relic_frame_art.gd")
-const SLASH: Texture2D = preload("res://assets/vfx/equipment_comfy/slash_6f.png")
 const PERIOD := 1.6
 const HIT_TIME := 0.30
 const CAPTION_HEIGHT := 28.0
@@ -33,7 +32,8 @@ var base_interval := 1.0
 ## 職業技カードだけが使う。架空の動きは描かず、職業と技の図柄を段階付きで見せる。
 var class_icon: Texture2D
 ## 秘技プレビュー用：実際の大技VFXシート（64px×6コマ）と段階ごとの同時発動数。
-var arcana_sheet: Texture2D
+## 秘技のプレビューに使う pixelfx のキー（signature_<skill_id>）。
+var arcana_key := ""
 var arcana_counts: Array = [1]
 var arcana_unit := ""
 var elapsed := 0.0
@@ -197,12 +197,8 @@ func _draw_echo(scene: Rect2, level: int) -> void:
 	_draw_hero(hero, 0.0)
 	_draw_strike(hero, target.x - hero.x + 8.0, 40.0, t, BASE_COLOR, false)
 	_draw_enemy(target, hp, maxf(_flash(t, HIT_TIME), _flash(t, echo_time) if level > 0 else 0.0))
-	if level > 0 and t >= echo_time and t < echo_time + 0.24:
-		var frame := clampi(int((t - echo_time) / 0.24 * 6.0), 0, 5)
-		var frame_width := SLASH.get_width() / 6.0
-		var region := Rect2(Vector2(frame * frame_width, 0.0), Vector2(frame_width, SLASH.get_height()))
-		for index in mini(level, 3):
-			draw_texture_rect_region(SLASH, Rect2(target - Vector2(20.0 + index * 2.0, 20.0), Vector2(40.0, 40.0)), region, Color(ECHO_COLOR, 1.0 - index * 0.22))
+	if level > 0 and t >= echo_time and t < echo_time + 0.4:
+		_draw_fx("echo_slash", (t - echo_time) / 0.4, target, 56.0)
 
 ## 雷光連鎖: 命中点から近い敵へ順に雷が渡る(段数=渡る体数、威力35%)。
 func _draw_chain(scene: Rect2, level: int) -> void:
@@ -325,17 +321,27 @@ func _draw_arcana(scene: Rect2, level: int) -> void:
 		var hit := index < count
 		var strike_t := cycle - index * 0.12
 		_draw_enemy(at + Vector2(0, 10), 0.35 if hit and strike_t > 0.25 else 1.0, _flash(strike_t, 0.25) if hit else 0.0)
-	if arcana_sheet == null:
+	if arcana_key == "" or not PixelSpriteVFX.has_effect(arcana_key):
 		return
-	var frame_w := arcana_sheet.get_width() / 6.0
 	for index in count:
 		var at: Vector2 = scene.position + scene.size * spots[index]
 		var strike_t := cycle - index * 0.12
 		if strike_t < 0.0 or strike_t > 0.9:
 			continue
-		var frame := clampi(int(strike_t / 0.15), 0, 5)
-		var draw_size := 72.0
-		draw_texture_rect_region(arcana_sheet, Rect2(at - Vector2(draw_size * 0.5, draw_size * 0.75), Vector2(draw_size, draw_size)), Rect2(frame * frame_w, 0, frame_w, arcana_sheet.get_height()))
+		_draw_fx(arcana_key, strike_t / 0.9, at + Vector2(0, 12), 78.0)
+
+## pixelfxのシート（PixelSpriteVFX）の t（0〜1）時点のコマを、原点を at に合わせて longest px に収めて描く。
+func _draw_fx(key: String, t: float, at: Vector2, longest: float) -> void:
+	var count := PixelSpriteVFX.frame_count(key)
+	if count <= 0:
+		return
+	var texture := PixelSpriteVFX.frame_texture(key, clampi(int(clampf(t, 0.0, 0.999) * count), 0, count - 1))
+	if texture == null:
+		return
+	var size := PixelSpriteVFX.frame_size_for(key)
+	var k := longest / maxf(size.x, size.y)
+	var pivot := PixelSpriteVFX.pivot_for(key)
+	draw_texture_rect(texture, Rect2(at - pivot * k, size * k), false)
 
 func _draw_class(scene: Rect2, _level: int, after: bool) -> void:
 	var center := scene.get_center() + Vector2(0.0, 4.0)

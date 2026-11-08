@@ -1,9 +1,6 @@
 extends Node
 class_name VFXPoolManager
-## 大量撃破の生成Pixel Burstを最大6個で使い回す。Particle/Timerは生成しない。
-
-# 既存Sceneの公開設定を保持。描画は生成済みmass_kill.pngへ移行済み。
-@export var mass_kill_particle_scene: PackedScene
+## 大量撃破の一発演出（pixelfx explosions/plasma-explosion、mass_kill）を最大6個で使い回す。
 @export var pool_size: int = 6
 
 var _pool: Array[PixelSpriteVFX] = []

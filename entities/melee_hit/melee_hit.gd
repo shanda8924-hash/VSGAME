@@ -1,6 +1,5 @@
 extends HitboxComponent
 class_name MeleeHit
-const CONTACT_MARK = preload("res://effects/melee_contact_mark.gd")
 ## 近接/AoE系の職業攻撃パターン(melee_arc/wide_cleave/self_pulse/holy_pulse_heal/
 ## piercing_thrust/charge_dash)が使う、移動しない瞬間ヒット判定。
 ## Projectileと違って飛ばないだけで、命中時の属性VFX発火・HitboxComponent経由の
@@ -85,11 +84,12 @@ func can_hit(hurtbox: HurtboxComponent) -> bool:
 func on_hit(hurtbox: HurtboxComponent) -> void:
 	var contact_target := hurtbox.get_owner_entity() as Node2D
 	if is_instance_valid(contact_target) and (_half_angle_degrees < 179.0 or _line_length > 0.0) and _hit_ids.size() < 3:
-		var mark := CONTACT_MARK.new()
-		GameManager.get_runtime_world(self).add_child(mark)
-		mark.global_position = contact_target.global_position - (contact_target.global_position - _origin_position).normalized() * 5.0
-		mark.rotation = (contact_target.global_position - _origin_position).angle()
-		mark.heavy = is_critical
+		# 接触印（pixelfx impacts/blunt-hit）。会心は1.5倍。
+		var mark := PixelSpriteVFX.spawn(GameManager.get_runtime_world(self), contact_target.global_position - (contact_target.global_position - _origin_position).normalized() * 5.0, "contact_mark", Vector2.ZERO, 0.0, (contact_target.global_position - _origin_position).angle())
+		if mark:
+			mark.z_index = 70
+			if is_critical:
+				mark.scale *= 1.5
 	var target := hurtbox.get_owner_entity() as Node2D
 	if target:
 		_hit_ids[target.get_instance_id()] = true

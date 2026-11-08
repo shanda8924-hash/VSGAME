@@ -413,8 +413,7 @@ func _fire_ranged_shot(target: Node2D) -> void:
 	bullet.global_position = global_position + (target.global_position - global_position).normalized() * 18.0
 	bullet.launch(target.global_position, weapon)
 	bullet.add_to_group("enemy_shots")
-	bullet.get_node("Visual").modulate = Color(1.0, 0.45, 0.25, 1.0)
-	bullet.get_node("Glow").modulate = Color(1.0, 0.25, 0.1, 0.55)
+	bullet.use_enemy_shot()
 	AudioManager.play_sfx("attack_shoot")
 
 func apply_knockback(direction: Vector2, distance: float) -> void:

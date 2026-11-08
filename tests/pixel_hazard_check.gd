@@ -18,11 +18,10 @@ func _run() -> void:
 	warning.radius = 110.0
 	warning.border_color = Color(0.8, 0.4, 1.0, 0.95)
 	add_child(warning)
-	var ring := warning.get_node("PixelRing") as Sprite2D
-	_check(ring.texture.resource_path == "res://assets/vfx/pixel/warning_ring.png", "Boss warning uses generated PNG")
-	_check_warning_image_radius()
-	_check(is_equal_approx(ring.scale.x * WarningCircle.RING_PIXEL_RADIUS, 110.0), "warning artwork boundary matches attack radius")
-	_check(ring.modulate == warning.border_color, "Nova/Summon warning color remains configurable")
+	var ring := warning.get_node("PixelRing") as PixelSpriteVFX
+	_check(ring != null and ring.get_meta("pixel_vfx_id", "") == WarningCircle.RING_KEY and String(ring.get_meta("pixel_vfx_source", "")) == "arcane/rune-circle", "Boss warning uses the pixelfx rune circle")
+	_check(ring != null and is_equal_approx(ring.scale.x * PixelSpriteVFX.frame_size_for(WarningCircle.RING_KEY).x, 220.0), "warning artwork width matches attack diameter")
+	_check(ring != null and ring.modulate != Color.WHITE and is_equal_approx(ring.modulate.a, warning.border_color.a), "Nova/Summon warning color remains configurable")
 	_check(ring.texture_filter == CanvasItem.TEXTURE_FILTER_NEAREST, "warning uses crisp nearest filtering")
 	warning.queue_free()
 	player.position = Vector2(61, 0)
@@ -57,15 +56,14 @@ func _run() -> void:
 	health._iframe_remaining = 0.0
 	await get_tree().create_timer(0.1).timeout
 	_check(is_equal_approx(health.current_hp, 95.0), "warning-only hazard still waits for explicit attack")
-	_check(telegraph.get_child_count() == 1 and telegraph.get_child(0) is Sprite2D, "essential telegraph is one uncapped static pixel sprite")
+	_check(telegraph.get_child_count() == 1 and telegraph.get_child(0) is PixelSpriteVFX and (telegraph.get_child(0) as PixelSpriteVFX).persistent, "essential telegraph is one uncapped pixelfx ring")
 	telegraph.trigger_once()
 	_check(is_equal_approx(health.current_hp, 88.0), "delayed elite attack still triggers original damage")
 	telegraph.queue_free()
 	var projectile := load("res://entities/projectiles/projectile.tscn").instantiate() as Projectile
 	add_child(projectile)
 	var glow := projectile.get_node("Glow") as Sprite2D
-	_check(glow.texture.resource_path == "res://assets/vfx/pixel/projectile_core.png", "projectile uses PNG rather than GradientTexture")
-	_check(glow.texture.get_size() * glow.scale == Vector2(24, 24), "projectile core keeps 24px footprint")
+	_check(glow.texture is AtlasTexture and (glow.texture as AtlasTexture).atlas.resource_path == PixelSpriteVFX.ASSET_DIRECTORY + "projectile_core.png", "projectile glow is a pixelfx frame rather than GradientTexture")
 	_check(is_equal_approx((projectile.get_node("CollisionShape2D").shape as CircleShape2D).radius, 6.0), "projectile attack collision is unchanged")
 	_check((projectile.get_node("Visual") as Sprite2D).texture.resource_path.ends_with("Arrow01(32x32).png"), "actual arrow weapon remains unchanged")
 	projectile.queue_free()
@@ -79,21 +77,3 @@ func _run() -> void:
 func _check(ok: bool, message: String) -> void:
 	if not ok:
 		failures.append(message)
-
-func _check_warning_image_radius() -> void:
-	# Readback is test-only. Ignore the four cardinal ticks, not the actual circle.
-	var image := WarningCircle.RING_TEXTURE.get_image()
-	_check(image.get_size() == Vector2i(128, 128), "warning PNG dimensions")
-	var minimum := Vector2i(128, 128)
-	var maximum := Vector2i.ZERO
-	for y in 128:
-		for x in 128:
-			if absf(float(x) - 63.5) <= 4.0 or absf(float(y) - 63.5) <= 4.0:
-				continue
-			if image.get_pixel(x, y).a > 0.0:
-				minimum = minimum.min(Vector2i(x, y))
-				maximum = maximum.max(Vector2i(x, y))
-	var body_extent := maximum + Vector2i.ONE - minimum
-	var measured_radius := float(maxi(body_extent.x, body_extent.y)) * 0.5
-	print("PIXEL_HAZARD warning ring body radius=%.1f px, full tick bounds=%s" % [measured_radius, image.get_used_rect()])
-	_check(is_equal_approx(measured_radius, WarningCircle.RING_PIXEL_RADIUS), "warning scale uses measured circle body rather than compass ticks")

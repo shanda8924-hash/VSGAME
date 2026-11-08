@@ -16,8 +16,6 @@ const PATTERN_EFFECT_IDS := {
 	"summon_minion": "attack_pulse",
 }
 
-var _frames_cache: Dictionary = {}
-var _opaque_height_cache: Dictionary = {}
 var _player: Player
 var _player_visual_height_cache: float = -1.0
 ## Debug/性能Harness用。Gameplay/VFX結果には影響せず、高頻度経路の呼び出しと
@@ -73,65 +71,19 @@ func play_hit(position: Vector2, theme_id: String, is_critical: bool) -> void:
 	# hit_criticalの6-frame Pixel Spriteが局所閃光も担う。半透明Polygonを重ねない。
 
 func play_effect(effect_id: String, position: Vector2, direction: Vector2, color: Color, strength: float = 1.0) -> AnimatedSprite2D:
+	# 見た目はpixelfxのシート（PixelSpriteVFX、data/vfx/pixelfx_effects.json）。ここは位置と向きだけを決める。
 	var data: AttackVFXData = DataLoader.attack_vfx_effects.get(effect_id)
-	if data == null or data.sprite_sheet == null:
+	if data == null or not PixelSpriteVFX.has_effect(effect_id):
 		push_warning("AttackVFXManager: Effect IDを解決できません -> %s" % effect_id)
-		return null
-	var frames := _get_frames(data)
-	if frames == null:
 		return null
 	var normalized_direction := direction.normalized() if direction != Vector2.ZERO else Vector2.RIGHT
 	var player_height := _get_player_visual_height()
-	var effect := AnimatedSprite2D.new()
-	effect.name = "PixelVFX_%s" % effect_id
-	effect.sprite_frames = frames
-	effect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	effect.z_index = 45
-	effect.modulate = color
-	effect.global_position = position + normalized_direction * player_height * data.spawn_offset_ratio
-	if data.directional:
-		effect.rotation = normalized_direction.angle()
-	var opaque_height := _get_opaque_height(data)
-	var target_height := clampf(player_height * data.visual_ratio * strength, 14.0, 84.0)
-	var visual_scale := target_height / maxf(opaque_height, 1.0)
-	effect.scale = Vector2.ONE * visual_scale
-	add_child(effect)
-	effect.animation_finished.connect(effect.queue_free)
-	effect.play("play")
-	_get_tree_timer(data.lifetime + 0.1).timeout.connect(_free_weak_ref.bind(weakref(effect)))
+	var world_position := position + normalized_direction * player_height * data.spawn_offset_ratio
+	var effect := PixelSpriteVFX.spawn(self, world_position, effect_id, Vector2.ONE * player_height * data.visual_ratio * strength, data.lifetime, normalized_direction.angle() if data.directional else 0.0, color)
+	if effect == null:
+		return null
 	effect_spawned.emit(effect_id, effect)
 	return effect
-
-func _get_frames(data: AttackVFXData) -> SpriteFrames:
-	if _frames_cache.has(data.id):
-		return _frames_cache[data.id]
-	var frame_height := data.sprite_sheet.get_height()
-	if frame_height <= 0:
-		return null
-	var available_count: int = int(data.sprite_sheet.get_width() / frame_height)
-	var count: int = mini(data.frame_count, available_count)
-	if count <= 0:
-		return null
-	var frames := SpriteFrames.new()
-	frames.remove_animation("default")
-	frames.add_animation("play")
-	frames.set_animation_loop("play", false)
-	frames.set_animation_speed("play", data.fps)
-	for index in count:
-		var atlas := AtlasTexture.new()
-		atlas.atlas = data.sprite_sheet
-		atlas.region = Rect2(index * frame_height, 0, frame_height, frame_height)
-		frames.add_frame("play", atlas)
-	_frames_cache[data.id] = frames
-	return frames
-
-func _get_opaque_height(data: AttackVFXData) -> float:
-	if _opaque_height_cache.has(data.id):
-		return float(_opaque_height_cache[data.id])
-	var image := data.sprite_sheet.get_image()
-	var height := float(image.get_used_rect().size.y) if image else float(data.sprite_sheet.get_height())
-	_opaque_height_cache[data.id] = maxf(height, 1.0)
-	return maxf(height, 1.0)
 
 func _get_player_visual_height() -> float:
 	if OS.is_debug_build():

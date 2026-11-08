@@ -4189,3 +4189,51 @@ PC/OpenGLとタッチ操作を含む横画面/Vulkanプレビューで6職を確
 - 新規`tests/meta_growth_check.tscn`：敗北の持ち帰り（ロック品必ず・1点以下・時間の欠片・リザルト文）、次ランの復元、勝利の全持ち越し・熟練の加算・記憶・
   深度+1と次MAP、深度2のランの倍率/HUD/装備済み/流派の持ち込み、熟練2・3段階の持ち込みとHP、ホームの深度行・熟練表示・装備画面の開閉と保存。
   `survival_home_check`／`five_minute_survival_check`／`survival_growth_check`は維持。実画面は`docs/screens/meta_*.png`。
+
+## 2026-11-08 エフェクトの全面置き換え：pixelfx（現行）
+上の「VFX（`tools/vfx_unified/`）」節は廃止。ゲームのエフェクトはすべて [pixelfx](https://github.com/patch-gg/pixelfx)
+（MIT。Patch / Hugo Duprez。Sprite FusionとHollow Crownの一部をMITで翻案）から書き出したシートで再生する。
+
+### 仕組み
+- 対応表 `data/vfx/pixelfx_effects.json`：ゲームのキー（66）→ pixelfxのID・パレット（暗→明の6段：fire/ice/volt/shadow/holy/danger/heal/steel、
+  レア度5色）・書き出しfps（12〜20）・再生speed・表示scale（基本1）・fit（fixed／size＝表示サイズに近い整数倍1〜4／stretch_x＝線を2点間へ横に伸ばす）・
+  max_seconds（長い一発物の打ち切り）・tail_fade（最後の割合を薄くして消す）・z。
+- 書き出し `tools/pixelfx_import/build.mjs`：pixelfxを `renderFrames` で描き、全コマの不透明範囲で切り詰めて格子に詰め、
+  `assets/vfx/pixelfx/<key>.png/.json`（count, columns, frame_size, pivot, fps, speed, loop …）を出す。ライセンス2点を同梱。
+- 再生 `effects/pixel_sprite_vfx.gd`：pivot（pixelfxの原点、地面の効果は足元）をノード原点へ。右向きの効果は |角度|>90°で左右反転して上下を保つ。
+  呼び出し側の色はシートの配色を潰さないよう35%だけ混ぜる。同時96個・1フレーム32個の上限は一時的な効果だけ。
+  常駐（床の柱と紋・結界・浮遊武器の斬撃・弾の見た目・警告紋）は `make_persistent` で上限と掃除グループの外。止まっている間は処理しない。
+- 使わない種類：`impacts/hit-flash`・`holy/heal`・`arcane/blink-in/out`・`status/*`（灰色のダミー人形の体に描くため）。
+
+### 割り当て（主なもの）
+- 命中：通常＝impacts/hit-spark、会心＝impacts/crit-hit、属性（炎/氷/闇/光）＝hit-sparkを属性パレット、雷＝lightning/zap-hit。接触印＝impacts/blunt-hit。
+- 戦闘強化：雷光連鎖＝lightning/chain-lightningを2点間へ伸ばす、残影＝melee/double-slash、強撃の火花＝hit-spark（0.06秒に1回）、
+  再生結界＝holy/divine-shield（シールドがある間だけ常駐）。
+- 浮遊武器：剣＝melee/sword-slash、短剣＝dagger-flurry、大剣＝heavy-cleave、突き＝thrust、斧＝spin-slash、槌＝hammer-smash、鎌＝scythe-reap、
+  射撃＝projectiles/muzzle-pistol。振りの時間×2.4で全コマを流す。
+- 弾：矢の背後の光＝projectiles/plasma-shotの1コマ、装備の魔法弾＝plasma-shot（闇）、魔導士＝arcane/arcane-orb、
+  敵弾（弓兵・ボスのnova）＝plasma-shot（危険色）で矢の絵を隠す（`Projectile.use_enemy_shot`）。
+- 職業技12種・概念6種・秘技5種：mana-burst／grasping-hands／thrust／heavy-cleave／smite／ground-slam／star-fall／heal-aoe／divine-shield／
+  summon-rise／time-stop、dark-explosion／fire-ring／frost-nova／feather-burst／thunderclap／spin-slash、
+  lightning-strike／flame-pillar／icicle-fall／holy-pillar／shadow-tendrils。fit "size"で範囲に近い整数倍。
+- 床ドロップ：光の柱＝pickups/loot-beamをレア度パレットで5枚（高さはレア度で縦に伸縮、着地でrevealが伸びる）、足元の紋＝arcane/rune-circle（静止1コマ）、
+  着地＝pickups/collect-burst。宝箱＝holy/feather-burst、回避＝spawn/poof、大量撃破＝explosions/plasma-explosion、鍛造＝arcane/mana-burst（金）。
+- 警告：ボスの予兆と精鋭の危険地帯＝arcane/rune-circle（危険色）を半径に合わせて伸縮。当たり判定の正確な半径は従来どおりコードの円と進行の弧が示す。
+  毒沼＝nature/toxic-puddle。
+- レベルアップのプレビュー：残影と秘技はシートのコマを `PixelSpriteVFX.frame_texture` で描く（秘技は `effect_params.vfx_key`）。
+
+### 削除したもの
+- `assets/vfx/{pixel,attack,dodge,equipment_comfy,imported,concepts}`（74枚・約29MB）、`effects/particles`（未使用のテーマ別命中パーティクル・大量撃破の旧粒子）、
+  `effects/melee_contact_mark.gd`、`tools/vfx_unified`、`tools/import_generated_pixel_vfx.py`、`tools/preview_imported_assets.*`。
+  `EffectThemeData`の粒子シーン2項目、`AttackVFXData.sprite_sheet`、`VFXPoolManager.mass_kill_particle_scene`。
+- 残したもの：ダメージ数字（UI）、画面の揺れと閃光（ScreenEffects）、キャラ自身の絵を使う残像、ボスの縁取りシェーダー、居合の進路の点線（予兆の案内）、
+  レベルアップのプレビュー内の簡易図形、床の飾りと空気感（マップ側）。
+
+### 注意
+- pixelfxは横から見た絵（床の線と立ち姿が基準）なので、上から見るこのゲームでは床の輪が楕円に見える。ピボット後の視点で再評価する。
+- シートは合計約138MB（非圧縮の画素数）。読むのは使った分だけだが、スマホ向けにはfpsを下げるか秘技・概念を小さくする余地がある。
+### 検証
+- 新規 `tests/pixelfx_vfx_check.gd`：66キーの読込、要求キー66の漏れなし、旧フォルダなし、ライセンス同梱、pivot・整数倍・横伸ばし・左向き反転・一発物の終了・常駐の扱い。
+- `five_minute_survival_check`／`survival_growth_check`／`skill_readability_check`／`synergy_evolution_check`／`meta_growth_check`／`loot_visibility_check`／
+  `iai_and_mode_check`／`equipment_auto_attack_check`／`forge_vfx_budget_check` PASS。`pixel_hazard_check`の6件は置き換え前と同じ失敗（毒沼の旧前提）。
+  実画面 `tools/capture_pixelfx.tscn` → `docs/screens/pixelfx_*.png`。

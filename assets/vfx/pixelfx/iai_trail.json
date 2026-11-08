@@ -1,0 +1,25 @@
+{
+ "key": "iai_trail",
+ "fx": "melee/thrust",
+ "name": "Thrust",
+ "fps": 20,
+ "loop": false,
+ "count": 16,
+ "columns": 13,
+ "frame_size": [
+  155,
+  66
+ ],
+ "pivot": [
+  13,
+  55
+ ],
+ "scale": 1,
+ "fit": "stretch_x",
+ "speed": 1.2,
+ "z": 45,
+ "tail_fade": 0.3,
+ "flip": false,
+ "palette": "steel",
+ "source": "pixelfx (MIT) https://github.com/patch-gg/pixelfx"
+}

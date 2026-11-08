@@ -1,0 +1,25 @@
+{
+ "key": "concept_wind_blade",
+ "fx": "melee/spin-slash",
+ "name": "Spin slash",
+ "fps": 20,
+ "loop": false,
+ "count": 17,
+ "columns": 11,
+ "frame_size": [
+  185,
+  94
+ ],
+ "pivot": [
+  81,
+  75
+ ],
+ "scale": 2,
+ "fit": "size",
+ "speed": 1.2,
+ "z": 45,
+ "tail_fade": 0.3,
+ "flip": false,
+ "palette": null,
+ "source": "pixelfx (MIT) https://github.com/patch-gg/pixelfx"
+}

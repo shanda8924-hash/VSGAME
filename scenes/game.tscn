@@ -1,4 +1,4 @@
-[gd_scene load_steps=34 format=3]
+[gd_scene load_steps=33 format=3]
 
 [ext_resource type="Script" path="res://scenes/game.gd" id="1"]
 [ext_resource type="PackedScene" path="res://entities/player/player.tscn" id="2"]
@@ -7,7 +7,6 @@
 [ext_resource type="Script" path="res://systems/mass_kill_tracker.gd" id="6"]
 [ext_resource type="Script" path="res://effects/screen_effects.gd" id="7"]
 [ext_resource type="Script" path="res://effects/vfx_pool_manager.gd" id="8"]
-[ext_resource type="PackedScene" path="res://effects/particles/mass_kill_burst.tscn" id="9"]
 [ext_resource type="PackedScene" path="res://ui/hud/hud.tscn" id="10"]
 [ext_resource type="PackedScene" path="res://ui/level_up_select/level_up_select.tscn" id="11"]
 [ext_resource type="PackedScene" path="res://ui/result_screen/result_screen.tscn" id="12"]
@@ -69,7 +68,6 @@ script = ExtResource("7")
 
 [node name="VFXPoolManager" type="Node" parent="."]
 script = ExtResource("8")
-mass_kill_particle_scene = ExtResource("9")
 
 [node name="MassKillTracker" type="Node" parent="."]
 script = ExtResource("6")

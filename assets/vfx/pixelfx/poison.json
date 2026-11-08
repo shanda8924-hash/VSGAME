@@ -1,0 +1,25 @@
+{
+ "key": "poison",
+ "fx": "nature/toxic-puddle",
+ "name": "Toxic puddle",
+ "fps": 12,
+ "loop": true,
+ "count": 48,
+ "columns": 20,
+ "frame_size": [
+  102,
+  55
+ ],
+ "pivot": [
+  51,
+  43
+ ],
+ "scale": 2,
+ "fit": "size",
+ "speed": 1,
+ "z": -1,
+ "tail_fade": 0.3,
+ "flip": false,
+ "palette": null,
+ "source": "pixelfx (MIT) https://github.com/patch-gg/pixelfx"
+}

@@ -1,0 +1,25 @@
+{
+ "key": "forge_awaken",
+ "fx": "arcane/mana-burst",
+ "name": "Mana burst",
+ "fps": 15,
+ "loop": false,
+ "count": 28,
+ "columns": 12,
+ "frame_size": [
+  160,
+  144
+ ],
+ "pivot": [
+  84,
+  119
+ ],
+ "scale": 2,
+ "fit": "fixed",
+ "speed": 1.2,
+ "z": 0,
+ "tail_fade": 0.3,
+ "flip": false,
+ "palette": "holy",
+ "source": "pixelfx (MIT) https://github.com/patch-gg/pixelfx"
+}

@@ -1,0 +1,25 @@
+{
+ "key": "loot_seal",
+ "fx": "arcane/rune-circle",
+ "name": "Rune circle",
+ "fps": 12,
+ "loop": true,
+ "count": 48,
+ "columns": 17,
+ "frame_size": [
+  114,
+  87
+ ],
+ "pivot": [
+  57,
+  67
+ ],
+ "scale": 1,
+ "fit": "fixed",
+ "speed": 1,
+ "z": 45,
+ "tail_fade": 0.3,
+ "flip": false,
+ "palette": "holy",
+ "source": "pixelfx (MIT) https://github.com/patch-gg/pixelfx"
+}

@@ -1,0 +1,25 @@
+{
+ "key": "equip_magic",
+ "fx": "projectiles/plasma-shot",
+ "name": "Plasma shot",
+ "fps": 15,
+ "loop": true,
+ "count": 12,
+ "columns": 12,
+ "frame_size": [
+  103,
+  52
+ ],
+ "pivot": [
+  78,
+  26
+ ],
+ "scale": 1,
+ "fit": "fixed",
+ "speed": 1,
+ "z": 45,
+ "tail_fade": 0.3,
+ "flip": false,
+ "palette": "shadow",
+ "source": "pixelfx (MIT) https://github.com/patch-gg/pixelfx"
+}

@@ -11,8 +11,6 @@ class_name EffectThemeData
 @export var display_name: String = ""
 @export var combo_ids: String = ""
 
-@export var hit_particle_scene: PackedScene
-@export var enhanced_particle_scene: PackedScene
 @export var hit_color: Color = Color.WHITE
 @export var enhanced_color: Color = Color.WHITE
 
