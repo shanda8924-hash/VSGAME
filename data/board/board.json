@@ -1,0 +1,17 @@
+{
+  "_comment": "3×3盤面の試作用の仮の設定。記号は中身が決まるまでの仮置きで、意味は持たない。数値はここで変える。",
+  "spins_per_run": 8,
+  "max_holds": 4,
+  "holds_persist": true,
+  "reel_stop_seconds": [0.35, 0.55, 0.75],
+  "roll_interval_seconds": 0.05,
+  "line_flash_seconds": 0.22,
+  "symbols": [
+    { "id": "circle", "name": "丸", "shape": "circle", "color": "e8615a", "weight": 1.0 },
+    { "id": "triangle", "name": "三角", "shape": "triangle", "color": "f2c14e", "weight": 1.0 },
+    { "id": "square", "name": "四角", "shape": "square", "color": "5fb0e8", "weight": 1.0 },
+    { "id": "diamond", "name": "菱", "shape": "diamond", "color": "7ed68a", "weight": 1.0 },
+    { "id": "star", "name": "星", "shape": "star", "color": "c58af2", "weight": 1.0 },
+    { "id": "cross", "name": "十字", "shape": "cross", "color": "e8e4d8", "weight": 1.0 }
+  ]
+}

@@ -22,7 +22,8 @@
 
 ### 画面と基盤（`project.godot`）
 - Godot 4.7、描画は mobile。画面 1600×900、伸縮 `canvas_items`／`expand`、横向き固定。ドット絵は最近傍。
-- 起動シーン `res://scenes/main.tscn`＋`scenes/main.gd`：何もない1部屋（床 704×384px、32px格子と枠を `_draw` で描くだけ。当たり判定なし）、
+- 起動シーンは盤面の試作 `res://scenes/board_prototype.tscn`（下の「盤面の試作」）。既定のフォントは DotGothic16。
+- 部屋のシーン `res://scenes/main.tscn`＋`scenes/main.gd`：何もない1部屋（床 704×384px、32px格子と枠を `_draw` で描くだけ。当たり判定なし）、
   原点に固定した `Camera2D`（2倍）、中央に `Player`。攻撃・敵・UIは無い。確認用に起動引数 `-- --character=<id>` で職業を選べる。実画面は `docs/screens/pivot_base_room.png`。
 - オートロードは2つ：`DataLoader`、`GameManager`。
 - オーディオバスは Master／Music／SFX（`default_bus_layout.tres`）。音源は無い。
@@ -36,6 +37,16 @@
 - `components/movement_component.gd`：`base_speed × speed_multiplier × direction`。
 - `components/animation_component.gd`：移動方向で idle／walk と左右反転、`damaged` で hurt、`died` で death。`play_attack()` は残してあるが呼び出し元は無い。
 - `entities/sprite_sheet_builder.gd`：`assets/sprites/<sprite_folder>/` の画像から `SpriteFrames` を組む。
+
+### 盤面の試作（ロードマップ案Aの1段目。戦闘なし、中身は仮）
+- ルール `systems/board/board_model.gd`（`BoardModel`、描画なし）：マスは左上から 0..8。`spin()` はホールドしていないマスだけ引き直す。
+  ラインは横3・縦3・斜め2の8本で、3マスが同じ記号なら揃い（`matched_lines()`）。`toggle_hold()` は上限を超える追加を拒否する。抽選は記号の重みに従う。
+- 設定 `data/board/board.json`（すべて仮）：1プレイ8回、ホールド上限4、ホールドは回したあとも残る、列が止まる時刻 0.35／0.55／0.75秒、
+  記号6種（丸・三角・四角・菱・星・十字。意味も効果も無く、重みは等しい）。
+- 表示 `ui/board/board_view.gd`（`BoardView`）：マスのタップ（マウス／タッチ）でホールド、上限を超えると赤く弾く。回すと列が左から順に止まり、
+  揃ったラインを1本ずつ光らせてから `spin_finished(lines)` を出す。回転中は操作を受け付けない。記号は図形を描くだけで画像は使わない。
+- 画面 `ui/board/board_prototype.gd`：「回す」ボタン（Space・Enterでも可）、回した回数、ホールド数、揃ったラインの合計、結果の一言。8回で終わり、「もう一度」で始め直す。
+- 実画面 `docs/screens/board_prototype_*.png`、撮影は `tools/capture_board.tscn`。
 
 ### データ
 - `resources/character_data.gd`：`id`、`display_name`、`sprite_folder`、`max_hp`、`move_speed`。
@@ -64,6 +75,8 @@
 - `--script res://tests/script_load_check.gd`：全スクリプトの読込。
 - `res://tests/character_base_check.tscn`：10職の生成、見た目とステータスの反映、待機アニメが進むこと、無入力で動かないこと。
 - `res://tests/room_base_check.tscn`：起動シーンに選んだ職業が1人だけ立ち、待機アニメが進み、動かず、カメラ以外のノードとUIが無いこと。
+- `res://tests/board_prototype_check.tscn`：ライン判定8本、ホールド上限、ホールド以外だけ引き直すこと、重みどおりの抽選、実画面でのクリックとボタン操作、
+  回転中の入力拒否、8回で終了と始め直し。
 - `--quit-after 180`：起動シーンの起動。
 
 ## 3. 退避したもの（`_archive/`）

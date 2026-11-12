@@ -15,7 +15,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 [application]
 
 config/name="VS Game Prototype"
-run/main_scene="res://scenes/main.tscn"
+run/main_scene="res://scenes/board_prototype.tscn"
 config/features=PackedStringArray("4.7")
 
 [autoload]
@@ -30,6 +30,10 @@ window/size/viewport_height=900
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/handheld/orientation=4
+
+[gui]
+
+theme/custom_font="res://assets/fonts/DotGothic16-Regular.ttf"
 
 [rendering]
 

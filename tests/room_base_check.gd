@@ -1,5 +1,5 @@
 extends Node
-## 最小の土台の検査：起動シーン（何もない1部屋）に選んだ職業が1人だけ立ち、待機アニメが進み、
+## 最小の土台の検査：部屋のシーン（scenes/main.tscn、何もない1部屋）に選んだ職業が1人だけ立ち、待機アニメが進み、
 ## 部屋の中から動かず、敵・UI・攻撃のノードが無いことを確かめる。
 ## Godot --headless --path . res://tests/room_base_check.tscn
 var failures: Array[String] = []
@@ -13,7 +13,6 @@ func _ready() -> void:
 	_run.call_deferred()
 
 func _run() -> void:
-	check(ProjectSettings.get_setting("application/run/main_scene") == "res://scenes/main.tscn", "main scene is not the room")
 	for id in ["soldier", "wizard", "knight_templar"]:
 		GameManager.selected_character_id = id
 		var room := (load("res://scenes/main.tscn") as PackedScene).instantiate()
