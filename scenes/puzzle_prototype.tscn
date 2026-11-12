@@ -1,0 +1,88 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://ui/puzzle/puzzle_prototype.gd" id="1"]
+[ext_resource type="Script" path="res://ui/puzzle/match_board_view.gd" id="2"]
+
+[node name="PuzzlePrototype" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0.07, 0.08, 0.12, 1)
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="Row" type="HBoxContainer" parent="Center"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 40
+
+[node name="BoardView" type="Control" parent="Center/Row"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(740, 740)
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("2")
+
+[node name="Side" type="VBoxContainer" parent="Center/Row"]
+custom_minimum_size = Vector2(640, 0)
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="MoveLabel" type="Label" parent="Center/Row/Side"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+
+[node name="SummonLabel" type="Label" parent="Center/Row/Side"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+autowrap_mode = 3
+
+[node name="UpgradeLabel" type="Label" parent="Center/Row/Side"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.88, 0.62, 1)
+theme_override_font_sizes/font_size = 22
+autowrap_mode = 3
+
+[node name="MessageLabel" type="Label" parent="Center/Row/Side"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.95, 0.69, 1)
+theme_override_font_sizes/font_size = 26
+autowrap_mode = 3
+
+[node name="RoomPanel" type="ColorRect" parent="Center/Row/Side"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(640, 350)
+layout_mode = 2
+mouse_filter = 2
+color = Color(0.137, 0.157, 0.227, 1)
+
+[node name="Units" type="Node2D" parent="Center/Row/Side/RoomPanel"]
+unique_name_in_owner = true
+
+[node name="RestartButton" type="Button" parent="Center/Row/Side"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "最初からやり直す"

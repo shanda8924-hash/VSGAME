@@ -6,23 +6,24 @@
 ## 1. 新しいゲームの方向
 
 - 横画面。1プレイ約5分。片手で遊べる操作量。
-- 戦闘は自走式。主人公1人が自動で移動・攻撃する。プレイヤーは戦闘を操作しない。
-- 進行は「1部屋＝1戦闘」の連続。8部屋前後のあとにボス。
-- 成長は3×3の盤面。9マスが主人公のビルドそのもの。
-  - 部屋をクリアするごとに1回回せる。残したいマスはタップでホールドできる。
-  - 揃ったライン（縦・横・斜め）の効果が、次の部屋で発動し続ける。
+- 中心は**3つ揃えて消すパズル**（2026-11-12決定。それまでの「3×3の盤面を回してホールドする」案は取りやめ、試作は `_archive/prototype_3x3/` へ退避）。
+  - 盤のマスは「キャラクターの召喚アイコン」と「強化アイコン」。
+  - 職業のアイコンを3つ揃えて消すと、その職業が1体出てくる（例：弓が3つ揃うと弓兵が1体）。強化のアイコンを揃えると強化が進む。
+  - 「揃えて召喚し、軍を育てる」部分は Slotbound に近づけてよい。
+- 戦闘は自動。プレイヤーは戦闘を直接操作しない。
 - 重視する面白さ：ギャンブル性、ルールの分かりやすさ、時短、直感的な操作。
-- 職業は10職すべて残す。主人公に使わない職業は敵キャラクターにできる。
+- 職業は10職すべて残す。召喚に使わない職業は敵キャラクターにできる。
 - 音楽は作り直す。
 
 ### 未定（何も前提にしない）
-盤面に何を載せるか、攻撃・属性・演出をどう作るか、敵・ボス・部屋の中身、UI、育成と保存。あとで1から決める。
+パズルと戦闘の関係（同時に進むか、交互か）、主人公1人を置くか召喚した軍だけで戦うか、手数や時間の制限、部屋とボスの進行、
+強化の中身、攻撃・属性・演出、敵、UI、育成と保存。
 
 ## 2. いま残っているもの
 
 ### 画面と基盤（`project.godot`）
 - Godot 4.7、描画は mobile。画面 1600×900、伸縮 `canvas_items`／`expand`、横向き固定。ドット絵は最近傍。
-- 起動シーンは盤面の試作 `res://scenes/board_prototype.tscn`（下の「盤面の試作」）。既定のフォントは DotGothic16。
+- 起動シーンはパズルの試作 `res://scenes/puzzle_prototype.tscn`（下の「パズルの試作」）。既定のフォントは DotGothic16。
 - 部屋のシーン `res://scenes/main.tscn`＋`scenes/main.gd`：何もない1部屋（床 704×384px、32px格子と枠を `_draw` で描くだけ。当たり判定なし）、
   原点に固定した `Camera2D`（2倍）、中央に `Player`。攻撃・敵・UIは無い。確認用に起動引数 `-- --character=<id>` で職業を選べる。実画面は `docs/screens/pivot_base_room.png`。
 - オートロードは2つ：`DataLoader`、`GameManager`。
@@ -38,15 +39,17 @@
 - `components/animation_component.gd`：移動方向で idle／walk と左右反転、`damaged` で hurt、`died` で death。`play_attack()` は残してあるが呼び出し元は無い。
 - `entities/sprite_sheet_builder.gd`：`assets/sprites/<sprite_folder>/` の画像から `SpriteFrames` を組む。
 
-### 盤面の試作（ロードマップ案Aの1段目。戦闘なし、中身は仮）
-- ルール `systems/board/board_model.gd`（`BoardModel`、描画なし）：マスは左上から 0..8。`spin()` はホールドしていないマスだけ引き直す。
-  ラインは横3・縦3・斜め2の8本で、3マスが同じ記号なら揃い（`matched_lines()`）。`toggle_hold()` は上限を超える追加を拒否する。抽選は記号の重みに従う。
-- 設定 `data/board/board.json`（すべて仮）：1プレイ8回、ホールド上限4、ホールドは回したあとも残る、列が止まる時刻 0.35／0.55／0.75秒、
-  記号6種（丸・三角・四角・菱・星・十字。意味も効果も無く、重みは等しい）。
-- 表示 `ui/board/board_view.gd`（`BoardView`）：マスのタップ（マウス／タッチ）でホールド、上限を超えると赤く弾く。回すと列が左から順に止まり、
-  揃ったラインを1本ずつ光らせてから `spin_finished(lines)` を出す。回転中は操作を受け付けない。記号は図形を描くだけで画像は使わない。
-- 画面 `ui/board/board_prototype.gd`：「回す」ボタン（Space・Enterでも可）、回した回数、ホールド数、揃ったラインの合計、結果の一言。8回で終わり、「もう一度」で始め直す。
-- 実画面 `docs/screens/board_prototype_*.png`、撮影は `tools/capture_board.tscn`。
+### パズルの試作（戦闘なし、中身は仮）
+- ルール `systems/puzzle/match_board.gd`（`MatchBoard`、描画なし）：マスは index = y×幅+x。隣り合う2マスを入れ替え、縦か横に同じ種類が3つ以上並ぶと消える。
+  揃わない入れ替えはできない（`swap()` が拒否）。`resolve_step()` は1回ぶん消して落とし、上から新しいマスで埋める。繰り返すと連鎖。
+  最初の盤は揃いが無く、動かせる手が必ずある。手が無くなったら `reshuffle()`。報酬は並び1本につき 3つで1、以降1つ多いごとに+1（`reward_for()`）。
+- 設定 `data/puzzle/puzzle.json`（すべて仮）：盤 8×8、マス 88px、種類7（職業4：弓兵・剣士・騎士・魔導士／強化3：攻撃・体力・速さ）、
+  入れ替え0.12秒、消える光0.2秒、落下 1500px/秒、部屋に立たせる上限32体。強化は段階を数えるだけで効果は無い。
+- 表示 `ui/puzzle/match_board_view.gd`（`MatchBoardView`）：職業のマスは職業の絵（待機の1コマ目）、強化のマスは図形。
+  操作は「隣へドラッグ」か「タップしてから隣をタップ」。処理中は入力を受け付けない。信号 `groups_cleared(groups, chain)`／`swap_rejected`／`reshuffled`／`resolved(chain)`。
+- 画面 `ui/puzzle/puzzle_prototype.gd`：左に盤、右に手数と最大連鎖、召喚数、強化の段階、一言、召喚先の部屋、やり直しボタン。
+  職業を揃えると、その職業（`player.tscn` に `apply_character()`）が部屋に現れて待機する。
+- 実画面 `docs/screens/puzzle_prototype.png`、撮影は `tools/capture_puzzle.tscn`。
 
 ### データ
 - `resources/character_data.gd`：`id`、`display_name`、`sprite_folder`、`max_hp`、`move_speed`。
@@ -75,8 +78,8 @@
 - `--script res://tests/script_load_check.gd`：全スクリプトの読込。
 - `res://tests/character_base_check.tscn`：10職の生成、見た目とステータスの反映、待機アニメが進むこと、無入力で動かないこと。
 - `res://tests/room_base_check.tscn`：起動シーンに選んだ職業が1人だけ立ち、待機アニメが進み、動かず、カメラ以外のノードとUIが無いこと。
-- `res://tests/board_prototype_check.tscn`：ライン判定8本、ホールド上限、ホールド以外だけ引き直すこと、重みどおりの抽選、実画面でのクリックとボタン操作、
-  回転中の入力拒否、8回で終了と始め直し。
+- `res://tests/puzzle_prototype_check.tscn`：初期盤（揃いなし・手あり、30通り）、無効な入れ替えの拒否、消えて落ちて埋まること、報酬の数、
+  実画面でスワイプとタップ、弓兵3つで弓兵が部屋に現れて待機、強化の段階、処理中の入力拒否、自動20手で盤が毎回きれいなこと、やり直し。
 - `--quit-after 180`：起動シーンの起動。
 
 ## 3. 退避したもの（`_archive/`）
@@ -85,5 +88,5 @@ UI一式、音源、セーブ、旧検査と制作ツール、資料とダッシ
 書き換えたファイル（player、各Component、CharacterData、DataLoader、GameManager、職業JSON）の元の版も同じ場所にある。詳細は `_archive/README.md`。
 
 ## 4. 次に決めること
-再利用の見込みと、実装順のロードマップ案（A：盤面を先に／B：戦闘を先に／C：最小の1周を先に）は `docs/pivot_reuse_inventory.md`。
-着手前に決める点：部屋の見せ方（上から／横から）、1戦闘の長さ、ラインの効果の持続、負けたときの扱い。
+再利用の見込みは `docs/pivot_reuse_inventory.md`（ロードマップ案はパズルへの方向転換前のもの）。
+着手前に決める点：パズルと戦闘の関係、主人公の有無、手数か時間の制限、1プレイの区切り方。
