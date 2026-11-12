@@ -1,11 +1,9 @@
 extends Node
 class_name AnimationComponent
-## 見た目のアニメーション状態(idle/walk/attack/hurt/death)の再生だけを責務とするコンポーネント。
-## MovementComponent.directionとHealthComponent.damaged/died Signalを購読し、
-## 「今どのアニメーションを再生すべきか」を決めるだけで、攻撃タイミング自体は
-## 呼び出し側(Player/EnemyBasic)がplay_attack()を呼んで教える(単一責任の原則)。
-## Player/Enemy共通で使えるよう、兄弟ノードは固定名(HealthComponent/MovementComponent/
-## AnimatedSprite2D)で参照する(Entity配下の他Componentと同じ規約)。
+## 見た目のアニメーション状態(idle/walk/attack/hurt/death)の再生だけを担うコンポーネント。
+## MovementComponent.direction と HealthComponent の damaged/died を見て、待機・歩行・被弾・死亡を切り替える。
+## 攻撃アニメは play_attack() を呼ばれたときだけ再生する(現在は呼び出し元なし)。
+## 兄弟ノードは固定名(HealthComponent/MovementComponent/AnimatedSprite2D)で参照する。
 
 signal death_finished
 
@@ -39,11 +37,6 @@ func _ready() -> void:
 		_sprite.play(IDLE_ANIM)
 
 func _process(_delta: float) -> void:
-	var player := get_parent() as Player
-	if player and player.weapon_manager._class_attack_in_progress and String(_sprite.animation) == player.weapon_manager._sword_animation and _sprite.is_playing():
-		# Keep the authored motion (including menu pauses) until its last frame.
-		_sprite.flip_h = player.weapon_manager._sword_facing.x < 0.0
-		return
 	if _pose_controlled and not _dead:
 		return
 	if _attack_speed_reset_msec > 0 and Time.get_ticks_msec() >= _attack_speed_reset_msec:
@@ -69,8 +62,7 @@ func _update_facing() -> void:
 	if absf(_movement.direction.x) > 0.01:
 		_sprite.flip_h = _movement.direction.x < 0.0
 
-## 呼び出し側(Player=武器発射時 / EnemyBasic=接触ダメージ着弾時)が攻撃演出を要求する。
-## variantはSpriteFramesに定義した"attack1"/"attack2"等の番号。無ければattack1にフォールバックする。
+## 攻撃アニメを再生する。variantはSpriteFramesの"attack1"/"attack2"等の番号。無ければattack1。
 func cancel_attack_pose() -> void:
 	_locked_until_msec = 0
 	_attack_speed_reset_msec = 0

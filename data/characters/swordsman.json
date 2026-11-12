@@ -3,34 +3,5 @@
   "display_name": "剣士",
   "sprite_folder": "player/Swordsman",
   "max_hp": 110.0,
-  "move_speed": 147.0,
-  "unlock_cost": 100,
-  "preferred_element": "lightning",
-  "attack_pattern_id": "melee_arc",
-  "base_damage": 7.0,
-  "attack_interval": 0.8,
-  "attack_range": 68.0,
-  "vfx_theme_id": "lightning",
-  "attack_pattern_params": {
-    "arc_half_angle_degrees": 66.0,
-    "step_distance": 16.0,
-    "impact_delay": 0.14,
-    "hitbox_active_seconds": 0.07,
-    "knockback_distance": 7.0
-  },
-  "active_skill_id": "swordsman_iai",
-  "active_skill_name": "IAI / 居合",
-  "active_skill_icon": "IAI",
-  "active_skill_cooldown": 9.0,
-  "active_skill_params": {
-    "dash_distance": 190.0,
-    "half_width": 26.0,
-    "damage_multiplier": 2.0,
-    "windup": 0.16,
-    "dash_steps": 10,
-    "afterimage_alpha": 0.48,
-    "afterimage_lifetime": 0.28
-  },
-  "melee_lifesteal_percent": 0.0,
-  "melee_lifesteal_cap_per_hit": 0.0
+  "move_speed": 147.0
 }

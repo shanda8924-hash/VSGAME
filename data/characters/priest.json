@@ -3,29 +3,5 @@
   "display_name": "司祭",
   "sprite_folder": "player/Priest",
   "max_hp": 100.0,
-  "move_speed": 140.0,
-  "unlock_cost": 250,
-  "preferred_element": "light",
-  "attack_pattern_id": "holy_pulse_heal",
-  "base_damage": 6.0,
-  "attack_interval": 2.5,
-  "attack_range": 100.0,
-  "vfx_theme_id": "light",
-  "attack_pattern_params": {
-    "radius": 100.0,
-    "heal_percent": 0.15
-  },
-  "active_skill_id": "priest_sanctuary",
-  "active_skill_name": "SANCTUARY / 聖域",
-  "active_skill_icon": "SAN",
-  "active_skill_cooldown": 15.0,
-  "active_skill_params": {
-    "range": 175.0,
-    "ticks": 6,
-    "tick_interval": 0.75,
-    "heal_percent_per_tick": 0.035,
-    "damage_multiplier": 0.8
-  },
-  "damage_reduction": 0.05,
-  "pickup_range_multiplier": 1.15
+  "move_speed": 140.0
 }

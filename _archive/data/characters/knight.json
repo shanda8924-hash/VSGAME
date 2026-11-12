@@ -1,0 +1,31 @@
+{
+  "id": "knight",
+  "display_name": "騎士",
+  "sprite_folder": "player/Knight",
+  "max_hp": 100.0,
+  "move_speed": 182.0,
+  "unlock_cost": 180,
+  "preferred_element": "light",
+  "attack_pattern_id": "charge_dash",
+  "base_damage": 11.0,
+  "attack_interval": 1.6,
+  "attack_range": 60.0,
+  "vfx_theme_id": "light",
+  "attack_pattern_params": {
+    "dash_speed": 480.0,
+    "dash_duration": 0.3,
+    "hit_radius": 55.0,
+    "knockback_distance": 60.0
+  },
+  "active_skill_id": "knight_perfect_guard",
+  "active_skill_name": "PERFECT GUARD / 完全防御",
+  "active_skill_icon": "GRD",
+  "active_skill_cooldown": 8.0,
+  "active_skill_params": {
+    "duration": 2.0,
+    "damage_taken_multiplier": 0.05,
+    "counter_range": 155.0,
+    "counter_multiplier": 5.0
+  },
+  "dash_invincible": true
+}
