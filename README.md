@@ -10,6 +10,7 @@ Godot 4.7 のドット絵ゲーム。2026-11-12 にピボットし、いまは**
 godot --headless --path . --import
 godot --headless --path . --script res://tests/script_load_check.gd
 godot --headless --audio-driver Dummy --path . res://tests/character_base_check.tscn
-godot --headless --audio-driver Dummy --path . --quit-after 120
+godot --headless --audio-driver Dummy --path . res://tests/room_base_check.tscn
+godot --headless --audio-driver Dummy --path . --quit-after 180
 ```
 エラー・警告が0件であること。

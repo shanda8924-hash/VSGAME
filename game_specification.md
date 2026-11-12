@@ -22,7 +22,8 @@
 
 ### 画面と基盤（`project.godot`）
 - Godot 4.7、描画は mobile。画面 1600×900、伸縮 `canvas_items`／`expand`、横向き固定。ドット絵は最近傍。
-- 起動シーン `res://scenes/main.tscn`（現在は空の `Node2D`）。
+- 起動シーン `res://scenes/main.tscn`＋`scenes/main.gd`：何もない1部屋（床 704×384px、32px格子と枠を `_draw` で描くだけ。当たり判定なし）、
+  原点に固定した `Camera2D`（2倍）、中央に `Player`。攻撃・敵・UIは無い。確認用に起動引数 `-- --character=<id>` で職業を選べる。実画面は `docs/screens/pivot_base_room.png`。
 - オートロードは2つ：`DataLoader`、`GameManager`。
 - オーディオバスは Master／Music／SFX（`default_bus_layout.tres`）。音源は無い。
 
@@ -62,7 +63,8 @@
 ### 検査（すべてheadlessで実行、エラー・警告0件が基準）
 - `--script res://tests/script_load_check.gd`：全スクリプトの読込。
 - `res://tests/character_base_check.tscn`：10職の生成、見た目とステータスの反映、待機アニメが進むこと、無入力で動かないこと。
-- `--quit-after 120`：起動シーンの起動。
+- `res://tests/room_base_check.tscn`：起動シーンに選んだ職業が1人だけ立ち、待機アニメが進み、動かず、カメラ以外のノードとUIが無いこと。
+- `--quit-after 180`：起動シーンの起動。
 
 ## 3. 退避したもの（`_archive/`）
 攻撃・属性・状態異常・弾・エフェクト（pixelfx含む）、天賦図と完成スキル、レベルアップ・装備・鍛造・ショップ・金貨、ダンジョン生成・敵・ボス・精鋭・波、
