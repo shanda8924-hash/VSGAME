@@ -198,7 +198,7 @@ func _run() -> void:
 	var total_units := 0
 	for id in screen.summoned.keys():
 		total_units += int(screen.summoned[id])
-	check(screen.units.size() == mini(total_units, int(model.config.get("max_units_shown", 32))), "units in the room disagree with the summon total")
+	check(screen.units.size() == mini(total_units, int(model.config.get("max_army", 20))) and screen.army.units.size() == screen.units.size(), "units in the room disagree with the summon total")
 	screen.restart_button.pressed.emit()
 	await get_tree().process_frame
 	await get_tree().process_frame

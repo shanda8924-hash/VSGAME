@@ -12,6 +12,7 @@ godot --headless --path . --script res://tests/script_load_check.gd
 godot --headless --audio-driver Dummy --path . res://tests/character_base_check.tscn
 godot --headless --audio-driver Dummy --path . res://tests/room_base_check.tscn
 godot --headless --audio-driver Dummy --path . res://tests/puzzle_prototype_check.tscn
+godot --headless --audio-driver Dummy --path . res://tests/army_fusion_check.tscn
 godot --headless --audio-driver Dummy --path . --quit-after 180
 ```
 エラー・警告が0件であること。

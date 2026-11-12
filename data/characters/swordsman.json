@@ -2,8 +2,11 @@
   "id": "swordsman",
   "display_name": "剣士",
   "sprite_folder": "player/Swordsman",
-  "max_hp": 110.0,
+  "max_hp": 160.0,
   "move_speed": 147.0,
   "icon": "res://assets/icons/class/swordsman.png",
-  "icon_name": "剣"
+  "icon_name": "剣",
+  "tier": 2,
+  "promotes_to": "knight",
+  "fusion_count": 2
 }

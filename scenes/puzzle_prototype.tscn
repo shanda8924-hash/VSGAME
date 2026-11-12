@@ -70,15 +70,28 @@ theme_override_colors/font_color = Color(1, 0.95, 0.69, 1)
 theme_override_font_sizes/font_size = 26
 autowrap_mode = 3
 
-[node name="RoomPanel" type="ColorRect" parent="Center/Row/Side"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(640, 350)
+[node name="RoomRow" type="HBoxContainer" parent="Center/Row/Side"]
 layout_mode = 2
 mouse_filter = 2
+theme_override_constants/separation = 16
+
+[node name="RoomPanel" type="ColorRect" parent="Center/Row/Side/RoomRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(400, 350)
+layout_mode = 2
 color = Color(0.137, 0.157, 0.227, 1)
 
-[node name="Units" type="Node2D" parent="Center/Row/Side/RoomPanel"]
+[node name="Units" type="Node2D" parent="Center/Row/Side/RoomRow/RoomPanel"]
 unique_name_in_owner = true
+
+[node name="StatusFrame" type="PanelContainer" parent="Center/Row/Side/RoomRow"]
+custom_minimum_size = Vector2(224, 350)
+layout_mode = 2
+
+[node name="StatusPanel" type="VBoxContainer" parent="Center/Row/Side/RoomRow/StatusFrame"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 10
 
 [node name="RestartButton" type="Button" parent="Center/Row/Side"]
 unique_name_in_owner = true

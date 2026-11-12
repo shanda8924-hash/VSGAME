@@ -9,27 +9,26 @@
   "fall_speed": 1500,
   "reward_base_length": 3,
   "reward_per_extra_tile": 1,
-  "max_units_shown": 32,
   "kinds": [
+    {
+      "id": "soldier",
+      "type": "unit",
+      "character": "soldier"
+    },
     {
       "id": "archer",
       "type": "unit",
       "character": "archer"
     },
     {
-      "id": "swordsman",
+      "id": "lancer",
       "type": "unit",
-      "character": "swordsman"
+      "character": "lancer"
     },
     {
-      "id": "knight",
+      "id": "priest",
       "type": "unit",
-      "character": "knight"
-    },
-    {
-      "id": "wizard",
-      "type": "unit",
-      "character": "wizard"
+      "character": "priest"
     },
     {
       "id": "attack",
@@ -51,5 +50,6 @@
     }
   ],
   "tile_color": "bdb6ae",
-  "tile_edge_color": "8f8880"
+  "tile_edge_color": "8f8880",
+  "max_army": 20
 }

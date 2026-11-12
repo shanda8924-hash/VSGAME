@@ -12,3 +12,7 @@ class_name CharacterData
 ## 職業を象徴する道具のアイコン（弓兵＝弓、剣士＝剣など）。パズルのマスなど、キャラクターの絵を出さない所で使う。
 @export var icon_path: String = ""
 @export var icon_name: String = ""
+## 転職の段階（1＝最下位）。同じ職業を fusion_count 体融合すると promotes_to の職業になる。空なら最上位。
+@export var tier: int = 1
+@export var promotes_to: String = ""
+@export var fusion_count: int = 2

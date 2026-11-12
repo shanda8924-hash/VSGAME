@@ -18,6 +18,21 @@ func _ready() -> void:
 			await screen.board_view.resolved
 	for i in 20: await get_tree().process_frame
 	await _shot("3_after_14_moves")
+	# ステータスと融合：ソルジャーを選ぶ → 融合して剣士に
+	var soldier_uid := -1
+	for unit in screen.army.units:
+		if String(unit.id) == "soldier":
+			soldier_uid = int(unit.uid)
+	if soldier_uid < 0:
+		soldier_uid = screen.add_unit("soldier")
+	if screen.army.count_of("soldier") < 2:
+		screen.add_unit("soldier")
+	screen.select_unit(soldier_uid)
+	for i in 20: await get_tree().process_frame
+	await _shot("4_status")
+	screen.fuse_selected()
+	for i in 30: await get_tree().process_frame
+	await _shot("5_fused")
 	get_tree().quit()
 
 func _shot(name: String) -> void:

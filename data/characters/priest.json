@@ -5,5 +5,8 @@
   "max_hp": 100.0,
   "move_speed": 140.0,
   "icon": "res://assets/icons/class/priest.png",
-  "icon_name": "聖典"
+  "icon_name": "聖典",
+  "tier": 1,
+  "promotes_to": "knight_templar",
+  "fusion_count": 2
 }

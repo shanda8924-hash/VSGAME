@@ -37,6 +37,9 @@ func _load_characters() -> void:
 		data.move_speed = float(entry.get("move_speed", 140.0))
 		data.icon_path = String(entry.get("icon", ""))
 		data.icon_name = String(entry.get("icon_name", ""))
+		data.tier = int(entry.get("tier", 1))
+		data.promotes_to = String(entry.get("promotes_to", ""))
+		data.fusion_count = maxi(int(entry.get("fusion_count", 2)), 2)
 		if data.id != "":
 			characters[data.id] = data
 
