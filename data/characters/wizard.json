@@ -2,11 +2,11 @@
   "id": "wizard",
   "display_name": "魔導士",
   "sprite_folder": "player/Wizard",
-  "max_hp": 130.0,
+  "max_hp": 75.0,
   "move_speed": 140.0,
   "icon": "res://assets/icons/class/wizard.png",
   "icon_name": "魔法の帽子",
-  "tier": 2,
+  "tier": 1,
   "promotes_to": "necromancer",
   "fusion_count": 2
 }

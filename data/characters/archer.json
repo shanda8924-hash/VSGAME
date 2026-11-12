@@ -7,6 +7,6 @@
   "icon": "res://assets/icons/class/archer.png",
   "icon_name": "弓",
   "tier": 1,
-  "promotes_to": "wizard",
+  "promotes_to": "",
   "fusion_count": 2
 }

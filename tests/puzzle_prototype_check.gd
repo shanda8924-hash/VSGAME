@@ -42,7 +42,7 @@ func _run() -> void:
 		var fresh := MatchBoard.new(seed_value)
 		check(fresh.find_matches().is_empty() and fresh.has_moves(), "seed %d: initial board has matches or no moves" % seed_value)
 	var board := MatchBoard.new(1)
-	check(board.width == 8 and board.height == 8 and board.kinds.size() == 7, "config not loaded")
+	check(board.width == 8 and board.height == 8 and board.kinds.size() == 8, "config not loaded")
 	base_grid(board)
 	check(board.find_matches().is_empty(), "base pattern is not match-free")
 	var archer := kind_index(board, "archer")

@@ -41,7 +41,9 @@ func _run() -> void:
 			check(target != null and target.tier == character.tier + 1, "%s promotes to a missing or wrong-tier class" % character.id)
 			check(target != null and target.max_hp > character.max_hp, "%s → %s is not stronger (HP)" % [character.id, character.promotes_to])
 		check(character.fusion_count >= 2, "%s fusion count below 2" % character.id)
-	check(roots == 4, "expected 4 base classes, got %d" % roots)
+	check(roots == 5, "expected 5 base classes, got %d" % roots)
+	check(DataLoader.characters.wizard.tier == 1 and DataLoader.characters.wizard.promotes_to == "necromancer" and DataLoader.characters.necromancer.tier == 2, "wizard → necromancer line is wrong")
+	check(DataLoader.characters.archer.promotes_to == "", "archer should have no promotion for now")
 	# --- ルール（Army）
 	var army := Army.new(3)
 	var first := army.add("soldier")
@@ -76,7 +78,7 @@ func _run() -> void:
 	check(screen.status_icon.texture != null and screen.status_icon.texture.resource_path == soldier.icon_path, "status panel has no class icon")
 	check(screen.status_promotion.text.contains("剣士") and screen.status_promotion.text.contains("1 / 2") and screen.fuse_button.visible and screen.fuse_button.disabled, "one soldier should show the path to swordsman with a disabled button: " + screen.status_promotion.text)
 	await click(screen.units[1].global_position)
-	check(screen.status_name.text == "弓兵" and screen.status_promotion.text.contains("魔導士"), "clicking another character does not switch the panel")
+	check(screen.status_name.text == "弓兵" and screen.status_promotion.text.contains("最上位") and not screen.fuse_button.visible, "clicking another character does not switch the panel")
 	screen.add_unit("soldier")
 	await get_tree().process_frame
 	await click(screen.units[0].global_position)
