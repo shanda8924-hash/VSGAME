@@ -35,6 +35,8 @@ func _load_characters() -> void:
 		data.sprite_folder = String(entry.get("sprite_folder", ""))
 		data.max_hp = float(entry.get("max_hp", 100.0))
 		data.move_speed = float(entry.get("move_speed", 140.0))
+		data.icon_path = String(entry.get("icon", ""))
+		data.icon_name = String(entry.get("icon_name", ""))
 		if data.id != "":
 			characters[data.id] = data
 

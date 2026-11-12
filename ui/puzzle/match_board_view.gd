@@ -1,6 +1,7 @@
 extends Control
 class_name MatchBoardView
 ## パズル盤の表示と操作。ルールは MatchBoard が持ち、ここは見せ方と入力だけ。
+## 職業のマスはキャラクターの絵ではなく、その職業を象徴する道具のアイコン（CharacterData.icon_path）。
 ## 操作：マスを隣へドラッグ（スワイプ）、またはマスをタップしてから隣のマスをタップ。
 ## 流れ：入れ替え → 揃った並びが光って消える → 上のマスが落ちる → 揃えば連鎖。全部終わると resolved を出す。
 
@@ -28,7 +29,8 @@ var _press_cell := -1
 var _press_position := Vector2.ZERO
 var _denied := {}
 var _denied_timer := 0.0
-var _portraits := {}
+## 種類の番号 → アイコン画像（職業のマスは、その職業を象徴する道具）。
+var _icons := {}
 
 func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -46,13 +48,13 @@ func bind(board: MatchBoard) -> void:
 	_offsets.fill(Vector2.ZERO)
 	_flash.clear()
 	_selected = -1
-	_portraits.clear()
+	_icons.clear()
 	for kind in board.kinds.size():
 		var data := board.kind_data(kind)
 		if String(data.get("type", "")) == "unit":
 			var character: CharacterData = DataLoader.characters.get(String(data.get("character", "")))
-			if character:
-				_portraits[kind] = SpriteSheetBuilder.build_portrait_texture(character.sprite_folder)
+			if character and ResourceLoader.exists(character.icon_path):
+				_icons[kind] = load(character.icon_path) as Texture2D
 	custom_minimum_size = board_size()
 	queue_redraw()
 
@@ -66,6 +68,10 @@ func board_size() -> Vector2:
 
 func cell_rect(index: int) -> Rect2:
 	return Rect2(Vector2(_gap + (index % model.width) * pitch(), _gap + (index / model.width) * pitch()), Vector2.ONE * _tile)
+
+## 種類 kind のマスに使っているアイコン画像（図形で描く種類は null）。
+func icon_for(kind: int) -> Texture2D:
+	return _icons.get(kind)
 
 func cell_at(point: Vector2) -> int:
 	if model == null:
@@ -193,12 +199,10 @@ func _draw() -> void:
 			rect = rect.grow(5.0)
 		draw_rect(rect, Color(String(data.get("color", "444444"))))
 		draw_rect(rect, Color(1, 1, 1, 0.12), false, 2.0)
-		if _portraits.has(kind) and _portraits[kind] != null:
-			var texture: Texture2D = _portraits[kind]
-			var scale_factor := floorf(rect.size.y * 0.8 / maxf(texture.get_height(), 1.0))
-			scale_factor = maxf(minf(scale_factor, floorf(rect.size.x * 0.9 / maxf(texture.get_width(), 1.0))), 1.0)
-			var size := texture.get_size() * scale_factor
-			draw_texture_rect(texture, Rect2(rect.get_center() - size * 0.5, size), false)
+		if _icons.has(kind) and _icons[kind] != null:
+			var texture: Texture2D = _icons[kind]
+			var side := rect.size.x * 0.84
+			draw_texture_rect(texture, Rect2(rect.get_center() - Vector2.ONE * side * 0.5, Vector2.ONE * side), false)
 		else:
 			_draw_shape(rect.get_center(), rect.size.x * 0.3, String(data.get("shape", "circle")), Color(String(data.get("icon_color", "ffffff"))))
 		if flashing:

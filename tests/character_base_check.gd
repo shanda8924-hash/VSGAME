@@ -34,6 +34,7 @@ func _run() -> void:
 			seen[sprite.frame] = true
 		check(seen.size() >= 2, "%s: idle animation does not advance" % id)
 		check(player.velocity == Vector2.ZERO, "%s: moves without any input" % id)
+		check(data.icon_name != "" and ResourceLoader.exists(data.icon_path) and load(data.icon_path) is Texture2D, "%s: class icon missing" % id)
 		player.queue_free()
 		await get_tree().process_frame
 	GameManager.selected_character_id = "no_such_class"

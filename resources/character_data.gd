@@ -9,3 +9,6 @@ class_name CharacterData
 @export var sprite_folder: String # 例: "player/Soldier"(assets/sprites/ 以下の実フォルダ名と一致させる)
 @export var max_hp: float = 100.0
 @export var move_speed: float = 140.0
+## 職業を象徴する道具のアイコン（弓兵＝弓、剣士＝剣など）。パズルのマスなど、キャラクターの絵を出さない所で使う。
+@export var icon_path: String = ""
+@export var icon_name: String = ""

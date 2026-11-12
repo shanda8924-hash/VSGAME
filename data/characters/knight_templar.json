@@ -3,5 +3,7 @@
   "display_name": "聖堂騎士",
   "sprite_folder": "player/Knight Templar",
   "max_hp": 140.0,
-  "move_speed": 119.0
+  "move_speed": 119.0,
+  "icon": "res://assets/icons/class/knight_templar.png",
+  "icon_name": "戦鎚"
 }

@@ -3,5 +3,7 @@
   "display_name": "弓兵",
   "sprite_folder": "player/Archer",
   "max_hp": 85.0,
-  "move_speed": 168.0
+  "move_speed": 168.0,
+  "icon": "res://assets/icons/class/archer.png",
+  "icon_name": "弓"
 }

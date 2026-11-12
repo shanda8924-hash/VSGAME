@@ -3,5 +3,7 @@
   "display_name": "槍兵",
   "sprite_folder": "player/Lancer",
   "max_hp": 105.0,
-  "move_speed": 161.0
+  "move_speed": 161.0,
+  "icon": "res://assets/icons/class/lancer.png",
+  "icon_name": "槍"
 }

@@ -88,6 +88,15 @@ func _run() -> void:
 	var visible_area := get_viewport().get_visible_rect()
 	check(visible_area.encloses(view.get_global_rect()) and visible_area.encloses(screen.room_panel.get_global_rect()) and visible_area.encloses(screen.restart_button.get_global_rect()), "board, room or button is off screen")
 	check(view.size.x >= view.board_size().x - 1.0 and view.size.y >= view.board_size().y - 1.0, "board view is smaller than the board")
+	# 職業のマスは象徴の道具のアイコン（キャラクターの絵ではない）
+	for kind in screen.model.kinds.size():
+		var kind_data: Dictionary = screen.model.kind_data(kind)
+		if String(kind_data.get("type", "")) == "unit":
+			var character: CharacterData = DataLoader.characters[String(kind_data.character)]
+			var icon := view.icon_for(kind)
+			check(icon != null and icon.resource_path == character.icon_path and icon.resource_path.begins_with("res://assets/icons/class/"), "%s tile does not use its class icon" % character.id)
+		else:
+			check(view.icon_for(kind) == null, "upgrade tile unexpectedly has a class icon")
 	# 弓兵3つをスワイプで揃える
 	var model := screen.model as MatchBoard
 	base_grid(model)

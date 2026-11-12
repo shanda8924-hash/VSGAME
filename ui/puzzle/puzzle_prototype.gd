@@ -58,7 +58,7 @@ func _on_groups_cleared(groups: Array, chain: int) -> void:
 			summoned[character.id] = int(summoned.get(character.id, 0)) + amount
 			for index in amount:
 				_spawn_unit(character)
-			parts.append("%sを%d体 召喚" % [character.display_name, amount])
+			parts.append("%sが揃った！ %sを%d体 召喚" % [character.icon_name, character.display_name, amount])
 		else:
 			var id := String(data.get("id", ""))
 			upgrades[id] = int(upgrades.get(id, 0)) + amount

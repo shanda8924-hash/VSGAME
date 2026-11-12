@@ -45,14 +45,14 @@
   最初の盤は揃いが無く、動かせる手が必ずある。手が無くなったら `reshuffle()`。報酬は並び1本につき 3つで1、以降1つ多いごとに+1（`reward_for()`）。
 - 設定 `data/puzzle/puzzle.json`（すべて仮）：盤 8×8、マス 88px、種類7（職業4：弓兵・剣士・騎士・魔導士／強化3：攻撃・体力・速さ）、
   入れ替え0.12秒、消える光0.2秒、落下 1500px/秒、部屋に立たせる上限32体。強化は段階を数えるだけで効果は無い。
-- 表示 `ui/puzzle/match_board_view.gd`（`MatchBoardView`）：職業のマスは職業の絵（待機の1コマ目）、強化のマスは図形。
+- 表示 `ui/puzzle/match_board_view.gd`（`MatchBoardView`）：職業のマスはその職業を象徴する道具のアイコン（キャラクターの絵は載せない）、強化のマスは図形。
   操作は「隣へドラッグ」か「タップしてから隣をタップ」。処理中は入力を受け付けない。信号 `groups_cleared(groups, chain)`／`swap_rejected`／`reshuffled`／`resolved(chain)`。
 - 画面 `ui/puzzle/puzzle_prototype.gd`：左に盤、右に手数と最大連鎖、召喚数、強化の段階、一言、召喚先の部屋、やり直しボタン。
   職業を揃えると、その職業（`player.tscn` に `apply_character()`）が部屋に現れて待機する。
 - 実画面 `docs/screens/puzzle_prototype.png`、撮影は `tools/capture_puzzle.tscn`。
 
 ### データ
-- `resources/character_data.gd`：`id`、`display_name`、`sprite_folder`、`max_hp`、`move_speed`。
+- `resources/character_data.gd`：`id`、`display_name`、`sprite_folder`、`max_hp`、`move_speed`、`icon_path`／`icon_name`（職業を象徴する道具のアイコン）。
 - `data/characters/*.json`（10職）。
 
 | id | 名前 | HP | 移動速度 |
@@ -72,6 +72,8 @@
 - `autoload/game_manager.gd`：`selected_character_id`（既定 `soldier`）、`get_selected_character()`（無効なIDは既定へ戻す）。
 
 ### 素材
+- `assets/icons/class/<id>.png`（10職の象徴アイコン、64px。弓兵＝弓、剣士＝剣、騎士＝騎士兜、魔導士＝杖、ソルジャー＝羽飾りの兜、重装斧兵＝戦斧、
+  槍兵＝槍、司祭＝司祭杖、死霊術師＝大鎌、聖堂騎士＝戦鎚。退避した装備アイコンから選んだ）。
 - `assets/sprites/player/`（10職。待機・歩行・攻撃・被弾・死亡のコマ）、`assets/fonts/`（DotGothic16、M PLUS 1p。OFL）。
 
 ### 検査（すべてheadlessで実行、エラー・警告0件が基準）

@@ -3,5 +3,7 @@
   "display_name": "死霊術師",
   "sprite_folder": "player/Necromancer",
   "max_hp": 80.0,
-  "move_speed": 140.0
+  "move_speed": 140.0,
+  "icon": "res://assets/icons/class/necromancer.png",
+  "icon_name": "大鎌"
 }
