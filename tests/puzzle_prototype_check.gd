@@ -96,7 +96,9 @@ func _run() -> void:
 			var icon := view.icon_for(kind)
 			check(icon != null and icon.resource_path == character.icon_path and icon.resource_path.begins_with("res://assets/icons/class/"), "%s tile does not use its class icon" % character.id)
 		else:
-			check(view.icon_for(kind) == null, "upgrade tile unexpectedly has a class icon")
+			var upgrade_icon := view.icon_for(kind)
+			check(upgrade_icon != null and upgrade_icon.resource_path == String(kind_data.icon) and upgrade_icon.resource_path.begins_with("res://assets/icons/upgrade/"), "%s tile has no upgrade icon" % String(kind_data.id))
+		check(view.icon_for(kind) != null and view.icon_for(kind).get_size() == Vector2(16, 16), "tile icon %d is not a 16px pixel icon" % kind)
 	# 弓兵3つをスワイプで揃える
 	var model := screen.model as MatchBoard
 	base_grid(model)

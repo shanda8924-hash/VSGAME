@@ -5,5 +5,5 @@
   "max_hp": 100.0,
   "move_speed": 182.0,
   "icon": "res://assets/icons/class/knight.png",
-  "icon_name": "騎士兜"
+  "icon_name": "盾"
 }

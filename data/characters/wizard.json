@@ -5,5 +5,5 @@
   "max_hp": 75.0,
   "move_speed": 140.0,
   "icon": "res://assets/icons/class/wizard.png",
-  "icon_name": "杖"
+  "icon_name": "魔法の帽子"
 }

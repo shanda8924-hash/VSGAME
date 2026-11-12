@@ -1,5 +1,5 @@
 {
-  "_comment": "3つ揃えて消すパズルの試作用の仮の設定。盤の大きさ、マスの種類、報酬の数はここで変える。type=unit は揃えるとその職業を召喚、type=upgrade は揃えるとその強化が1段上がる。強化の中身（効果）はまだ無い。",
+  "_comment": "3つ揃えて消すパズルの試作用の仮の設定。盤の大きさ、マスの種類、報酬の数はここで変える。type=unit は揃えるとその職業を召喚（アイコンは職業データの icon）、type=upgrade は揃えるとその強化が1段上がる（アイコンは icon）。強化の中身（効果）はまだ無い。",
   "width": 8,
   "height": 8,
   "tile_size": 88,
@@ -11,12 +11,45 @@
   "reward_per_extra_tile": 1,
   "max_units_shown": 32,
   "kinds": [
-    { "id": "archer", "type": "unit", "character": "archer", "color": "3f6b4a" },
-    { "id": "swordsman", "type": "unit", "character": "swordsman", "color": "3f5f8a" },
-    { "id": "knight", "type": "unit", "character": "knight", "color": "6a6f80" },
-    { "id": "wizard", "type": "unit", "character": "wizard", "color": "5b468a" },
-    { "id": "attack", "type": "upgrade", "name": "攻撃", "shape": "diamond", "color": "8a3b36", "icon_color": "ffb0a0" },
-    { "id": "life", "type": "upgrade", "name": "体力", "shape": "cross", "color": "2f6f5a", "icon_color": "b6f5cf" },
-    { "id": "speed", "type": "upgrade", "name": "速さ", "shape": "triangle", "color": "8a7a2f", "icon_color": "fff0a0" }
-  ]
+    {
+      "id": "archer",
+      "type": "unit",
+      "character": "archer"
+    },
+    {
+      "id": "swordsman",
+      "type": "unit",
+      "character": "swordsman"
+    },
+    {
+      "id": "knight",
+      "type": "unit",
+      "character": "knight"
+    },
+    {
+      "id": "wizard",
+      "type": "unit",
+      "character": "wizard"
+    },
+    {
+      "id": "attack",
+      "type": "upgrade",
+      "name": "攻撃",
+      "icon": "res://assets/icons/upgrade/attack.png"
+    },
+    {
+      "id": "life",
+      "type": "upgrade",
+      "name": "体力",
+      "icon": "res://assets/icons/upgrade/life.png"
+    },
+    {
+      "id": "speed",
+      "type": "upgrade",
+      "name": "速さ",
+      "icon": "res://assets/icons/upgrade/speed.png"
+    }
+  ],
+  "tile_color": "bdb6ae",
+  "tile_edge_color": "8f8880"
 }

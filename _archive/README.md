@@ -9,3 +9,4 @@
   `entities/player/player.gd`・`player.tscn`、`entities/entity_base/entity.gd`、`components/{animation,movement,health}_component.gd`、
   `resources/character_data.gd`、`autoload/{data_loader,game_manager}.gd`、`data/characters/*.json`（攻撃パターン・職業技などの項目つき）。
 - `.github/workflows/dashboard-pages.yml`（ダッシュボード公開）も退避した。`dashboard/dist` を戻すなら一緒に戻す。
+- 装備用のアイコン（`assets/items`、`assets/visuals/ember_v5/equipment`、`assets/ui/equipment_readable_v4`、`assets/ui/equipment_pixel_v3`、`tools/icon_unified`）は削除済み。必要ならタグ `pre-pivot` から取り出す。

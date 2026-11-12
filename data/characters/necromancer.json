@@ -5,5 +5,5 @@
   "max_hp": 80.0,
   "move_speed": 140.0,
   "icon": "res://assets/icons/class/necromancer.png",
-  "icon_name": "大鎌"
+  "icon_name": "髑髏"
 }

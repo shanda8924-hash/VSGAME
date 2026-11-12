@@ -45,7 +45,8 @@
   最初の盤は揃いが無く、動かせる手が必ずある。手が無くなったら `reshuffle()`。報酬は並び1本につき 3つで1、以降1つ多いごとに+1（`reward_for()`）。
 - 設定 `data/puzzle/puzzle.json`（すべて仮）：盤 8×8、マス 88px、種類7（職業4：弓兵・剣士・騎士・魔導士／強化3：攻撃・体力・速さ）、
   入れ替え0.12秒、消える光0.2秒、落下 1500px/秒、部屋に立たせる上限32体。強化は段階を数えるだけで効果は無い。
-- 表示 `ui/puzzle/match_board_view.gd`（`MatchBoardView`）：職業のマスはその職業を象徴する道具のアイコン（キャラクターの絵は載せない）、強化のマスは図形。
+- 表示 `ui/puzzle/match_board_view.gd`（`MatchBoardView`）：マスの地は無彩色で、アイコンだけで種類を見分ける。職業のマスはその職業を象徴する道具（キャラクターの絵は載せない）、
+  強化のマスも同じ画風のアイコン。16pxの絵を整数倍（5倍）で描く。
   操作は「隣へドラッグ」か「タップしてから隣をタップ」。処理中は入力を受け付けない。信号 `groups_cleared(groups, chain)`／`swap_rejected`／`reshuffled`／`resolved(chain)`。
 - 画面 `ui/puzzle/puzzle_prototype.gd`：左に盤、右に手数と最大連鎖、召喚数、強化の段階、一言、召喚先の部屋、やり直しボタン。
   職業を揃えると、その職業（`player.tscn` に `apply_character()`）が部屋に現れて待機する。
@@ -72,8 +73,9 @@
 - `autoload/game_manager.gd`：`selected_character_id`（既定 `soldier`）、`get_selected_character()`（無効なIDは既定へ戻す）。
 
 ### 素材
-- `assets/icons/class/<id>.png`（10職の象徴アイコン、64px。弓兵＝弓、剣士＝剣、騎士＝騎士兜、魔導士＝杖、ソルジャー＝羽飾りの兜、重装斧兵＝戦斧、
-  槍兵＝槍、司祭＝司祭杖、死霊術師＝大鎌、聖堂騎士＝戦鎚。退避した装備アイコンから選んだ）。
+- `assets/icons/class/<id>.png`（10職の象徴）と `assets/icons/upgrade/<id>.png`（強化3種）。16×16px。粗いドット・平らな2〜3色・太い暗い輪郭の画風で、
+  `tools/pixel_icons/build.py` に文字の並びで描いてある（輪郭は自動）。弓兵＝弓、剣士＝剣、騎士＝盾、魔導士＝魔法の帽子、ソルジャー＝兜、重装斧兵＝斧、
+  槍兵＝槍、司祭＝聖典、死霊術師＝髑髏、聖堂騎士＝槌。強化は 攻撃＝炎、体力＝ハート、速さ＝稲妻（中身は仮）。
 - `assets/sprites/player/`（10職。待機・歩行・攻撃・被弾・死亡のコマ）、`assets/fonts/`（DotGothic16、M PLUS 1p。OFL）。
 
 ### 検査（すべてheadlessで実行、エラー・警告0件が基準）
@@ -87,6 +89,7 @@
 ## 3. 退避したもの（`_archive/`）
 攻撃・属性・状態異常・弾・エフェクト（pixelfx含む）、天賦図と完成スキル、レベルアップ・装備・鍛造・ショップ・金貨、ダンジョン生成・敵・ボス・精鋭・波、
 UI一式、音源、セーブ、旧検査と制作ツール、資料とダッシュボード。元のフォルダ構成のまま置き、`.gdignore` でGodotには読み込ませない。
+装備用のアイコン（`assets/items`、`ember_v5/equipment`、`equipment_readable_v4`、`equipment_pixel_v3`、生成器 `tools/icon_unified`）は画風が合わないため2026-11-12に削除した（タグ `pre-pivot` には残っている）。
 書き換えたファイル（player、各Component、CharacterData、DataLoader、GameManager、職業JSON）の元の版も同じ場所にある。詳細は `_archive/README.md`。
 
 ## 4. 次に決めること

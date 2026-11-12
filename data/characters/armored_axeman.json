@@ -5,5 +5,5 @@
   "max_hp": 150.0,
   "move_speed": 105.0,
   "icon": "res://assets/icons/class/armored_axeman.png",
-  "icon_name": "戦斧"
+  "icon_name": "斧"
 }

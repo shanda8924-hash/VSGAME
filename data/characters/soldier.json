@@ -5,5 +5,5 @@
   "max_hp": 100.0,
   "move_speed": 140.0,
   "icon": "res://assets/icons/class/soldier.png",
-  "icon_name": "羽飾りの兜"
+  "icon_name": "兜"
 }

@@ -1,7 +1,7 @@
 extends Control
 class_name MatchBoardView
 ## パズル盤の表示と操作。ルールは MatchBoard が持ち、ここは見せ方と入力だけ。
-## 職業のマスはキャラクターの絵ではなく、その職業を象徴する道具のアイコン（CharacterData.icon_path）。
+## マスは粗いドットのアイコン（tools/pixel_icons）。職業のマスはキャラクターの絵ではなく、その職業を象徴する道具（CharacterData.icon_path）。
 ## 操作：マスを隣へドラッグ（スワイプ）、またはマスをタップしてから隣のマスをタップ。
 ## 流れ：入れ替え → 揃った並びが光って消える → 上のマスが落ちる → 揃えば連鎖。全部終わると resolved を出す。
 
@@ -31,6 +31,8 @@ var _denied := {}
 var _denied_timer := 0.0
 ## 種類の番号 → アイコン画像（職業のマスは、その職業を象徴する道具）。
 var _icons := {}
+var _tile_color := Color("bdb6ae")
+var _tile_edge_color := Color("8f8880")
 
 func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -43,6 +45,8 @@ func bind(board: MatchBoard) -> void:
 	_swap_seconds = float(board.config.get("swap_seconds", 0.12))
 	_flash_seconds = float(board.config.get("clear_flash_seconds", 0.2))
 	_fall_speed = float(board.config.get("fall_speed", 1500))
+	_tile_color = Color(String(board.config.get("tile_color", "bdb6ae")))
+	_tile_edge_color = Color(String(board.config.get("tile_edge_color", "8f8880")))
 	_display = board.grid.duplicate()
 	_offsets.resize(board.cell_count())
 	_offsets.fill(Vector2.ZERO)
@@ -51,10 +55,12 @@ func bind(board: MatchBoard) -> void:
 	_icons.clear()
 	for kind in board.kinds.size():
 		var data := board.kind_data(kind)
+		var path := String(data.get("icon", ""))
 		if String(data.get("type", "")) == "unit":
 			var character: CharacterData = DataLoader.characters.get(String(data.get("character", "")))
-			if character and ResourceLoader.exists(character.icon_path):
-				_icons[kind] = load(character.icon_path) as Texture2D
+			path = character.icon_path if character else ""
+		if ResourceLoader.exists(path):
+			_icons[kind] = load(path) as Texture2D
 	custom_minimum_size = board_size()
 	queue_redraw()
 
@@ -69,7 +75,7 @@ func board_size() -> Vector2:
 func cell_rect(index: int) -> Rect2:
 	return Rect2(Vector2(_gap + (index % model.width) * pitch(), _gap + (index / model.width) * pitch()), Vector2.ONE * _tile)
 
-## 種類 kind のマスに使っているアイコン画像（図形で描く種類は null）。
+## 種類 kind のマスに使っているアイコン画像。
 func icon_for(kind: int) -> Texture2D:
 	return _icons.get(kind)
 
@@ -197,14 +203,14 @@ func _draw() -> void:
 		var flashing := _flash.has(index)
 		if flashing:
 			rect = rect.grow(5.0)
-		draw_rect(rect, Color(String(data.get("color", "444444"))))
-		draw_rect(rect, Color(1, 1, 1, 0.12), false, 2.0)
+		draw_rect(rect, _tile_color)
+		draw_rect(rect, _tile_edge_color, false, 3.0)
 		if _icons.has(kind) and _icons[kind] != null:
+			# 16pxの絵を整数倍で拡大する（ドットをにじませない）。
 			var texture: Texture2D = _icons[kind]
-			var side := rect.size.x * 0.84
-			draw_texture_rect(texture, Rect2(rect.get_center() - Vector2.ONE * side * 0.5, Vector2.ONE * side), false)
-		else:
-			_draw_shape(rect.get_center(), rect.size.x * 0.3, String(data.get("shape", "circle")), Color(String(data.get("icon_color", "ffffff"))))
+			var factor := maxf(floorf(rect.size.x * 0.95 / maxf(texture.get_width(), 1.0)), 1.0)
+			var size := texture.get_size() * factor
+			draw_texture_rect(texture, Rect2((rect.get_center() - size * 0.5).round(), size), false)
 		if flashing:
 			draw_rect(rect, Color(1, 1, 1, 0.55))
 		if index == _selected:
@@ -212,18 +218,3 @@ func _draw() -> void:
 		if _denied_timer > 0.0 and _denied.has(index):
 			draw_rect(rect, Color(1.0, 0.35, 0.3, _denied_timer / 0.25), false, 6.0)
 	draw_rect(area, BORDER, false, 4.0)
-
-func _draw_shape(center: Vector2, radius: float, shape: String, color: Color) -> void:
-	match shape:
-		"circle":
-			draw_circle(center, radius, color)
-		"triangle":
-			draw_colored_polygon(PackedVector2Array([center + Vector2(0, -radius), center + Vector2(radius, radius * 0.85), center + Vector2(-radius, radius * 0.85)]), color)
-		"diamond":
-			draw_colored_polygon(PackedVector2Array([center + Vector2(0, -radius * 1.15), center + Vector2(radius * 0.8, 0), center + Vector2(0, radius * 1.15), center + Vector2(-radius * 0.8, 0)]), color)
-		"cross":
-			var arm := radius * 0.38
-			draw_rect(Rect2(center - Vector2(arm, radius), Vector2(arm * 2.0, radius * 2.0)), color)
-			draw_rect(Rect2(center - Vector2(radius, arm), Vector2(radius * 2.0, arm * 2.0)), color)
-		_:
-			draw_rect(Rect2(center - Vector2.ONE * radius * 0.85, Vector2.ONE * radius * 1.7), color)
